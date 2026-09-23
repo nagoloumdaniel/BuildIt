@@ -1,0 +1,37 @@
+{
+  "name": "project-factory",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Development Environment Factory — describe a project, get a coherent, documented, diagnosed codebase.",
+  "license": "MIT",
+  "packageManager": "pnpm@11.13.1",
+  "engines": {
+    "node": ">=20.11.0",
+    "pnpm": ">=11.0.0"
+  },
+  "scripts": {
+    "build": "turbo run build",
+    "test": "turbo run test",
+    "typecheck": "turbo run typecheck",
+    "lint": "biome check .",
+    "lint:fix": "biome check --write .",
+    "lint:secrets": "secretlint --maskSecrets \"**/*\"",
+    "ci:local": "pnpm run lint && pnpm run typecheck && pnpm run test && pnpm run build && pnpm run lint:secrets",
+    "prepare": "lefthook install"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "2.5.14",
+    "@changesets/cli": "3.0.3",
+    "@commitlint/cli": "21.2.3",
+    "@commitlint/config-conventional": "21.2.3",
+    "@secretlint/secretlint-rule-preset-recommend": "13.0.5",
+    "@types/node": "26.6.2",
+    "lefthook": "2.1.14",
+    "secretlint": "13.0.5",
+    "tsdown": "0.23.0",
+    "turbo": "2.11.3",
+    "typescript": "7.0.2",
+    "vitest": "5.0.1"
+  }
+}

@@ -1,0 +1,8 @@
+# Le dépôt est développé sous Windows et consommé sous Linux en CI.
+# Fins de ligne normalisées en LF dans l'index, quoi qu'il arrive.
+* text=auto eol=lf
+
+*.png binary
+*.jpg binary
+*.ico binary
+*.woff2 binary

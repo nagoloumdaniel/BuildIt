@@ -1,0 +1,21 @@
+packages:
+  - "packages/*"
+  - "tooling/*"
+  - "apps/*"
+
+# pnpm >=10 bloque les scripts d'installation par défaut.
+# Ces paquets distribuent un binaire natif et en ont légitimement besoin.
+allowBuilds:
+  lefthook: true
+  "@biomejs/biome": true
+
+# pnpm 11 retient par défaut les versions trop récentes (protection chaîne
+# d'approvisionnement). Ces entrées sont les exceptions explicitement validées.
+minimumReleaseAgeExclude:
+  - "@turbo/darwin-64@2.11.3"
+  - "@turbo/darwin-arm64@2.11.3"
+  - "@turbo/linux-64@2.11.3"
+  - "@turbo/linux-arm64@2.11.3"
+  - "@turbo/windows-64@2.11.3"
+  - "@turbo/windows-arm64@2.11.3"
+  - "turbo@2.11.3"

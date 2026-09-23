@@ -1,0 +1,8 @@
+{
+  "extends": "@project-factory/typescript-config/base.json",
+  // Seulement `src` : `isolatedDeclarations` est une contrainte de source de
+  // librairie (des .d.ts générables sans inférence), pas de fichier de config.
+  // tsdown.config.ts et vitest.config.ts sont validés par l'exécution des
+  // outils eux-mêmes, ce qui est plus fort qu'un typecheck.
+  "include": ["src"]
+}

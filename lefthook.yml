@@ -1,0 +1,24 @@
+# Garde-fous locaux. Tant que le dépôt n'a pas de remote (compte GitHub
+# indisponible), ces hooks SONT l'intégration continue — `pre-push` exécute
+# exactement le même pipeline que .github/workflows/ci.yml.
+
+pre-commit:
+  parallel: true
+  jobs:
+    - name: biome
+      glob: "*.{js,ts,mts,cts,json,jsonc}"
+      run: pnpm exec biome check --write --no-errors-on-unmatched {staged_files}
+      stage_fixed: true
+
+    - name: secrets
+      run: pnpm exec secretlint --maskSecrets {staged_files}
+
+commit-msg:
+  jobs:
+    - name: commitlint
+      run: pnpm exec commitlint --edit {1}
+
+pre-push:
+  jobs:
+    - name: ci-local
+      run: pnpm run ci:local
