@@ -5,7 +5,7 @@ Référence complète : `docs/cahier-des-charges.md`. Plan d'exécution : `docs/
 
 ## État
 
-Phases 1 (socle monorepo) et 2 (Project Manifest) livrées. Phase 3 (registry) en cours : schéma, intégrité, chargeur et 35 fiches faits ; restent les ~150 fiches déclarées et la doc de contribution. Pas de remote Git — le compte GitHub est indisponible, la CI est **locale**.
+Phases 1 (socle monorepo) et 2 (Project Manifest) livrées. Phase 3 (registry) livrée : schéma, intégrité, chargeur, 282 fiches et doc de contribution. Prochaine : Phase 4, compatibility engine. Pas de remote Git — le compte GitHub est indisponible, la CI est **locale**.
 
 Reliquat de Phase 0, non fait et assumé : entretiens utilisateurs, profils concurrents, doc de monétisation V2. Le premier utilisateur (§0) a tranché le catalogue à leur place ; à corriger avec de vrais testeurs en Phase 13.
 
@@ -27,7 +27,7 @@ pnpm build         # tsdown, via Turborepo
 tooling/typescript-config/   tsconfig de base partagé
 packages/validation/         modèle d'erreur partagé — livré
 packages/manifest/           Project Manifest (§10) — livré
-packages/registry/           catalogue (§7, §11) — en cours
+packages/registry/           catalogue (§7, §11) — livré, 282 fiches
   data/<catégorie>/<id>.entry.json   source de vérité, éditable à la main
   src/generated/entries.ts           index engendré, versionné, vérifié
 assets/brand/                logos, provisoires (voir son README)

@@ -56,4 +56,4 @@ Aucune valeur sensible dans le dépôt, jamais — pas même en exemple, pas mê
 
 ## Registry
 
-Le workflow d'ajout d'une technologie au registry sera documenté en Phase 3. En attendant, `packages/registry` n'existe pas encore.
+Ajouter une technologie au catalogue, c'est ajouter un fichier JSON — pas modifier du code. La procédure complète est dans [packages/registry/CONTRIBUTING.md](packages/registry/CONTRIBUTING.md).
