@@ -75,6 +75,11 @@ export const LICENSES = [
   'BSD-2-Clause',
   'BSD-3-Clause',
   'ISC',
+  // Licence propre à PostgreSQL, proche d'une BSD. Ajoutée en écrivant les
+  // premières vraies fiches : une liste fermée ne vaut que si elle couvre
+  // réellement le catalogue, sinon on est tenté d'approximer — et une licence
+  // approximée rend l'alerte « usage commercial » du §11 inutile.
+  'PostgreSQL',
   'MPL-2.0',
   'LGPL-3.0',
   'GPL-3.0',

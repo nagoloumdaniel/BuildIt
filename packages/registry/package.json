@@ -18,7 +18,8 @@
   "scripts": {
     "build": "tsdown",
     "typecheck": "tsc --noEmit",
-    "test": "vitest run --coverage"
+    "test": "vitest run --coverage",
+    "build:index": "node scripts/build-index.mjs"
   },
   "dependencies": {
     "@project-factory/manifest": "workspace:*",

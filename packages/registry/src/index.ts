@@ -7,6 +7,7 @@
  * (Phase 4).
  */
 
+export { loadCatalogue } from './catalogue.js';
 export type { RegistryIssue, RegistryIssueCode, RegistryPathSegment } from './errors.js';
 export { messageFor, REGISTRY_ISSUE_CODES } from './errors.js';
 export type { IntegrityCode, IntegrityIssue, IntegritySeverity } from './integrity.js';
