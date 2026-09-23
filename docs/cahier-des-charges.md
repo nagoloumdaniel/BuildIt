@@ -216,13 +216,15 @@ Monolith, Modular Monolith, Monorepo, Microservices, Serverless, Event-driven, C
 
 ## 8. Presets / Blueprints
 
-- **SaaS Web** — Next.js + TypeScript + Tailwind + shadcn/ui + PostgreSQL + Drizzle + Better Auth + Stripe + Resend + Sentry + PostHog + Vercel + Vitest + Playwright.
-- **Full-stack Monorepo** — Next.js + NestJS + TypeScript + Tailwind + shared UI + PostgreSQL + Drizzle + Better Auth + Redis + Zod + Vitest + Playwright + Docker + GitHub Actions.
-- **AI SaaS** — Next.js + TypeScript + Tailwind + shadcn/ui + PostgreSQL + Drizzle + Better Auth + Vercel AI SDK + OpenAI/Anthropic + pgvector + Redis + Stripe + PostHog + Sentry.
-- **Marketplace** — Web + Mobile + Admin + API : Next.js + Expo + NestJS + PostgreSQL + Drizzle + Auth + Storage + Payments + Notifications + Search + Redis.
-- **Mobile + API** — Expo + React Native + TypeScript + Expo Router + NativeWind + NestJS/Hono + PostgreSQL + Drizzle + Auth + Redis + Docker.
+- **SaaS Web** — Next.js + TypeScript + Tailwind + shadcn/ui + PostgreSQL + Prisma + Better Auth + Stripe + Resend + Sentry + PostHog + Vercel + Vitest + Playwright.
+- **Full-stack Monorepo** — Next.js + NestJS + TypeScript + Tailwind + shared UI + PostgreSQL + Prisma + Better Auth + Redis + Zod + Vitest + Playwright + Docker + GitHub Actions.
+- **AI SaaS** — Next.js + TypeScript + Tailwind + shadcn/ui + PostgreSQL + Prisma + Better Auth + Vercel AI SDK + OpenAI/Anthropic + pgvector + Redis + Stripe + PostHog + Sentry.
+- **Marketplace** — Web + Mobile + Admin + API : Next.js + Expo + NestJS + PostgreSQL + Prisma + Auth + Storage + Payments + Notifications + Search + Redis.
+- **Mobile + API** — Expo + React Native + TypeScript + Expo Router + NativeWind + NestJS/Hono + PostgreSQL + Prisma + Auth + Redis + Docker.
 - **Desktop + Web** — Next.js/React + Tauri + TypeScript + shared packages + API + PostgreSQL + Auth.
-- **API** — NestJS/Hono + TypeScript + PostgreSQL + Drizzle + Redis + OpenAPI + Docker + GitHub Actions.
+- **API** — NestJS/Hono + TypeScript + PostgreSQL + Prisma + Redis + OpenAPI + Docker + GitHub Actions.
+
+**Décision du 23/09/2026 — ORM par défaut : Prisma.** Les presets livrés utilisent Prisma parce que c'est l'outil réellement employé par le premier utilisateur (§0). Drizzle reste au catalogue (§7.7) comme alternative certifiée. Conséquence sur le pipeline : Prisma exige un `prisma generate` à l'étape Post Install (§22), qui doit échouer explicitement plutôt que livrer un projet qui ne compile pas.
 
 ---
 
@@ -268,7 +270,7 @@ Le moteur est indépendant de l'interface. **UI et CLI produisent tous deux un P
   "frontend": { "framework": "next", "language": "typescript", "styling": "tailwind" },
   "mobile": { "framework": "expo", "language": "typescript" },
   "backend": { "framework": "nestjs" },
-  "database": { "engine": "postgresql", "orm": "drizzle" },
+  "database": { "engine": "postgresql", "orm": "prisma" },
   "auth": { "provider": "better-auth" },
   "services": ["redis", "storage", "email", "payments"],
   "quality": ["biome", "vitest", "playwright"],
@@ -293,7 +295,7 @@ Chaque technologie est décrite par une fiche machine-readable, versionnée en s
   "status": "stable",
   "versionRange": ">=1.0.0 <2.0.0",
   "requires": ["typescript"],
-  "compatibleWith": ["next", "nestjs", "drizzle", "postgresql"],
+  "compatibleWith": ["next", "nestjs", "prisma", "postgresql"],
   "conflictsWith": [],
   "packages": ["better-auth"],
   "env": ["BETTER_AUTH_SECRET"],

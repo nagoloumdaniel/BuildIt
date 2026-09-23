@@ -161,24 +161,37 @@ Le registry n'est jamais codé en dur dans les écrans (§11). Il est data-drive
 |---|---|---|
 | 3.1 | Cadrer la fiche technologie : le schéma du §11 + `status`, `versionRange`, `license`, `lastReviewedAt` | `brainstorming` |
 | 3.2 | TDD du loader + validateur de fiches | `test-driven-development` |
-| 3.3 | Rédiger les **60 fiches du périmètre MVP uniquement** (web : §7.1, §7.2, §7.3, §7.4, §7.14, §7.15, §7.16, §7.17) — pas les 250 | `test-driven-development`, `dispatching-parallel-agents` (découpe par catégorie) |
+| 3.3a | Rédiger les **~40 fiches `certifiée`** — celles que le preset SaaS génère réellement, chacune adossée à un template et à un test de génération | `test-driven-development` |
+| 3.3b | Rédiger les **~150 fiches `déclarée`** — tout le périmètre web du §7 : connues du registry (catégorie, compatibilités, licence, paquets), visibles et cherchables, mais sans template, donc non générables | `dispatching-parallel-agents` (découpe par catégorie) |
 | 3.4 | CI de validation du registry : schéma + unicité des id + licences connues + dates de revue | `update-config` |
 | 3.5 | Politique de fraîcheur (§7) : job planifié de rappel de revue trimestrielle | `schedule` |
 | 3.6 | Alerte licence incompatible usage commercial (§11, §24) | `security-review` |
 | 3.7 | Workflow de contribution (§11) documenté | `anthropic-skills:docs-writer` |
 | 3.8 | Revue + merge | `caveman-review`, `finishing-a-development-branch` |
 
+### Le distinguo qui tient tout
+
+Le catalogue doit être large (§7 en liste ~250) **et** honnête (§24 : « ne pas générer de combinaisons non testées »). Les deux se concilient par un champ de statut de génération sur chaque fiche :
+
+| Statut | Signification | Visible ? | Générable ? |
+|---|---|---|---|
+| `certifiée` | template écrit + test de génération en CI | oui | oui |
+| `déclarée` | connue du registry (catégorie, compatibilités, licence, paquets) mais sans template | oui, marquée | non |
+
+L'utilisateur voit un catalogue crédible — « 190 technologies connues, 40 génèrent aujourd'hui » — sans jamais cliquer sur une case qui ne fait rien. Une fiche passe de `déclarée` à `certifiée` le jour où son template et son test existent, preset par preset.
+
 ### Livrables
 - `packages/registry` — loader, validateur, index par catégorie/target
-- 60+ fiches JSON versionnées
+- ~40 fiches `certifiée` + ~150 fiches `déclarée`, versionnées
 - `CONTRIBUTING-registry.md`
 - Job trimestriel de revue
 
 ### Gate M1 — `verification-before-completion`
 - [ ] Une fiche malformée fait **échouer la CI** (test négatif)
-- [ ] Chaque fiche porte `status`, `versionRange`, `license`, `lastReviewedAt`
+- [ ] Chaque fiche porte `status`, `generation`, `versionRange`, `license`, `lastReviewedAt`
+- [ ] Une fiche `certifiée` sans `template` fait **échouer la CI** — c'est le garde-fou qui empêche de promettre ce qui n'existe pas
 - [ ] `registry.query({ category, target })` testé
-- [ ] Aucune techno hors périmètre MVP n'est présente
+- [ ] Le registry ne connaît aucune technologie hors périmètre web MVP
 
 ---
 
