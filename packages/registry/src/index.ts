@@ -7,8 +7,12 @@
  * (Phase 4).
  */
 
+export type { RegistryIssue, RegistryIssueCode, RegistryPathSegment } from './errors.js';
+export { messageFor, REGISTRY_ISSUE_CODES } from './errors.js';
 export type { IntegrityCode, IntegrityIssue, IntegritySeverity } from './integrity.js';
 export { checkIntegrity, INTEGRITY_CODES } from './integrity.js';
+export type { Registry, RegistryQuery } from './load.js';
+export { loadRegistry } from './load.js';
 export type {
   Category,
   GenerationStatus,
