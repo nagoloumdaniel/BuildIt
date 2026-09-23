@@ -5,7 +5,7 @@ Référence complète : `docs/cahier-des-charges.md`. Plan d'exécution : `docs/
 
 ## État
 
-Phases 1 (socle monorepo) et 2 (Project Manifest) livrées. Phase 3 (registry) livrée : schéma, intégrité, chargeur, 282 fiches et doc de contribution. Prochaine : Phase 4, compatibility engine. Pas de remote Git — le compte GitHub est indisponible, la CI est **locale**.
+Phases 1 (socle monorepo) et 2 (Project Manifest) livrées. Phases 3 (registry, 282 fiches) et 4 (compatibility engine) livrées. Prochaine : Phase 5, pipeline de génération. Pas de remote Git — le compte GitHub est indisponible, la CI est **locale**.
 
 Reliquat de Phase 0, non fait et assumé : entretiens utilisateurs, profils concurrents, doc de monétisation V2. Le premier utilisateur (§0) a tranché le catalogue à leur place ; à corriger avec de vrais testeurs en Phase 13.
 
@@ -30,6 +30,7 @@ packages/manifest/           Project Manifest (§10) — livré
 packages/registry/           catalogue (§7, §11) — livré, 282 fiches
   data/<catégorie>/<id>.entry.json   source de vérité, éditable à la main
   src/generated/entries.ts           index engendré, versionné, vérifié
+packages/compatibility/      règles du §12 — livré
 assets/brand/                logos, provisoires (voir son README)
 docs/superpowers/{specs,plans}/
 ```
@@ -39,8 +40,10 @@ docs/superpowers/{specs,plans}/
 Frontière structurante, à ne pas franchir :
 
 - `manifest` valide la **forme** — « framework est un slug kebab-case »
-- `registry` (Phase 3) valide l'**identité** — « le slug next existe »
-- `compatibility` (Phase 4) valide la **combinaison** — « next va avec drizzle »
+- `registry` valide l'**identité** — « le slug next existe »
+- `compatibility` valide la **combinaison** — « next va avec prisma »
+
+L'arité des catégories vit dans `compatibility/arity.ts`, jamais sur les fiches : c'est une propriété invariante de la catégorie. **Déduire un conflit de la seule catégorie est faux** — `testing` est cumulative (vitest, playwright et testing-library coexistent), `orm` est exclusive.
 
 Aucun nom de technologie ne doit apparaître dans `packages/manifest`. S'il en apparaît un, ajouter une entrée au catalogue obligera à faire migrer tous les manifests existants.
 

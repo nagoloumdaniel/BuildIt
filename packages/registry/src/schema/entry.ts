@@ -113,6 +113,7 @@ export interface RegistryEntry {
   packages?: string[] | undefined;
   env?: string[] | undefined;
   recipes?: string[] | undefined;
+  engines?: Readonly<Record<string, string>> | undefined;
   template?: string | undefined;
   docs?: string | undefined;
 }
@@ -178,6 +179,9 @@ export const entrySchema: z.ZodType<RegistryEntry, unknown> = z
     packages: z.array(z.string().min(1)).optional(),
     env: z.array(envNameSchema).optional(),
     recipes: uniqueSlugs().optional(),
+    // Contraintes de runtime (§12) : « next 15 exige node >=18.18 ». La cle est
+    // un runtime (node, bun, deno), la valeur une plage semver.
+    engines: z.record(z.enum(['node', 'bun', 'deno']), z.string().min(1)).optional(),
     template: z
       .string()
       .regex(/^[a-z0-9]+(?:[-/][a-z0-9]+)*$/)
