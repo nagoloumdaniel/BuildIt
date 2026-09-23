@@ -5,7 +5,9 @@ Référence complète : `docs/cahier-des-charges.md`. Plan d'exécution : `docs/
 
 ## État
 
-Phase 1 de la roadmap (socle monorepo). Pas de remote Git — le compte GitHub est indisponible, la CI est **locale**.
+Phases 1 (socle monorepo) et 2 (Project Manifest) livrées. Pas de remote Git — le compte GitHub est indisponible, la CI est **locale**.
+
+Reliquat de Phase 0, redevient bloquant avant la Phase 3 : entretiens utilisateurs, profils concurrents, doc de monétisation V2.
 
 ## Commandes
 
@@ -21,11 +23,27 @@ pnpm build         # tsdown, via Turborepo
 
 ## Structure
 
-```
+```text
 tooling/typescript-config/   tsconfig de base partagé
-packages/manifest/           Project Manifest (§10) — cible de la Phase 2
+packages/manifest/           Project Manifest (§10) — livré
+assets/brand/                logos, provisoires (voir son README)
 docs/superpowers/{specs,plans}/
 ```
+
+## Frontières entre paquets
+
+Frontière structurante, à ne pas franchir :
+
+- `manifest` valide la **forme** — « framework est un slug kebab-case »
+- `registry` (Phase 3) valide l'**identité** — « le slug next existe »
+- `compatibility` (Phase 4) valide la **combinaison** — « next va avec drizzle »
+
+Aucun nom de technologie ne doit apparaître dans `packages/manifest`. S'il en apparaît un, ajouter une entrée au catalogue obligera à faire migrer tous les manifests existants.
+
+Deux invariants du manifest, tenus par des tests :
+
+- **Un seul champ à contenu libre** : `name`. C'est ce qui rend un manifest structurellement incapable de porter un secret, alors qu'il transite par les liens de partage (§20, §24).
+- **`parseManifest` rend toujours une forme canonique** : ensembles triés, clés ordonnées. C'est ce qui rend vérifiable la promesse « mêmes choix en UI et en CLI ⇒ manifest identique octet pour octet ».
 
 Les packages naissent dans leur phase. Ne pas créer de répertoire vide « pour plus tard » : c'est du scaffolding à maintenir pour rien.
 
@@ -51,3 +69,7 @@ Les packages naissent dans leur phase. Ne pas créer de répertoire vide « pour
 - tsdown émet `.mjs` / `.d.mts` par défaut ; dans un paquet `"type": "module"` il faut `outExtensions` pour retomber sur `.js` / `.d.ts` et rester cohérent avec `exports`.
 - `isolatedDeclarations` exige `declaration: true` même avec `noEmit: true` (TS5069).
 - `changeset init` est interactif et échoue sans TTY : écrire `.changeset/config.json` à la main.
+- `isolatedDeclarations` refuse `as const satisfies` sur un export : annoter explicitement.
+- Zod 4 signale une **énumération absente** en `invalid_value`, pas en `invalid_type`. Ne pas déduire « champ manquant » du code Zod : regarder si la valeur à ce chemin est `undefined`.
+- Zod 4 expose `params` uniquement sur les issues `code: 'custom'` — restreindre l'union avant d'y accéder.
+- Pour suggérer une correction de faute de frappe, utiliser **Damerau**-Levenshtein : Levenshtein facture 2 une transposition (« wbe » → « web »), ce qui la met hors d'atteinte de tout seuil raisonnable.
