@@ -1,9 +1,9 @@
 import { describe, expect, it } from 'vitest';
-import type { ManifestIssue } from './errors.js';
+import type { Issue } from './issue.js';
 import { fail, ok } from './result.js';
 
-const issue: ManifestIssue = {
-  code: 'MANIFEST_NAME_INVALID',
+const issue: Issue = {
+  code: 'NAME_INVALID',
   path: ['name'],
   message: 'peu importe',
 };
@@ -24,7 +24,7 @@ describe('fail', () => {
     expect(result.ok).toBe(false);
     if (!result.ok) {
       expect(result.issues).toHaveLength(1);
-      expect(result.issues[0]?.code).toBe('MANIFEST_NAME_INVALID');
+      expect(result.issues[0]?.code).toBe('NAME_INVALID');
     }
   });
 

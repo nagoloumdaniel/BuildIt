@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { MANIFEST_ISSUE_CODES, type ManifestIssueCode, messageFor, suggest } from './errors.js';
+import { MANIFEST_ISSUE_CODES, type ManifestIssueCode, messageFor } from './errors.js';
 
 describe('MANIFEST_ISSUE_CODES', () => {
   it('expose les codes du spec', () => {
@@ -34,28 +34,6 @@ describe('messageFor', () => {
   it('ne laisse aucun marqueur non remplacé quand un paramètre manque', () => {
     const message = messageFor('MANIFEST_ENUM_UNKNOWN', {});
     expect(message).not.toMatch(/\{[a-z]+\}/);
-  });
-});
-
-describe('suggest', () => {
-  it('propose la valeur la plus proche sur une faute de frappe', () => {
-    expect(suggest('wbe', ['web', 'mobile', 'desktop'])).toBe('web');
-  });
-
-  it('propose la valeur la plus proche sur une lettre manquante', () => {
-    expect(suggest('mobil', ['web', 'mobile', 'desktop'])).toBe('mobile');
-  });
-
-  it('ne propose rien quand rien n’est proche', () => {
-    expect(suggest('zzzzzzzz', ['web', 'mobile', 'desktop'])).toBeUndefined();
-  });
-
-  it('ne propose rien sur une liste vide', () => {
-    expect(suggest('web', [])).toBeUndefined();
-  });
-
-  it('ignore la casse', () => {
-    expect(suggest('WEB', ['web', 'mobile'])).toBe('web');
   });
 });
 

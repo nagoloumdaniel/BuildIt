@@ -1,6 +1,6 @@
+import { fail, type ParseResult } from '@project-factory/validation';
 import { messageFor } from './errors.js';
 import { parseManifest } from './parse.js';
-import { fail, type ParseResult } from './result.js';
 import type { Manifest } from './schema/manifest.js';
 import { MANIFEST_VERSION } from './version.js';
 

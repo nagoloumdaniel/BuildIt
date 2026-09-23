@@ -7,8 +7,8 @@
   "description": "Registry des technologies — base de connaissances du catalogue (cahier des charges §7, §11).",
   "exports": {
     ".": {
-      "types": "./dist/index.d.ts",
-      "import": "./dist/index.js"
+      "types": "./src/index.ts",
+      "import": "./src/index.ts"
     }
   },
   "files": [
@@ -30,5 +30,13 @@
     "tsdown": "0.23.0",
     "typescript": "7.0.2",
     "vitest": "5.0.1"
+  },
+  "publishConfig": {
+    "exports": {
+      ".": {
+        "types": "./dist/index.d.ts",
+        "import": "./dist/index.js"
+      }
+    }
   }
 }
