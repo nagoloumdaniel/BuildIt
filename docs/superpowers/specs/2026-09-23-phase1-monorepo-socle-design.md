@@ -40,23 +40,26 @@ project-factory/
 │   ├── roadmap.md
 │   └── superpowers/{specs,plans}/
 ├── tooling/
-│   ├── typescript-config/
-│   ├── biome-config/
-│   └── vitest-config/
+│   └── typescript-config/
 ├── packages/
 │   └── manifest/
-├── .changeset/
-├── LICENSE
-├── README.md
-├── CONTRIBUTING.md
-├── CLAUDE.md
-├── package.json
-├── pnpm-workspace.yaml
-├── turbo.json
-├── biome.json
-├── lefthook.yml
-└── commitlint.config.js
+├── .changeset/config.json
+├── LICENSE · README.md · CONTRIBUTING.md · CLAUDE.md
+├── package.json · pnpm-workspace.yaml · turbo.json
+├── biome.json · lefthook.yml
+├── .commitlintrc.json
+├── .secretlintrc.json · .secretlintignore
+└── .gitignore · .gitattributes · .npmrc
 ```
+
+`tooling/biome-config` et `tooling/vitest-config` n'existent pas : avec un seul
+package, une configuration partagée n'a rien à partager. Biome se configure une
+fois à la racine (il est mono-configuration par nature), et Vitest vit dans le
+package. Ils seront extraits quand le deuxième package en aura besoin (Phase 3).
+
+Commitlint et secretlint sont configurés en `.*rc.json` plutôt qu'en `.js` :
+la racine est `"type": "module"`, et un fichier JSON évite toute ambiguïté de
+système de modules pour des outils qui chargent leur config par cosmiconfig.
 
 ### Décision : un seul package sonde
 
