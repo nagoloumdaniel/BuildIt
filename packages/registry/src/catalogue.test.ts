@@ -1,6 +1,7 @@
 import { execFileSync } from 'node:child_process';
 import { describe, expect, it } from 'vitest';
 import { loadCatalogue } from './catalogue.js';
+import type { Category } from './schema/entry.js';
 
 /**
  * Tests du catalogue **réel**, pas de fixtures.
@@ -36,10 +37,58 @@ describe('contenu du catalogue', () => {
     return result.value;
   })();
 
-  it('contient le cœur du preset SaaS', () => {
-    for (const id of ['typescript', 'next', 'postgresql', 'prisma', 'better-auth']) {
+  it('contient toute la stack du preset SaaS (§8)', () => {
+    const saas = [
+      'next',
+      'typescript',
+      'tailwind',
+      'shadcn-ui',
+      'postgresql',
+      'prisma',
+      'better-auth',
+      'stripe',
+      'resend',
+      'sentry',
+      'posthog',
+      'vercel',
+      'vitest',
+      'playwright',
+    ];
+    for (const id of saas) {
       expect(registry.get(id), `fiche manquante : ${id}`).toBeDefined();
     }
+  });
+
+  it('offre un vrai choix là où il compte, et un seul là où il n’en apporte pas', () => {
+    // Décision produit : 2 à 4 options recommandées par étape (§5), mais
+    // uniquement dans les catégories où le choix change quelque chose. Personne
+    // ne change de vie parce que l'outil impose Biome plutôt qu'ESLint.
+    const plural: Category[] = [
+      'database',
+      'orm',
+      'authentication',
+      'ui',
+      'payments',
+      'email',
+      'hosting',
+    ];
+    for (const category of plural) {
+      expect(
+        registry.query({ category }).length,
+        `choix insuffisant en ${category}`,
+      ).toBeGreaterThanOrEqual(2);
+    }
+
+    const singular: Category[] = ['language', 'styling', 'linting', 'package-manager', 'monorepo'];
+    for (const category of singular) {
+      expect(registry.query({ category }).length, `choix superflu en ${category}`).toBe(1);
+    }
+  });
+
+  it('aucune fiche n’est encore certifiée — les templates arrivent en Phase 6', () => {
+    // Ce test tombera dès le premier template livré : c'est voulu. Il force à
+    // relire la règle certifiée/déclarée au moment où elle commence à mordre.
+    expect(registry.query({ generation: 'certified' })).toEqual([]);
   });
 
   it('chaque fiche certifiée porte un template', () => {

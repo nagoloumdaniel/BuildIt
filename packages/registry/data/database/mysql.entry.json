@@ -1,0 +1,14 @@
+{
+  "id": "mysql",
+  "name": "MySQL",
+  "category": "database",
+  "targets": ["web", "api"],
+  "status": "stable",
+  "generation": "declared",
+  "license": "GPL-2.0",
+  "lastReviewedAt": "2026-09-23",
+  "versionRange": ">=8.0.0",
+  "compatibleWith": ["prisma", "drizzle", "kysely"],
+  "env": ["DATABASE_URL"],
+  "docs": "https://www.mysql.com"
+}

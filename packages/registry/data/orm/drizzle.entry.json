@@ -1,0 +1,16 @@
+{
+  "id": "drizzle",
+  "name": "Drizzle",
+  "category": "orm",
+  "targets": ["web", "api"],
+  "status": "stable",
+  "generation": "declared",
+  "license": "Apache-2.0",
+  "lastReviewedAt": "2026-09-23",
+  "requires": ["typescript"],
+  "compatibleWith": ["postgresql", "mysql", "sqlite", "next", "better-auth"],
+  "packages": ["drizzle-orm", "drizzle-kit"],
+  "env": ["DATABASE_URL"],
+  "recipes": ["migrate", "seed"],
+  "docs": "https://orm.drizzle.team"
+}

@@ -72,4 +72,6 @@ Les packages naissent dans leur phase. Ne pas créer de répertoire vide « pour
 - `isolatedDeclarations` refuse `as const satisfies` sur un export : annoter explicitement.
 - Zod 4 signale une **énumération absente** en `invalid_value`, pas en `invalid_type`. Ne pas déduire « champ manquant » du code Zod : regarder si la valeur à ce chemin est `undefined`.
 - Zod 4 expose `params` uniquement sur les issues `code: 'custom'` — restreindre l'union avant d'y accéder.
+- Une fiche du registry se nomme `<id>.entry.json`, jamais `<id>.json` : plusieurs identifiants de technologies sont des noms de fichiers de configuration réservés (`biome.json`, `vercel.json`, `turbo.json`), et l'outil correspondant les lit comme sa propre configuration.
+- Biome découvre les configurations imbriquées avant d'appliquer `files.includes` : exclure un dossier n'empêche pas un `biome.json` qui s'y trouve d'être lu.
 - Pour suggérer une correction de faute de frappe, utiliser **Damerau**-Levenshtein : Levenshtein facture 2 une transposition (« wbe » → « web »), ce qui la met hors d'atteinte de tout seuil raisonnable.

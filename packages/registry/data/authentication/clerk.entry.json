@@ -1,0 +1,15 @@
+{
+  "id": "clerk",
+  "name": "Clerk",
+  "category": "authentication",
+  "targets": ["web", "api"],
+  "status": "stable",
+  "generation": "declared",
+  "license": "Proprietary",
+  "lastReviewedAt": "2026-09-23",
+  "compatibleWith": ["next"],
+  "packages": ["@clerk/nextjs"],
+  "env": ["CLERK_PUBLISHABLE_KEY", "CLERK_SECRET_KEY"],
+  "recipes": ["oauth", "organizations"],
+  "docs": "https://clerk.com"
+}

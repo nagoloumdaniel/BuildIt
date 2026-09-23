@@ -1,0 +1,14 @@
+{
+  "id": "mantine",
+  "name": "Mantine",
+  "category": "ui",
+  "targets": ["web"],
+  "status": "stable",
+  "generation": "declared",
+  "license": "MIT",
+  "lastReviewedAt": "2026-09-23",
+  "versionRange": ">=7.0.0",
+  "compatibleWith": ["next"],
+  "packages": ["@mantine/core", "@mantine/hooks"],
+  "docs": "https://mantine.dev"
+}

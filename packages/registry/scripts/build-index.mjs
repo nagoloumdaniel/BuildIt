@@ -23,14 +23,23 @@ const root = dirname(dirname(fileURLToPath(import.meta.url)));
 const dataDir = join(root, 'data');
 const outputPath = join(root, 'src', 'generated', 'entries.ts');
 
-/** Liste les fiches, triées pour que la sortie ne dépende pas du système de fichiers. */
+/**
+ * Liste les fiches, triées pour que la sortie ne dépende pas du système de
+ * fichiers.
+ *
+ * Suffixe `.entry.json` et non `.json` : une fiche porte le nom de sa
+ * technologie, et plusieurs de ces noms sont des fichiers de configuration
+ * réservés. `data/linting/biome.json` a été lu par Biome comme sa propre
+ * configuration ; `vercel.json`, `turbo.json` et `package.json` auraient posé
+ * le même problème. Le suffixe supprime la classe entière.
+ */
 function collectEntryFiles(directory) {
   const found = [];
   for (const item of readdirSync(directory, { withFileTypes: true })) {
     const path = join(directory, item.name);
     if (item.isDirectory()) {
       found.push(...collectEntryFiles(path));
-    } else if (item.name.endsWith('.json')) {
+    } else if (item.name.endsWith('.entry.json')) {
       found.push(path);
     }
   }

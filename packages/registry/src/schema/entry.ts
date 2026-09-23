@@ -75,6 +75,8 @@ export const LICENSES = [
   'BSD-2-Clause',
   'BSD-3-Clause',
   'ISC',
+  'GPL-2.0',
+  'Public-Domain',
   // Licence propre à PostgreSQL, proche d'une BSD. Ajoutée en écrivant les
   // premières vraies fiches : une liste fermée ne vaut que si elle couvre
   // réellement le catalogue, sinon on est tenté d'approximer — et une licence
