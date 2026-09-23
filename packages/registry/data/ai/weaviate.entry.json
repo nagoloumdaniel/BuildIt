@@ -1,0 +1,11 @@
+{
+  "id": "weaviate",
+  "name": "Weaviate",
+  "category": "ai",
+  "targets": ["web", "api"],
+  "status": "stable",
+  "generation": "declared",
+  "license": "BSD-3-Clause",
+  "lastReviewedAt": "2026-09-23",
+  "docs": "https://weaviate.io/developers"
+}

@@ -1,0 +1,11 @@
+{
+  "id": "laravel",
+  "name": "Laravel",
+  "category": "backend",
+  "targets": ["api"],
+  "status": "stable",
+  "generation": "declared",
+  "license": "MIT",
+  "lastReviewedAt": "2026-09-23",
+  "docs": "https://laravel.com"
+}

@@ -1,0 +1,11 @@
+{
+  "id": "htmx",
+  "name": "htmx",
+  "category": "frontend",
+  "targets": ["web"],
+  "status": "stable",
+  "generation": "declared",
+  "license": "BSD-2-Clause",
+  "lastReviewedAt": "2026-09-23",
+  "docs": "https://htmx.org"
+}

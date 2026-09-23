@@ -1,0 +1,11 @@
+{
+  "id": "mariadb",
+  "name": "MariaDB",
+  "category": "database",
+  "targets": ["web", "api"],
+  "status": "stable",
+  "generation": "declared",
+  "license": "GPL-2.0",
+  "lastReviewedAt": "2026-09-23",
+  "docs": "https://mariadb.org"
+}

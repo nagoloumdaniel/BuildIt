@@ -1,0 +1,11 @@
+{
+  "id": "urql",
+  "name": "urql",
+  "category": "data-fetching",
+  "targets": ["web"],
+  "status": "stable",
+  "generation": "declared",
+  "license": "MIT",
+  "lastReviewedAt": "2026-09-23",
+  "docs": "https://commerce.nearform.com/open-source/urql"
+}

@@ -1,6 +1,7 @@
 import { execFileSync } from 'node:child_process';
 import { describe, expect, it } from 'vitest';
 import { loadCatalogue } from './catalogue.js';
+import type { Registry } from './load.js';
 import type { Category } from './schema/entry.js';
 
 /**
@@ -29,15 +30,24 @@ describe('le catalogue officiel charge', () => {
   });
 });
 
-describe('contenu du catalogue', () => {
-  const registry = (() => {
-    if (!result.ok) {
-      throw new Error('le catalogue ne charge pas');
-    }
-    return result.value;
-  })();
+/**
+ * Accès au catalogue chargé, appelé **dans** chaque test.
+ *
+ * Surtout pas dans le corps d'un `describe` : y lever une exception interrompt
+ * la collecte des tests, et le test de diagnostic ci-dessus — celui qui imprime
+ * les erreurs réelles — ne s'exécute jamais. On perd alors l'information au
+ * moment précis où on en a besoin.
+ */
+function requireRegistry(): Registry {
+  if (!result.ok) {
+    throw new Error('le catalogue ne charge pas — voir le test de diagnostic ci-dessus');
+  }
+  return result.value;
+}
 
+describe('contenu du catalogue', () => {
   it('contient toute la stack du preset SaaS (§8)', () => {
+    const registry = requireRegistry();
     const saas = [
       'next',
       'typescript',
@@ -59,10 +69,58 @@ describe('contenu du catalogue', () => {
     }
   });
 
-  it('offre un vrai choix là où il compte, et un seul là où il n’en apporte pas', () => {
-    // Décision produit : 2 à 4 options recommandées par étape (§5), mais
-    // uniquement dans les catégories où le choix change quelque chose. Personne
-    // ne change de vie parce que l'outil impose Biome plutôt qu'ESLint.
+  it('couvre chaque catégorie du périmètre web', () => {
+    const registry = requireRegistry();
+    // Le registry est large par vocation : il déclare ce que le produit connaît.
+    // La restriction à 2–4 options recommandées par étape (§5) ne porte pas sur
+    // lui — elle portera sur le sous-ensemble certifié, donc générable, une fois
+    // les templates écrits en Phase 6. Confondre les deux reviendrait à brider
+    // le catalogue pour une raison d'interface.
+    const expected: Category[] = [
+      'frontend',
+      'language',
+      'styling',
+      'ui',
+      'backend',
+      'database',
+      'orm',
+      'authentication',
+      'authorization',
+      'state',
+      'data-fetching',
+      'forms',
+      'validation',
+      'api',
+      'build',
+      'package-manager',
+      'monorepo',
+      'testing',
+      'linting',
+      'containers',
+      'ci-cd',
+      'hosting',
+      'storage',
+      'cache',
+      'queue',
+      'search',
+      'email',
+      'payments',
+      'observability',
+      'analytics',
+      'security',
+      'ai',
+      'cms',
+      'ecommerce',
+    ];
+    for (const category of expected) {
+      expect(registry.query({ category }).length, `catégorie vide : ${category}`).toBeGreaterThan(
+        0,
+      );
+    }
+  });
+
+  it('offre plusieurs options là où le choix change quelque chose', () => {
+    const registry = requireRegistry();
     const plural: Category[] = [
       'database',
       'orm',
@@ -71,39 +129,40 @@ describe('contenu du catalogue', () => {
       'payments',
       'email',
       'hosting',
+      'frontend',
+      'backend',
     ];
     for (const category of plural) {
       expect(
         registry.query({ category }).length,
         `choix insuffisant en ${category}`,
-      ).toBeGreaterThanOrEqual(2);
-    }
-
-    const singular: Category[] = ['language', 'styling', 'linting', 'package-manager', 'monorepo'];
-    for (const category of singular) {
-      expect(registry.query({ category }).length, `choix superflu en ${category}`).toBe(1);
+      ).toBeGreaterThanOrEqual(3);
     }
   });
 
   it('aucune fiche n’est encore certifiée — les templates arrivent en Phase 6', () => {
+    const registry = requireRegistry();
     // Ce test tombera dès le premier template livré : c'est voulu. Il force à
     // relire la règle certifiée/déclarée au moment où elle commence à mordre.
     expect(registry.query({ generation: 'certified' })).toEqual([]);
   });
 
   it('chaque fiche certifiée porte un template', () => {
+    const registry = requireRegistry();
     for (const entry of registry.query({ generation: 'certified' })) {
       expect(entry.template, `template manquant : ${entry.id}`).toBeDefined();
     }
   });
 
   it('aucune fiche déclarée ne porte de template', () => {
+    const registry = requireRegistry();
     for (const entry of registry.query({ generation: 'declared' })) {
       expect(entry.template, `template interdit : ${entry.id}`).toBeUndefined();
     }
   });
 
   it('aucune fiche ne porte de valeur dans env — seulement des noms (§24)', () => {
+    const registry = requireRegistry();
     for (const entry of registry.entries()) {
       for (const name of entry.env ?? []) {
         expect(name, `valeur dans env : ${entry.id}`).not.toContain('=');
@@ -112,14 +171,20 @@ describe('contenu du catalogue', () => {
   });
 
   it('chaque fiche a une documentation atteignable en http(s)', () => {
+    const registry = requireRegistry();
     for (const entry of registry.entries()) {
       expect(entry.docs, `documentation manquante : ${entry.id}`).toMatch(/^https?:\/\//);
     }
   });
 
-  it('toutes les fiches du périmètre MVP visent au moins le web', () => {
+  it('aucune fiche ne vise exclusivement mobile ou desktop — hors périmètre MVP (§23)', () => {
+    const registry = requireRegistry();
+    // Le MVP est « Web uniquement » (§23). Une technologie d'API entre dans le
+    // périmètre — elle sert l'application web — mais une technologie purement
+    // mobile ou desktop n'a rien à y faire avant la V1.
     for (const entry of registry.entries()) {
-      expect(entry.targets, `hors périmètre web : ${entry.id}`).toContain('web');
+      const inScope = entry.targets.some((target) => target === 'web' || target === 'api');
+      expect(inScope, `hors périmètre MVP : ${entry.id}`).toBe(true);
     }
   });
 });

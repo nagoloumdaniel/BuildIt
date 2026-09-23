@@ -1,0 +1,11 @@
+{
+  "id": "snyk",
+  "name": "Snyk",
+  "category": "security",
+  "targets": ["web", "mobile", "desktop", "api", "library"],
+  "status": "stable",
+  "generation": "declared",
+  "license": "Proprietary",
+  "lastReviewedAt": "2026-09-23",
+  "docs": "https://docs.snyk.io"
+}

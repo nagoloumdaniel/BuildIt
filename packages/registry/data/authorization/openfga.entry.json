@@ -1,0 +1,11 @@
+{
+  "id": "openfga",
+  "name": "OpenFGA",
+  "category": "authorization",
+  "targets": ["web", "api"],
+  "status": "stable",
+  "generation": "declared",
+  "license": "Apache-2.0",
+  "lastReviewedAt": "2026-09-23",
+  "docs": "https://openfga.dev"
+}

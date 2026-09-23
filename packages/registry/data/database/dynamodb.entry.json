@@ -1,0 +1,11 @@
+{
+  "id": "dynamodb",
+  "name": "DynamoDB",
+  "category": "database",
+  "targets": ["web", "api"],
+  "status": "stable",
+  "generation": "declared",
+  "license": "Proprietary",
+  "lastReviewedAt": "2026-09-23",
+  "docs": "https://aws.amazon.com/dynamodb"
+}

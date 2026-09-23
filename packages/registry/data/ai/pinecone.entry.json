@@ -1,0 +1,11 @@
+{
+  "id": "pinecone",
+  "name": "Pinecone",
+  "category": "ai",
+  "targets": ["web", "api"],
+  "status": "stable",
+  "generation": "declared",
+  "license": "Proprietary",
+  "lastReviewedAt": "2026-09-23",
+  "docs": "https://docs.pinecone.io"
+}

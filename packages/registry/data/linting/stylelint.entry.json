@@ -1,0 +1,11 @@
+{
+  "id": "stylelint",
+  "name": "Stylelint",
+  "category": "linting",
+  "targets": ["web"],
+  "status": "stable",
+  "generation": "declared",
+  "license": "MIT",
+  "lastReviewedAt": "2026-09-23",
+  "docs": "https://stylelint.io"
+}

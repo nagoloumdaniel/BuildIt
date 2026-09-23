@@ -1,0 +1,11 @@
+{
+  "id": "oracle",
+  "name": "Oracle Database",
+  "category": "database",
+  "targets": ["web", "api"],
+  "status": "stable",
+  "generation": "declared",
+  "license": "Proprietary",
+  "lastReviewedAt": "2026-09-23",
+  "docs": "https://www.oracle.com/database"
+}
