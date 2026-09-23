@@ -12,7 +12,7 @@ export type {
   ManifestIssueCode,
   ManifestPathSegment,
 } from './errors.js';
-export { MANIFEST_ISSUE_CODES } from './errors.js';
+export { MANIFEST_ISSUE_CODES, suggest } from './errors.js';
 export type { Migration } from './migrate.js';
 export { applyMigrations, MIGRATIONS, migrateManifest } from './migrate.js';
 export { parseManifest } from './parse.js';
