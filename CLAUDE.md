@@ -68,6 +68,8 @@ Les packages naissent dans leur phase. Ne pas créer de répertoire vide « pour
 - TDD : le test échoue d'abord, on le vérifie, puis on implémente.
 - Un garde-fou n'est validé que par un **test négatif** — on prouve qu'il rejette, pas qu'il passe. Et la sonde du test négatif doit être réaliste : une sonde que l'outil ignore donne un faux « garde-fou cassé ».
 - Ne jamais chaîner `&& echo "OK"` après une commande dont la sortie passe par `tail` — le code de retour est celui de `tail`, et le « OK » ment.
+- **Regarder `docs/superpowers/specs/` avant d'écrire un spec.** Un spec de Phase 5 existait déjà ; en avoir écrit un second a produit deux conventions de nommage concurrentes qu'il a fallu réconcilier après coup.
+- Ne jamais mettre de backtick dans un `node -e "..."` lancé depuis bash : le shell l'interprète comme une substitution de commande et mange le contenu. Pour du contenu qui en contient, utiliser les outils d'écriture de fichier.
 
 ## Pièges rencontrés sur cette stack
 

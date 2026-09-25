@@ -15,3 +15,6 @@ Thumbs.db
 .idea/
 .vscode/*
 !.vscode/extensions.json
+
+# Outillage copié par le harness, pas du code projet
+.agents/
