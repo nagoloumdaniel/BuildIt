@@ -8,5 +8,16 @@
 
 export type { FilePlan, GenIssue, GenIssueCode, PlannedFile } from './plan.js';
 export { describePlan, GEN_ISSUE_CODES, planFiles } from './plan.js';
+export type {
+  TemplateContext,
+  TemplateIssue,
+  TemplateIssueCode,
+  TemplateVariable,
+} from './template.js';
+export {
+  renderTemplate,
+  TEMPLATE_ISSUE_CODES,
+  TEMPLATE_VARIABLES,
+} from './template.js';
 export type { FileSystem, GenerationReport, GenWriteCode, GenWriteIssue } from './write.js';
 export { GEN_WRITE_CODES, generate, nodeFileSystem } from './write.js';
