@@ -128,7 +128,15 @@ describe('generateProject — le projet sur le disque', () => {
 
     expect(result.ok).toBe(true);
     const files = (await readdir(target)).sort();
-    expect(files).toEqual(['.env.example', '.gitignore', 'README.md', 'package.json']);
+    // docker-compose.yml apparaît parce que PostgreSQL est dans la stack : le
+    // projet est démarrable sans rien installer d'autre que Docker.
+    expect(files).toEqual([
+      '.env.example',
+      '.gitignore',
+      'README.md',
+      'docker-compose.yml',
+      'package.json',
+    ]);
   });
 
   it('écrit un package.json valide portant le nom du projet', async () => {

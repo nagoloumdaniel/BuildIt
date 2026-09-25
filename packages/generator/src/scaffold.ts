@@ -8,6 +8,7 @@ import {
   type ParseResult,
 } from '@project-factory/validation';
 import { resolveDependencies } from './dependencies.js';
+import { buildInfrastructure } from './infrastructure.js';
 import { INTEGRATIONS } from './integrations.data.js';
 import type { PlannedFile } from './plan.js';
 
@@ -273,6 +274,11 @@ export function buildScaffold(
     { path: '.env.example', contents: envExample(names), source: 'scaffold:env-example' },
     { path: 'README.md', contents: readme(manifest, entries), source: 'scaffold:readme' },
   ];
+
+  // Docker et CI viennent apres le socle : ils dependent des scripts que les
+  // technologies ont apportes, donc ils ne peuvent etre construits qu'une fois
+  // le package.json decide.
+  files.push(...buildInfrastructure(entries, scripts));
 
   if (manifest.architecture === 'monorepo') {
     files.push({

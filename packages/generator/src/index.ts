@@ -8,7 +8,8 @@
 
 export type { DependencyIssue, DependencyIssueCode, ResolvedDependencies } from './dependencies.js';
 export { DEPENDENCY_ISSUE_CODES, resolveDependencies } from './dependencies.js';
-export type { Integration } from './integrations.data.js';
+export { buildInfrastructure } from './infrastructure.js';
+export type { DockerService, Integration } from './integrations.data.js';
 export { INTEGRATIONS } from './integrations.data.js';
 export type { GenerationOutcome, PipelineOptions, ProjectPlan } from './pipeline.js';
 export {
