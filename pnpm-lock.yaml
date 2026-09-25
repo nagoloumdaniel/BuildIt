@@ -81,13 +81,22 @@ importers:
 
   packages/generator:
     dependencies:
+      '@project-factory/registry':
+        specifier: workspace:*
+        version: link:../registry
       '@project-factory/validation':
         specifier: workspace:*
         version: link:../validation
+      semver:
+        specifier: 7.8.5
+        version: 7.8.5
     devDependencies:
       '@project-factory/typescript-config':
         specifier: workspace:*
         version: link:../../tooling/typescript-config
+      '@types/semver':
+        specifier: 7.8.0
+        version: 7.8.0
       '@vitest/coverage-v8':
         specifier: 5.0.1
         version: 5.0.1(vitest@5.0.1)

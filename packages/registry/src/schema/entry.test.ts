@@ -173,3 +173,31 @@ describe('champs libres', () => {
     expect(accepts({ docs: 'ftp://exemple.com' })).toBe(false);
   });
 });
+
+describe('paquets et plages de versions', () => {
+  it('accepte des paquets de production et de développement distincts', () => {
+    expect(
+      accepts({
+        packages: ['@prisma/client'],
+        devPackages: ['prisma'],
+        packageRanges: { prisma: '^6.0.0', '@prisma/client': '^6.0.0' },
+      }),
+    ).toBe(true);
+  });
+
+  it('refuse un paquet à la fois de production et de développement', () => {
+    expect(accepts({ packages: ['prisma'], devPackages: ['prisma'] })).toBe(false);
+  });
+
+  it('refuse une plage pour un paquet que la fiche n’installe pas', () => {
+    expect(accepts({ packages: ['prisma'], packageRanges: { autre: '^1.0.0' } })).toBe(false);
+  });
+
+  it('accepte une fiche sans aucun paquet', () => {
+    expect(accepts({})).toBe(true);
+  });
+
+  it('refuse une plage vide', () => {
+    expect(accepts({ packages: ['prisma'], packageRanges: { prisma: '' } })).toBe(false);
+  });
+});

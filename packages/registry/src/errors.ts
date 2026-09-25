@@ -24,6 +24,8 @@ export const REGISTRY_ISSUE_CODES = [
   'REGISTRY_DUPLICATE_VALUE',
   'REGISTRY_CERTIFIED_WITHOUT_TEMPLATE',
   'REGISTRY_DECLARED_WITH_TEMPLATE',
+  'REGISTRY_PACKAGE_ROLE_CONFLICT',
+  'REGISTRY_ORPHAN_PACKAGE_RANGE',
   // Codes d'intégrité — voir integrity.ts
   'REGISTRY_DUPLICATE_ID',
   'REGISTRY_UNKNOWN_REFERENCE',
@@ -64,6 +66,10 @@ const MESSAGES: Readonly<Record<RegistryIssueCode, string>> = {
     "Fiche certifiée sans template : elle promettrait une génération qui n'existe pas. Ajoutez un template, ou passez la fiche en « declared ».",
   REGISTRY_DECLARED_WITH_TEMPLATE:
     'Fiche déclarée avec un template : si le template existe et qu’un test de génération le couvre, passez la fiche en « certified ».',
+  REGISTRY_PACKAGE_ROLE_CONFLICT:
+    'Un paquet figure a la fois dans packages et devPackages. Le generateur ne saurait pas dans quelle section du package.json l ecrire.',
+  REGISTRY_ORPHAN_PACKAGE_RANGE:
+    'packageRanges donne une plage pour un paquet que la fiche n installe pas. Soit le paquet manque a packages ou devPackages, soit la plage est morte.',
   REGISTRY_DUPLICATE_ID: 'Deux fiches portent le même identifiant.',
   REGISTRY_UNKNOWN_REFERENCE: 'Référence vers une fiche inexistante.',
   REGISTRY_SELF_REFERENCE: 'Une fiche se cite elle-même.',

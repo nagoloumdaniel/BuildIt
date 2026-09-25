@@ -6,6 +6,8 @@
  * Le dry-run n'est pas un mode à part, c'est la première étape sans la seconde.
  */
 
+export type { DependencyIssue, DependencyIssueCode, ResolvedDependencies } from './dependencies.js';
+export { DEPENDENCY_ISSUE_CODES, resolveDependencies } from './dependencies.js';
 export type { FilePlan, GenIssue, GenIssueCode, PlannedFile } from './plan.js';
 export { describePlan, GEN_ISSUE_CODES, planFiles } from './plan.js';
 export type {

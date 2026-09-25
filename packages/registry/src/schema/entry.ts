@@ -110,7 +110,19 @@ export interface RegistryEntry {
   requires?: string[] | undefined;
   compatibleWith?: string[] | undefined;
   conflictsWith?: string[] | undefined;
+  /** Paquets npm installés en dépendances de production. */
   packages?: string[] | undefined;
+  /**
+   * Paquets npm installés en dépendances de développement.
+   *
+   * Séparé de `packages` parce que le rôle se joue au **paquet**, pas à la
+   * fiche : Prisma installe `prisma` (la CLI, en développement) et
+   * `@prisma/client` (à l'exécution). Une règle déduite de la catégorie ne
+   * pourrait pas exprimer ça.
+   */
+  devPackages?: string[] | undefined;
+  /** Plage de versions par paquet. Sans elle, la version n'est pas épinglée. */
+  packageRanges?: Readonly<Record<string, string>> | undefined;
   env?: string[] | undefined;
   recipes?: string[] | undefined;
   engines?: Readonly<Record<string, string>> | undefined;
@@ -177,6 +189,8 @@ export const entrySchema: z.ZodType<RegistryEntry, unknown> = z
     compatibleWith: uniqueSlugs().optional(),
     conflictsWith: uniqueSlugs().optional(),
     packages: z.array(z.string().min(1)).optional(),
+    devPackages: z.array(z.string().min(1)).optional(),
+    packageRanges: z.record(z.string().min(1), z.string().min(1)).optional(),
     env: z.array(envNameSchema).optional(),
     recipes: uniqueSlugs().optional(),
     // Contraintes de runtime (§12) : « next 15 exige node >=18.18 ». La cle est
@@ -196,4 +210,22 @@ export const entrySchema: z.ZodType<RegistryEntry, unknown> = z
   .refine((entry) => (entry.generation === 'declared' ? entry.template === undefined : true), {
     params: { pfCode: 'REGISTRY_DECLARED_WITH_TEMPLATE' },
     error: 'template interdit',
-  }) as unknown as z.ZodType<RegistryEntry, unknown>;
+  })
+  // Un paquet ne peut pas être à la fois de production et de développement :
+  // le générateur ne saurait pas dans quelle section du package.json l'écrire.
+  .refine(
+    (entry) => {
+      const dev = new Set(entry.devPackages ?? []);
+      return (entry.packages ?? []).every((name) => !dev.has(name));
+    },
+    { params: { pfCode: 'REGISTRY_PACKAGE_ROLE_CONFLICT' }, error: 'paquet en double rôle' },
+  )
+  // Une plage pour un paquet que la fiche n'installe pas est du bruit : soit
+  // le paquet a été renommé et la plage est morte, soit il manque à la liste.
+  .refine(
+    (entry) => {
+      const declared = new Set([...(entry.packages ?? []), ...(entry.devPackages ?? [])]);
+      return Object.keys(entry.packageRanges ?? {}).every((name) => declared.has(name));
+    },
+    { params: { pfCode: 'REGISTRY_ORPHAN_PACKAGE_RANGE' }, error: 'plage orpheline' },
+  ) as unknown as z.ZodType<RegistryEntry, unknown>;
