@@ -11,5 +11,8 @@
   "requires": ["typescript"],
   "compatibleWith": ["next"],
   "packages": ["@tanstack/react-query"],
+  "packageRanges": {
+    "@tanstack/react-query": "^5.0.0"
+  },
   "docs": "https://tanstack.com/query"
 }

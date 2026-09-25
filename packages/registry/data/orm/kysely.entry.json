@@ -10,6 +10,9 @@
   "requires": ["typescript"],
   "compatibleWith": ["postgresql", "mysql", "sqlite"],
   "packages": ["kysely"],
+  "packageRanges": {
+    "kysely": "^0.28.0"
+  },
   "env": ["DATABASE_URL"],
   "docs": "https://kysely.dev"
 }

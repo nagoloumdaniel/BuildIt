@@ -10,5 +10,9 @@
   "versionRange": ">=7.0.0",
   "compatibleWith": ["zod", "shadcn-ui"],
   "packages": ["react-hook-form", "@hookform/resolvers"],
+  "packageRanges": {
+    "react-hook-form": "^7.0.0",
+    "@hookform/resolvers": "^5.0.0"
+  },
   "docs": "https://react-hook-form.com"
 }

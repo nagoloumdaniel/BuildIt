@@ -8,8 +8,18 @@
 
 export type { DependencyIssue, DependencyIssueCode, ResolvedDependencies } from './dependencies.js';
 export { DEPENDENCY_ISSUE_CODES, resolveDependencies } from './dependencies.js';
+export type { Integration } from './integrations.data.js';
+export { INTEGRATIONS } from './integrations.data.js';
+export type { GenerationOutcome, PipelineOptions, ProjectPlan } from './pipeline.js';
+export {
+  generateProject,
+  planProject,
+  selectionFromManifest,
+} from './pipeline.js';
 export type { FilePlan, GenIssue, GenIssueCode, PlannedFile } from './plan.js';
 export { describePlan, GEN_ISSUE_CODES, planFiles } from './plan.js';
+export type { Scaffold, ScaffoldIssue, ScaffoldIssueCode } from './scaffold.js';
+export { buildScaffold, SCAFFOLD_ISSUE_CODES } from './scaffold.js';
 export type {
   TemplateContext,
   TemplateIssue,

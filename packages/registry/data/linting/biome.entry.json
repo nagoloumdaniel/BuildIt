@@ -8,6 +8,9 @@
   "license": "MIT",
   "lastReviewedAt": "2026-09-23",
   "versionRange": ">=2.0.0",
-  "packages": ["@biomejs/biome"],
+  "devPackages": ["@biomejs/biome"],
+  "packageRanges": {
+    "@biomejs/biome": ">=2.0.0"
+  },
   "docs": "https://biomejs.dev"
 }

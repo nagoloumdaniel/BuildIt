@@ -10,7 +10,12 @@
   "versionRange": ">=6.0.0 <8.0.0",
   "requires": ["typescript"],
   "compatibleWith": ["postgresql", "mysql", "sqlite", "next", "better-auth"],
-  "packages": ["prisma", "@prisma/client"],
+  "packages": ["@prisma/client"],
+  "devPackages": ["prisma"],
+  "packageRanges": {
+    "prisma": ">=6.0.0 <8.0.0",
+    "@prisma/client": ">=6.0.0 <8.0.0"
+  },
   "env": ["DATABASE_URL"],
   "recipes": ["migrate", "seed"],
   "docs": "https://www.prisma.io"

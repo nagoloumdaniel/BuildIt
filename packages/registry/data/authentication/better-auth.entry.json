@@ -11,6 +11,9 @@
   "requires": ["typescript"],
   "compatibleWith": ["next", "prisma", "drizzle", "postgresql"],
   "packages": ["better-auth"],
+  "packageRanges": {
+    "better-auth": ">=1.0.0 <2.0.0"
+  },
   "env": ["BETTER_AUTH_SECRET", "BETTER_AUTH_URL"],
   "recipes": ["email-password", "oauth", "passkeys"],
   "docs": "https://www.better-auth.com"

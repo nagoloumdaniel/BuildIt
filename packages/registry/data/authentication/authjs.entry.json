@@ -11,6 +11,9 @@
   "requires": ["typescript"],
   "compatibleWith": ["next", "prisma", "drizzle"],
   "packages": ["next-auth"],
+  "packageRanges": {
+    "next-auth": ">=5.0.0"
+  },
   "env": ["AUTH_SECRET", "AUTH_URL"],
   "recipes": ["oauth", "email-magic-link"],
   "docs": "https://authjs.dev"

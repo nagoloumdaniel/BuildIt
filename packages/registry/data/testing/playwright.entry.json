@@ -8,6 +8,9 @@
   "license": "Apache-2.0",
   "lastReviewedAt": "2026-09-23",
   "versionRange": ">=1.50.0",
-  "packages": ["@playwright/test"],
+  "devPackages": ["@playwright/test"],
+  "packageRanges": {
+    "@playwright/test": ">=1.50.0"
+  },
   "docs": "https://playwright.dev"
 }

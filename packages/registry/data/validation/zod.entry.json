@@ -11,5 +11,8 @@
   "requires": ["typescript"],
   "compatibleWith": ["next", "react-hook-form"],
   "packages": ["zod"],
+  "packageRanges": {
+    "zod": ">=4.0.0 <5.0.0"
+  },
   "docs": "https://zod.dev"
 }

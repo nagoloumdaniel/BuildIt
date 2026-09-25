@@ -11,5 +11,10 @@
   "requires": ["typescript"],
   "compatibleWith": ["prisma", "better-auth", "tailwind", "zod"],
   "packages": ["next", "react", "react-dom"],
+  "packageRanges": {
+    "next": ">=15.0.0 <17.0.0",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
+  },
   "docs": "https://nextjs.org"
 }

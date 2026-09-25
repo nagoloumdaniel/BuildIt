@@ -9,6 +9,9 @@
   "lastReviewedAt": "2026-09-23",
   "compatibleWith": ["next"],
   "packages": ["@lemonsqueezy/lemonsqueezy.js"],
+  "packageRanges": {
+    "@lemonsqueezy/lemonsqueezy.js": "^4.0.0"
+  },
   "env": ["LEMONSQUEEZY_API_KEY", "LEMONSQUEEZY_WEBHOOK_SECRET"],
   "recipes": ["checkout", "webhooks"],
   "docs": "https://docs.lemonsqueezy.com"

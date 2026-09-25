@@ -28,8 +28,10 @@
     "test": "vitest run --coverage"
   },
   "dependencies": {
-    "@project-factory/validation": "workspace:*",
+    "@project-factory/compatibility": "workspace:*",
+    "@project-factory/manifest": "workspace:*",
     "@project-factory/registry": "workspace:*",
+    "@project-factory/validation": "workspace:*",
     "semver": "7.8.5"
   },
   "devDependencies": {

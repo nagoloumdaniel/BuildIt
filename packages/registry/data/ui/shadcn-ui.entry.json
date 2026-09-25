@@ -10,5 +10,10 @@
   "requires": ["tailwind"],
   "compatibleWith": ["next", "react-hook-form"],
   "packages": ["class-variance-authority", "clsx", "tailwind-merge"],
+  "packageRanges": {
+    "class-variance-authority": "^0.7.0",
+    "clsx": "^2.1.0",
+    "tailwind-merge": "^3.0.0"
+  },
   "docs": "https://ui.shadcn.com"
 }

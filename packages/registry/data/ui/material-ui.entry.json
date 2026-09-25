@@ -10,5 +10,10 @@
   "versionRange": ">=6.0.0",
   "compatibleWith": ["next"],
   "packages": ["@mui/material", "@emotion/react", "@emotion/styled"],
+  "packageRanges": {
+    "@mui/material": ">=6.0.0",
+    "@emotion/react": "^11.0.0",
+    "@emotion/styled": "^11.0.0"
+  },
   "docs": "https://mui.com"
 }

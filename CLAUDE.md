@@ -5,7 +5,7 @@ Référence complète : `docs/cahier-des-charges.md`. Plan d'exécution : `docs/
 
 ## État
 
-Phases 1 (socle monorepo) et 2 (Project Manifest) livrées. Phases 3 (registry, 282 fiches) et 4 (compatibility engine) livrées. Prochaine : Phase 5, pipeline de génération. Pas de remote Git — le compte GitHub est indisponible, la CI est **locale**.
+Phases 1 (socle monorepo) et 2 (Project Manifest) livrées. Phases 3 (registry, 282 fiches) et 4 (compatibility engine) livrées. Phase 5 en cours : plan, dry-run, ecriture, rollback, templates, dependances et socle faits — restent recettes, Docker/CI, post-install et revue securite. Pas de remote Git — le compte GitHub est indisponible, la CI est **locale**.
 
 Reliquat de Phase 0, non fait et assumé : entretiens utilisateurs, profils concurrents, doc de monétisation V2. Le premier utilisateur (§0) a tranché le catalogue à leur place ; à corriger avec de vrais testeurs en Phase 13.
 
@@ -31,6 +31,7 @@ packages/registry/           catalogue (§7, §11) — livré, 282 fiches
   data/<catégorie>/<id>.entry.json   source de vérité, éditable à la main
   src/generated/entries.ts           index engendré, versionné, vérifié
 packages/compatibility/      règles du §12 — livré
+packages/generator/          pipeline du §22 — en cours
 assets/brand/                logos, provisoires (voir son README)
 docs/superpowers/{specs,plans}/
 ```

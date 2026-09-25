@@ -9,6 +9,9 @@
   "lastReviewedAt": "2026-09-23",
   "versionRange": ">=4.0.0 <5.0.0",
   "compatibleWith": ["next", "shadcn-ui"],
-  "packages": ["tailwindcss"],
+  "devPackages": ["tailwindcss"],
+  "packageRanges": {
+    "tailwindcss": ">=4.0.0 <5.0.0"
+  },
   "docs": "https://tailwindcss.com"
 }

@@ -81,6 +81,12 @@ importers:
 
   packages/generator:
     dependencies:
+      '@project-factory/compatibility':
+        specifier: workspace:*
+        version: link:../compatibility
+      '@project-factory/manifest':
+        specifier: workspace:*
+        version: link:../manifest
       '@project-factory/registry':
         specifier: workspace:*
         version: link:../registry

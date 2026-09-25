@@ -10,5 +10,9 @@
   "versionRange": ">=7.0.0",
   "compatibleWith": ["next"],
   "packages": ["@mantine/core", "@mantine/hooks"],
+  "packageRanges": {
+    "@mantine/core": ">=7.0.0",
+    "@mantine/hooks": ">=7.0.0"
+  },
   "docs": "https://mantine.dev"
 }
