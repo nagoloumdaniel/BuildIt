@@ -22,23 +22,30 @@ import type { PlannedFile } from './plan.js';
  * projet vient de `integrations.data.ts` ; le socle ne fait que l'assembler.
  */
 
-export const SCAFFOLD_ISSUE_CODES = [
-  'GEN_SCRIPT_CONFLICT',
-  'GEN_SECRET_IN_ENV',
-  'GEN_DEPENDENCY_CONFLICT',
-  'GEN_PACKAGE_ROLE_CONFLICT',
-] as const;
+/** Problèmes que le socle détecte lui-même. */
+const OWN_CODES = ['GEN_SCRIPT_CONFLICT', 'GEN_SECRET_IN_ENV'] as const;
 
-export type ScaffoldIssueCode = (typeof SCAFFOLD_ISSUE_CODES)[number];
+/**
+ * Problèmes que le socle **transmet** sans les reformuler.
+ *
+ * Ils appartiennent au résolveur de dépendances, qui les rédige mieux que le
+ * socle ne le ferait : c'est lui qui connaît les plages en cause. Ils n'ont
+ * donc pas d'entrée dans le catalogue ci-dessous — une entrée existerait sans
+ * jamais servir, et produirait un message dégradé le jour où quelqu'un
+ * l'appellerait par erreur.
+ */
+const FORWARDED_CODES = ['GEN_DEPENDENCY_CONFLICT', 'GEN_PACKAGE_ROLE_CONFLICT'] as const;
+
+export const SCAFFOLD_ISSUE_CODES: readonly string[] = [...OWN_CODES, ...FORWARDED_CODES];
+
+export type ScaffoldIssueCode = (typeof OWN_CODES)[number] | (typeof FORWARDED_CODES)[number];
 export type ScaffoldIssue = Issue<ScaffoldIssueCode>;
 
-const MESSAGES: Readonly<Record<ScaffoldIssueCode, string>> = {
+const MESSAGES: Readonly<Record<(typeof OWN_CODES)[number], string>> = {
   GEN_SCRIPT_CONFLICT:
     'Le script « {script} » est réclamé par {first} et par {second}. Un package.json ne peut en garder qu’un.',
   GEN_SECRET_IN_ENV:
     '{first} déclare « {value} » comme variable d’environnement. Ce n’est pas un nom de variable — une valeur ne doit jamais entrer dans un fichier généré.',
-  GEN_DEPENDENCY_CONFLICT: '{value}',
-  GEN_PACKAGE_ROLE_CONFLICT: '{value}',
 };
 
 const messageFor = createMessageFormatter(MESSAGES);
@@ -233,27 +240,28 @@ export function buildScaffold(
   const { names, issues: envIssues } = collectEnv(entries);
   const dependencies = resolveDependencies(entries);
 
-  const issues: ScaffoldIssue[] = [...scriptIssues, ...envIssues];
+  const ownIssues: ScaffoldIssue[] = [...scriptIssues, ...envIssues];
 
   if (!dependencies.ok) {
-    for (const issue of dependencies.issues) {
-      // Les codes de dépendances sont conservés tels quels : l'utilisateur voit
-      // le même problème qu'il ait lancé le résolveur seul ou le socle complet.
-      issues.push({
+    // Les problèmes de dépendances sont transmis tels quels : l'utilisateur lit
+    // le même message qu'il ait lancé le résolveur seul ou le socle complet.
+    // Ils partent avec les problèmes propres au socle — une seule liste, tous
+    // les défauts d'un coup.
+    return fail([
+      ...ownIssues,
+      ...dependencies.issues.map((issue) => ({
         code: issue.code as ScaffoldIssueCode,
         path: issue.path,
         message: issue.message,
-      });
-    }
+      })),
+    ]);
   }
 
-  if (issues.length > 0) {
-    return fail(issues);
+  if (ownIssues.length > 0) {
+    return fail(ownIssues);
   }
 
-  const resolved = dependencies.ok
-    ? dependencies.value
-    : { dependencies: {}, devDependencies: {}, warnings: [] };
+  const resolved = dependencies.value;
 
   const files: PlannedFile[] = [
     {

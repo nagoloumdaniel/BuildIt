@@ -1,4 +1,4 @@
-import { mkdtemp, readdir, readFile, rm } from 'node:fs/promises';
+import { mkdtemp, readdir, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import type { Manifest } from '@project-factory/manifest';
@@ -287,5 +287,38 @@ describe('les avertissements remontent jusqu’au bout', () => {
       expect(result.value.warnings.length).toBeGreaterThan(0);
       expect(result.value.report.written.length).toBeGreaterThan(0);
     }
+  });
+});
+
+/**
+ * Les chemins d'erreur du pipeline. Ce sont ceux qui s'exécutent quand quelque
+ * chose va mal — donc exactement ceux dont le comportement compte le plus.
+ */
+describe('chemins d’erreur', () => {
+  it('remonte un conflit de script avec les mots du socle', () => {
+    // vitest et jest réclament tous deux le script « test ».
+    const result = planProject({ ...SAAS, quality: ['vitest', 'jest'] }, '/cible');
+    expect(result.ok).toBe(false);
+    if (!result.ok) {
+      expect(result.issues.map((i) => i.code)).toContain('GEN_SCRIPT_CONFLICT');
+    }
+  });
+
+  it('remonte un refus d’écriture avec les mots du générateur', async () => {
+    const target = await tempDir();
+    await writeFile(join(target, 'deja-la.txt'), 'important');
+
+    const result = await generateProject(SAAS, target);
+    expect(result.ok).toBe(false);
+    if (!result.ok) {
+      expect(result.issues.map((i) => i.code)).toContain('GEN_TARGET_NOT_EMPTY');
+    }
+  });
+
+  it('un refus d’écriture laisse le contenu préexistant intact', async () => {
+    const target = await tempDir();
+    await writeFile(join(target, 'deja-la.txt'), 'important');
+    await generateProject(SAAS, target);
+    expect(await readFile(join(target, 'deja-la.txt'), 'utf8')).toBe('important');
   });
 });

@@ -296,3 +296,36 @@ describe('remontée des avertissements', () => {
     expect(result.warnings).toEqual([]);
   });
 });
+
+describe('problèmes transmis par le résolveur de dépendances', () => {
+  it('remonte un conflit de plages sans le reformuler', () => {
+    const codes = codesOf(MANIFEST, [
+      entry({ id: 'a', packages: ['react'], packageRanges: { react: '^19.0.0' } }),
+      entry({ id: 'b', category: 'ui', packages: ['react'], packageRanges: { react: '^18.0.0' } }),
+    ]);
+    expect(codes).toContain('GEN_DEPENDENCY_CONFLICT');
+  });
+
+  it('conserve le message d’origine — c’est le résolveur qui connaît les plages', () => {
+    const result = buildScaffold(MANIFEST, [
+      entry({ id: 'a', packages: ['react'], packageRanges: { react: '^19.0.0' } }),
+      entry({ id: 'b', category: 'ui', packages: ['react'], packageRanges: { react: '^18.0.0' } }),
+    ]);
+    expect(result.ok).toBe(false);
+    if (!result.ok) {
+      expect(result.issues[0]?.message).toContain('^19.0.0');
+      expect(result.issues[0]?.message).toContain('^18.0.0');
+    }
+  });
+
+  it('rapporte les problèmes du socle et ceux des dépendances ensemble', () => {
+    const codes = codesOf(MANIFEST, [
+      entry({ id: 'vitest', category: 'testing' }),
+      entry({ id: 'jest', category: 'testing' }),
+      entry({ id: 'a', packages: ['react'], packageRanges: { react: '^19.0.0' } }),
+      entry({ id: 'b', category: 'ui', packages: ['react'], packageRanges: { react: '^18.0.0' } }),
+    ]);
+    expect(codes).toContain('GEN_SCRIPT_CONFLICT');
+    expect(codes).toContain('GEN_DEPENDENCY_CONFLICT');
+  });
+});

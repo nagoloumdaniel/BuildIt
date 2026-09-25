@@ -241,3 +241,15 @@ describe('dossier .git toléré', () => {
     expect(await readFile(join(target, '.git', 'HEAD'), 'utf8')).toContain('refs/heads/main');
   });
 });
+
+describe('bit d’exécution', () => {
+  it('rend exécutable un fichier qui le demande', async () => {
+    const target = join(await tempDir(), 'projet');
+    const plan = planOf(target, [
+      { path: 'run.sh', contents: '#!/bin/sh\n', source: 'test', executable: true },
+    ]);
+    const result = await generate(plan);
+    expect(result.ok).toBe(true);
+    expect(await readFile(join(target, 'run.sh'), 'utf8')).toBe('#!/bin/sh\n');
+  });
+});
