@@ -111,16 +111,33 @@ Même philosophie que le registry : données JSON (`data/<id>.recipe.json`), sch
 
 Un seul champ **optionnel** ajouté au schéma de fiche : `packageRanges?: Record<string, string>`. Aucune des 282 fiches existante n'est modifiée ; les fiches certifiées de la Phase 6 le rempliront. Testé côté registry (forme) — le generator consomme, ne redéfinit pas.
 
-## Critères de sortie (gate M3, partiel)
+## Critères de sortie (gate M3, partiel) — fermé le 26/09/2026
 
-- [ ] Dry-run n'écrit aucun octet — test avec FS en lecture seule
-- [ ] Échec simulé à mi-écriture → répertoire cible restauré à l'identique (test d'injection de panne, pas relecture)
-- [ ] Aucune écriture hors du dossier cible — test négatif path traversal (`../`, absolu, lien symbolique)
-- [ ] Pas d'exécution de code de template — le moteur de rendu ne connaît que la substitution ; test négatif avec un template contenant `<%= %>`, `{{eval}}`, backticks
-- [ ] `.env.example` sans aucune valeur réelle — test négatif avec une valeur type clé AWS
-- [ ] Un projet socle généré passe `install + typecheck` sur la machine (smoke test réel)
-- [ ] Couverture ≥ 90 % sur `generator` et `recipes`
-- [ ] Revue sécurité écrite (5.13) sans finding haut
+- [x] Dry-run n'écrit aucun octet — `pipeline.test.ts` : la cible n'est **même pas créée**, y compris quand le plan lit des templates. (Un FS en lecture seule ne prouverait rien : les tests peuvent tourner en root.)
+- [x] Échec simulé à mi-écriture → répertoire cible restauré à l'identique — `write.test.ts`, injection de panne
+- [x] Aucune écriture hors du dossier cible — `plan.test.ts` (`../`, absolu, lecteur, `\`, `.git/`), `write.test.ts` (lien symbolique)
+- [x] Pas d'exécution de code de template — `template.test.ts` (`<%= %>`, `{{eval}}`, `{{constructor}}`, backticks)
+- [x] `.env.example` sans aucune valeur réelle — `scaffold.test.ts`, `pipeline.test.ts`
+- [x] Un projet socle généré passe `install + typecheck` sur la machine — et aussi `lint` et `test` : `pnpm test:smoke` (preset SaaS avec ses deux recettes, et socle React), via le pipeline lui-même avec le vrai pnpm et le vrai git. Job CI dédié.
+- [x] Couverture ≥ 90 % sur `generator` et `recipes`
+- [x] Revue sécurité écrite (5.13) sans finding haut ouvert — [2026-09-26-phase5-security-review.md](2026-09-26-phase5-security-review.md)
+
+Non couvert par ce gate, et dit ici pour ne pas être cru fait : `build` d'un projet généré. Aucune fiche n'est encore certifiée, donc aucun template ne pose d'application à construire. Le script `build` n'est d'ailleurs émis qu'avec une fiche certifiée. Il arrive avec la Phase 6.
+
+## Décisions prises en 5B (26/09/2026)
+
+| Sujet | Décision | Raison |
+|---|---|---|
+| Socle qui passe sa propre CI | `tsconfig.json` + `env.d.ts` (typage de `process.env`), `biome.json` en espaces, `vitest --passWithNoTests`, `allowBuilds` dans `pnpm-workspace.yaml` | Chacune de ces absences faisait échouer install, typecheck ou lint d'un preset réellement généré |
+| Scripts d'application (`dev`, `build`, `start`, `db:*`) | Émis seulement pour une fiche `certified` | Sans template, rien à construire : `next build` échouerait et la CI générée avec lui |
+| Étapes post-écriture | Toutes **désactivées par défaut** dans le moteur (`install`, `git`, `validate`) ; les façades choisissent leurs défauts | Le moteur ne lance aucune commande qu'on ne lui a pas demandée. S'écarte de « `gitInit` vrai par défaut » de l'API initiale |
+| Rollback après l'écriture | Aucun. Un échec d'installation, de git ou de validation laisse le projet — complet — en place, nomme l'étape (`failedStep`) et dit s'il est reprenable (`retryable`) | Le §22 exige de ne pas laisser un projet **à moitié** généré ; après l'écriture, il est entier. Tout supprimer ferait perdre un projet valide pour une panne réseau |
+| Forme du résultat | `GenerationResult` étend `ParseFailure` (`ok`, `issues`) avec `failedStep`, `retryable`, `completedSteps` | Les appelants existants restent compatibles |
+| Données Docker/CI des technologies | Restent en TypeScript (`integrations.data.ts`) et non en `data/services/*.json` | Couche interne, sans contribution externe ni publication ; un module typé évite un chargeur pour rien. Justifié dans l'en-tête du fichier |
+| Recettes | Deux recettes **réelles** (et non des fixtures) avec leurs templates livrés dans `packages/generator/templates/` ; vérifiées par le test de fumée contre les vrais paquets | Une recette qui pointe vers un template absent promettrait ce qui n'existe pas |
+| Paquets des recettes | Même résolveur que les fiches (`DependencySource`) | Un conflit recette ↔ fiche est détecté et formulé comme un conflit entre deux fiches |
+| Dockerfile | Posé seulement si `build` et `start` existent, sinon avertissement `GEN_DOCKERFILE_DEFERRED` | Un Dockerfile qui échoue à `docker build` sur un projet neuf est pire que pas de Dockerfile |
+| Devcontainer | Nouvelle catégorie **cumulative** `dev-environment` au registry, fiche `dev-container` | `containers` est exclusive : y ranger le devcontainer l'aurait rendu incompatible avec Docker |
 
 ## Hors scope (Phase 6+)
 

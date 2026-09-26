@@ -37,7 +37,7 @@
 | 2 | Project Manifest + Validation | S3 | **M1 — Moteur parle** | Manifest validé, typé, versionné |
 | 3 | Registry | S3–S4 | M1 | 60+ fiches, CI de validation du registry |
 | 4 | Compatibility Engine | S4–S5 | **M2 — Moteur décide** | Résolution + conflits + semver testés |
-| 5 | Pipeline Generator (5A livrée, 5B en cours) | S5–S8 | **M3 — Moteur génère** | `pf generate` produit un socle qui installe, typecheck et lint |
+| 5 | Pipeline Generator (5A + 5B livrées) | S5–S8 | **M3 — Moteur génère** | `pf generate` produit un socle qui installe, typecheck et lint |
 | 6 | Templates & Recipes MVP | S8–S9 | M3 | Preset SaaS certifié, puis les 3 autres, générés en CI |
 | 7 | CLI `pf` | S9–S10 | **M4 — CLI utilisable** | CLI publiée en `npm` tag `next` |
 | 7B | Projets existants & GitHub | S10–S11 | M4 | `pf clone`, `pf open`, `pf repo create`, `pf collab add` sur de vrais dépôts |
@@ -271,7 +271,7 @@ Manifest → fichiers sur disque, avec **dry-run obligatoire** et **rollback** (
 ### Risque à surveiller
 Le rollback est la fonctionnalité la plus facile à « croire faite ». Elle exige un test d'injection de panne, pas une relecture.
 
-## État au 26/09/2026 — 5A livrée, 5B ouverte
+## État au 26/09/2026 — 5A et 5B livrées, gate M3 partiel fermé
 
 **5A (livrée)** : 5.1, 5.2, 5.5, 5.6, 5.7, 5.8, et 5.11 en partie (docker-compose, CI, `.env.example`). 185 tests, couverture ≥ 90 %.
 
@@ -291,6 +291,8 @@ Le rollback est la fonctionnalité la plus facile à « croire faite ». Elle ex
 | 5B.8 | Gate M3 partiel coché avec preuves, `PROJECT_CONTEXT.md` à jour | `verification-before-completion` |
 
 **Règle** : la Phase 6 ne s'ouvre pas tant que 5B.1 n'est pas vert — sinon chaque preset hérite du défaut et on le corrige quatre fois.
+
+**5B livrée le 26/09/2026.** Les 8 étapes sont faites ; le gate est coché avec ses preuves dans la [spec de la Phase 5](superpowers/specs/2026-09-24-phase5-pipeline-generator-design.md), et la [revue sécurité](superpowers/specs/2026-09-26-phase5-security-review.md) a trouvé et corrigé 5 défauts, dont un haut (écriture dans `.git/hooks`). Reste pour la Phase 6 : le `build` d'un projet généré, qui exige une première fiche certifiée. **La Phase 6 peut s'ouvrir.**
 
 ---
 

@@ -5,7 +5,7 @@ Référence complète : `docs/cahier-des-charges.md`. Plan d'exécution : `docs/
 
 ## État
 
-Phases 1 (socle monorepo), 2 (Project Manifest), 3 (registry, 282 fiches) et 4 (compatibility engine) livrées. Phase 5 scindée : **5A livrée** (plan, dry-run, écriture, rollback, rendu de templates, dépendances, socle, docker-compose, CI) ; **5B en cours** pour fermer le gate M3 (socle vert vérifié par un test de fumée réel, post-install, reprise, templates, recettes, Dockerfile/devcontainer, revue sécurité). Voir la roadmap, section « 5B ».
+Phases 1 (socle monorepo), 2 (Project Manifest), 3 (registry, 282 fiches) et 4 (compatibility engine) livrées. Phase 5 livrée (5A + 5B), gate M3 partiel fermé : le socle généré s'installe et passe lint, typecheck et test (`pnpm test:smoke`), post-install et reprise d'étape, Template Resolver, `packages/recipes` avec deux recettes réelles, Dockerfile/devcontainer, revue sécurité écrite. **Prochaine étape : Phase 6** — certifier le preset SaaS de bout en bout (première fiche `certified`, premier `build`).
 
 Remote : `github.com/nagoloumdaniel/BuildIt`. La CI GitHub Actions appelle `pnpm ci:local`, plus un job de fumée.
 
@@ -21,6 +21,7 @@ pnpm lint:fix      # Biome, corrections appliquées
 pnpm typecheck     # tsc strict, via Turborepo
 pnpm test          # Vitest, via Turborepo
 pnpm build         # tsdown, via Turborepo
+pnpm test:smoke    # génère, installe et vérifie de vrais projets — réseau, ~1 min
 ```
 
 `.github/workflows/ci.yml` appelle `pnpm ci:local` et rien d'autre. Si le pipeline change, il change à un seul endroit : le script `ci:local` du `package.json` racine.
@@ -35,7 +36,11 @@ packages/registry/           catalogue (§7, §11) — livré, 282 fiches
   data/<catégorie>/<id>.entry.json   source de vérité, éditable à la main
   src/generated/entries.ts           index engendré, versionné, vérifié
 packages/compatibility/      règles du §12 — livré
-packages/generator/          pipeline du §22 — en cours
+packages/recipes/            recettes (§22, Recipe Resolver) — livré
+  data/<id>.recipe.json              source de vérité ; index engendré comme le registry
+packages/generator/          pipeline du §22 — livré
+  templates/                         templates livrés (recettes aujourd'hui, presets en Phase 6)
+  src/*.smoke.ts                     test de fumée réseau : pnpm test:smoke, hors pnpm test
 assets/brand/                logos, provisoires (voir son README)
 docs/superpowers/{specs,plans}/
 ```
@@ -88,4 +93,9 @@ Les packages naissent dans leur phase. Ne pas créer de répertoire vide « pour
 - Zod 4 expose `params` uniquement sur les issues `code: 'custom'` — restreindre l'union avant d'y accéder.
 - Une fiche du registry se nomme `<id>.entry.json`, jamais `<id>.json` : plusieurs identifiants de technologies sont des noms de fichiers de configuration réservés (`biome.json`, `vercel.json`, `turbo.json`), et l'outil correspondant les lit comme sa propre configuration.
 - Biome découvre les configurations imbriquées avant d'appliquer `files.includes` : exclure un dossier n'empêche pas un `biome.json` qui s'y trouve d'être lu.
+- pnpm 11 **fait échouer** `pnpm install` (`ERR_PNPM_IGNORED_BUILDS`) dès qu'un paquet a un script de build non approuvé — Prisma, notamment. Le projet généré déclare `allowBuilds` dans `pnpm-workspace.yaml`, même hors monorepo.
+- `tsc` sans aucun fichier d'entrée échoue (TS18003). Un socle TypeScript neuf a donc besoin d'au moins un `.ts` — d'où `env.d.ts`.
+- Sans `biome.json`, Biome formate en **tabulations** : tout JSON généré en espaces échoue au `lint`. Et un tableau court écrit par `JSON.stringify` est remis sur une ligne par Biome — écrire ces fichiers à la main.
+- Dans un Dockerfile, Corepack retélécharge pnpm au démarrage sous un autre utilisateur : fixer `COREPACK_HOME` et recopier le cache dans l'étape d'exécution.
+- La couverture ne dit rien de la sortie : 99 % de couverture n'a pas vu qu'un projet généré échouait à `typecheck`. Toute sortie générée est vérifiée par les outils qu'elle déclare (`socle.test.ts` hors réseau, `pnpm test:smoke` en vrai).
 - Pour suggérer une correction de faute de frappe, utiliser **Damerau**-Levenshtein : Levenshtein facture 2 une transposition (« wbe » → « web »), ce qui la met hors d'atteinte de tout seuil raisonnable.

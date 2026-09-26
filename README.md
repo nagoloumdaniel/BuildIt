@@ -2,7 +2,7 @@
 
 > **Development Environment Factory** — décrire un projet, choisir ses plateformes et ses technologies, obtenir un projet prêt à développer : cohérent, documenté et diagnostiqué.
 
-**Statut : pré-alpha.** Le moteur (manifest, registry, compatibility, generator) existe et est testé ; la Phase 5B (socle généré vérifié de bout en bout) est en cours. Rien n'est publié, rien n'est utilisable par un tiers. Voir la [roadmap](docs/roadmap.md).
+**Statut : pré-alpha.** Le moteur (manifest, registry, compatibility, generator) existe et est testé ; un projet généré s'installe et passe sa propre CI. Prochaine étape : le premier preset certifié (Phase 6). Rien n'est publié, rien n'est utilisable par un tiers. Voir la [roadmap](docs/roadmap.md).
 
 ---
 
