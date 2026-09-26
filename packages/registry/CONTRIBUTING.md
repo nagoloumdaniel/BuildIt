@@ -156,12 +156,14 @@ database · orm · authentication · authorization
 state · data-fetching · forms · validation · api
 build · package-manager · monorepo
 testing · linting · formatting · git-hooks
-containers · ci-cd · hosting
+containers · dev-environment · ci-cd · hosting
 storage · cache · queue · search
 email · payments
 observability · analytics · security
 ai · cms · ecommerce
 ```
+
+`dev-environment` (ajoutée le 26/09/2026, Phase 5B) est **cumulative** : un devcontainer s'ajoute à Docker, il ne le remplace pas. La ranger dans `containers`, exclusive, aurait rendu les deux incompatibles.
 
 ## Licences
 

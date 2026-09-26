@@ -217,3 +217,98 @@ describe('défauts corrigés après lecture de la sortie', () => {
     expect(ci).not.toContain('playwright');
   });
 });
+
+describe('Dockerfile — 5B.6', () => {
+  const DOCKER = entry({ id: 'docker', category: 'containers' });
+  const APP = { build: 'next build', start: 'next start' };
+
+  it('est généré quand Docker est choisi et que l’application sait se construire', () => {
+    const files = buildInfrastructure([DOCKER], APP, { projectName: 'quai3' });
+    const dockerfile = fileNamed(files, 'Dockerfile');
+    expect(dockerfile).toContain('RUN corepack install && pnpm install --frozen-lockfile');
+    expect(dockerfile).toContain('RUN pnpm run build');
+    expect(dockerfile).toContain('CMD ["pnpm", "start"]');
+  });
+
+  it('embarque pnpm : le conteneur démarre sans réseau', () => {
+    const dockerfile = fileNamed(
+      buildInfrastructure([DOCKER], APP, { projectName: 'quai3' }),
+      'Dockerfile',
+    );
+    expect(dockerfile).toContain('ENV COREPACK_HOME=/corepack');
+    expect(dockerfile).toContain('COPY --from=deps /corepack /corepack');
+  });
+
+  it('ne tourne pas en root', () => {
+    const dockerfile = fileNamed(
+      buildInfrastructure([DOCKER], APP, { projectName: 'quai3' }),
+      'Dockerfile',
+    );
+    expect(dockerfile).toContain('USER node');
+  });
+
+  it('n’est pas généré sans script build ou start : il échouerait à la construction', () => {
+    const paths = buildInfrastructure([DOCKER], { build: 'x' }, { projectName: 'q' }).map(
+      (file) => file.path,
+    );
+    expect(paths).not.toContain('Dockerfile');
+  });
+
+  it('n’est pas généré sans Docker', () => {
+    const paths = buildInfrastructure([], APP, { projectName: 'q' }).map((file) => file.path);
+    expect(paths).not.toContain('Dockerfile');
+  });
+
+  it('copie pnpm-workspace.yaml seulement s’il existe', () => {
+    const without = fileNamed(
+      buildInfrastructure([DOCKER], APP, { projectName: 'q' }),
+      'Dockerfile',
+    );
+    const withIt = fileNamed(
+      buildInfrastructure([DOCKER], APP, { projectName: 'q', workspaceFile: true }),
+      'Dockerfile',
+    );
+    expect(without).not.toContain('pnpm-workspace.yaml');
+    expect(withIt).toContain('COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./');
+  });
+
+  it('est accompagné d’un .dockerignore qui exclut les secrets locaux', () => {
+    const ignore = fileNamed(
+      buildInfrastructure([DOCKER], APP, { projectName: 'q' }),
+      '.dockerignore',
+    );
+    expect(ignore).toContain('.env');
+    expect(ignore).toContain('!.env.example');
+    expect(ignore).toContain('node_modules');
+  });
+});
+
+describe('Dev Container — 5B.6', () => {
+  const DEV_CONTAINER = entry({ id: 'dev-container', category: 'dev-environment' });
+
+  it('est généré quand il est choisi, au nom du projet', () => {
+    const config = JSON.parse(
+      fileNamed(
+        buildInfrastructure([DEV_CONTAINER], {}, { projectName: 'quai3' }),
+        '.devcontainer/devcontainer.json',
+      ),
+    ) as { name: string; image: string; postCreateCommand: string };
+    expect(config.name).toBe('quai3');
+    expect(config.image).toContain('typescript-node');
+    expect(config.postCreateCommand).toContain('pnpm install');
+  });
+
+  it('n’est pas généré s’il n’est pas choisi', () => {
+    expect(buildInfrastructure([], {}, { projectName: 'q' })).toEqual([]);
+  });
+
+  it('transfère les ports des services locaux', () => {
+    const config = JSON.parse(
+      fileNamed(
+        buildInfrastructure([DEV_CONTAINER, POSTGRES], {}, { projectName: 'q' }),
+        '.devcontainer/devcontainer.json',
+      ),
+    ) as { forwardPorts: number[] };
+    expect(config.forwardPorts).toContain(5432);
+  });
+});

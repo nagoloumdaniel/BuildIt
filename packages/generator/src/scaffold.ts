@@ -1,4 +1,5 @@
-import type { Manifest } from '@project-factory/manifest';
+import { type Manifest, PROJECT_NAME_PATTERN } from '@project-factory/manifest';
+import type { Recipe } from '@project-factory/recipes';
 import type { RegistryEntry } from '@project-factory/registry';
 import {
   createMessageFormatter,
@@ -8,9 +9,10 @@ import {
   type ParseResult,
 } from '@project-factory/validation';
 import { resolveDependencies } from './dependencies.js';
-import { buildInfrastructure } from './infrastructure.js';
-import { INTEGRATIONS } from './integrations.data.js';
+import { buildInfrastructure, canRunInContainer } from './infrastructure.js';
+import { INTEGRATIONS, type Integration } from './integrations.data.js';
 import type { PlannedFile } from './plan.js';
+import { recipeAsDependencySource } from './recipes.js';
 
 /**
  * Le socle d'un projet généré (§13).
@@ -24,7 +26,12 @@ import type { PlannedFile } from './plan.js';
  */
 
 /** Problèmes que le socle détecte lui-même. */
-const OWN_CODES = ['GEN_SCRIPT_CONFLICT', 'GEN_SECRET_IN_ENV'] as const;
+const OWN_CODES = [
+  'GEN_SCRIPT_CONFLICT',
+  'GEN_SECRET_IN_ENV',
+  'GEN_DOCKERFILE_DEFERRED',
+  'GEN_INVALID_PROJECT_NAME',
+] as const;
 
 /**
  * Problèmes que le socle **transmet** sans les reformuler.
@@ -45,6 +52,10 @@ export type ScaffoldIssue = Issue<ScaffoldIssueCode>;
 const MESSAGES: Readonly<Record<(typeof OWN_CODES)[number], string>> = {
   GEN_SCRIPT_CONFLICT:
     'Le script « {script} » est réclamé par {first} et par {second}. Un package.json ne peut en garder qu’un.',
+  GEN_DOCKERFILE_DEFERRED:
+    'Docker est choisi, mais le projet n’a pas encore d’application à construire et démarrer (scripts build et start). Aucun Dockerfile n’est posé : il échouerait dès « docker build ». Il le sera quand un template certifié fournira l’application.',
+  GEN_INVALID_PROJECT_NAME:
+    'Le nom de projet {value} n’est pas un nom de paquet valide (minuscules, chiffres, « . », « _ », « - »). Le manifest n’a pas été validé avant la génération.',
   GEN_SECRET_IN_ENV:
     '{first} déclare « {value} » comme variable d’environnement. Ce n’est pas un nom de variable — une valeur ne doit jamais entrer dans un fichier généré.',
 };
@@ -52,15 +63,43 @@ const MESSAGES: Readonly<Record<(typeof OWN_CODES)[number], string>> = {
 const messageFor = createMessageFormatter(MESSAGES);
 
 /** Plancher Node et gestionnaire de paquets du projet généré. */
-const NODE_RANGE = '>=20.11.0';
-const PACKAGE_MANAGER = 'pnpm@11.13.1';
+export const NODE_RANGE: string = '>=20.11.0';
+export const PACKAGE_MANAGER: string = 'pnpm@11.13.1';
 
 /** Nom de variable d'environnement acceptable : majuscules, chiffres, tirets bas. */
 const ENV_NAME = /^[A-Z][A-Z0-9_]*$/;
 
-const SCRIPTS_BY_ID = new Map(
-  INTEGRATIONS.map((integration) => [integration.id, integration.scripts ?? {}]),
+const INTEGRATION_BY_ID = new Map<string, Integration>(
+  INTEGRATIONS.map((integration) => [integration.id, integration]),
 );
+
+/**
+ * Scripts qu'une technologie apporte à ce projet-ci.
+ *
+ * Les scripts d'application ne comptent que si la fiche est certifiée : c'est
+ * le seul cas où un template pose le code sur lequel ils opèrent.
+ */
+function scriptsOf(entry: RegistryEntry): Readonly<Record<string, string>> {
+  const integration = INTEGRATION_BY_ID.get(entry.id);
+  return {
+    ...integration?.scripts,
+    ...(entry.generation === 'certified' ? integration?.appScripts : {}),
+  };
+}
+
+/** Fichiers de configuration exigés par les outils de la stack. */
+function integrationFiles(
+  entries: readonly RegistryEntry[],
+  env: readonly string[],
+): PlannedFile[] {
+  return entries.flatMap((entry) =>
+    (INTEGRATION_BY_ID.get(entry.id)?.files ?? []).map((file) => ({
+      path: file.path,
+      contents: typeof file.contents === 'string' ? file.contents : file.contents({ env }),
+      source: `integration:${entry.id}`,
+    })),
+  );
+}
 
 function collectScripts(entries: readonly RegistryEntry[]): {
   scripts: Record<string, string>;
@@ -71,7 +110,7 @@ function collectScripts(entries: readonly RegistryEntry[]): {
   const issues: ScaffoldIssue[] = [];
 
   for (const entry of entries) {
-    for (const [name, command] of Object.entries(SCRIPTS_BY_ID.get(entry.id) ?? {})) {
+    for (const [name, command] of Object.entries(scriptsOf(entry))) {
       const owner = owners.get(name);
       if (owner !== undefined) {
         // Deux outils qui veulent le même script : le générateur ne peut pas
@@ -95,7 +134,14 @@ function collectScripts(entries: readonly RegistryEntry[]): {
   return { scripts: sortedRecord(scripts), issues };
 }
 
-function collectEnv(entries: readonly RegistryEntry[]): {
+/** Ce qui déclare des variables d'environnement : une fiche ou une recette. */
+interface EnvSource {
+  readonly id: string;
+  readonly name: string;
+  readonly env?: readonly string[] | undefined;
+}
+
+function collectEnv(entries: readonly EnvSource[]): {
   names: string[];
   issues: ScaffoldIssue[];
 } {
@@ -163,12 +209,18 @@ function envExample(names: readonly string[]): string {
   return `${lines.join('\n')}\n`;
 }
 
-function readme(manifest: Manifest, entries: readonly RegistryEntry[]): string {
+function readme(
+  manifest: Manifest,
+  entries: readonly RegistryEntry[],
+  recipes: readonly Recipe[],
+): string {
   const stack = entries.map((entry) => `- ${entry.name}`).join('\n');
+  const applied = recipes.map((recipe) => `- ${recipe.name} — ${recipe.description}`).join('\n');
   const lines = [
     `# ${manifest.name}`,
     '',
     ...(entries.length > 0 ? ['## Stack', '', stack, ''] : []),
+    ...(recipes.length > 0 ? ['## Recettes', '', applied, ''] : []),
     '## Démarrer',
     '',
     '```bash',
@@ -205,10 +257,39 @@ Thumbs.db
 !.vscode/extensions.json
 `;
 
-const PNPM_WORKSPACE = `packages:
-  - "apps/*"
-  - "packages/*"
-`;
+const WORKSPACE_PACKAGES = ['packages:', '  - "apps/*"', '  - "packages/*"'];
+
+/**
+ * `pnpm-workspace.yaml` : il a deux raisons d'exister, indépendantes.
+ *
+ * - un monorepo y déclare ses paquets ;
+ * - pnpm 11 y lit `allowBuilds`, la liste des paquets autorisés à exécuter leur
+ *   script d'installation. Sans elle, `pnpm install` **échoue** dès qu'un tel
+ *   paquet est présent (Prisma, notamment) — même dans une application seule.
+ */
+function pnpmWorkspace(monorepo: boolean, allowBuilds: readonly string[]): string | undefined {
+  if (!monorepo && allowBuilds.length === 0) {
+    return undefined;
+  }
+  const lines = monorepo ? [...WORKSPACE_PACKAGES] : [];
+  if (allowBuilds.length > 0) {
+    if (lines.length > 0) {
+      lines.push('');
+    }
+    lines.push(
+      '# Paquets autorisés à exécuter leur script d’installation (pnpm >= 10).',
+      '# Chacun l’est parce qu’une technologie choisie en a besoin.',
+      'allowBuilds:',
+      ...allowBuilds.map((name) => `  ${/^[a-z0-9-]+$/.test(name) ? name : `"${name}"`}: true`),
+    );
+  }
+  return `${lines.join('\n')}\n`;
+}
+
+function collectAllowBuilds(entries: readonly RegistryEntry[]): string[] {
+  const names = entries.flatMap((entry) => INTEGRATION_BY_ID.get(entry.id)?.allowBuilds ?? []);
+  return [...new Set(names)].sort();
+}
 
 const TURBO_JSON = `{
   "$schema": "https://turbo.build/schema.json",
@@ -236,10 +317,25 @@ export interface Scaffold {
 export function buildScaffold(
   manifest: Manifest,
   entries: readonly RegistryEntry[],
+  recipes: readonly Recipe[] = [],
 ): ParseResult<Scaffold, ScaffoldIssueCode> {
+  // `name` est le seul champ libre du manifest, et il est substitué dans du
+  // code (package.json, templates). Le type `Manifest` ne garantit pas qu'il a
+  // été validé : un appelant peut en fabriquer un à la main. Revérifié ici, au
+  // premier endroit où il entre dans un fichier.
+  if (!PROJECT_NAME_PATTERN.test(manifest.name)) {
+    return fail([
+      {
+        code: 'GEN_INVALID_PROJECT_NAME',
+        path: ['name'],
+        message: messageFor('GEN_INVALID_PROJECT_NAME', { value: JSON.stringify(manifest.name) }),
+      },
+    ]);
+  }
+
   const { scripts, issues: scriptIssues } = collectScripts(entries);
-  const { names, issues: envIssues } = collectEnv(entries);
-  const dependencies = resolveDependencies(entries);
+  const { names, issues: envIssues } = collectEnv([...entries, ...recipes]);
+  const dependencies = resolveDependencies([...entries, ...recipes.map(recipeAsDependencySource)]);
 
   const ownIssues: ScaffoldIssue[] = [...scriptIssues, ...envIssues];
 
@@ -272,24 +368,48 @@ export function buildScaffold(
     },
     { path: '.gitignore', contents: GITIGNORE, source: 'scaffold:gitignore' },
     { path: '.env.example', contents: envExample(names), source: 'scaffold:env-example' },
-    { path: 'README.md', contents: readme(manifest, entries), source: 'scaffold:readme' },
+    { path: 'README.md', contents: readme(manifest, entries, recipes), source: 'scaffold:readme' },
   ];
+
+  files.push(...integrationFiles(entries, names));
+
+  const workspace = pnpmWorkspace(
+    manifest.architecture === 'monorepo',
+    collectAllowBuilds(entries),
+  );
 
   // Docker et CI viennent apres le socle : ils dependent des scripts que les
   // technologies ont apportes, donc ils ne peuvent etre construits qu'une fois
   // le package.json decide.
-  files.push(...buildInfrastructure(entries, scripts));
+  files.push(
+    ...buildInfrastructure(entries, scripts, {
+      projectName: manifest.name,
+      workspaceFile: workspace !== undefined,
+    }),
+  );
 
-  if (manifest.architecture === 'monorepo') {
+  const warnings: Issue<string>[] = [...resolved.warnings];
+  if (entries.some((entry) => entry.id === 'docker') && !canRunInContainer(scripts)) {
+    warnings.push({
+      code: 'GEN_DOCKERFILE_DEFERRED',
+      path: ['docker'],
+      message: messageFor('GEN_DOCKERFILE_DEFERRED', {}),
+    });
+  }
+
+  if (workspace !== undefined) {
     files.push({
       path: 'pnpm-workspace.yaml',
-      contents: PNPM_WORKSPACE,
+      contents: workspace,
       source: 'scaffold:pnpm-workspace',
     });
+  }
+
+  if (manifest.architecture === 'monorepo') {
     if (entries.some((entry) => entry.id === 'turborepo')) {
       files.push({ path: 'turbo.json', contents: TURBO_JSON, source: 'scaffold:turbo' });
     }
   }
 
-  return ok({ files, warnings: resolved.warnings });
+  return ok({ files, warnings });
 }

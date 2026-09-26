@@ -1,5 +1,4 @@
-# Ce workflow est versionné mais dormant : le dépôt n'a pas encore de remote.
-# Il appelle `pnpm ci:local` et rien d'autre — le pipeline est défini une seule
+# Le job `ci` appelle `pnpm ci:local` et rien d'autre — le pipeline est défini une seule
 # fois, dans le package.json racine, et le hook pre-push de lefthook exécute
 # exactement la même chose. Aucune divergence possible entre local et distant.
 
@@ -35,3 +34,22 @@ jobs:
       - run: pnpm install --frozen-lockfile
 
       - run: pnpm run ci:local
+
+  # Gate M3 : génère de vrais projets, les installe depuis npm et lance les
+  # scripts que leur propre CI lancera. Réseau requis, d'où un job à part —
+  # le pre-push ne l'exécute pas.
+  smoke:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: '22'
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      - run: pnpm run test:smoke

@@ -20,16 +20,19 @@
     }
   },
   "files": [
-    "dist"
+    "dist",
+    "templates"
   ],
   "scripts": {
     "build": "tsdown",
     "typecheck": "tsc --noEmit",
-    "test": "vitest run --coverage"
+    "test": "vitest run --coverage",
+    "test:smoke": "vitest run --config vitest.smoke.config.ts"
   },
   "dependencies": {
     "@project-factory/compatibility": "workspace:*",
     "@project-factory/manifest": "workspace:*",
+    "@project-factory/recipes": "workspace:*",
     "@project-factory/registry": "workspace:*",
     "@project-factory/validation": "workspace:*",
     "semver": "7.8.5"

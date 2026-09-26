@@ -1,0 +1,11 @@
+{
+  "id": "dev-container",
+  "name": "Dev Container",
+  "category": "dev-environment",
+  "targets": ["web", "api"],
+  "status": "stable",
+  "generation": "declared",
+  "license": "MIT",
+  "lastReviewedAt": "2026-09-26",
+  "docs": "https://containers.dev"
+}

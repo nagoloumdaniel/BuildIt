@@ -21,6 +21,7 @@ import {
 export const GEN_ISSUE_CODES = [
   'GEN_EMPTY_PATH',
   'GEN_PATH_TRAVERSAL',
+  'GEN_PATH_RESERVED',
   'GEN_BACKSLASH_SEPARATOR',
   'GEN_NOT_A_FILE',
   'GEN_FILE_CONFLICT',
@@ -36,6 +37,8 @@ const MESSAGES: Readonly<Record<GenIssueCode, string>> = {
   // symbolique — parce que du point de vue de l'utilisateur c'est le même
   // problème : le fichier voulait sortir du dossier cible. Le message dit
   // laquelle des causes s'applique.
+  GEN_PATH_RESERVED:
+    'Le chemin {value} écrit dans un dossier .git. Un hook ou une configuration Git y exécuterait du code au prochain commit : aucun fichier généré n’y entre.',
   GEN_PATH_TRAVERSAL:
     'Le chemin {value} sort du dossier cible ({cause}). La génération n’écrit jamais en dehors du dossier demandé.',
   GEN_BACKSLASH_SEPARATOR:
@@ -95,6 +98,26 @@ function normalizeWithin(path: string): string | undefined {
   return resolved.length === 0 ? undefined : resolved.join('/');
 }
 
+/**
+ * Un segment `.git`, quelle que soit sa casse — macOS et Windows ne la
+ * distinguent pas — ni ses points ou espaces finaux, que Windows ignore.
+ */
+function entersGitDir(path: string): boolean {
+  return path.split('/').some((segment) => segment.replace(/[. ]+$/, '').toLowerCase() === '.git');
+}
+
+/**
+ * Clé d'identité d'un fichier sur le disque : chemin résolu, sans casse.
+ *
+ * Comparer les chemins tels qu'écrits laisserait passer `lib/./a.ts` contre
+ * `lib/a.ts`, ou `README.md` contre `readme.md` sur un disque insensible à la
+ * casse : deux écritures du même fichier, la seconde écrasant la première sans
+ * conflit signalé.
+ */
+function identityOf(path: string): string {
+  return (normalizeWithin(path) ?? path).toLowerCase();
+}
+
 function validateOne(file: PlannedFile): GenIssue[] {
   const issues: GenIssue[] = [];
   const { path } = file;
@@ -131,6 +154,14 @@ function validateOne(file: PlannedFile): GenIssue[] {
     });
   }
 
+  if (entersGitDir(path)) {
+    issues.push({
+      code: 'GEN_PATH_RESERVED',
+      path: [path],
+      message: messageFor('GEN_PATH_RESERVED', { value: path }),
+    });
+  }
+
   if (file.source.length === 0) {
     issues.push({
       code: 'GEN_MISSING_SOURCE',
@@ -161,7 +192,7 @@ export function planFiles(
 
   const byPath = new Map<string, PlannedFile>();
   for (const file of files) {
-    const existing = byPath.get(file.path);
+    const existing = byPath.get(identityOf(file.path));
     if (existing !== undefined) {
       issues.push({
         code: 'GEN_FILE_CONFLICT',
@@ -174,7 +205,7 @@ export function planFiles(
       });
       continue;
     }
-    byPath.set(file.path, file);
+    byPath.set(identityOf(file.path), file);
   }
 
   if (issues.length > 0) {

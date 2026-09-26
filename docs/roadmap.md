@@ -1,8 +1,9 @@
 # Project Factory — Roadmap 0 → Beta publique (v1)
 
 > **Source :** `Project_Factory_Cahier_des_charges_v2.md` — chaque phase référence les sections (§) qu'elle implémente.
-> **Cible de cette roadmap :** livrer le **MVP gratuit (§23)** en beta publique, moteur `forge` + configurateur web + partage lecture seule. V1/V2/V3 sont cadrés en horizon (Phase 15) mais hors périmètre d'exécution.
+> **Cible de cette roadmap :** livrer le **MVP gratuit (§23)** en beta publique, moteur Forge + CLI `pf` + configurateur web + partage lecture seule + intégration GitHub (§18bis, §20bis). V1/V2/V3 sont cadrés en horizon (Phase 15) mais hors périmètre d'exécution.
 > **Hypothèse de charge :** 1 dev (Daniel), ~4 j/semaine. Les semaines sont indicatives, les **gates** sont fermes.
+> **Révision du 26/09/2026 :** Phase 5 scindée (5A livrée, 5B pour fermer le gate M3) ; Phase 6 recentrée sur un preset certifié d'abord ; nouvelle **Phase 7B — Projets existants & GitHub** (menu d'accueil, clonage, projet local, création de dépôt, partage et collaborateurs). Le binaire CLI s'appelle `pf` (Forge reste le nom du moteur). Les phases 8 et suivantes glissent de 2 semaines.
 
 ---
 
@@ -36,17 +37,18 @@
 | 2 | Project Manifest + Validation | S3 | **M1 — Moteur parle** | Manifest validé, typé, versionné |
 | 3 | Registry | S3–S4 | M1 | 60+ fiches, CI de validation du registry |
 | 4 | Compatibility Engine | S4–S5 | **M2 — Moteur décide** | Résolution + conflits + semver testés |
-| 5 | Pipeline Generator | S5–S7 | **M3 — Moteur génère** | `forge generate` produit un projet qui build |
-| 6 | Templates & Recipes MVP | S7–S8 | M3 | 4 presets certifiés générés en CI |
-| 7 | CLI `forge` | S8–S9 | **M4 — CLI utilisable** | CLI publiée en `npm` tag `next` |
-| 8 | Configurateur Web | S9–S12 | **M5 — UI utilisable** | 14 écrans MVP, guidé + expert |
-| 9 | Partage lecture seule | S12 | M5 | Lien anonyme → Blueprint read-only |
-| 10 | Durcissement qualité & sécurité | S13 | **M6 — Prêt à montrer** | 0 finding bloquant, score Doctor interne ≥ 90 |
-| 11 | Docs & site | S13–S14 | M6 | docs.projectfactory + landing |
-| 12 | Packaging & déploiement | S14 | **M7 — Déployé** | CLI en `npm@latest`, web en prod |
-| 13 | Beta privée | S15 | M7 | 20 testeurs, 5 projets réels générés |
-| 14 | Beta publique / GTM | S16 | **M8 — Beta publique** | Launch day exécuté |
-| 15 | Horizon V1 → V3 | S17+ | — | Backlog priorisé |
+| 5 | Pipeline Generator (5A + 5B livrées) | S5–S8 | **M3 — Moteur génère** | `pf generate` produit un socle qui installe, typecheck et lint |
+| 6 | Templates & Recipes MVP | S8–S9 | M3 | Preset SaaS certifié, puis les 3 autres, générés en CI |
+| 7 | CLI `pf` | S9–S10 | **M4 — CLI utilisable** | CLI publiée en `npm` tag `next` |
+| 7B | Projets existants & GitHub | S10–S11 | M4 | `pf clone`, `pf open`, `pf repo create`, `pf collab add` sur de vrais dépôts |
+| 8 | Configurateur Web | S11–S14 | **M5 — UI utilisable** | 18 écrans MVP, guidé + expert, menu d'accueil |
+| 9 | Partage lecture seule | S14 | M5 | Lien anonyme → Blueprint read-only |
+| 10 | Durcissement qualité & sécurité | S15 | **M6 — Prêt à montrer** | 0 finding bloquant, score Doctor interne ≥ 90 |
+| 11 | Docs & site | S15–S16 | M6 | docs.projectfactory + landing |
+| 12 | Packaging & déploiement | S16 | **M7 — Déployé** | CLI en `npm@latest`, web en prod |
+| 13 | Beta privée | S17 | M7 | 20 testeurs, 5 projets réels générés |
+| 14 | Beta publique / GTM | S18 | **M8 — Beta publique** | Launch day exécuté |
+| 15 | Horizon V1 → V3 | S19+ | — | Backlog priorisé |
 
 ---
 
@@ -269,6 +271,29 @@ Manifest → fichiers sur disque, avec **dry-run obligatoire** et **rollback** (
 ### Risque à surveiller
 Le rollback est la fonctionnalité la plus facile à « croire faite ». Elle exige un test d'injection de panne, pas une relecture.
 
+## État au 26/09/2026 — 5A et 5B livrées, gate M3 partiel fermé
+
+**5A (livrée)** : 5.1, 5.2, 5.5, 5.6, 5.7, 5.8, et 5.11 en partie (docker-compose, CI, `.env.example`). 185 tests, couverture ≥ 90 %.
+
+**Constat qui ouvre 5B** : un preset SaaS généré puis installé pour de vrai passe `pnpm install` mais **échoue** à `typecheck` (pas de `tsconfig.json`) et à `lint` (sortie non conforme au formateur choisi). Le workflow CI généré serait rouge au premier push. 99 % de couverture n'a pas vu le défaut : les tests prouvaient les étages, pas la sortie.
+
+## 5B — Fermer le gate M3
+
+| # | Étape | Skills obligatoires |
+|---|---|---|
+| 5B.1 | **Socle vert** : `tsconfig.json`, configuration de l'outil de qualité choisi, sortie conforme à son formateur, scripts `build`/`dev`/`start` émis seulement quand une application existe. **Test de fumée réel** : générer → installer → typecheck → lint, en script dédié et en job CI | `test-driven-development`, `run` |
+| 5B.2 | Post Install + Validation (5.10) via `CommandRunner` injectable : `pnpm install`, `git init` + premier commit, typecheck/lint du projet généré | `test-driven-development` |
+| 5B.3 | Reprise (5.9) : échec transitoire/permanent, `retryable`, `failedStep`, reprise `fromStep` | `test-driven-development` |
+| 5B.4 | Template Resolver (5.4) : chargement depuis `templatesRoot`, rendu `{{placeholder}}`, branchement dans le plan | `test-driven-development` |
+| 5B.5 | `packages/recipes` (5.3) : schéma, chargeur, 2 recettes fixtures, résolution explicite | `test-driven-development`, `composition-patterns` |
+| 5B.6 | Infra (fin de 5.11) : Dockerfile et devcontainer conditionnels ; décision écrite sur `integrations.data.ts` vs `data/services/*.json` | `anthropic-skills:backend-patterns` |
+| 5B.7 | Revue sécurité écrite (5.13) | `security-review`, `code-review` |
+| 5B.8 | Gate M3 partiel coché avec preuves, `PROJECT_CONTEXT.md` à jour | `verification-before-completion` |
+
+**Règle** : la Phase 6 ne s'ouvre pas tant que 5B.1 n'est pas vert — sinon chaque preset hérite du défaut et on le corrige quatre fois.
+
+**5B livrée le 26/09/2026.** Les 8 étapes sont faites ; le gate est coché avec ses preuves dans la [spec de la Phase 5](superpowers/specs/2026-09-24-phase5-pipeline-generator-design.md), et la [revue sécurité](superpowers/specs/2026-09-26-phase5-security-review.md) a trouvé et corrigé 5 défauts, dont un haut (écriture dans `.git/hooks`). Reste pour la Phase 6 : le `build` d'un projet généré, qui exige une première fiche certifiée. **La Phase 6 peut s'ouvrir.**
+
 ---
 
 # PHASE 6 — Templates & Recipes MVP
@@ -287,11 +312,13 @@ Le rollback est la fonctionnalité la plus facile à « croire faite ». Elle ex
 | 6.4 | Choix de la lib UI embarquée dans les presets (shadcn/ui par défaut, §8) | `pick-ui-library` |
 | 6.5 | Toasts/feedback dans les templates web | `ask-sonner` |
 | 6.6 | Direction visuelle du code généré — un projet Project Factory ne doit pas ressembler à un template IA générique | `frontend-design`, `taste-skill` |
-| 6.7 | Les 4 presets en parallèle (worktrees séparés) | `dispatching-parallel-agents`, `using-git-worktrees` |
+| 6.7a | **Preset SaaS certifié de bout en bout d'abord** — c'est lui qui fixe les templates partagés | `test-driven-development` |
+| 6.7b | Les 3 autres presets, en réutilisant les templates du SaaS (worktrees séparés) | `dispatching-parallel-agents`, `using-git-worktrees` |
 | 6.8 | **Tests de génération en CI** pour chaque preset : générer → installer → builder → typecheck (§24) | `test-driven-development`, `update-config` |
 | 6.9 | README + `.env.example` + docs générés avec le projet | `anthropic-skills:docs-writer` |
 | 6.10 | Accessibilité du code généré (base saine dès le scaffold) | `web-design-guidelines`, `design:accessibility-review` |
 | 6.11 | Revue + merge | `caveman-review`, `finishing-a-development-branch` |
+| 6.12 | **Rattrapage Phase 0** : 2–3 entretiens de développeurs sur le contenu des 4 presets, avant de figer 6.7b | `customer-research`, `design:research-synthesis` |
 
 ### Livrables
 - `packages/templates` — 4 presets certifiés
@@ -306,7 +333,7 @@ Le rollback est la fonctionnalité la plus facile à « croire faite ». Elle ex
 
 ---
 
-# PHASE 7 — CLI `forge`
+# PHASE 7 — CLI `pf`
 **Semaines 8–9 · Milestone M4 · Couvre §9, §21**
 
 ### Objectif
@@ -318,8 +345,8 @@ Le CLI est une **façade au même niveau que l'UI** (§9, §21, §24), pas un bo
 |---|---|---|
 | 7.1 | Cadrer l'UX terminal : prompts guidés, flags, mode non-interactif pour la CI | `brainstorming`, `design:ux-copy` |
 | 7.2 | TDD des commandes du §21 : `create`, `add`, `graph`, `doctor`, `analyze`, `template`, `generate`, `share` | `test-driven-development` |
-| 7.3 | `forge create --web --mobile` et le mode guidé/expert (§5) en terminal | `test-driven-development` |
-| 7.4 | `forge graph` — rendu texte du Dependency Graph | `test-driven-development`, `dataviz` |
+| 7.3 | `pf create --web --mobile` et le mode guidé/expert (§5) en terminal | `test-driven-development` |
+| 7.4 | `pf graph` — rendu texte du Dependency Graph | `test-driven-development`, `dataviz` |
 | 7.5 | Gestion de la clé API LLM locale (§0, §17) — stockage local, jamais commitée, jamais loggée | `security-review` |
 | 7.6 | Sorties d'erreur actionnables (chaque erreur dit quoi faire) | `design:ux-copy`, `copy-editing` |
 | 7.7 | `--dry-run` par défaut sur les commandes destructives | `verify-and-stop` |
@@ -333,10 +360,46 @@ Le CLI est une **façade au même niveau que l'UI** (§9, §21, §24), pas un bo
 - Clé API gérée localement
 
 ### Gate M4 — `verification-before-completion`
-- [ ] `npx forge@next create` fonctionne depuis un dossier vide sur machine propre
-- [ ] Les 12 commandes du §21 existent et ont un `--help` utile
+- [ ] `npx <paquet CLI>@next create` (binaire `pf`) fonctionne depuis un dossier vide sur machine propre
+- [ ] Les commandes du §21 (hors celles de la Phase 7B) existent et ont un `--help` utile
 - [ ] `security-review` : la clé API n'apparaît ni en logs, ni en fichier versionné, ni en variable exportée
 - [ ] Un projet créé au CLI et un projet créé plus tard à l'UI sont **byte-identical** à partir du même manifest
+
+---
+
+# PHASE 7B — Projets existants & GitHub
+**Semaines 10–11 · Milestone M4 · Couvre §0 (Dépôts & GitHub), §18bis, §20bis, §21, §24**
+
+### Objectif
+Project Factory ne sert pas qu'à créer. Menu d'accueil à trois chemins (créer / cloner / ouvrir un projet local), installation des dépendances, connexion GitHub, création du dépôt d'un projet généré, partage et collaborateurs. CLI d'abord — l'UI reprend les mêmes paquets en Phase 8.
+
+### Étapes et skills
+
+| # | Étape | Skills obligatoires |
+|---|---|---|
+| 7B.1 | Cadrer : device flow, permissions GitHub minimales, stockage du jeton, parcours du menu | `brainstorming`, `design:ux-copy` |
+| 7B.2 | `packages/workspace` — détection écosystème + gestionnaire de paquets (verrou, `packageManager`), plan d'installation affiché avant exécution | `test-driven-development` |
+| 7B.3 | `packages/git` — validation du lien (option injection, protocoles), clone/init/commit/push via le `CommandRunner` de 5B.2, nettoyage du dossier en cas d'échec | `test-driven-development`, `security-review` |
+| 7B.4 | `packages/github` — client API injectable (fetch), device flow, liste des dépôts, création de dépôt (privé par défaut), collaborateurs (inviter/lister/retirer) | `test-driven-development` |
+| 7B.5 | Stockage du jeton dans le trousseau système ; jamais en clair, jamais loggé | `security-review` |
+| 7B.6 | Commandes `pf` (menu sans argument), `pf clone`, `pf open`, `pf install`, `pf login`/`logout`, `pf repo create`/`share`, `pf collab add`/`list`/`remove` | `test-driven-development`, `design:ux-copy` |
+| 7B.7 | Règle « partage de projet ⇔ dépôt GitHub » : refus explicite avec la marche à suivre quand le projet n'a pas de dépôt | `test-driven-development` |
+| 7B.8 | Code cloné non fiable : avertissement sur les scripts d'installation, option `--ignore-scripts` | `security-review` |
+| 7B.9 | Vérification réelle : cloner un dépôt public, un dépôt privé, ouvrir un projet local, créer un dépôt, inviter un collaborateur de test | `run`, `verify-and-stop` |
+| 7B.10 | Revue + merge | `requesting-code-review`, `code-review`, `finishing-a-development-branch` |
+
+### Livrables
+- `packages/workspace`, `packages/git`, `packages/github`
+- Commandes CLI de §21 marquées §18bis/§20bis
+- Référence de commandes mise à jour
+
+### Gate — `verification-before-completion`
+- [ ] Un lien commençant par `-`, un protocole `ext::`/`file://` sont **rejetés** avant tout appel à Git (test négatif)
+- [ ] Un clone qui échoue ne laisse aucun dossier derrière lui
+- [ ] Le jeton GitHub n'apparaît dans aucun log, fichier du projet ni variable exportée (test)
+- [ ] Un dépôt créé est privé sauf `--public` explicite
+- [ ] `pf repo share` sur un projet sans dépôt refuse avec la marche à suivre
+- [ ] Aucune commande d'installation n'est lancée sans confirmation (ou `--yes` explicite en mode non interactif)
 
 ---
 
@@ -344,7 +407,7 @@ Le CLI est une **façade au même niveau que l'UI** (§9, §21, §24), pas un bo
 **Semaines 9–12 · Milestone M5 · Couvre §3, §5, §6**
 
 ### Objectif
-14 écrans MVP, mode guidé/expert (§5), progressive disclosure réelle. C'est la phase la plus longue — elle se découpe en 6 sous-phases.
+18 écrans MVP (les 14 du parcours + menu d'accueil, GitHub Connection, Clone Project, Open Local Project, Repository & Sharing — §6.21–24), mode guidé/expert (§5), progressive disclosure réelle. C'est la phase la plus longue — elle se découpe en 7 sous-phases.
 
 ## 8A — Direction artistique (S9)
 
@@ -356,7 +419,7 @@ Le CLI est une **façade au même niveau que l'UI** (§9, §21, §24), pas un bo
 | 8A.4 | Cadrer les décisions UI au fil du build | `bencium-controlled-ux-designer` |
 | 8A.5 | Design system + tokens (clair/sombre imposés par §6) | `design:design-system`, `theme-factory` |
 | 8A.6 | Cohérence de marque | `brand-guidelines` |
-| 8A.7 | Critique de la direction avant de coder 14 écrans | `design:design-critique` |
+| 8A.7 | Critique de la direction avant de coder 18 écrans | `design:design-critique` |
 
 **Gate 8A :** direction validée sur 3 écrans maquettés (Stack Builder, Blueprint, File Preview) — les 3 plus durs.
 
@@ -369,6 +432,7 @@ Le CLI est une **façade au même niveau que l'UI** (§9, §21, §24), pas un bo
 | 8B.3 | Patterns React et perf | `react-best-practices`, `anthropic-skills:senior-frontend` |
 | 8B.4 | Sauvegarde automatique du brouillon (§3, §6) | `test-driven-development` |
 | 8B.5 | Feedback utilisateur (toasts, états de chargement) | `ask-sonner` |
+| 8B.6 | **Trancher l'accès au disque local depuis l'UI** (serveur local lancé par `pf`, ou autre) — condition des écrans clone / projet local (§18bis) | `brainstorming`, `security-review` |
 
 ## 8C — Écrans 1 → 9 : parcours de configuration (S10–S11)
 Couvre §6.1 à §6.9 — Dashboard, Create, Target, Project Type, Architecture, Stack Builder, Capabilities, Env & Secrets, Infrastructure.
@@ -391,6 +455,17 @@ Couvre §6.10 à §6.14.
 | 8D.3 | File Preview — arborescence + contenu façon éditeur (§6.12) | `anthropic-skills:senior-frontend`, `react-best-practices` |
 | 8D.4 | Generation Progress — étapes, annulation propre avec rollback (§6.13, §22) | `test-driven-development` |
 | 8D.5 | Generation Report (§6.14) | `design:ux-copy` |
+
+## 8G — Menu d'accueil & écrans GitHub (S13)
+Couvre §6.1 (menu), §6.21 à §6.24. Consomme `workspace`, `git` et `github` de la Phase 7B — aucune logique dupliquée.
+
+| # | Étape | Skills obligatoires |
+|---|---|---|
+| 8G.1 | Menu d'accueil à trois choix sur le Dashboard | `brainstorming`, `design:ux-copy` |
+| 8G.2 | GitHub Connection — permissions affichées avant connexion, jamais le jeton | `security-review`, `anthropic-skills:frontend-security-coder` |
+| 8G.3 | Clone Project (Mes dépôts / Depuis un lien) + case « Installer les dépendances » | `test-driven-development` |
+| 8G.4 | Open Local Project — commande d'installation affichée avant exécution | `test-driven-development` |
+| 8G.5 | Repository & Sharing — « Partager » grisé avec explication sans dépôt GitHub | `design:ux-copy`, `test-driven-development` |
 
 ## 8E — Motion (S11–S12)
 
@@ -416,11 +491,11 @@ Couvre §6.10 à §6.14.
 | 8F.6 | Revue | `requesting-code-review`, `code-review`, `receiving-code-review` |
 
 ### Gate M5 — `verification-before-completion`
-- [ ] Les 14 écrans MVP existent et bloquent correctement (condition de passage du §6 testée)
+- [ ] Les 18 écrans MVP existent et bloquent correctement (condition de passage du §6 testée)
 - [ ] Parcours complet §3 réalisable **au clavier seul**
 - [ ] Mode guidé : ≤ 4 options visibles par étape ; mode expert : catalogue complet + recherche
 - [ ] Une incompatibilité affiche **pourquoi**, en français lisible
-- [ ] Thème clair et sombre corrects sur les 14 écrans
+- [ ] Thème clair et sombre corrects sur les 18 écrans
 - [ ] Brouillon restauré après fermeture du navigateur
 - [ ] UI et CLI produisent le même manifest pour les mêmes choix
 
@@ -430,12 +505,12 @@ Couvre §6.10 à §6.14.
 **Semaine 12 · Milestone M5 · Couvre §0, §10 (`shareLink`), §20**
 
 ### Objectif
-Lien anonyme, sans compte, vers Manifest + Blueprint en lecture seule (§20, MVP). Petit en volume, sensible en sécurité.
+Lien anonyme, sans compte, vers Manifest + Blueprint en lecture seule (§20, MVP). Petit en volume, sensible en sécurité. À ne pas confondre avec le partage d'un **projet** (le code), qui passe exclusivement par GitHub (§20bis, Phase 7B).
 
 | # | Étape | Skills obligatoires |
 |---|---|---|
 | 9.1 | Cadrer : où vit le manifest partagé ? (encodé dans l'URL vs stocké) — impacte la confidentialité | `brainstorming` |
-| 9.2 | `forge share` + bouton Blueprint → génération du lien | `test-driven-development` |
+| 9.2 | `pf share` + bouton Blueprint → génération du lien | `test-driven-development` |
 | 9.3 | Page publique read-only — non éditable, non générable sans copie locale | `test-driven-development` |
 | 9.4 | **Revue sécurité dédiée** : identifiants non énumérables, aucun secret dans le manifest partagé, pas de fuite de chemin local, pas d'indexation | `security-review` |
 | 9.5 | Copy de la page partagée (le destinataire n'a jamais utilisé le produit) | `design:ux-copy`, `copywriting` |
@@ -457,7 +532,7 @@ Passer en revue le §24 point par point. Rien de neuf n'est codé ici — on fer
 
 | # | Étape | Skills obligatoires |
 |---|---|---|
-| 10.1 | Revue de sécurité globale : generator (écriture disque), clé API, lien de partage, import de templates | `security-review` |
+| 10.1 | Revue de sécurité globale : generator (écriture disque), clé API, lien de partage, import de templates, jeton GitHub, clonage et installation de code non fiable | `security-review` |
 | 10.2 | Revue de code complète sur le diff cumulé | `code-review` (niveau `high`) |
 | 10.3 | Simplification / suppression du code mort | `simplify`, `safe-refactor` |
 | 10.4 | Bugs restants, un par un | `investigate-first`, `systematic-debugging`, `surgical-patch` |
@@ -502,7 +577,7 @@ Passer en revue le §24 point par point. Rien de neuf n'est codé ici — on fer
 
 | # | Étape | Skills obligatoires |
 |---|---|---|
-| 12.1 | Release pipeline Changesets → npm (`forge` en `latest`) | `lean-build`, `update-config` |
+| 12.1 | Release pipeline Changesets → npm (CLI `pf` en `latest`) | `lean-build`, `update-config` |
 | 12.2 | Déploiement `apps/web` (Vercel ou Cloudflare) + `apps/docs` | `lean-build` |
 | 12.3 | Variables d'environnement de prod, secrets hors repo | `security-review` |
 | 12.4 | Observabilité minimale : Sentry + un analytics respectueux (Plausible/Umami/PostHog) | `analytics` |
@@ -511,7 +586,7 @@ Passer en revue le §24 point par point. Rien de neuf n'est codé ici — on fer
 | 12.7 | Procédure de rollback produit (release cassée) | `verify-and-stop` |
 
 ### Gate M7 — `verification-before-completion`
-- [ ] `npm i -g forge` depuis le registre public, sur une machine vierge → génération réussie
+- [ ] `npm i -g <paquet CLI>` (binaire `pf`) depuis le registre public, sur une machine vierge → génération réussie
 - [ ] Web en prod, HTTPS, thème sombre, < 2 s de first load
 - [ ] Erreurs remontées dans Sentry (test d'erreur volontaire)
 - [ ] Un rollback de release a été **testé**, pas seulement écrit
@@ -625,7 +700,7 @@ Multi-cloud, IaC, déploiement automatisé, policy engine, enterprise registry, 
 ```
 Manifest (P2) → Registry (P3) → Compatibility (P4) → Generator (P5) → Templates (P6)
                                                                           ↓
-                                                            CLI (P7) ──┬──► Web (P8) → Partage (P9)
+                                               CLI (P7) → GitHub (P7B) ──┬──► Web (P8) → Partage (P9)
                                                                        │
                                                                        └──► Durcissement (P10) → Docs (P11) → Déploiement (P12)
                                                                                                                       ↓
@@ -633,7 +708,8 @@ Manifest (P2) → Registry (P3) → Compatibility (P4) → Generator (P5) → Te
 ```
 
 **Parallélisable :** P3 avec la fin de P2 · P6 avec la fin de P5 · P11 avec P8F/P9/P10 · P14 (préparation) avec P13.
-**Non parallélisable :** P4 avant P5 · P5 avant P6 · P6 avant P7 · P10 avant P12.
+**Non parallélisable :** P4 avant P5 · P5B.1 avant P6 · P6 avant P7 · P7B avant P8G · P10 avant P12.
+**Parallélisable aussi :** P7B.2–7B.4 (paquets `workspace`, `git`, `github`) avec la fin de P6 — ils ne dépendent que du `CommandRunner` de 5B.2.
 
 ---
 
@@ -643,7 +719,8 @@ Manifest (P2) → Registry (P3) → Compatibility (P4) → Generator (P5) → Te
 
 - Les ~230 technologies du §7 hors périmètre web MVP
 - Mobile, Desktop, backend (→ V1)
-- AI Stack Advisor (§17) et import de projets (§18) (→ V2)
+- AI Stack Advisor (§17) et import **avec analyse** de projets (§18) (→ V2). Cloner et installer (§18bis) sont dans le MVP : ni analyse, ni Blueprint reconstruit, ni migration
+- Installation automatique hors JavaScript, GitLab/Bitbucket (→ V1)
 - Marketplace, comptes, organisations, cloud (→ V2)
 - Terraform / Kubernetes (§15) (→ V3)
 - Toute forme de paiement

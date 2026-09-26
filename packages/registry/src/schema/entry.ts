@@ -32,6 +32,7 @@ export const CATEGORIES = [
   'formatting',
   'git-hooks',
   'containers',
+  'dev-environment',
   'ci-cd',
   'hosting',
   'storage',

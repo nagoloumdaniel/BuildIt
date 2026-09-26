@@ -1,4 +1,5 @@
 import type { Manifest } from '@project-factory/manifest';
+import type { Recipe } from '@project-factory/recipes';
 import type { RegistryEntry } from '@project-factory/registry';
 import { describe, expect, it } from 'vitest';
 import { buildScaffold } from './scaffold.js';
@@ -131,7 +132,7 @@ describe('package.json', () => {
     const json = JSON.parse(fileNamed(files, 'package.json')) as {
       scripts: Record<string, string>;
     };
-    expect(json.scripts['test']).toBe('vitest run');
+    expect(json.scripts['test']).toBe('vitest run --passWithNoTests');
     expect(json.scripts['lint']).toBe('biome check .');
   });
 
@@ -327,5 +328,255 @@ describe('problèmes transmis par le résolveur de dépendances', () => {
     ]);
     expect(codes).toContain('GEN_SCRIPT_CONFLICT');
     expect(codes).toContain('GEN_DEPENDENCY_CONFLICT');
+  });
+});
+
+/**
+ * 5B.1 — le socle doit passer ses propres vérifications.
+ *
+ * Un preset SaaS réellement généré puis installé échouait à `typecheck` (pas
+ * de tsconfig) et à `lint` (formatage par défaut de Biome, en tabulations). La
+ * CI générée était rouge avant la première ligne de l'utilisateur. Chaque test
+ * ci-dessous verrouille une des causes, sans réseau ; le test de fumée
+ * (`pnpm test:smoke`) vérifie l'ensemble pour de vrai.
+ */
+describe('le socle passe ses propres vérifications — 5B.1', () => {
+  const TYPESCRIPT = entry({ id: 'typescript', category: 'language' });
+  const BIOME = entry({ id: 'biome', category: 'linting' });
+
+  function scripts(entries: RegistryEntry[]): Record<string, string> {
+    return (
+      JSON.parse(fileNamed(scaffoldFiles(MANIFEST, entries), 'package.json')) as {
+        scripts: Record<string, string>;
+      }
+    ).scripts;
+  }
+
+  it('un script typecheck s’accompagne d’un tsconfig.json strict', () => {
+    const files = scaffoldFiles(MANIFEST, [TYPESCRIPT]);
+    const tsconfig = JSON.parse(fileNamed(files, 'tsconfig.json')) as {
+      compilerOptions: Record<string, unknown>;
+    };
+    expect(tsconfig.compilerOptions['strict']).toBe(true);
+    expect(tsconfig.compilerOptions['noEmit']).toBe(true);
+  });
+
+  it('pose un env.d.ts même sans variable : tsc échoue sur un projet sans aucune entrée', () => {
+    const declaration = fileNamed(scaffoldFiles(MANIFEST, [TYPESCRIPT]), 'env.d.ts');
+    // Pas d'interface vide, que le linter refuserait : un module vide suffit.
+    expect(declaration).toContain('export {};');
+    expect(declaration).not.toContain('interface');
+  });
+
+  it('env.d.ts type chaque variable de .env.example', () => {
+    const files = scaffoldFiles(MANIFEST, [
+      TYPESCRIPT,
+      entry({ id: 'prisma', category: 'orm', env: ['DATABASE_URL'] }),
+      entry({ id: 'stripe', category: 'payments', env: ['STRIPE_SECRET_KEY'] }),
+    ]);
+    const declaration = fileNamed(files, 'env.d.ts');
+    expect(declaration).toContain('readonly DATABASE_URL?: string;');
+    expect(declaration).toContain('readonly STRIPE_SECRET_KEY?: string;');
+  });
+
+  it('pas de tsconfig ni d’env.d.ts sans TypeScript', () => {
+    const paths = scaffoldFiles(MANIFEST, [BIOME]).map((file) => file.path);
+    expect(paths).not.toContain('tsconfig.json');
+    expect(paths).not.toContain('env.d.ts');
+  });
+
+  it('Biome choisi ⇒ biome.json indenté en espaces, comme les fichiers générés', () => {
+    const config = JSON.parse(fileNamed(scaffoldFiles(MANIFEST, [BIOME]), 'biome.json')) as {
+      formatter: { indentStyle: string; indentWidth: number };
+    };
+    expect(config.formatter.indentStyle).toBe('space');
+    expect(config.formatter.indentWidth).toBe(2);
+  });
+
+  it('les tests passent sur un projet qui n’en a pas encore', () => {
+    expect(scripts([entry({ id: 'vitest', category: 'testing' })])['test']).toContain(
+      '--passWithNoTests',
+    );
+  });
+
+  it('pas de dev/build/start tant qu’aucun template ne pose l’application', () => {
+    const declared = scripts([entry({ id: 'next' })]);
+    expect(declared['build']).toBeUndefined();
+    expect(declared['dev']).toBeUndefined();
+    expect(declared['start']).toBeUndefined();
+  });
+
+  it('dev/build/start apparaissent quand la fiche est certifiée', () => {
+    const certified = scripts([
+      entry({ id: 'next', generation: 'certified', template: 'frontend/next' }),
+    ]);
+    expect(certified['build']).toBe('next build');
+    expect(certified['dev']).toBe('next dev');
+  });
+
+  it('pas de scripts Prisma sans schéma à générer', () => {
+    expect(scripts([entry({ id: 'prisma', category: 'orm' })])['db:generate']).toBeUndefined();
+  });
+
+  it('les fichiers de configuration disent d’où ils viennent', () => {
+    const files = scaffoldFiles(MANIFEST, [TYPESCRIPT, BIOME]);
+    const sources = files.map((file) => file.source);
+    expect(sources).toContain('integration:typescript');
+    expect(sources).toContain('integration:biome');
+  });
+
+  it('chaque fichier de configuration JSON généré est du JSON valide', () => {
+    for (const file of scaffoldFiles(MANIFEST, [TYPESCRIPT, BIOME])) {
+      if (file.path.endsWith('.json')) {
+        expect(() => JSON.parse(file.contents), file.path).not.toThrow();
+      }
+    }
+  });
+});
+
+/**
+ * pnpm 11 refuse d'installer quand un paquet a un script de build non
+ * approuvé (`ERR_PNPM_IGNORED_BUILDS`). Trouvé par le test de fumée : le
+ * preset SaaS ne s'installait pas, à cause de Prisma.
+ */
+describe('scripts d’installation approuvés — pnpm 11', () => {
+  const PRISMA = entry({ id: 'prisma', category: 'orm' });
+
+  it('approuve les scripts de Prisma, même hors monorepo', () => {
+    const workspace = fileNamed(scaffoldFiles(MANIFEST, [PRISMA]), 'pnpm-workspace.yaml');
+    expect(workspace).toContain('allowBuilds:');
+    expect(workspace).toContain('  prisma: true');
+    expect(workspace).toContain('  "@prisma/engines": true');
+  });
+
+  it('hors monorepo, ne déclare pas de paquets de workspace', () => {
+    const workspace = fileNamed(scaffoldFiles(MANIFEST, [PRISMA]), 'pnpm-workspace.yaml');
+    expect(workspace).not.toContain('packages:');
+  });
+
+  it('en monorepo, déclare les deux', () => {
+    const workspace = fileNamed(
+      scaffoldFiles({ ...MANIFEST, architecture: 'monorepo' }, [PRISMA]),
+      'pnpm-workspace.yaml',
+    );
+    expect(workspace).toContain('packages:');
+    expect(workspace).toContain('allowBuilds:');
+  });
+
+  it('n’approuve rien qui ne soit demandé', () => {
+    const workspace = fileNamed(
+      scaffoldFiles({ ...MANIFEST, architecture: 'monorepo' }, []),
+      'pnpm-workspace.yaml',
+    );
+    expect(workspace).not.toContain('allowBuilds');
+  });
+
+  it('les approbations sont triées et dédoublonnées', () => {
+    const workspace = fileNamed(
+      scaffoldFiles(MANIFEST, [PRISMA, entry({ id: 'vite' })]),
+      'pnpm-workspace.yaml',
+    );
+    const approved = workspace
+      .split('\n')
+      .filter((line) => line.endsWith(': true'))
+      .map((line) => line.trim().replace(/"/g, '').replace(': true', ''));
+    expect(approved).toEqual([...new Set(approved)].sort());
+  });
+});
+
+describe('recettes dans le socle — 5B.5', () => {
+  const RECIPE: Recipe = {
+    id: 'stripe-checkout',
+    name: 'Stripe — Checkout',
+    description: 'x',
+    for: ['stripe'],
+    packages: { stripe: '^18.0.0' },
+    devPackages: { '@types/node': '^24.0.0' },
+    env: ['STRIPE_WEBHOOK_SECRET'],
+  };
+  const STRIPE = entry({
+    id: 'stripe',
+    category: 'payments',
+    packages: ['stripe'],
+    packageRanges: { stripe: '^18.0.0' },
+    env: ['STRIPE_SECRET_KEY'],
+  });
+
+  function withRecipes(recipes: Recipe[], entries: RegistryEntry[] = [STRIPE]) {
+    const result = buildScaffold(MANIFEST, entries, recipes);
+    if (!result.ok) {
+      throw new Error(result.issues.map((issue) => issue.message).join(' | '));
+    }
+    return result.value.files;
+  }
+
+  it('ajoute les paquets de la recette au package.json', () => {
+    const json = JSON.parse(fileNamed(withRecipes([RECIPE]), 'package.json')) as {
+      dependencies: Record<string, string>;
+      devDependencies: Record<string, string>;
+    };
+    expect(json.dependencies['stripe']).toBe('^18.0.0');
+    expect(json.devDependencies['@types/node']).toBe('^24.0.0');
+  });
+
+  it('ajoute ses variables à .env.example, sans doublon avec la fiche', () => {
+    const env = fileNamed(withRecipes([RECIPE]), '.env.example');
+    expect(env).toContain('STRIPE_SECRET_KEY=');
+    expect(env).toContain('STRIPE_WEBHOOK_SECRET=');
+    expect(env.match(/STRIPE_WEBHOOK_SECRET=/g)).toHaveLength(1);
+  });
+
+  it('une plage de recette incompatible avec la fiche est un conflit', () => {
+    const result = buildScaffold(
+      MANIFEST,
+      [STRIPE],
+      [{ ...RECIPE, packages: { stripe: '^12.0.0' } }],
+    );
+    expect(!result.ok && result.issues.map((issue) => issue.code)).toEqual([
+      'GEN_DEPENDENCY_CONFLICT',
+    ]);
+  });
+
+  it('le README liste les recettes appliquées', () => {
+    expect(fileNamed(withRecipes([RECIPE]), 'README.md')).toContain('Stripe — Checkout');
+  });
+
+  it('sans recette, le README n’a pas de section recettes', () => {
+    expect(fileNamed(withRecipes([]), 'README.md')).not.toContain('## Recettes');
+  });
+});
+
+describe('Docker dans le socle — 5B.6', () => {
+  const DOCKER = entry({ id: 'docker', category: 'containers' });
+
+  it('Docker choisi sans application à construire : pas de Dockerfile, un avertissement', () => {
+    const result = built(MANIFEST, [DOCKER, entry({ id: 'next' })]);
+    expect(result.files.map((file) => file.path)).not.toContain('Dockerfile');
+    expect(result.warnings.map((warning) => warning.code)).toContain('GEN_DOCKERFILE_DEFERRED');
+  });
+
+  it('Docker choisi avec une application certifiée : Dockerfile, sans avertissement', () => {
+    const result = built(MANIFEST, [
+      DOCKER,
+      entry({ id: 'next', generation: 'certified', template: 'frontend/next' }),
+    ]);
+    expect(result.files.map((file) => file.path)).toContain('Dockerfile');
+    expect(result.warnings.map((warning) => warning.code)).not.toContain('GEN_DOCKERFILE_DEFERRED');
+  });
+
+  it('le Dockerfile copie pnpm-workspace.yaml quand le socle en a un', () => {
+    const files = scaffoldFiles(MANIFEST, [
+      DOCKER,
+      entry({ id: 'next', generation: 'certified', template: 'frontend/next' }),
+      entry({ id: 'prisma', category: 'orm' }),
+    ]);
+    expect(fileNamed(files, 'Dockerfile')).toContain('pnpm-workspace.yaml');
+  });
+
+  it('le devcontainer porte le nom du projet', () => {
+    const files = scaffoldFiles(MANIFEST, [
+      entry({ id: 'dev-container', category: 'dev-environment' }),
+    ]);
+    expect(fileNamed(files, '.devcontainer/devcontainer.json')).toContain('"name": "quai3"');
   });
 });

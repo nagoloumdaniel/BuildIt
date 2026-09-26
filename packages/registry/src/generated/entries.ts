@@ -113,6 +113,7 @@ export const RAW_ENTRIES: readonly unknown[] = [
   {"id":"sqlserver","name":"SQL Server","category":"database","targets":["web","api"],"status":"stable","generation":"declared","license":"Proprietary","lastReviewedAt":"2026-09-23","docs":"https://learn.microsoft.com/sql"},
   {"id":"supabase","name":"Supabase","category":"database","targets":["web","api"],"status":"stable","generation":"declared","license":"Apache-2.0","lastReviewedAt":"2026-09-23","docs":"https://supabase.com"},
   {"id":"turso","name":"Turso","category":"database","targets":["web","api"],"status":"stable","generation":"declared","license":"MIT","lastReviewedAt":"2026-09-23","docs":"https://turso.tech"},
+  {"id":"dev-container","name":"Dev Container","category":"dev-environment","targets":["web","api"],"status":"stable","generation":"declared","license":"MIT","lastReviewedAt":"2026-09-26","docs":"https://containers.dev"},
   {"id":"medusa","name":"Medusa","category":"ecommerce","targets":["web","api"],"status":"stable","generation":"declared","license":"MIT","lastReviewedAt":"2026-09-23","docs":"https://docs.medusajs.com"},
   {"id":"saleor","name":"Saleor","category":"ecommerce","targets":["web","api"],"status":"stable","generation":"declared","license":"BSD-3-Clause","lastReviewedAt":"2026-09-23","docs":"https://docs.saleor.io"},
   {"id":"shopify","name":"Shopify","category":"ecommerce","targets":["web","api"],"status":"stable","generation":"declared","license":"Proprietary","lastReviewedAt":"2026-09-23","docs":"https://shopify.dev/docs"},

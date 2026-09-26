@@ -1,0 +1,43 @@
+{
+  "name": "@project-factory/recipes",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "license": "MIT",
+  "description": "Recettes — capacités câblées (auth email-password, checkout…) appliquées par le generator (§22).",
+  "exports": {
+    ".": {
+      "types": "./src/index.ts",
+      "import": "./src/index.ts"
+    }
+  },
+  "files": [
+    "dist",
+    "data"
+  ],
+  "scripts": {
+    "build": "tsdown",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run --coverage",
+    "build:index": "node scripts/build-index.mjs"
+  },
+  "dependencies": {
+    "@project-factory/validation": "workspace:*",
+    "zod": "4.6.5"
+  },
+  "devDependencies": {
+    "@project-factory/typescript-config": "workspace:*",
+    "@vitest/coverage-v8": "5.0.1",
+    "tsdown": "0.23.0",
+    "typescript": "7.0.2",
+    "vitest": "5.0.1"
+  },
+  "publishConfig": {
+    "exports": {
+      ".": {
+        "types": "./dist/index.d.ts",
+        "import": "./dist/index.js"
+      }
+    }
+  }
+}

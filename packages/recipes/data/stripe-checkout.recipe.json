@@ -1,0 +1,19 @@
+{
+  "id": "stripe-checkout",
+  "name": "Stripe — paiement Checkout",
+  "description": "Session de paiement Stripe Checkout : un prix, une redirection.",
+  "for": ["stripe"],
+  "packages": {
+    "stripe": "^18.0.0"
+  },
+  "devPackages": {
+    "@types/node": "^24.0.0"
+  },
+  "env": ["STRIPE_SECRET_KEY"],
+  "files": [
+    {
+      "template": "recipes/stripe-checkout/checkout.ts",
+      "target": "lib/stripe/checkout.ts"
+    }
+  ]
+}
