@@ -2,7 +2,7 @@
 
 > **Source :** `Project_Factory_Cahier_des_charges_v2.md` — chaque phase référence les sections (§) qu'elle implémente.
 > **Cible de cette roadmap :** livrer le **MVP gratuit (§23)** en beta publique, moteur `forge` + configurateur web + partage lecture seule. V1/V2/V3 sont cadrés en horizon (Phase 15) mais hors périmètre d'exécution.
-> **Hypothèse de charge :** 1 dev (Daniel) assisté Claude Code, ~4 j/semaine. Les semaines sont indicatives, les **gates** sont fermes.
+> **Hypothèse de charge :** 1 dev (Daniel), ~4 j/semaine. Les semaines sont indicatives, les **gates** sont fermes.
 
 ---
 
