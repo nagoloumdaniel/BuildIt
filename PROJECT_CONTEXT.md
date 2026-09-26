@@ -1,13 +1,17 @@
 # Project Factory — contexte projet
 
-Development Environment Factory. Le produit s'appelle **Project Factory**, le moteur **Forge**, le binaire CLI **`pf`**.
+Development Environment Factory. Le produit s'appelle **Project Factory**, le moteur **Forge**, le binaire CLI **`pf`**. Le cahier des charges et la roadmap utilisent `pf` partout depuis le 26/09/2026.
 Référence complète : `docs/cahier-des-charges.md`. Plan d'exécution : `docs/roadmap.md`.
 
 ## État
 
-Phases 1 (socle monorepo) et 2 (Project Manifest) livrées. Phases 3 (registry, 282 fiches) et 4 (compatibility engine) livrées. Phase 5 en cours : plan, dry-run, ecriture, rollback, templates, dependances et socle faits — restent recettes, Docker/CI, post-install et revue securite. Pas de remote Git — le compte GitHub est indisponible, la CI est **locale**.
+Phases 1 (socle monorepo), 2 (Project Manifest), 3 (registry, 282 fiches) et 4 (compatibility engine) livrées. Phase 5 scindée : **5A livrée** (plan, dry-run, écriture, rollback, rendu de templates, dépendances, socle, docker-compose, CI) ; **5B en cours** pour fermer le gate M3 (socle vert vérifié par un test de fumée réel, post-install, reprise, templates, recettes, Dockerfile/devcontainer, revue sécurité). Voir la roadmap, section « 5B ».
 
-Reliquat de Phase 0, non fait et assumé : entretiens utilisateurs, profils concurrents, doc de monétisation V2. Le premier utilisateur (§0) a tranché le catalogue à leur place ; à corriger avec de vrais testeurs en Phase 13.
+Remote : `github.com/nagoloumdaniel/BuildIt`. La CI GitHub Actions appelle `pnpm ci:local`, plus un job de fumée.
+
+Ajouts du 26/09/2026 au cahier des charges : menu d'accueil créer / cloner / ouvrir un projet local (§18bis), intégration GitHub — connexion, clonage, création de dépôt, partage et collaborateurs (§20bis). Exécutés en **Phase 7B**, après le CLI.
+
+Reliquat de Phase 0, non fait et assumé : entretiens utilisateurs, profils concurrents, doc de monétisation V2. Le premier utilisateur (§0) a tranché le catalogue à leur place ; 2–3 entretiens sont prévus en Phase 6 (étape 6.12), le reste en Phase 13.
 
 ## Commandes
 

@@ -2,7 +2,7 @@
 
 > **Development Environment Factory** — décrire un projet, choisir ses plateformes et ses technologies, obtenir un projet prêt à développer : cohérent, documenté et diagnostiqué.
 
-**Statut : pré-alpha.** Phase 1 (socle du monorepo) en cours. Rien n'est publié, rien n'est utilisable. Voir la [roadmap](docs/roadmap.md).
+**Statut : pré-alpha.** Le moteur (manifest, registry, compatibility, generator) existe et est testé ; la Phase 5B (socle généré vérifié de bout en bout) est en cours. Rien n'est publié, rien n'est utilisable par un tiers. Voir la [roadmap](docs/roadmap.md).
 
 ---
 
@@ -24,6 +24,7 @@ Deux noms, une seule chose :
 
 - **Project Factory** est le produit.
 - **Forge** est le moteur qui l'alimente.
+- **`pf`** est le nom de la commande du CLI.
 - L'interface web et le CLI `pf` sont deux façades du même moteur, au même niveau. Tout ce qui est faisable dans l'une l'est dans l'autre, parce que les deux produisent le même *Project Manifest* et le passent au même pipeline.
 
 ---
@@ -50,7 +51,9 @@ Commandes individuelles :
 
 ### Intégration continue
 
-Le dépôt n'a pas encore de remote. En attendant, **`pnpm ci:local` est la CI** : elle est exécutée automatiquement par le hook `pre-push` de lefthook, et `.github/workflows/ci.yml` appelle exactement la même commande. Aucune divergence possible entre local et distant.
+**`pnpm ci:local` est la CI** : elle est exécutée automatiquement par le hook `pre-push` de lefthook, et `.github/workflows/ci.yml` appelle exactement la même commande sur GitHub Actions. Aucune divergence possible entre local et distant.
+
+Le test de fumée (`pnpm test:smoke`) génère un vrai projet, l'installe et le vérifie. Il a besoin du réseau et prend environ une minute : il tourne dans un job CI dédié plutôt qu'au pre-push.
 
 ### Structure
 
