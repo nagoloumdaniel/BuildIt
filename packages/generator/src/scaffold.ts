@@ -9,7 +9,7 @@ import {
 } from '@project-factory/validation';
 import { resolveDependencies } from './dependencies.js';
 import { buildInfrastructure } from './infrastructure.js';
-import { INTEGRATIONS } from './integrations.data.js';
+import { INTEGRATIONS, type Integration } from './integrations.data.js';
 import type { PlannedFile } from './plan.js';
 
 /**
@@ -58,9 +58,37 @@ const PACKAGE_MANAGER = 'pnpm@11.13.1';
 /** Nom de variable d'environnement acceptable : majuscules, chiffres, tirets bas. */
 const ENV_NAME = /^[A-Z][A-Z0-9_]*$/;
 
-const SCRIPTS_BY_ID = new Map(
-  INTEGRATIONS.map((integration) => [integration.id, integration.scripts ?? {}]),
+const INTEGRATION_BY_ID = new Map<string, Integration>(
+  INTEGRATIONS.map((integration) => [integration.id, integration]),
 );
+
+/**
+ * Scripts qu'une technologie apporte à ce projet-ci.
+ *
+ * Les scripts d'application ne comptent que si la fiche est certifiée : c'est
+ * le seul cas où un template pose le code sur lequel ils opèrent.
+ */
+function scriptsOf(entry: RegistryEntry): Readonly<Record<string, string>> {
+  const integration = INTEGRATION_BY_ID.get(entry.id);
+  return {
+    ...integration?.scripts,
+    ...(entry.generation === 'certified' ? integration?.appScripts : {}),
+  };
+}
+
+/** Fichiers de configuration exigés par les outils de la stack. */
+function integrationFiles(
+  entries: readonly RegistryEntry[],
+  env: readonly string[],
+): PlannedFile[] {
+  return entries.flatMap((entry) =>
+    (INTEGRATION_BY_ID.get(entry.id)?.files ?? []).map((file) => ({
+      path: file.path,
+      contents: typeof file.contents === 'string' ? file.contents : file.contents({ env }),
+      source: `integration:${entry.id}`,
+    })),
+  );
+}
 
 function collectScripts(entries: readonly RegistryEntry[]): {
   scripts: Record<string, string>;
@@ -71,7 +99,7 @@ function collectScripts(entries: readonly RegistryEntry[]): {
   const issues: ScaffoldIssue[] = [];
 
   for (const entry of entries) {
-    for (const [name, command] of Object.entries(SCRIPTS_BY_ID.get(entry.id) ?? {})) {
+    for (const [name, command] of Object.entries(scriptsOf(entry))) {
       const owner = owners.get(name);
       if (owner !== undefined) {
         // Deux outils qui veulent le même script : le générateur ne peut pas
@@ -205,10 +233,39 @@ Thumbs.db
 !.vscode/extensions.json
 `;
 
-const PNPM_WORKSPACE = `packages:
-  - "apps/*"
-  - "packages/*"
-`;
+const WORKSPACE_PACKAGES = ['packages:', '  - "apps/*"', '  - "packages/*"'];
+
+/**
+ * `pnpm-workspace.yaml` : il a deux raisons d'exister, indépendantes.
+ *
+ * - un monorepo y déclare ses paquets ;
+ * - pnpm 11 y lit `allowBuilds`, la liste des paquets autorisés à exécuter leur
+ *   script d'installation. Sans elle, `pnpm install` **échoue** dès qu'un tel
+ *   paquet est présent (Prisma, notamment) — même dans une application seule.
+ */
+function pnpmWorkspace(monorepo: boolean, allowBuilds: readonly string[]): string | undefined {
+  if (!monorepo && allowBuilds.length === 0) {
+    return undefined;
+  }
+  const lines = monorepo ? [...WORKSPACE_PACKAGES] : [];
+  if (allowBuilds.length > 0) {
+    if (lines.length > 0) {
+      lines.push('');
+    }
+    lines.push(
+      '# Paquets autorisés à exécuter leur script d’installation (pnpm >= 10).',
+      '# Chacun l’est parce qu’une technologie choisie en a besoin.',
+      'allowBuilds:',
+      ...allowBuilds.map((name) => `  ${/^[a-z0-9-]+$/.test(name) ? name : `"${name}"`}: true`),
+    );
+  }
+  return `${lines.join('\n')}\n`;
+}
+
+function collectAllowBuilds(entries: readonly RegistryEntry[]): string[] {
+  const names = entries.flatMap((entry) => INTEGRATION_BY_ID.get(entry.id)?.allowBuilds ?? []);
+  return [...new Set(names)].sort();
+}
 
 const TURBO_JSON = `{
   "$schema": "https://turbo.build/schema.json",
@@ -275,17 +332,26 @@ export function buildScaffold(
     { path: 'README.md', contents: readme(manifest, entries), source: 'scaffold:readme' },
   ];
 
+  files.push(...integrationFiles(entries, names));
+
   // Docker et CI viennent apres le socle : ils dependent des scripts que les
   // technologies ont apportes, donc ils ne peuvent etre construits qu'une fois
   // le package.json decide.
   files.push(...buildInfrastructure(entries, scripts));
 
-  if (manifest.architecture === 'monorepo') {
+  const workspace = pnpmWorkspace(
+    manifest.architecture === 'monorepo',
+    collectAllowBuilds(entries),
+  );
+  if (workspace !== undefined) {
     files.push({
       path: 'pnpm-workspace.yaml',
-      contents: PNPM_WORKSPACE,
+      contents: workspace,
       source: 'scaffold:pnpm-workspace',
     });
+  }
+
+  if (manifest.architecture === 'monorepo') {
     if (entries.some((entry) => entry.id === 'turborepo')) {
       files.push({ path: 'turbo.json', contents: TURBO_JSON, source: 'scaffold:turbo' });
     }

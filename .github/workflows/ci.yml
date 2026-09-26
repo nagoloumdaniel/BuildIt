@@ -34,3 +34,22 @@ jobs:
       - run: pnpm install --frozen-lockfile
 
       - run: pnpm run ci:local
+
+  # Gate M3 : génère de vrais projets, les installe depuis npm et lance les
+  # scripts que leur propre CI lancera. Réseau requis, d'où un job à part —
+  # le pre-push ne l'exécute pas.
+  smoke:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: '22'
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      - run: pnpm run test:smoke

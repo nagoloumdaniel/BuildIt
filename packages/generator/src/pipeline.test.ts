@@ -134,8 +134,12 @@ describe('generateProject — le projet sur le disque', () => {
       '.env.example',
       '.gitignore',
       'README.md',
+      'biome.json',
       'docker-compose.yml',
+      'env.d.ts',
       'package.json',
+      'pnpm-workspace.yaml',
+      'tsconfig.json',
     ]);
   });
 
@@ -149,7 +153,7 @@ describe('generateProject — le projet sur le disque', () => {
       dependencies: Record<string, string>;
     };
     expect(json.name).toBe('quai3');
-    expect(json.scripts['test']).toBe('vitest run');
+    expect(json.scripts['test']).toBe('vitest run --passWithNoTests');
     expect(json.scripts['lint']).toBe('biome check .');
     expect(json.dependencies['next']).toBeDefined();
   });
