@@ -26,5 +26,6 @@ export type {
   ManifestShareLink,
 } from './schema/manifest.js';
 export { MANIFEST_KEY_ORDER } from './schema/manifest.js';
+export { PROJECT_NAME_PATTERN } from './schema/primitives.js';
 export { canonicalizeManifest, serializeManifest } from './serialize.js';
 export { isSupportedManifestVersion, MANIFEST_VERSION } from './version.js';

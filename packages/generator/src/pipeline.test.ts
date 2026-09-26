@@ -96,6 +96,15 @@ describe('planProject — le dry-run', () => {
     expect(await readdir(target)).toEqual([]);
   });
 
+  it('ne crée même pas la cible, y compris quand il lit des templates', async () => {
+    // Un FS en lecture seule ne prouverait rien ici : les tests peuvent tourner
+    // en root, que les permissions n'arrêtent pas. On prouve donc l'absence.
+    const target = join(await tempDir(), 'jamais', 'creee');
+    const result = planProject(SAAS, target, { recipes: ['stripe-checkout'] });
+    expect(result.ok).toBe(true);
+    await expect(readdir(join(target, '..'))).rejects.toThrow();
+  });
+
   it('rend une arborescence lisible', () => {
     const result = planProject(SAAS, '/cible');
     expect(result.ok).toBe(true);
@@ -633,5 +642,18 @@ describe('templates et recettes dans le plan — §22', () => {
   it('sans fiche certifiée ni recette, aucun dossier de templates n’est lu', () => {
     const result = planProject(SAAS, '/cible', { templatesRoot: '/racine/qui/n-existe/pas' });
     expect(result.ok).toBe(true);
+  });
+});
+
+describe('le nom du projet est revérifié avant tout rendu — revue sécurité', () => {
+  it('un manifest non validé ne peut pas injecter de code par son nom', () => {
+    const result = planProject(
+      { ...SAAS, name: 'x"; require("child_process").execSync("id"); //' },
+      '/cible',
+      { recipes: ['stripe-checkout'] },
+    );
+    expect(!result.ok && result.issues.map((issue) => issue.code)).toEqual([
+      'GEN_INVALID_PROJECT_NAME',
+    ]);
   });
 });

@@ -147,6 +147,26 @@ describe('fichier de recette : un template vers une cible', () => {
   });
 });
 
+describe('liens symboliques en chemin — revue sécurité', () => {
+  it('refuse un dossier intermédiaire qui est un lien, pour un fichier de recette', async () => {
+    const outside = await templatesRoot({ 'a.ts': 'dehors\n' });
+    const root = await templatesRoot({});
+    await symlink(outside, join(root, 'recipes'));
+    expect(
+      codes(root, [{ kind: 'file', template: 'recipes/a.ts', target: 'a.ts', origin: 'recipe:a' }]),
+    ).toEqual(['GEN_TEMPLATE_SYMLINK']);
+  });
+
+  it('refuse un dossier intermédiaire qui est un lien, pour un template de fiche', async () => {
+    const outside = await templatesRoot({ 'next/page.tsx': 'dehors\n' });
+    const root = await templatesRoot({});
+    await symlink(outside, join(root, 'frontend'));
+    expect(codes(root, [{ kind: 'directory', template: 'frontend/next' }])).toEqual([
+      'GEN_TEMPLATE_SYMLINK',
+    ]);
+  });
+});
+
 describe('ensemble', () => {
   it('aucune demande : aucun accès disque, aucun fichier', () => {
     expect(loadTemplateFiles('/racine/inexistante', [], CONTEXT)).toEqual({ ok: true, value: [] });

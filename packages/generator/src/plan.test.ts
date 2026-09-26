@@ -196,3 +196,48 @@ describe('describePlan — le dry-run du §6.12', () => {
     }
   });
 });
+
+/**
+ * Revue sécurité 5B.7. Un template qui écrit dans `.git/` peut poser un hook
+ * (`.git/hooks/pre-commit`) ou une configuration (`core.fsmonitor`) : du code
+ * exécuté au prochain `git commit` — celui de l'étape git du pipeline, déjà.
+ */
+describe('chemins réservés — revue sécurité', () => {
+  it.each([
+    '.git/hooks/pre-commit',
+    '.git/config',
+    '.GIT/config',
+    '.Git/hooks/post-checkout',
+    'apps/web/.git/config',
+    '.git./config',
+  ])('refuse %s', (path) => {
+    expect(codesOf([{ ...FILE, path }])).toContain('GEN_PATH_RESERVED');
+  });
+
+  it.each(['.gitignore', '.github/workflows/ci.yml', '.gitattributes', 'docs/git/notes.md'])(
+    'accepte %s',
+    (path) => {
+      expect(codesOf([{ ...FILE, path }])).toEqual([]);
+    },
+  );
+});
+
+describe('conflits sur le chemin réel — revue sécurité', () => {
+  it('deux écritures du même fichier sous deux formes sont un conflit', () => {
+    expect(
+      codesOf([
+        { ...FILE, path: 'lib/auth.ts' },
+        { ...FILE, path: 'lib/./auth.ts', source: 'autre' },
+      ]),
+    ).toContain('GEN_FILE_CONFLICT');
+  });
+
+  it('sur un disque insensible à la casse, README.md et readme.md sont le même fichier', () => {
+    expect(
+      codesOf([
+        { ...FILE, path: 'README.md' },
+        { ...FILE, path: 'readme.md', source: 'autre' },
+      ]),
+    ).toContain('GEN_FILE_CONFLICT');
+  });
+});

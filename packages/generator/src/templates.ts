@@ -75,6 +75,23 @@ function kindOf(path: string): Kind {
   }
 }
 
+/**
+ * Premier dossier intermédiaire du chemin qui est un lien symbolique.
+ *
+ * `lstat` sur le chemin complet ne voit que son dernier composant : un
+ * `recipes/` qui pointe ailleurs serait suivi sans bruit.
+ */
+function symlinkedAncestor(root: string, template: string): string | undefined {
+  const segments = template.split('/').slice(0, -1);
+  for (let i = 1; i <= segments.length; i += 1) {
+    const prefix = segments.slice(0, i).join('/');
+    if (kindOf(join(root, prefix)) === 'symlink') {
+      return prefix;
+    }
+  }
+  return undefined;
+}
+
 /** Fichiers d'un dossier, chemins relatifs POSIX, triés. */
 function walk(
   root: string,
@@ -200,6 +217,11 @@ export function loadTemplateFiles(
   for (const request of requests) {
     if (!isSafeRelativePath(request.template)) {
       issues.push(issue('GEN_TEMPLATE_PATH_UNSAFE', request.template));
+      continue;
+    }
+    const link = symlinkedAncestor(root, request.template);
+    if (link !== undefined) {
+      issues.push(issue('GEN_TEMPLATE_SYMLINK', link));
       continue;
     }
     files.push(

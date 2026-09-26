@@ -1,4 +1,4 @@
-import type { Manifest } from '@project-factory/manifest';
+import { type Manifest, PROJECT_NAME_PATTERN } from '@project-factory/manifest';
 import type { Recipe } from '@project-factory/recipes';
 import type { RegistryEntry } from '@project-factory/registry';
 import {
@@ -26,7 +26,12 @@ import { recipeAsDependencySource } from './recipes.js';
  */
 
 /** Problèmes que le socle détecte lui-même. */
-const OWN_CODES = ['GEN_SCRIPT_CONFLICT', 'GEN_SECRET_IN_ENV', 'GEN_DOCKERFILE_DEFERRED'] as const;
+const OWN_CODES = [
+  'GEN_SCRIPT_CONFLICT',
+  'GEN_SECRET_IN_ENV',
+  'GEN_DOCKERFILE_DEFERRED',
+  'GEN_INVALID_PROJECT_NAME',
+] as const;
 
 /**
  * Problèmes que le socle **transmet** sans les reformuler.
@@ -49,6 +54,8 @@ const MESSAGES: Readonly<Record<(typeof OWN_CODES)[number], string>> = {
     'Le script « {script} » est réclamé par {first} et par {second}. Un package.json ne peut en garder qu’un.',
   GEN_DOCKERFILE_DEFERRED:
     'Docker est choisi, mais le projet n’a pas encore d’application à construire et démarrer (scripts build et start). Aucun Dockerfile n’est posé : il échouerait dès « docker build ». Il le sera quand un template certifié fournira l’application.',
+  GEN_INVALID_PROJECT_NAME:
+    'Le nom de projet {value} n’est pas un nom de paquet valide (minuscules, chiffres, « . », « _ », « - »). Le manifest n’a pas été validé avant la génération.',
   GEN_SECRET_IN_ENV:
     '{first} déclare « {value} » comme variable d’environnement. Ce n’est pas un nom de variable — une valeur ne doit jamais entrer dans un fichier généré.',
 };
@@ -312,6 +319,20 @@ export function buildScaffold(
   entries: readonly RegistryEntry[],
   recipes: readonly Recipe[] = [],
 ): ParseResult<Scaffold, ScaffoldIssueCode> {
+  // `name` est le seul champ libre du manifest, et il est substitué dans du
+  // code (package.json, templates). Le type `Manifest` ne garantit pas qu'il a
+  // été validé : un appelant peut en fabriquer un à la main. Revérifié ici, au
+  // premier endroit où il entre dans un fichier.
+  if (!PROJECT_NAME_PATTERN.test(manifest.name)) {
+    return fail([
+      {
+        code: 'GEN_INVALID_PROJECT_NAME',
+        path: ['name'],
+        message: messageFor('GEN_INVALID_PROJECT_NAME', { value: JSON.stringify(manifest.name) }),
+      },
+    ]);
+  }
+
   const { scripts, issues: scriptIssues } = collectScripts(entries);
   const { names, issues: envIssues } = collectEnv([...entries, ...recipes]);
   const dependencies = resolveDependencies([...entries, ...recipes.map(recipeAsDependencySource)]);
