@@ -23,7 +23,8 @@ const DOCKER_BY_ID = new Map<string, DockerService>(
 
 /**
  * Scripts exécutés en intégration continue, dans l'ordre : ce qui échoue vite
- * passe en premier.
+ * passe en premier. L'étape Validation du pipeline (postinstall.ts) lance
+ * exactement les mêmes : ce qu'elle vérifie est ce que la CI vérifiera.
  *
  * `test:e2e` en est **volontairement absent**. Les tests de bout en bout
  * exigent des navigateurs installés (`playwright install --with-deps`) et une
@@ -31,7 +32,7 @@ const DOCKER_BY_ID = new Map<string, DockerService>(
  * Les lancer produirait une CI rouge au premier passage, avant même que
  * l'utilisateur ait écrit une ligne. Le workflow le dit, plutôt que de le taire.
  */
-const SCRIPT_ORDER = ['lint', 'typecheck', 'test', 'build'];
+export const CI_SCRIPTS: readonly string[] = ['lint', 'typecheck', 'test', 'build'];
 
 function serviceBlock(service: DockerService): string[] {
   const lines = [
@@ -109,7 +110,7 @@ function dockerCompose(services: readonly DockerService[]): string {
  * d'avoir écrit une ligne.
  */
 function githubWorkflow(scripts: Readonly<Record<string, string>>): string {
-  const steps = SCRIPT_ORDER.filter((name) => scripts[name] !== undefined);
+  const steps = CI_SCRIPTS.filter((name) => scripts[name] !== undefined);
 
   const lines = [
     'name: CI',

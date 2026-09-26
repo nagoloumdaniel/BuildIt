@@ -1,8 +1,22 @@
 import { resolve, type Selection } from '@project-factory/compatibility';
 import type { Manifest } from '@project-factory/manifest';
 import { loadCatalogue, type Registry, type RegistryEntry } from '@project-factory/registry';
-import { fail, type Issue, ok, type ParseResult } from '@project-factory/validation';
+import {
+  fail,
+  type Issue,
+  ok,
+  type ParseFailure,
+  type ParseResult,
+} from '@project-factory/validation';
 import { type FilePlan, planFiles } from './plan.js';
+import {
+  type CommandRunner,
+  nodeCommandRunner,
+  runGit,
+  runInstall,
+  runValidation,
+  type StepFailure,
+} from './postinstall.js';
 import { buildScaffold } from './scaffold.js';
 import { type FileSystem, type GenerationReport, generate } from './write.js';
 
@@ -11,7 +25,13 @@ import { type FileSystem, type GenerationReport, generate } from './write.js';
  *
  * ```
  * Manifest → Stack Resolver → Compatibility → Scaffold → File Plan → [Dry Run] → Generator
+ *          → Post Install (install, git) → Validation
  * ```
+ *
+ * Le rollback couvre l'écriture — la seule étape qui produit le projet. Après
+ * elle, le projet est complet sur le disque : un échec d'installation, de Git
+ * ou de validation le laisse en place et nomme l'étape (`failedStep`), pour
+ * qu'on puisse la relancer (`fromStep`) plutôt que tout régénérer.
  *
  * Chaque étage existe déjà et est testé isolément. Ce fichier ne fait que les
  * enchaîner, et s'arrête au premier qui refuse — avec ses mots à lui. Un
@@ -50,15 +70,57 @@ export function selectionFromManifest(manifest: Manifest): Selection {
   return { targets: manifest.targets, technologies: [...new Set(technologies)] };
 }
 
+/** Étapes du pipeline, dans l'ordre d'exécution. */
+export const PIPELINE_STEPS: readonly PipelineStep[] = [
+  'plan',
+  'write',
+  'install',
+  'git',
+  'validate',
+];
+
+export type PipelineStep = 'plan' | 'write' | 'install' | 'git' | 'validate';
+
+/** Étapes à partir desquelles une génération peut reprendre. */
+export type ResumableStep = Exclude<PipelineStep, 'plan'>;
+
 export interface GenerationOutcome {
+  /** Vide quand l'écriture a été sautée par une reprise. */
   readonly report: GenerationReport;
   readonly warnings: readonly PipelineIssue[];
+  /** Étapes réellement exécutées, dans l'ordre. */
+  readonly completedSteps: readonly PipelineStep[];
 }
+
+/** Un échec dit où il s'est produit, et s'il vaut la peine de reprendre là. */
+export interface GenerationFailure extends ParseFailure<string> {
+  readonly failedStep: PipelineStep;
+  /** `true` : erreur transitoire (réseau) — relancer avec `fromStep: failedStep`. */
+  readonly retryable: boolean;
+  readonly completedSteps: readonly PipelineStep[];
+}
+
+export type GenerationResult =
+  | { readonly ok: true; readonly value: GenerationOutcome }
+  | GenerationFailure;
 
 export interface PipelineOptions {
   /** Catalogue à utiliser. Par défaut, le catalogue officiel. */
   readonly registry?: Registry;
   readonly fs?: FileSystem;
+  /** Exécuteur des commandes post-écriture. Par défaut, le vrai. */
+  readonly runner?: CommandRunner;
+  /**
+   * Étapes post-écriture, toutes désactivées par défaut : le moteur ne lance
+   * aucune commande qu'on ne lui a pas demandée. Les façades (CLI, UI)
+   * choisissent leurs propres défauts.
+   */
+  readonly install?: boolean;
+  readonly git?: boolean;
+  /** Suppose les dépendances installées. */
+  readonly validate?: boolean;
+  /** Reprend à cette étape : les précédentes, sauf le plan, sont sautées. */
+  readonly fromStep?: ResumableStep;
 }
 
 /** Réunit les codes d'erreur de tous les étages traversés. */
@@ -127,21 +189,101 @@ export function planProject(
   });
 }
 
-/** Construit le plan puis l'écrit. Une erreur à n'importe quel étage n'écrit rien. */
+const EMPTY_REPORT: GenerationReport = { written: [], bytes: 0, rolledBack: false };
+
+function failure(
+  issues: readonly PipelineIssue[],
+  failedStep: PipelineStep,
+  completedSteps: readonly PipelineStep[],
+  retryable = false,
+): GenerationFailure {
+  return { ...fail(toIssues(issues)), failedStep, retryable, completedSteps: [...completedSteps] };
+}
+
+function fromStepFailure(
+  step: StepFailure,
+  failedStep: PipelineStep,
+  completedSteps: readonly PipelineStep[],
+): GenerationFailure {
+  return failure([step.issue], failedStep, completedSteps, step.retryable);
+}
+
+/** Scripts du package.json planifié — ceux que la validation lancera. */
+function plannedScripts(plan: FilePlan): Record<string, string> {
+  const file = plan.files.find((planned) => planned.path === 'package.json');
+  if (file === undefined) {
+    return {};
+  }
+  return (JSON.parse(file.contents) as { scripts?: Record<string, string> }).scripts ?? {};
+}
+
+/**
+ * Construit le plan, l'écrit, puis déroule les étapes post-écriture demandées.
+ *
+ * Une erreur avant ou pendant l'écriture n'écrit rien (rollback). Le plan est
+ * toujours recalculé, même en reprise : il est pur et déterministe, et c'est
+ * lui qui dit quels scripts valider.
+ */
 export async function generateProject(
   manifest: Manifest,
   targetDir: string,
   options: PipelineOptions = {},
-): Promise<ParseResult<GenerationOutcome, string>> {
+): Promise<GenerationResult> {
+  const completed: PipelineStep[] = [];
   const planned = planProject(manifest, targetDir, options);
   if (!planned.ok) {
-    return planned;
+    return failure(planned.issues, 'plan', completed);
+  }
+  completed.push('plan');
+
+  const start = PIPELINE_STEPS.indexOf(options.fromStep ?? 'write');
+  const wanted = (step: PipelineStep, enabled: boolean): boolean =>
+    enabled && PIPELINE_STEPS.indexOf(step) >= start;
+
+  let report = EMPTY_REPORT;
+  if (wanted('write', true)) {
+    const written = await generate(planned.value.plan, options.fs);
+    if (!written.ok) {
+      return failure(written.issues, 'write', completed);
+    }
+    report = written.value;
+    completed.push('write');
   }
 
-  const report = await generate(planned.value.plan, options.fs);
-  if (!report.ok) {
-    return fail(toIssues(report.issues));
+  const runner = options.runner ?? nodeCommandRunner;
+  const warnings: PipelineIssue[] = [...planned.value.warnings];
+
+  if (wanted('install', options.install === true)) {
+    const installFailure = await runInstall(runner, targetDir);
+    if (installFailure !== undefined) {
+      return fromStepFailure(installFailure, 'install', completed);
+    }
+    completed.push('install');
   }
 
-  return ok({ report: report.value, warnings: planned.value.warnings });
+  if (wanted('git', options.git === true)) {
+    const git = await runGit(runner, targetDir);
+    if (git.failure !== undefined) {
+      return fromStepFailure(git.failure, 'git', completed);
+    }
+    if (git.warning === undefined) {
+      completed.push('git');
+    } else {
+      warnings.push(git.warning);
+    }
+  }
+
+  if (wanted('validate', options.validate === true)) {
+    const validationFailure = await runValidation(
+      runner,
+      targetDir,
+      plannedScripts(planned.value.plan),
+    );
+    if (validationFailure !== undefined) {
+      return fromStepFailure(validationFailure, 'validate', completed);
+    }
+    completed.push('validate');
+  }
+
+  return ok({ report, warnings, completedSteps: completed });
 }

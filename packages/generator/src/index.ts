@@ -8,17 +8,42 @@
 
 export type { DependencyIssue, DependencyIssueCode, ResolvedDependencies } from './dependencies.js';
 export { DEPENDENCY_ISSUE_CODES, resolveDependencies } from './dependencies.js';
-export { buildInfrastructure } from './infrastructure.js';
+export { buildInfrastructure, CI_SCRIPTS } from './infrastructure.js';
 export type { DockerService, Integration } from './integrations.data.js';
 export { INTEGRATIONS } from './integrations.data.js';
-export type { GenerationOutcome, PipelineOptions, ProjectPlan } from './pipeline.js';
+export type {
+  GenerationFailure,
+  GenerationOutcome,
+  GenerationResult,
+  PipelineOptions,
+  PipelineStep,
+  ProjectPlan,
+  ResumableStep,
+} from './pipeline.js';
 export {
   generateProject,
+  PIPELINE_STEPS,
   planProject,
   selectionFromManifest,
 } from './pipeline.js';
 export type { FilePlan, GenIssue, GenIssueCode, PlannedFile } from './plan.js';
 export { describePlan, GEN_ISSUE_CODES, planFiles } from './plan.js';
+export type {
+  CommandResult,
+  CommandRunner,
+  GitOutcome,
+  PostInstallCode,
+  PostInstallIssue,
+  StepFailure,
+} from './postinstall.js';
+export {
+  isTransientFailure,
+  nodeCommandRunner,
+  POST_INSTALL_CODES,
+  runGit,
+  runInstall,
+  runValidation,
+} from './postinstall.js';
 export type { Scaffold, ScaffoldIssue, ScaffoldIssueCode } from './scaffold.js';
 export { buildScaffold, SCAFFOLD_ISSUE_CODES } from './scaffold.js';
 export type {

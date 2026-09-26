@@ -1,10 +1,10 @@
-import { execFileSync } from 'node:child_process';
 import { mkdtemp, readFile, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import type { Manifest } from '@project-factory/manifest';
 import { afterAll, describe, expect, it } from 'vitest';
-import { generateProject } from './pipeline.js';
+import { CI_SCRIPTS } from './infrastructure.js';
+import { generateProject, PIPELINE_STEPS } from './pipeline.js';
 
 /**
  * Le gate M3 en vrai : générer → `pnpm install` → chaque script que la CI
@@ -15,9 +15,6 @@ import { generateProject } from './pipeline.js';
  * il a besoin du réseau. Hors-ligne, il échoue franchement plutôt que de faire
  * semblant.
  */
-
-/** Scripts lancés par la CI générée, dans le même ordre (infrastructure.ts). */
-const CI_SCRIPTS = ['lint', 'typecheck', 'test', 'build'];
 
 const PROJECTS: Record<string, Manifest> = {
   'preset SaaS': {
@@ -44,22 +41,18 @@ const PROJECTS: Record<string, Manifest> = {
 
 const roots: string[] = [];
 
+// Le runner CI n'a pas d'identité Git ; le pipeline n'en invente jamais une,
+// c'est donc au test de la fournir, par l'environnement.
+process.env['GIT_AUTHOR_NAME'] ??= 'Smoke Test';
+process.env['GIT_AUTHOR_EMAIL'] ??= 'smoke@example.invalid';
+process.env['GIT_COMMITTER_NAME'] ??= 'Smoke Test';
+process.env['GIT_COMMITTER_EMAIL'] ??= 'smoke@example.invalid';
+
 afterAll(async () => {
   for (const root of roots) {
     await rm(root, { recursive: true, force: true });
   }
 });
-
-function pnpm(args: string[], cwd: string): void {
-  try {
-    execFileSync('pnpm', args, { cwd, stdio: 'pipe', env: { ...process.env, CI: 'true' } });
-  } catch (error) {
-    const failure = error as { stdout?: Buffer; stderr?: Buffer };
-    throw new Error(
-      `pnpm ${args.join(' ')} a échoué dans ${cwd} :\n${failure.stdout?.toString() ?? ''}${failure.stderr?.toString() ?? ''}`,
-    );
-  }
-}
 
 describe('un projet généré passe sa propre CI — gate M3', () => {
   for (const [label, manifest] of Object.entries(PROJECTS)) {
@@ -68,22 +61,25 @@ describe('un projet généré passe sa propre CI — gate M3', () => {
       roots.push(root);
       const target = join(root, manifest.name);
 
-      const result = await generateProject(manifest, target);
-      expect(result.ok, result.ok ? '' : result.issues.map((i) => i.message).join(' | ')).toBe(
-        true,
-      );
+      // Le pipeline complet, avec le vrai exécuteur : pnpm install, git, puis
+      // les scripts que la CI générée lancera.
+      const result = await generateProject(manifest, target, {
+        install: true,
+        git: true,
+        validate: true,
+      });
 
-      pnpm(['install'], target);
+      expect(result.ok, result.ok ? '' : result.issues.map((i) => i.message).join('\n')).toBe(true);
+      if (result.ok) {
+        expect(result.value.completedSteps).toEqual(PIPELINE_STEPS);
+      }
 
+      // Le verrou est commité : la CI générée installe en --frozen-lockfile.
       const { scripts } = JSON.parse(await readFile(join(target, 'package.json'), 'utf8')) as {
         scripts: Record<string, string>;
       };
-      const ran = CI_SCRIPTS.filter((name) => scripts[name] !== undefined);
-      // Un socle sans aucun script vérifiable ne prouverait rien.
-      expect(ran.length).toBeGreaterThan(0);
-      for (const name of ran) {
-        pnpm(['run', name], target);
-      }
+      expect(CI_SCRIPTS.some((name) => scripts[name] !== undefined)).toBe(true);
+      await expect(readFile(join(target, 'pnpm-lock.yaml'), 'utf8')).resolves.toBeTruthy();
     });
   }
 });

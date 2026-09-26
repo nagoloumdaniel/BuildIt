@@ -5,6 +5,7 @@ import type { Manifest } from '@project-factory/manifest';
 import { afterEach, describe, expect, it } from 'vitest';
 import { generateProject, planProject, selectionFromManifest } from './pipeline.js';
 import { describePlan } from './plan.js';
+import type { CommandResult, CommandRunner } from './postinstall.js';
 import { nodeFileSystem } from './write.js';
 
 /**
@@ -332,5 +333,175 @@ describe('chemins d’erreur', () => {
     await writeFile(join(target, 'deja-la.txt'), 'important');
     await generateProject(SAAS, target);
     expect(await readFile(join(target, 'deja-la.txt'), 'utf8')).toBe('important');
+  });
+});
+
+/**
+ * Post Install, Validation et reprise (5B.2, 5B.3). L'exécuteur est factice :
+ * aucun vrai pnpm, aucun vrai git.
+ */
+describe('post-install, validation et reprise — §22', () => {
+  function fakeRunner(answers: Record<string, CommandResult> = {}): CommandRunner & {
+    calls: string[];
+  } {
+    const calls: string[] = [];
+    return {
+      calls,
+      async run(command, args) {
+        const line = `${command} ${args.join(' ')}`;
+        calls.push(line);
+        return answers[line] ?? { exitCode: 0, output: '' };
+      },
+    };
+  }
+  const NOT_A_REPO: CommandResult = { exitCode: 128, output: 'fatal: not a git repository' };
+
+  it('par défaut, aucune commande n’est lancée', async () => {
+    const runner = fakeRunner();
+    const result = await generateProject(SAAS, join(await tempDir(), 'p'), { runner });
+    expect(result.ok).toBe(true);
+    expect(runner.calls).toEqual([]);
+    if (result.ok) {
+      expect(result.value.completedSteps).toEqual(['plan', 'write']);
+    }
+  });
+
+  it('enchaîne install → git → validation, dans cet ordre', async () => {
+    const runner = fakeRunner({ 'git rev-parse --show-prefix': NOT_A_REPO });
+    const result = await generateProject(SAAS, join(await tempDir(), 'p'), {
+      runner,
+      install: true,
+      git: true,
+      validate: true,
+    });
+    expect(result.ok).toBe(true);
+    // Le commit suit l'installation : le fichier de verrouillage en fait partie,
+    // et la CI générée l'exige (--frozen-lockfile).
+    expect(runner.calls).toEqual([
+      'pnpm install',
+      'git rev-parse --show-prefix',
+      'git init --initial-branch=main',
+      'git add --all',
+      'git commit --message chore: initial commit',
+      'pnpm run lint',
+      'pnpm run typecheck',
+      'pnpm run test',
+    ]);
+    if (result.ok) {
+      expect(result.value.completedSteps).toEqual(['plan', 'write', 'install', 'git', 'validate']);
+    }
+  });
+
+  it('un échec réseau à l’installation est reprenable, et les fichiers restent', async () => {
+    const target = join(await tempDir(), 'p');
+    const result = await generateProject(SAAS, target, {
+      runner: fakeRunner({ 'pnpm install': { exitCode: 1, output: 'ECONNRESET' } }),
+      install: true,
+    });
+    expect(result.ok).toBe(false);
+    if (!result.ok) {
+      expect(result.failedStep).toBe('install');
+      expect(result.retryable).toBe(true);
+      expect(result.completedSteps).toEqual(['plan', 'write']);
+    }
+    await expect(readFile(join(target, 'package.json'), 'utf8')).resolves.toContain('quai3');
+  });
+
+  it('reprise fromStep install : n’écrit rien, relance l’installation', async () => {
+    const target = join(await tempDir(), 'p');
+    await generateProject(SAAS, target);
+    const before = (await readdir(target)).sort();
+
+    const runner = fakeRunner();
+    const resumed = await generateProject(SAAS, target, {
+      runner,
+      install: true,
+      fromStep: 'install',
+    });
+
+    // Le dossier n'est plus vide : sans la reprise, l'écriture refuserait.
+    expect(resumed.ok).toBe(true);
+    expect(runner.calls).toEqual(['pnpm install']);
+    expect((await readdir(target)).sort()).toEqual(before);
+    if (resumed.ok) {
+      expect(resumed.value.completedSteps).toEqual(['plan', 'install']);
+      expect(resumed.value.report.written).toEqual([]);
+    }
+  });
+
+  it('reprise fromStep validate : saute install et git même demandés', async () => {
+    const target = join(await tempDir(), 'p');
+    await generateProject(SAAS, target);
+    const runner = fakeRunner();
+    await generateProject(SAAS, target, {
+      runner,
+      install: true,
+      git: true,
+      validate: true,
+      fromStep: 'validate',
+    });
+    expect(runner.calls.every((call) => call.startsWith('pnpm run'))).toBe(true);
+  });
+
+  it('un manifest refusé échoue à l’étage plan, sans reprise possible', async () => {
+    const result = await generateProject(
+      { ...SAAS, quality: ['vitest', 'jest'] },
+      join(await tempDir(), 'p'),
+    );
+    expect(result.ok).toBe(false);
+    if (!result.ok) {
+      expect(result.failedStep).toBe('plan');
+      expect(result.retryable).toBe(false);
+      expect(result.completedSteps).toEqual([]);
+    }
+  });
+
+  it('une écriture refusée échoue à l’étage write', async () => {
+    const target = await tempDir();
+    await writeFile(join(target, 'deja-la.txt'), 'important');
+    const result = await generateProject(SAAS, target);
+    expect(result.ok).toBe(false);
+    if (!result.ok) {
+      expect(result.failedStep).toBe('write');
+    }
+  });
+
+  it('une validation qui échoue le dit, sans reprise : c’est un défaut du générateur', async () => {
+    const result = await generateProject(SAAS, join(await tempDir(), 'p'), {
+      runner: fakeRunner({ 'pnpm run typecheck': { exitCode: 2, output: 'error TS2322' } }),
+      validate: true,
+    });
+    expect(result.ok).toBe(false);
+    if (!result.ok) {
+      expect(result.failedStep).toBe('validate');
+      expect(result.retryable).toBe(false);
+      expect(result.issues[0]?.code).toBe('GEN_VALIDATION_FAILED');
+    }
+  });
+
+  it('un git qui échoue nomme l’étage git', async () => {
+    const result = await generateProject(SAAS, join(await tempDir(), 'p'), {
+      runner: fakeRunner({
+        'git rev-parse --show-prefix': NOT_A_REPO,
+        'git commit --message chore: initial commit': { exitCode: 1, output: 'who are you' },
+      }),
+      git: true,
+    });
+    expect(result.ok).toBe(false);
+    if (!result.ok) {
+      expect(result.failedStep).toBe('git');
+    }
+  });
+
+  it('un projet dans un dépôt existant : avertissement, pas d’échec', async () => {
+    const result = await generateProject(SAAS, join(await tempDir(), 'p'), {
+      runner: fakeRunner({ 'git rev-parse --show-prefix': { exitCode: 0, output: 'apps/p/' } }),
+      git: true,
+    });
+    expect(result.ok).toBe(true);
+    if (result.ok) {
+      expect(result.value.warnings.map((warning) => warning.code)).toContain('GEN_GIT_NESTED');
+      expect(result.value.completedSteps).not.toContain('git');
+    }
   });
 });
