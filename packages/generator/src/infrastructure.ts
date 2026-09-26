@@ -34,6 +34,11 @@ const DOCKER_BY_ID = new Map<string, DockerService>(
  */
 export const CI_SCRIPTS: readonly string[] = ['lint', 'typecheck', 'test', 'build'];
 
+/** Un conteneur de production a besoin de construire puis de démarrer l'application. */
+export function canRunInContainer(scripts: Readonly<Record<string, string>>): boolean {
+  return scripts['build'] !== undefined && scripts['start'] !== undefined;
+}
+
 function serviceBlock(service: DockerService): string[] {
   const lines = [
     `  ${service.name}:`,
@@ -150,12 +155,95 @@ function githubWorkflow(scripts: Readonly<Record<string, string>>): string {
   return lines.join('\n');
 }
 
+/**
+ * Image de production en trois étapes : dépendances, construction, exécution.
+ *
+ * Posée seulement quand le projet a de quoi se construire et démarrer
+ * (`build` et `start`) — un Dockerfile qui échoue à `docker build` sur un
+ * projet neuf est pire que pas de Dockerfile. `pnpm-workspace.yaml` n'est
+ * copié que s'il existe : un `COPY` d'un fichier absent casse la construction.
+ */
+function dockerfile(workspaceFile: boolean): string {
+  const manifests = [
+    'package.json',
+    'pnpm-lock.yaml',
+    ...(workspaceFile ? ['pnpm-workspace.yaml'] : []),
+  ];
+  return `${[
+    '# syntax=docker/dockerfile:1',
+    '',
+    'FROM node:22-alpine AS base',
+    '# pnpm à la version de packageManager, via corepack. Le cache vit dans',
+    '# COREPACK_HOME pour être recopié : sinon le conteneur retéléchargerait pnpm',
+    '# à chaque démarrage, et ne démarrerait pas sans réseau.',
+    'ENV COREPACK_HOME=/corepack',
+    'RUN corepack enable',
+    'WORKDIR /app',
+    '',
+    'FROM base AS deps',
+    `COPY ${manifests.join(' ')} ./`,
+    'RUN corepack install && pnpm install --frozen-lockfile',
+    '',
+    'FROM deps AS build',
+    'COPY . .',
+    'RUN pnpm run build',
+    '',
+    'FROM base AS runtime',
+    'ENV NODE_ENV=production',
+    'COPY --from=deps /corepack /corepack',
+    'COPY --from=build --chown=node:node /app ./',
+    '# Jamais root : une faille applicative ne donne pas la main sur le conteneur.',
+    'USER node',
+    'EXPOSE 3000',
+    'CMD ["pnpm", "start"]',
+  ].join('\n')}\n`;
+}
+
+/** Ce qui n'entre jamais dans le contexte de construction — les secrets d'abord. */
+const DOCKERIGNORE = `.env
+.env.*
+!.env.example
+.git
+node_modules
+dist
+.next
+coverage
+`;
+
+/**
+ * Dev Container : l'environnement de développement, reproductible.
+ *
+ * Écrit à la main plutôt qu'avec `JSON.stringify` : Biome mettrait un tableau
+ * court sur une ligne, et le projet échouerait à son propre `pnpm lint`.
+ */
+function devcontainer(projectName: string, ports: readonly number[]): string {
+  return `${[
+    '{',
+    `  "name": ${JSON.stringify(projectName)},`,
+    '  "image": "mcr.microsoft.com/devcontainers/typescript-node:22",',
+    `  "forwardPorts": [${ports.join(', ')}],`,
+    '  "postCreateCommand": "corepack enable && pnpm install"',
+    '}',
+  ].join('\n')}\n`;
+}
+
+/** Port de l'application en développement, avant ceux des services. */
+const APP_PORT = 3000;
+
+export interface InfrastructureOptions {
+  readonly projectName: string;
+  /** Le socle contient un `pnpm-workspace.yaml`. */
+  readonly workspaceFile?: boolean;
+}
+
 /** Construit les fichiers d'infrastructure demandés par la stack. */
 export function buildInfrastructure(
   entries: readonly RegistryEntry[],
   scripts: Readonly<Record<string, string>>,
+  options: InfrastructureOptions = { projectName: 'app' },
 ): PlannedFile[] {
   const files: PlannedFile[] = [];
+  const chosen = new Set(entries.map((entry) => entry.id));
 
   // Tri par identifiant : l'ordre des services ne doit pas dépendre de l'ordre
   // dans lequel l'utilisateur a fait ses choix.
@@ -172,7 +260,30 @@ export function buildInfrastructure(
     });
   }
 
-  if (entries.some((entry) => entry.id === 'github-actions')) {
+  if (chosen.has('docker') && canRunInContainer(scripts)) {
+    files.push(
+      {
+        path: 'Dockerfile',
+        contents: dockerfile(options.workspaceFile === true),
+        source: 'infra:docker',
+      },
+      { path: '.dockerignore', contents: DOCKERIGNORE, source: 'infra:docker' },
+    );
+  }
+
+  if (chosen.has('dev-container')) {
+    const servicePorts = services
+      .flatMap((service) => service.ports ?? [])
+      .map((mapping) => Number.parseInt(mapping.split(':')[0] ?? '', 10))
+      .filter((port) => Number.isInteger(port));
+    files.push({
+      path: '.devcontainer/devcontainer.json',
+      contents: devcontainer(options.projectName, [APP_PORT, ...servicePorts]),
+      source: 'infra:dev-container',
+    });
+  }
+
+  if (chosen.has('github-actions')) {
     files.push({
       path: '.github/workflows/ci.yml',
       contents: githubWorkflow(scripts),

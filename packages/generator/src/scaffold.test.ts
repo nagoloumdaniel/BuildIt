@@ -545,3 +545,38 @@ describe('recettes dans le socle — 5B.5', () => {
     expect(fileNamed(withRecipes([]), 'README.md')).not.toContain('## Recettes');
   });
 });
+
+describe('Docker dans le socle — 5B.6', () => {
+  const DOCKER = entry({ id: 'docker', category: 'containers' });
+
+  it('Docker choisi sans application à construire : pas de Dockerfile, un avertissement', () => {
+    const result = built(MANIFEST, [DOCKER, entry({ id: 'next' })]);
+    expect(result.files.map((file) => file.path)).not.toContain('Dockerfile');
+    expect(result.warnings.map((warning) => warning.code)).toContain('GEN_DOCKERFILE_DEFERRED');
+  });
+
+  it('Docker choisi avec une application certifiée : Dockerfile, sans avertissement', () => {
+    const result = built(MANIFEST, [
+      DOCKER,
+      entry({ id: 'next', generation: 'certified', template: 'frontend/next' }),
+    ]);
+    expect(result.files.map((file) => file.path)).toContain('Dockerfile');
+    expect(result.warnings.map((warning) => warning.code)).not.toContain('GEN_DOCKERFILE_DEFERRED');
+  });
+
+  it('le Dockerfile copie pnpm-workspace.yaml quand le socle en a un', () => {
+    const files = scaffoldFiles(MANIFEST, [
+      DOCKER,
+      entry({ id: 'next', generation: 'certified', template: 'frontend/next' }),
+      entry({ id: 'prisma', category: 'orm' }),
+    ]);
+    expect(fileNamed(files, 'Dockerfile')).toContain('pnpm-workspace.yaml');
+  });
+
+  it('le devcontainer porte le nom du projet', () => {
+    const files = scaffoldFiles(MANIFEST, [
+      entry({ id: 'dev-container', category: 'dev-environment' }),
+    ]);
+    expect(fileNamed(files, '.devcontainer/devcontainer.json')).toContain('"name": "quai3"');
+  });
+});

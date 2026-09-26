@@ -48,6 +48,8 @@ export const CUMULATIVE_CATEGORIES: readonly Category[] = [
   'api',
   'testing',
   'git-hooks',
+  // Un devcontainer s'ajoute à Docker, il ne le remplace pas.
+  'dev-environment',
   'storage',
   'cache',
   'queue',

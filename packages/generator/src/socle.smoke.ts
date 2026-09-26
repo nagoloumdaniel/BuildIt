@@ -35,7 +35,7 @@ const PROJECTS: Record<string, SmokeProject> = {
       auth: { provider: 'better-auth' },
       services: ['stripe', 'resend'],
       quality: ['biome', 'vitest', 'playwright'],
-      infra: ['vercel', 'github-actions'],
+      infra: ['vercel', 'github-actions', 'docker', 'dev-container'],
     },
   },
   'socle React + TypeScript': {

@@ -9,7 +9,7 @@ import {
   type ParseResult,
 } from '@project-factory/validation';
 import { resolveDependencies } from './dependencies.js';
-import { buildInfrastructure } from './infrastructure.js';
+import { buildInfrastructure, canRunInContainer } from './infrastructure.js';
 import { INTEGRATIONS, type Integration } from './integrations.data.js';
 import type { PlannedFile } from './plan.js';
 import { recipeAsDependencySource } from './recipes.js';
@@ -26,7 +26,7 @@ import { recipeAsDependencySource } from './recipes.js';
  */
 
 /** Problèmes que le socle détecte lui-même. */
-const OWN_CODES = ['GEN_SCRIPT_CONFLICT', 'GEN_SECRET_IN_ENV'] as const;
+const OWN_CODES = ['GEN_SCRIPT_CONFLICT', 'GEN_SECRET_IN_ENV', 'GEN_DOCKERFILE_DEFERRED'] as const;
 
 /**
  * Problèmes que le socle **transmet** sans les reformuler.
@@ -47,6 +47,8 @@ export type ScaffoldIssue = Issue<ScaffoldIssueCode>;
 const MESSAGES: Readonly<Record<(typeof OWN_CODES)[number], string>> = {
   GEN_SCRIPT_CONFLICT:
     'Le script « {script} » est réclamé par {first} et par {second}. Un package.json ne peut en garder qu’un.',
+  GEN_DOCKERFILE_DEFERRED:
+    'Docker est choisi, mais le projet n’a pas encore d’application à construire et démarrer (scripts build et start). Aucun Dockerfile n’est posé : il échouerait dès « docker build ». Il le sera quand un template certifié fournira l’application.',
   GEN_SECRET_IN_ENV:
     '{first} déclare « {value} » comme variable d’environnement. Ce n’est pas un nom de variable — une valeur ne doit jamais entrer dans un fichier généré.',
 };
@@ -350,15 +352,30 @@ export function buildScaffold(
 
   files.push(...integrationFiles(entries, names));
 
-  // Docker et CI viennent apres le socle : ils dependent des scripts que les
-  // technologies ont apportes, donc ils ne peuvent etre construits qu'une fois
-  // le package.json decide.
-  files.push(...buildInfrastructure(entries, scripts));
-
   const workspace = pnpmWorkspace(
     manifest.architecture === 'monorepo',
     collectAllowBuilds(entries),
   );
+
+  // Docker et CI viennent apres le socle : ils dependent des scripts que les
+  // technologies ont apportes, donc ils ne peuvent etre construits qu'une fois
+  // le package.json decide.
+  files.push(
+    ...buildInfrastructure(entries, scripts, {
+      projectName: manifest.name,
+      workspaceFile: workspace !== undefined,
+    }),
+  );
+
+  const warnings: Issue<string>[] = [...resolved.warnings];
+  if (entries.some((entry) => entry.id === 'docker') && !canRunInContainer(scripts)) {
+    warnings.push({
+      code: 'GEN_DOCKERFILE_DEFERRED',
+      path: ['docker'],
+      message: messageFor('GEN_DOCKERFILE_DEFERRED', {}),
+    });
+  }
+
   if (workspace !== undefined) {
     files.push({
       path: 'pnpm-workspace.yaml',
@@ -373,5 +390,5 @@ export function buildScaffold(
     }
   }
 
-  return ok({ files, warnings: resolved.warnings });
+  return ok({ files, warnings });
 }
