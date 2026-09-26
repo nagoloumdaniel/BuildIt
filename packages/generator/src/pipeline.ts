@@ -1,5 +1,7 @@
+import { fileURLToPath } from 'node:url';
 import { resolve, type Selection } from '@project-factory/compatibility';
 import type { Manifest } from '@project-factory/manifest';
+import { loadRecipeCatalogue, type RecipeCatalogue } from '@project-factory/recipes';
 import { loadCatalogue, type Registry, type RegistryEntry } from '@project-factory/registry';
 import {
   fail,
@@ -17,14 +19,18 @@ import {
   runValidation,
   type StepFailure,
 } from './postinstall.js';
-import { buildScaffold } from './scaffold.js';
+import { resolveRecipes } from './recipes.js';
+import { buildScaffold, NODE_RANGE, PACKAGE_MANAGER } from './scaffold.js';
+import type { TemplateContext } from './template.js';
+import { loadTemplateFiles, type TemplateRequest } from './templates.js';
 import { type FileSystem, type GenerationReport, generate } from './write.js';
 
 /**
  * Le pipeline du §22, assemblé.
  *
  * ```
- * Manifest → Stack Resolver → Compatibility → Scaffold → File Plan → [Dry Run] → Generator
+ * Manifest → Stack Resolver → Compatibility → Recipe Resolver → Scaffold
+ *          → Template Resolver → File Plan → [Dry Run] → Generator
  *          → Post Install (install, git) → Validation
  * ```
  *
@@ -107,6 +113,14 @@ export type GenerationResult =
 export interface PipelineOptions {
   /** Catalogue à utiliser. Par défaut, le catalogue officiel. */
   readonly registry?: Registry;
+  /** Recettes à appliquer, choisies explicitement (§22). Par défaut : aucune. */
+  readonly recipes?: readonly string[];
+  /** Catalogue de recettes. Par défaut, les recettes officielles. */
+  readonly recipeCatalogue?: RecipeCatalogue;
+  /** Racine des templates. Par défaut, le dossier `templates/` du paquet. */
+  readonly templatesRoot?: string;
+  /** Horloge des templates (`{{year}}`). Par défaut, maintenant. */
+  readonly now?: Date;
   readonly fs?: FileSystem;
   /** Exécuteur des commandes post-écriture. Par défaut, le vrai. */
   readonly runner?: CommandRunner;
@@ -128,6 +142,37 @@ type PipelineIssue = Issue<string>;
 
 function toIssues(issues: readonly Issue<string>[]): PipelineIssue[] {
   return [...issues];
+}
+
+/**
+ * Templates livrés avec le paquet. Résolu depuis ce fichier : `src/` en
+ * développement, `dist/` une fois publié — le dossier est à côté des deux.
+ */
+const DEFAULT_TEMPLATES_ROOT = fileURLToPath(new URL('../templates', import.meta.url));
+
+function requireRecipeCatalogue(options: PipelineOptions): ParseResult<RecipeCatalogue, string> {
+  if (options.recipeCatalogue !== undefined) {
+    return ok(options.recipeCatalogue);
+  }
+  const catalogue = loadRecipeCatalogue();
+  return catalogue.ok ? ok(catalogue.value) : fail(toIssues(catalogue.issues));
+}
+
+/**
+ * Variables offertes aux templates. Liste fermée (template.ts) ; toutes
+ * dérivées du manifest ou de constantes du socle, jamais d'une saisie libre
+ * autre que `name`.
+ */
+function templateContext(manifest: Manifest, now: Date): TemplateContext {
+  return {
+    projectName: manifest.name,
+    packageName: manifest.name,
+    scope: `@${manifest.name}`,
+    description: '',
+    year: String(now.getUTCFullYear()),
+    nodeVersion: NODE_RANGE,
+    packageManager: PACKAGE_MANAGER,
+  };
 }
 
 function requireRegistry(options: PipelineOptions): ParseResult<Registry, string> {
@@ -170,12 +215,56 @@ export function planProject(
     .map((id) => registry.value.get(id))
     .filter((entry): entry is RegistryEntry => entry !== undefined);
 
-  const scaffold = buildScaffold(manifest, entries);
+  const requested = options.recipes ?? [];
+  let recipes: ReturnType<RecipeCatalogue['all']> = [];
+  if (requested.length > 0) {
+    const catalogue = requireRecipeCatalogue(options);
+    if (!catalogue.ok) {
+      return catalogue;
+    }
+    const resolved = resolveRecipes(requested, entries, catalogue.value);
+    if (!resolved.ok) {
+      return fail(toIssues(resolved.issues));
+    }
+    recipes = resolved.value;
+  }
+
+  const scaffold = buildScaffold(manifest, entries, recipes);
   if (!scaffold.ok) {
     return fail(toIssues(scaffold.issues));
   }
 
-  const plan = planFiles(targetDir, scaffold.value.files);
+  // Template Resolver : le template de chaque fiche certifiée, puis les
+  // fichiers des recettes. Sans demande, aucun accès au disque.
+  const requests: TemplateRequest[] = [
+    ...entries.flatMap((entry): TemplateRequest[] =>
+      entry.generation === 'certified' && entry.template !== undefined
+        ? [{ kind: 'directory', template: entry.template }]
+        : [],
+    ),
+    ...recipes.flatMap((recipe) =>
+      (recipe.files ?? []).map(
+        (file): TemplateRequest => ({
+          kind: 'file',
+          template: file.template,
+          target: file.target,
+          origin: `recipe:${recipe.id}`,
+        }),
+      ),
+    ),
+  ];
+  const templates = loadTemplateFiles(
+    options.templatesRoot ?? DEFAULT_TEMPLATES_ROOT,
+    requests,
+    templateContext(manifest, options.now ?? new Date()),
+  );
+  if (!templates.ok) {
+    return fail(toIssues(templates.issues));
+  }
+
+  // Un template qui viserait un fichier du socle est un conflit : planFiles le
+  // détecte avant toute écriture, avec les deux origines.
+  const plan = planFiles(targetDir, [...scaffold.value.files, ...templates.value]);
   if (!plan.ok) {
     return fail(toIssues(plan.issues));
   }

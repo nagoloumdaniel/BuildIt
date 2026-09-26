@@ -1,4 +1,5 @@
 import type { Manifest } from '@project-factory/manifest';
+import type { Recipe } from '@project-factory/recipes';
 import type { RegistryEntry } from '@project-factory/registry';
 import {
   createMessageFormatter,
@@ -11,6 +12,7 @@ import { resolveDependencies } from './dependencies.js';
 import { buildInfrastructure } from './infrastructure.js';
 import { INTEGRATIONS, type Integration } from './integrations.data.js';
 import type { PlannedFile } from './plan.js';
+import { recipeAsDependencySource } from './recipes.js';
 
 /**
  * Le socle d'un projet généré (§13).
@@ -52,8 +54,8 @@ const MESSAGES: Readonly<Record<(typeof OWN_CODES)[number], string>> = {
 const messageFor = createMessageFormatter(MESSAGES);
 
 /** Plancher Node et gestionnaire de paquets du projet généré. */
-const NODE_RANGE = '>=20.11.0';
-const PACKAGE_MANAGER = 'pnpm@11.13.1';
+export const NODE_RANGE: string = '>=20.11.0';
+export const PACKAGE_MANAGER: string = 'pnpm@11.13.1';
 
 /** Nom de variable d'environnement acceptable : majuscules, chiffres, tirets bas. */
 const ENV_NAME = /^[A-Z][A-Z0-9_]*$/;
@@ -123,7 +125,14 @@ function collectScripts(entries: readonly RegistryEntry[]): {
   return { scripts: sortedRecord(scripts), issues };
 }
 
-function collectEnv(entries: readonly RegistryEntry[]): {
+/** Ce qui déclare des variables d'environnement : une fiche ou une recette. */
+interface EnvSource {
+  readonly id: string;
+  readonly name: string;
+  readonly env?: readonly string[] | undefined;
+}
+
+function collectEnv(entries: readonly EnvSource[]): {
   names: string[];
   issues: ScaffoldIssue[];
 } {
@@ -191,12 +200,18 @@ function envExample(names: readonly string[]): string {
   return `${lines.join('\n')}\n`;
 }
 
-function readme(manifest: Manifest, entries: readonly RegistryEntry[]): string {
+function readme(
+  manifest: Manifest,
+  entries: readonly RegistryEntry[],
+  recipes: readonly Recipe[],
+): string {
   const stack = entries.map((entry) => `- ${entry.name}`).join('\n');
+  const applied = recipes.map((recipe) => `- ${recipe.name} — ${recipe.description}`).join('\n');
   const lines = [
     `# ${manifest.name}`,
     '',
     ...(entries.length > 0 ? ['## Stack', '', stack, ''] : []),
+    ...(recipes.length > 0 ? ['## Recettes', '', applied, ''] : []),
     '## Démarrer',
     '',
     '```bash',
@@ -293,10 +308,11 @@ export interface Scaffold {
 export function buildScaffold(
   manifest: Manifest,
   entries: readonly RegistryEntry[],
+  recipes: readonly Recipe[] = [],
 ): ParseResult<Scaffold, ScaffoldIssueCode> {
   const { scripts, issues: scriptIssues } = collectScripts(entries);
-  const { names, issues: envIssues } = collectEnv(entries);
-  const dependencies = resolveDependencies(entries);
+  const { names, issues: envIssues } = collectEnv([...entries, ...recipes]);
+  const dependencies = resolveDependencies([...entries, ...recipes.map(recipeAsDependencySource)]);
 
   const ownIssues: ScaffoldIssue[] = [...scriptIssues, ...envIssues];
 
@@ -329,7 +345,7 @@ export function buildScaffold(
     },
     { path: '.gitignore', contents: GITIGNORE, source: 'scaffold:gitignore' },
     { path: '.env.example', contents: envExample(names), source: 'scaffold:env-example' },
-    { path: 'README.md', contents: readme(manifest, entries), source: 'scaffold:readme' },
+    { path: 'README.md', contents: readme(manifest, entries, recipes), source: 'scaffold:readme' },
   ];
 
   files.push(...integrationFiles(entries, names));

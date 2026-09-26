@@ -36,6 +36,18 @@ const MESSAGES: Readonly<Record<DependencyIssueCode, string>> = {
 
 const messageFor = createMessageFormatter(MESSAGES);
 
+/**
+ * Ce qui réclame des paquets : une fiche du registry, ou une recette.
+ *
+ * Le sous-ensemble utile d'une fiche, et rien de plus — une recette s'y
+ * convertit, et ses plages entrent en conflit avec celles des fiches par le
+ * même code, avec les mêmes messages.
+ */
+export type DependencySource = Pick<
+  RegistryEntry,
+  'id' | 'name' | 'packages' | 'devPackages' | 'packageRanges' | 'versionRange'
+>;
+
 export interface ResolvedDependencies {
   /** Clés triées : deux générations identiques produisent le même package.json. */
   readonly dependencies: Readonly<Record<string, string>>;
@@ -46,7 +58,7 @@ export interface ResolvedDependencies {
 type Role = 'runtime' | 'dev';
 
 interface Claim {
-  readonly entry: RegistryEntry;
+  readonly entry: DependencySource;
   readonly role: Role;
   readonly range: string | undefined;
 }
@@ -59,7 +71,7 @@ interface Claim {
  * Un paquet satellite sans plage propre n'hérite de rien : appliquer la version
  * de Next.js à React serait faux.
  */
-function rangeFor(entry: RegistryEntry, packageName: string): string | undefined {
+function rangeFor(entry: DependencySource, packageName: string): string | undefined {
   const declared = entry.packageRanges?.[packageName];
   if (declared !== undefined) {
     return declared;
@@ -67,10 +79,10 @@ function rangeFor(entry: RegistryEntry, packageName: string): string | undefined
   return packageName === entry.id ? entry.versionRange : undefined;
 }
 
-function claimsOf(entries: readonly RegistryEntry[]): Map<string, Claim[]> {
+function claimsOf(entries: readonly DependencySource[]): Map<string, Claim[]> {
   const claims = new Map<string, Claim[]>();
 
-  function add(entry: RegistryEntry, packageName: string, role: Role): void {
+  function add(entry: DependencySource, packageName: string, role: Role): void {
     const bucket = claims.get(packageName) ?? [];
     bucket.push({ entry, role, range: rangeFor(entry, packageName) });
     claims.set(packageName, bucket);
@@ -138,7 +150,7 @@ function combine(
 }
 
 export function resolveDependencies(
-  entries: readonly RegistryEntry[],
+  entries: readonly DependencySource[],
 ): ParseResult<ResolvedDependencies, DependencyIssueCode> {
   const errors: DependencyIssue[] = [];
   const warnings: DependencyIssue[] = [];

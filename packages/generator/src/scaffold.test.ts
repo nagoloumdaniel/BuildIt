@@ -1,4 +1,5 @@
 import type { Manifest } from '@project-factory/manifest';
+import type { Recipe } from '@project-factory/recipes';
 import type { RegistryEntry } from '@project-factory/registry';
 import { describe, expect, it } from 'vitest';
 import { buildScaffold } from './scaffold.js';
@@ -480,5 +481,67 @@ describe('scripts d’installation approuvés — pnpm 11', () => {
       .filter((line) => line.endsWith(': true'))
       .map((line) => line.trim().replace(/"/g, '').replace(': true', ''));
     expect(approved).toEqual([...new Set(approved)].sort());
+  });
+});
+
+describe('recettes dans le socle — 5B.5', () => {
+  const RECIPE: Recipe = {
+    id: 'stripe-checkout',
+    name: 'Stripe — Checkout',
+    description: 'x',
+    for: ['stripe'],
+    packages: { stripe: '^18.0.0' },
+    devPackages: { '@types/node': '^24.0.0' },
+    env: ['STRIPE_WEBHOOK_SECRET'],
+  };
+  const STRIPE = entry({
+    id: 'stripe',
+    category: 'payments',
+    packages: ['stripe'],
+    packageRanges: { stripe: '^18.0.0' },
+    env: ['STRIPE_SECRET_KEY'],
+  });
+
+  function withRecipes(recipes: Recipe[], entries: RegistryEntry[] = [STRIPE]) {
+    const result = buildScaffold(MANIFEST, entries, recipes);
+    if (!result.ok) {
+      throw new Error(result.issues.map((issue) => issue.message).join(' | '));
+    }
+    return result.value.files;
+  }
+
+  it('ajoute les paquets de la recette au package.json', () => {
+    const json = JSON.parse(fileNamed(withRecipes([RECIPE]), 'package.json')) as {
+      dependencies: Record<string, string>;
+      devDependencies: Record<string, string>;
+    };
+    expect(json.dependencies['stripe']).toBe('^18.0.0');
+    expect(json.devDependencies['@types/node']).toBe('^24.0.0');
+  });
+
+  it('ajoute ses variables à .env.example, sans doublon avec la fiche', () => {
+    const env = fileNamed(withRecipes([RECIPE]), '.env.example');
+    expect(env).toContain('STRIPE_SECRET_KEY=');
+    expect(env).toContain('STRIPE_WEBHOOK_SECRET=');
+    expect(env.match(/STRIPE_WEBHOOK_SECRET=/g)).toHaveLength(1);
+  });
+
+  it('une plage de recette incompatible avec la fiche est un conflit', () => {
+    const result = buildScaffold(
+      MANIFEST,
+      [STRIPE],
+      [{ ...RECIPE, packages: { stripe: '^12.0.0' } }],
+    );
+    expect(!result.ok && result.issues.map((issue) => issue.code)).toEqual([
+      'GEN_DEPENDENCY_CONFLICT',
+    ]);
+  });
+
+  it('le README liste les recettes appliquées', () => {
+    expect(fileNamed(withRecipes([RECIPE]), 'README.md')).toContain('Stripe — Checkout');
+  });
+
+  it('sans recette, le README n’a pas de section recettes', () => {
+    expect(fileNamed(withRecipes([]), 'README.md')).not.toContain('## Recettes');
   });
 });

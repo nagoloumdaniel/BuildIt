@@ -16,26 +16,37 @@ import { generateProject, PIPELINE_STEPS } from './pipeline.js';
  * semblant.
  */
 
-const PROJECTS: Record<string, Manifest> = {
-  'preset SaaS': {
-    manifestVersion: 1,
-    name: 'quai3',
-    targets: ['web'],
-    architecture: 'single-app',
-    frontend: { framework: 'next', language: 'typescript', styling: 'tailwind', ui: 'shadcn-ui' },
-    database: { engine: 'postgresql', orm: 'prisma' },
-    auth: { provider: 'better-auth' },
-    services: ['stripe', 'resend'],
-    quality: ['biome', 'vitest', 'playwright'],
-    infra: ['vercel', 'github-actions'],
+interface SmokeProject {
+  readonly manifest: Manifest;
+  /** Recettes appliquées : leurs templates sont vérifiés contre les vrais paquets. */
+  readonly recipes?: readonly string[];
+}
+
+const PROJECTS: Record<string, SmokeProject> = {
+  'preset SaaS, avec ses deux recettes': {
+    recipes: ['better-auth-email-password', 'stripe-checkout'],
+    manifest: {
+      manifestVersion: 1,
+      name: 'quai3',
+      targets: ['web'],
+      architecture: 'single-app',
+      frontend: { framework: 'next', language: 'typescript', styling: 'tailwind', ui: 'shadcn-ui' },
+      database: { engine: 'postgresql', orm: 'prisma' },
+      auth: { provider: 'better-auth' },
+      services: ['stripe', 'resend'],
+      quality: ['biome', 'vitest', 'playwright'],
+      infra: ['vercel', 'github-actions'],
+    },
   },
   'socle React + TypeScript': {
-    manifestVersion: 1,
-    name: 'minimal-react',
-    targets: ['web'],
-    architecture: 'single-app',
-    frontend: { framework: 'react', language: 'typescript' },
-    quality: ['biome', 'vitest'],
+    manifest: {
+      manifestVersion: 1,
+      name: 'minimal-react',
+      targets: ['web'],
+      architecture: 'single-app',
+      frontend: { framework: 'react', language: 'typescript' },
+      quality: ['biome', 'vitest'],
+    },
   },
 };
 
@@ -55,7 +66,7 @@ afterAll(async () => {
 });
 
 describe('un projet généré passe sa propre CI — gate M3', () => {
-  for (const [label, manifest] of Object.entries(PROJECTS)) {
+  for (const [label, { manifest, recipes }] of Object.entries(PROJECTS)) {
     it(label, async () => {
       const root = await mkdtemp(join(tmpdir(), 'pf-smoke-'));
       roots.push(root);
@@ -67,6 +78,7 @@ describe('un projet généré passe sa propre CI — gate M3', () => {
         install: true,
         git: true,
         validate: true,
+        ...(recipes === undefined ? {} : { recipes }),
       });
 
       expect(result.ok, result.ok ? '' : result.issues.map((i) => i.message).join('\n')).toBe(true);

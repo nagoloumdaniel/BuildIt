@@ -1,7 +1,8 @@
-import { mkdtemp, readdir, readFile, rm, writeFile } from 'node:fs/promises';
+import { mkdir, mkdtemp, readdir, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import type { Manifest } from '@project-factory/manifest';
+import { loadCatalogue, loadRegistry, type Registry } from '@project-factory/registry';
 import { afterEach, describe, expect, it } from 'vitest';
 import { generateProject, planProject, selectionFromManifest } from './pipeline.js';
 import { describePlan } from './plan.js';
@@ -503,5 +504,134 @@ describe('post-install, validation et reprise — §22', () => {
       expect(result.value.warnings.map((warning) => warning.code)).toContain('GEN_GIT_NESTED');
       expect(result.value.completedSteps).not.toContain('git');
     }
+  });
+});
+
+/**
+ * Template Resolver et Recipe Resolver branchés dans le pipeline (5B.4, 5B.5).
+ */
+describe('templates et recettes dans le plan — §22', () => {
+  /** Le catalogue officiel, avec `next` promu certifié pour les besoins du test. */
+  function registryWithCertifiedNext(): Registry {
+    const official = loadCatalogue();
+    if (!official.ok) {
+      throw new Error('catalogue officiel invalide');
+    }
+    const raw = official.value
+      .entries()
+      .map((entry) =>
+        entry.id === 'next'
+          ? { ...entry, generation: 'certified', template: 'frontend/next' }
+          : entry,
+      );
+    const registry = loadRegistry(raw);
+    if (!registry.ok) {
+      throw new Error(registry.issues.map((issue) => issue.message).join(' | '));
+    }
+    return registry.value;
+  }
+
+  async function templatesRoot(files: Record<string, string>): Promise<string> {
+    const root = await tempDir();
+    for (const [path, contents] of Object.entries(files)) {
+      const full = join(root, path);
+      await mkdir(full.slice(0, full.lastIndexOf('/')), { recursive: true });
+      await writeFile(full, contents);
+    }
+    return root;
+  }
+
+  function paths(result: ReturnType<typeof planProject>): string[] {
+    if (!result.ok) {
+      throw new Error(result.issues.map((issue) => issue.message).join(' | '));
+    }
+    return result.value.plan.files.map((file) => file.path);
+  }
+
+  it('une fiche certifiée apporte les fichiers de son template, rendus', async () => {
+    const templates = await templatesRoot({
+      'frontend/next/app/page.tsx': 'export const title = "{{projectName}} — {{year}}";\n',
+    });
+    const result = planProject(SAAS, '/cible', {
+      registry: registryWithCertifiedNext(),
+      templatesRoot: templates,
+      now: new Date('2031-05-01T00:00:00Z'),
+    });
+    expect(paths(result)).toContain('app/page.tsx');
+    if (result.ok) {
+      const page = result.value.plan.files.find((file) => file.path === 'app/page.tsx');
+      expect(page?.contents).toBe('export const title = "quai3 — 2031";\n');
+      expect(page?.source).toBe('template:frontend/next');
+    }
+  });
+
+  it('une fiche certifiée apporte aussi ses scripts d’application', async () => {
+    const templates = await templatesRoot({ 'frontend/next/app/page.tsx': 'x\n' });
+    const result = planProject(SAAS, '/cible', {
+      registry: registryWithCertifiedNext(),
+      templatesRoot: templates,
+    });
+    const pkg = result.ok
+      ? result.value.plan.files.find((file) => file.path === 'package.json')
+      : undefined;
+    expect(JSON.parse(pkg?.contents ?? '{}').scripts.build).toBe('next build');
+  });
+
+  it('un template promis mais absent arrête la génération à l’étage plan', async () => {
+    const result = await generateProject(SAAS, join(await tempDir(), 'p'), {
+      registry: registryWithCertifiedNext(),
+      templatesRoot: await templatesRoot({}),
+    });
+    expect(result.ok).toBe(false);
+    if (!result.ok) {
+      expect(result.failedStep).toBe('plan');
+      expect(result.issues.map((issue) => issue.code)).toEqual(['GEN_TEMPLATE_MISSING']);
+    }
+  });
+
+  it('un template qui réécrit un fichier du socle est un conflit détecté avant écriture', async () => {
+    const templates = await templatesRoot({ 'frontend/next/package.json': '{}\n' });
+    const result = planProject(SAAS, '/cible', {
+      registry: registryWithCertifiedNext(),
+      templatesRoot: templates,
+    });
+    expect(!result.ok && result.issues.map((issue) => issue.code)).toContain('GEN_FILE_CONFLICT');
+  });
+
+  it('les recettes officielles s’appliquent avec leurs templates livrés', () => {
+    const result = planProject(SAAS, '/cible', {
+      recipes: ['stripe-checkout', 'better-auth-email-password'],
+    });
+    expect(paths(result)).toEqual(
+      expect.arrayContaining(['lib/auth.ts', 'lib/stripe/checkout.ts']),
+    );
+    if (result.ok) {
+      const checkout = result.value.plan.files.find(
+        (file) => file.path === 'lib/stripe/checkout.ts',
+      );
+      expect(checkout?.source).toBe('recipe:stripe-checkout');
+      expect(checkout?.contents).toContain('Paiement Stripe Checkout pour quai3.');
+      const pkg = result.value.plan.files.find((file) => file.path === 'package.json');
+      expect(JSON.parse(pkg?.contents ?? '{}').devDependencies['@types/node']).toBeDefined();
+    }
+  });
+
+  it('une recette inconnue est refusée avec les mots du résolveur', () => {
+    const result = planProject(SAAS, '/cible', { recipes: ['stripe-chekout'] });
+    expect(!result.ok && result.issues.map((issue) => issue.code)).toEqual(['GEN_RECIPE_UNKNOWN']);
+  });
+
+  it('une recette hors stack est refusée', () => {
+    const result = planProject({ ...SAAS, services: ['resend'] }, '/cible', {
+      recipes: ['stripe-checkout'],
+    });
+    expect(!result.ok && result.issues.map((issue) => issue.code)).toEqual([
+      'GEN_RECIPE_NOT_APPLICABLE',
+    ]);
+  });
+
+  it('sans fiche certifiée ni recette, aucun dossier de templates n’est lu', () => {
+    const result = planProject(SAAS, '/cible', { templatesRoot: '/racine/qui/n-existe/pas' });
+    expect(result.ok).toBe(true);
   });
 });
