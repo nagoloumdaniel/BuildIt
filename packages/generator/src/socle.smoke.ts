@@ -124,12 +124,14 @@ function run(
  * générateur, il ne doit pas passer pour une panne d'infrastructure.
  */
 const REGISTRY_OUTAGE =
-  /rate limit|toomanyrequests|i\/o timeout|TLS handshake timeout|connection refused|no such host|network is unreachable/i;
+  /rate limit|toomanyrequests|too many requests|\b429\b|i\/o timeout|TLS handshake timeout|connection refused|no such host|network is unreachable/i;
 
 /** Télécharge l'image du service ; `false` si le registre est indisponible. */
 function pullImage(target: string, service: string): boolean {
   try {
-    run('docker', ['compose', 'pull', service], target);
+    // `missing` : une image déjà présente ne recontacte pas le registre, donc
+    // ne consomme pas de quota.
+    run('docker', ['compose', 'pull', '--policy', 'missing', service], target);
     return true;
   } catch (error) {
     if (REGISTRY_OUTAGE.test(String(error))) {
