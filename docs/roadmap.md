@@ -366,6 +366,25 @@ Le test de fumée **échoue** désormais sans Docker, sauf saut explicite (`PF_S
 
 Gate M3 : **3 presets sur 4**. Reste le Full-stack.
 
+## État au 28/09/2026 (fin) — Full-stack certifié, gate M3 fermé
+
+Le générateur sait produire un **monorepo multi-applications** ([spec](superpowers/specs/2026-09-28-phase6-monorepo-fullstack-design.md)) : la stack est répartie entre `apps/web` et `apps/api` par une table de rôles, chaque application est générée par le chemin des applications seules — celui que le test de fumée certifie —, la racine porte Turborepo, Biome, `pnpm-workspace.yaml` (réunion des scripts d'installation), `docker-compose.yml` (réunion des services) et la CI.
+
+Preset Full-stack (Next.js + Hono) certifié : le test de fumée installe à la racine, passe lint, typecheck, test et build via Turborepo, démarre l'API construite, fait l'aller-retour Redis depuis `apps/api` et l'inscription réelle sur `apps/web`. `turborepo` et `pnpm` certifiés.
+
+### Gate M3 — `verification-before-completion`
+- [x] Les 4 presets génèrent, installent, buildent et typechecken — en CI **locale** (hook pre-push, la CI GitHub n'étant pas disponible)
+- [x] No-lock-in vérifié par test
+- [x] Un projet généré tourne réellement et s'affiche dans un navigateur — Playwright (vérifié à la main), image Docker (test de fumée)
+- [x] Génération < 90 s hors installation
+
+Écarts assumés, à reprendre :
+- Full-stack : ni `packages/shared` (le « shared UI » du §8), ni Dockerfile par application (`GEN_DOCKERFILE_MONOREPO_DEFERRED`) — spec, « Hors périmètre ».
+- Les tests Playwright générés ne tournent pas dans le test de fumée (navigateurs requis).
+- 6.12 : aucun entretien n'a eu lieu ; les presets ont été tranchés par le premier utilisateur (§0).
+
+**Prochaine étape : Phase 7 — CLI `pf`.**
+
 **Prochaine étape (initiale) : 6.12 puis 6.7b.** Les entretiens de 6.12 doivent précéder 6.7b (« avant de figer ») ; les trois autres presets réutiliseront les intégrations du SaaS. Full-stack exige NestJS, Redis et Zod ; API exige NestJS ou Hono ; Dashboard reste à cadrer (6.1).
 
 ---

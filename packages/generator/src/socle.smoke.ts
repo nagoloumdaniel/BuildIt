@@ -49,6 +49,11 @@ interface SmokeProject {
    * généré (`lib/redis.ts`), exécuté avec tsx. Exige Docker.
    */
   readonly cache?: { readonly service: string; readonly url: string };
+  /**
+   * Monorepo : sous-dossier de l'application qui porte chaque vérification.
+   * Les services Docker restent à la racine, où vit docker-compose.yml.
+   */
+  readonly apps?: { readonly http?: string; readonly data?: string; readonly cache?: string };
   /** Recettes appliquées : leurs templates sont vérifiés contre les vrais paquets. */
   readonly recipes?: readonly string[];
 }
@@ -102,6 +107,26 @@ const PROJECTS: Record<string, SmokeProject> = {
       services: ['redis'],
       quality: ['biome', 'vitest'],
       infra: ['docker', 'github-actions'],
+    },
+  },
+  'preset Full-stack (monorepo)': {
+    apps: { http: 'apps/api', data: 'apps/web', cache: 'apps/api' },
+    http: ['/health', '/openapi.json'],
+    database: { service: 'postgres', url: 'postgresql://postgres:postgres@localhost:5432/app' },
+    signUp: true,
+    cache: { service: 'redis', url: 'redis://localhost:6379' },
+    manifest: {
+      manifestVersion: 1,
+      name: 'atelier',
+      targets: ['web', 'api'],
+      architecture: 'monorepo',
+      frontend: { framework: 'next', language: 'typescript', styling: 'tailwind', ui: 'shadcn-ui' },
+      backend: { framework: 'hono', language: 'typescript' },
+      database: { engine: 'postgresql', orm: 'prisma' },
+      auth: { provider: 'better-auth' },
+      services: ['redis', 'zod'],
+      quality: ['biome', 'vitest', 'playwright'],
+      infra: ['turborepo', 'docker', 'github-actions'],
     },
   },
   'socle React + TypeScript': {
@@ -196,9 +221,14 @@ function requireImage(target: string, service: string): void {
   }
 }
 
-async function databaseRoundTrip(target: string, service: string, url: string): Promise<void> {
-  composed.push(target);
-  run('docker', ['compose', 'up', '-d', '--wait', service], target);
+async function databaseRoundTrip(
+  root: string,
+  target: string,
+  service: string,
+  url: string,
+): Promise<void> {
+  composed.push(root);
+  run('docker', ['compose', 'up', '-d', '--wait', service], root);
   await writeFile(
     join(target, 'prisma/schema/smoke.prisma'),
     'model SmokeCheck {\n  id Int @id @default(autoincrement())\n}\n',
@@ -339,9 +369,9 @@ async function imageServes(target: string, path: string): Promise<void> {
 }
 
 /** Le client Redis généré se connecte et obtient PONG — pas seulement il se type. */
-function cacheRoundTrip(target: string, service: string, url: string): void {
-  composed.push(target);
-  run('docker', ['compose', 'up', '-d', '--wait', service], target);
+function cacheRoundTrip(root: string, target: string, service: string, url: string): void {
+  composed.push(root);
+  run('docker', ['compose', 'up', '-d', '--wait', service], root);
   const script =
     "import('./lib/redis.ts').then(async ({ redis }) => { const client = await redis(); " +
     'console.log(await client.ping()); await client.quit(); })';
@@ -471,7 +501,7 @@ function requireDocker(): void {
 describe('un projet généré passe sa propre CI — gate M3', () => {
   for (const [
     label,
-    { manifest, recipes, database, signUp, dashboard, http, image, cache },
+    { manifest, recipes, database, signUp, dashboard, http, image, cache, apps },
   ] of Object.entries(PROJECTS)) {
     describe(label, () => {
       let target = '';
@@ -516,7 +546,7 @@ describe('un projet généré passe sa propre CI — gate M3', () => {
 
       if (http !== undefined) {
         it('l’application construite démarre et sert ses routes', async () => {
-          await expectPaths(generated(), http);
+          await expectPaths(join(generated(), apps?.http ?? ''), http);
         });
       }
 
@@ -526,7 +556,7 @@ describe('un projet généré passe sa propre CI — gate M3', () => {
           const project = generated();
           requireImage(project, cache.service);
           try {
-            cacheRoundTrip(project, cache.service, cache.url);
+            cacheRoundTrip(project, join(project, apps?.cache ?? ''), cache.service, cache.url);
           } finally {
             composeDown(project);
           }
@@ -550,14 +580,15 @@ describe('un projet généré passe sa propre CI — gate M3', () => {
         it.skipIf(SKIP_DOCKER)(`PostgreSQL réel${journey}`, async () => {
           requireDocker();
           const project = generated();
+          const app = join(project, apps?.data ?? '');
           requireImage(project, database.service);
           try {
-            await databaseRoundTrip(project, database.service, database.url);
+            await databaseRoundTrip(project, app, database.service, database.url);
             if (signUp === true) {
-              await signUpAndSignIn(project, database.url);
+              await signUpAndSignIn(app, database.url);
             }
             if (dashboard === true) {
-              await dashboardJourney(project, database.url);
+              await dashboardJourney(app, database.url);
             }
           } finally {
             composeDown(project);

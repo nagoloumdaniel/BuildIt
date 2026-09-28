@@ -5,7 +5,7 @@ Référence complète : `docs/cahier-des-charges.md`. Plan d'exécution : `docs/
 
 ## État
 
-Phases 1 (socle monorepo), 2 (Project Manifest), 3 (registry, 282 fiches) et 4 (compatibility engine) livrées. Phase 5 livrée (5A + 5B), gate M3 partiel fermé : le socle généré s'installe et passe lint, typecheck et test (`pnpm test:smoke`), post-install et reprise d'étape, Template Resolver, `packages/recipes` avec deux recettes réelles, Dockerfile/devcontainer, revue sécurité écrite. Phase 6 en cours : presets **SaaS**, **API** (Hono) et **Dashboard** (recette `dashboard-admin`) certifiés de bout en bout. Reste le **Full-stack** (Next.js + Hono en monorepo), qui exige la génération multi-applications. Les entretiens de 6.12 n'ont pas eu lieu.
+Phases 1 (socle monorepo), 2 (Project Manifest), 3 (registry, 282 fiches) et 4 (compatibility engine) livrées. Phase 5 livrée (5A + 5B), gate M3 partiel fermé : le socle généré s'installe et passe lint, typecheck et test (`pnpm test:smoke`), post-install et reprise d'étape, Template Resolver, `packages/recipes` avec deux recettes réelles, Dockerfile/devcontainer, revue sécurité écrite. Phase 6 livrée, gate M3 fermé : les quatre presets — **SaaS**, **API** (Hono), **Dashboard** (recette `dashboard-admin`), **Full-stack** (Next.js + Hono en monorepo) — sont certifiés de bout en bout. Écarts assumés dans la roadmap (pas de `packages/shared`, pas de Dockerfile par application en monorepo, entretiens 6.12 non faits). **Prochaine étape : Phase 7, CLI `pf`.**
 
 Remote : `github.com/nagoloumdaniel/BuildIt`. **La CI GitHub n'est pas disponible** : l'intégration continue est locale, portée par le hook `pre-push` — `ci:local` à chaque push, plus `test:smoke` quand le push touche `generator`, `registry` ou `recipes`. `ci.yml` est dormant (déclenchement manuel).
 
@@ -40,7 +40,7 @@ packages/registry/           catalogue (§7, §11) — livré, 282 fiches
 packages/compatibility/      règles du §12 — livré
 packages/recipes/            recettes (§22, Recipe Resolver) — livré
   data/<id>.recipe.json              source de vérité ; index engendré comme le registry
-packages/generator/          pipeline du §22 — livré
+packages/generator/          pipeline du §22 — livré ; monorepo multi-applications (monorepo.ts)
   templates/                         templates livrés (recettes aujourd'hui, presets en Phase 6)
   src/*.smoke.ts                     test de fumée réseau : pnpm test:smoke, hors pnpm test
 assets/brand/                logos, provisoires (voir son README)

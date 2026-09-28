@@ -140,7 +140,7 @@ describe('contenu du catalogue', () => {
     }
   });
 
-  it('les presets SaaS et API du §8 sont entièrement certifiés', () => {
+  it('les quatre presets du §8 — SaaS, API, Dashboard, Full-stack — sont certifiés', () => {
     const registry = requireRegistry();
     const certified = registry.query({ generation: 'certified' }).map((entry) => entry.id);
     expect([...certified].sort()).toEqual([
@@ -152,6 +152,7 @@ describe('contenu du catalogue', () => {
       'next',
       'openapi',
       'playwright',
+      'pnpm',
       'postgresql',
       'posthog',
       'prisma',
@@ -161,6 +162,7 @@ describe('contenu du catalogue', () => {
       'shadcn-ui',
       'stripe',
       'tailwind',
+      'turborepo',
       'typescript',
       'vercel',
       'vitest',

@@ -370,7 +370,7 @@ const WORKSPACE_PACKAGES = ['packages:', '  - "apps/*"', '  - "packages/*"'];
  *   script d'installation. Sans elle, `pnpm install` **échoue** dès qu'un tel
  *   paquet est présent (Prisma, notamment) — même dans une application seule.
  */
-function pnpmWorkspace(
+export function pnpmWorkspace(
   monorepo: boolean,
   builds: readonly (readonly [string, boolean])[],
 ): string | undefined {
@@ -401,7 +401,9 @@ function pnpmWorkspace(
  * Une autorisation l'emporte sur un refus : refuser ce dont une autre
  * technologie a besoin casserait son installation.
  */
-function collectBuildPolicy(entries: readonly RegistryEntry[]): (readonly [string, boolean])[] {
+export function collectBuildPolicy(
+  entries: readonly RegistryEntry[],
+): (readonly [string, boolean])[] {
   const stack = stackOf(entries);
   const integrations = entries.flatMap((entry) => integrationsFor(entry, stack));
   const policy = new Map<string, boolean>();
@@ -417,9 +419,10 @@ function collectBuildPolicy(entries: readonly RegistryEntry[]): (readonly [strin
 const TURBO_JSON = `{
   "$schema": "https://turbo.build/schema.json",
   "tasks": {
-    "build": { "dependsOn": ["^build"], "outputs": ["dist/**", ".next/**"] },
+    "build": { "dependsOn": ["^build"], "outputs": ["dist/**", ".next/**", "!.next/cache/**"] },
     "typecheck": { "dependsOn": ["^build"] },
-    "test": { "dependsOn": ["^build"] }
+    "test": { "dependsOn": ["^build"] },
+    "dev": { "cache": false, "persistent": true }
   }
 }
 `;

@@ -1,7 +1,7 @@
 import { fileURLToPath } from 'node:url';
 import { resolve, type Selection } from '@project-factory/compatibility';
 import type { Manifest } from '@project-factory/manifest';
-import { loadRecipeCatalogue, type RecipeCatalogue } from '@project-factory/recipes';
+import { loadRecipeCatalogue, type Recipe, type RecipeCatalogue } from '@project-factory/recipes';
 import { loadCatalogue, type Registry, type RegistryEntry } from '@project-factory/registry';
 import {
   fail,
@@ -10,6 +10,7 @@ import {
   type ParseFailure,
   type ParseResult,
 } from '@project-factory/validation';
+import { type GeneratedFiles, planMonorepo } from './monorepo.js';
 import { type FilePlan, planFiles } from './plan.js';
 import {
   type CommandRunner,
@@ -229,6 +230,42 @@ export function planProject(
     recipes = resolved.value;
   }
 
+  const generated =
+    manifest.architecture === 'monorepo'
+      ? planMonorepo(manifest, entries, recipes, (app, appEntries, appRecipes) =>
+          generateApp(app, appEntries, appRecipes, options),
+        )
+      : generateApp(manifest, entries, recipes, options);
+  if (!generated.ok) {
+    return fail(toIssues(generated.issues));
+  }
+
+  // Un template qui viserait un fichier du socle est un conflit : planFiles le
+  // détecte avant toute écriture, avec les deux origines.
+  const plan = planFiles(targetDir, generated.value.files);
+  if (!plan.ok) {
+    return fail(toIssues(plan.issues));
+  }
+
+  // Les avertissements de tous les étages traversés sont réunis : combinaison
+  // expérimentale, licence restrictive, version non épinglée. Aucun n'est
+  // consommé en chemin.
+  return ok({
+    plan: plan.value,
+    warnings: [...resolution.value.warnings, ...generated.value.warnings],
+  });
+}
+
+/**
+ * Une application seule : socle, puis templates des fiches certifiées et
+ * fichiers des recettes. En monorepo, appelée une fois par application.
+ */
+function generateApp(
+  manifest: Manifest,
+  entries: readonly RegistryEntry[],
+  recipes: readonly Recipe[],
+  options: PipelineOptions,
+): ParseResult<GeneratedFiles, string> {
   const scaffold = buildScaffold(manifest, entries, recipes);
   if (!scaffold.ok) {
     return fail(toIssues(scaffold.issues));
@@ -262,19 +299,9 @@ export function planProject(
     return fail(toIssues(templates.issues));
   }
 
-  // Un template qui viserait un fichier du socle est un conflit : planFiles le
-  // détecte avant toute écriture, avec les deux origines.
-  const plan = planFiles(targetDir, [...scaffold.value.files, ...templates.value]);
-  if (!plan.ok) {
-    return fail(toIssues(plan.issues));
-  }
-
-  // Les avertissements des deux etages traverses sont reunis : combinaison
-  // experimentale, licence restrictive, version non epinglee. Aucun n'est
-  // consomme en chemin.
   return ok({
-    plan: plan.value,
-    warnings: [...resolution.value.warnings, ...scaffold.value.warnings],
+    files: [...scaffold.value.files, ...templates.value],
+    warnings: scaffold.value.warnings,
   });
 }
 
