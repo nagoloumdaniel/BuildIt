@@ -53,6 +53,23 @@ export const ROLE_BY_CATEGORY: Readonly<Record<Category, Role>> = {
   security: 'root',
 };
 
+/**
+ * Pont entre deux applications d'un monorepo : quand l'application web porte
+ * `web` et l'API porte `api`, le dossier de templates `template` est posé à la
+ * racine du dépôt — contrat partagé, client, test de contrat.
+ */
+export interface Bridge {
+  readonly web: string;
+  readonly api: string;
+  readonly template: string;
+  /** Variables d'environnement que le pont ajoute à l'application web. */
+  readonly webEnv: readonly string[];
+}
+
+export const BRIDGES: readonly Bridge[] = [
+  { web: 'next', api: 'hono', template: 'monorepo/next-hono', webEnv: ['API_URL'] },
+];
+
 /** Exceptions à la règle par catégorie. */
 export const ROLE_BY_ID: Readonly<Record<string, Role>> = {
   // Tests de bout en bout d'une interface : l'API n'en a pas.

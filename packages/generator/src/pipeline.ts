@@ -232,8 +232,19 @@ export function planProject(
 
   const generated =
     manifest.architecture === 'monorepo'
-      ? planMonorepo(manifest, entries, recipes, (app, appEntries, appRecipes) =>
-          generateApp(app, appEntries, appRecipes, options),
+      ? planMonorepo(
+          manifest,
+          entries,
+          recipes,
+          (app, appEntries, appRecipes) => generateApp(app, appEntries, appRecipes, options),
+          (template) => {
+            const loaded = loadTemplateFiles(
+              options.templatesRoot ?? DEFAULT_TEMPLATES_ROOT,
+              [{ kind: 'directory', template }],
+              templateContext(manifest, options.now ?? new Date()),
+            );
+            return loaded.ok ? ok(loaded.value) : fail(toIssues(loaded.issues));
+          },
         )
       : generateApp(manifest, entries, recipes, options);
   if (!generated.ok) {

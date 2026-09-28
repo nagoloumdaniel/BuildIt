@@ -301,7 +301,7 @@ function packageJson(
   return `${JSON.stringify(content, null, 2)}\n`;
 }
 
-function envExample(names: readonly string[]): string {
+export function envExample(names: readonly string[]): string {
   const lines = [
     '# Variables d’environnement requises par ce projet.',
     '# Aucune valeur n’est fournie : renseignez-les localement, ne les versionnez jamais.',

@@ -9,9 +9,10 @@ import {
   type ParseResult,
 } from '@project-factory/validation';
 import { buildInfrastructure } from './infrastructure.js';
-import { ROLE_BY_CATEGORY, ROLE_BY_ID, type Role } from './monorepo.data.js';
+import { envDeclaration } from './integrations.data.js';
+import { BRIDGES, ROLE_BY_CATEGORY, ROLE_BY_ID, type Role } from './monorepo.data.js';
 import type { PlannedFile } from './plan.js';
-import { buildScaffold, collectBuildPolicy, pnpmWorkspace } from './scaffold.js';
+import { buildScaffold, collectBuildPolicy, envExample, pnpmWorkspace } from './scaffold.js';
 
 /**
  * Monorepo multi-applications (spec 2026-09-28).
@@ -73,6 +74,46 @@ export type GenerateApp = (
   entries: readonly RegistryEntry[],
   recipes: readonly Recipe[],
 ) => ParseResult<GeneratedFiles, string>;
+
+/** Charge un dossier de templates, chemins relatifs à la racine du dépôt. */
+export type LoadTemplates = (template: string) => ParseResult<PlannedFile[], string>;
+
+/** Réécrit un package.json planifié en y ajoutant une dépendance de workspace. */
+function withWorkspaceDependency(file: PlannedFile, name: string): PlannedFile {
+  const json = JSON.parse(file.contents) as { dependencies?: Record<string, string> };
+  const dependencies = Object.fromEntries(
+    Object.entries({ ...json.dependencies, [name]: 'workspace:*' }).sort(([a], [b]) =>
+      a.localeCompare(b),
+    ),
+  );
+  return { ...file, contents: `${JSON.stringify({ ...json, dependencies }, null, 2)}\n` };
+}
+
+/** Ajoute des variables à .env.example et env.d.ts d'une application, triées, sans doublon. */
+function withEnv(
+  files: readonly PlannedFile[],
+  prefix: string,
+  added: readonly string[],
+): PlannedFile[] {
+  const example = files.find((file) => file.path === `${prefix}.env.example`);
+  const names = new Set(added);
+  for (const line of example?.contents.split('\n') ?? []) {
+    const match = /^([A-Z][A-Z0-9_]*)=$/.exec(line);
+    if (match?.[1] !== undefined) {
+      names.add(match[1]);
+    }
+  }
+  const sorted = [...names].sort();
+  return files.map((file) => {
+    if (file.path === `${prefix}.env.example`) {
+      return { ...file, contents: envExample(sorted) };
+    }
+    if (file.path === `${prefix}env.d.ts`) {
+      return { ...file, contents: envDeclaration({ env: sorted }) };
+    }
+    return file;
+  });
+}
 
 function roleOf(entry: RegistryEntry): Role {
   return ROLE_BY_ID[entry.id] ?? ROLE_BY_CATEGORY[entry.category];
@@ -153,10 +194,15 @@ function rootScripts(
   return Object.fromEntries(Object.entries(scripts).sort(([a], [b]) => a.localeCompare(b)));
 }
 
-function applicationsSection(apps: ReadonlyMap<AppName, RegistryEntry[]>): string {
+function applicationsSection(apps: ReadonlyMap<AppName, RegistryEntry[]>, shared: boolean): string {
   const lines = ['## Applications', ''];
   for (const [app, entries] of apps) {
     lines.push(`- \`apps/${app}\` — ${entries.map((entry) => entry.name).join(', ')}`);
+  }
+  if (shared) {
+    lines.push(
+      '- `packages/shared` — le contrat entre le web et l’API : schémas Zod et client typé. L’API le respecte (test de contrat), le web le valide à la réception ; `/status` montre la liaison.',
+    );
   }
   return `${lines.join('\n')}\n`;
 }
@@ -166,6 +212,7 @@ export function planMonorepo(
   entries: readonly RegistryEntry[],
   recipes: readonly Recipe[],
   generateApp: GenerateApp,
+  loadTemplates: LoadTemplates,
 ): ParseResult<GeneratedFiles, string> {
   const { apps, root } = partition(entries);
   if (apps.size === 0) {
@@ -210,6 +257,26 @@ export function planMonorepo(
     );
   }
 
+  // Les ponts entre applications : contrat partagé, client, test de contrat.
+  // Chaque application dépend alors du paquet partagé.
+  const ids = (app: AppName) => new Set((apps.get(app) ?? []).map((entry) => entry.id));
+  const bridges = BRIDGES.filter(
+    (bridge) => ids('web').has(bridge.web) && ids('api').has(bridge.api),
+  );
+  for (const bridge of bridges) {
+    const loaded = loadTemplates(bridge.template);
+    if (!loaded.ok) {
+      return loaded;
+    }
+    const shared = `${manifest.name}-shared`;
+    const linked = [...files, ...loaded.value].map((file) =>
+      file.path === 'apps/web/package.json' || file.path === 'apps/api/package.json'
+        ? withWorkspaceDependency(file, shared)
+        : file,
+    );
+    files.splice(0, files.length, ...withEnv(linked, 'apps/web/', bridge.webEnv));
+  }
+
   // La racine : le socle de ses propres fiches (Biome, Turborepo…), puis ce
   // qui doit réunir toutes les applications — scripts, scripts d'installation,
   // services locaux, CI.
@@ -241,7 +308,7 @@ export function planMonorepo(
     } else if (file.path === 'README.md') {
       files.push({
         ...file,
-        contents: `${file.contents.trimEnd()}\n\n${applicationsSection(apps)}`,
+        contents: `${file.contents.trimEnd()}\n\n${applicationsSection(apps, bridges.length > 0)}`,
       });
     } else {
       files.push(file);

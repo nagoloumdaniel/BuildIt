@@ -168,7 +168,7 @@ const TSCONFIG = `{
  * Les variables sont optionnelles : rien ne garantit qu'elles soient
  * renseignées, et un type qui l'affirmerait mentirait.
  */
-function envDeclaration(context: IntegrationContext): string {
+export function envDeclaration(context: IntegrationContext): string {
   const header = [
     '// Variables d’environnement de ce projet, typées pour `process.env`.',
     '// Gardez ce fichier aligné sur .env.example.',

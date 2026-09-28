@@ -200,7 +200,9 @@ function dockerfile(workspaceFile: boolean): string {
     'RUN pnpm run build',
     '',
     'FROM base AS runtime',
-    'ENV NODE_ENV=production',
+    // PORT fixé : l'application écoute là où EXPOSE le dit, quel que soit son
+    // port par défaut (3001 pour une API Hono).
+    'ENV NODE_ENV=production PORT=3000',
     'COPY --from=deps /corepack /corepack',
     'COPY --from=build --chown=node:node /app ./',
     '# Jamais root : une faille applicative ne donne pas la main sur le conteneur.',

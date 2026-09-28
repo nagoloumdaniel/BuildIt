@@ -54,6 +54,8 @@ interface SmokeProject {
    * Les services Docker restent à la racine, où vit docker-compose.yml.
    */
   readonly apps?: { readonly http?: string; readonly data?: string; readonly cache?: string };
+  /** Monorepo : le web construit joint l'API construite par le contrat partagé. */
+  readonly bridge?: { readonly web: string; readonly api: string };
   /** Recettes appliquées : leurs templates sont vérifiés contre les vrais paquets. */
   readonly recipes?: readonly string[];
 }
@@ -111,6 +113,7 @@ const PROJECTS: Record<string, SmokeProject> = {
   },
   'preset Full-stack (monorepo)': {
     apps: { http: 'apps/api', data: 'apps/web', cache: 'apps/api' },
+    bridge: { web: 'apps/web', api: 'apps/api' },
     http: ['/health', '/openapi.json'],
     database: { service: 'postgres', url: 'postgresql://postgres:postgres@localhost:5432/app' },
     signUp: true,
@@ -270,8 +273,9 @@ async function withRunningApp(
   target: string,
   env: NodeJS.ProcessEnv,
   check: (base: string) => Promise<void>,
+  port: number = APP_PORT,
 ): Promise<void> {
-  const base = `http://localhost:${APP_PORT}`;
+  const base = `http://localhost:${port}`;
   // Un port qui répond déjà ferait tester une autre application — celle du
   // projet précédent, en train de s'arrêter — sans que rien ne le signale.
   const occupied = await fetch(base).then(
@@ -279,13 +283,13 @@ async function withRunningApp(
     () => false,
   );
   if (occupied) {
-    throw new Error(`Le port ${APP_PORT} répond déjà : impossible de tester ${target}.`);
+    throw new Error(`Le port ${port} répond déjà : impossible de tester ${target}.`);
   }
   const server = spawn('pnpm', ['start'], {
     cwd: target,
     stdio: 'ignore',
     detached: true,
-    env: { ...process.env, PORT: String(APP_PORT), ...env },
+    env: { ...process.env, PORT: String(port), ...env },
   });
   try {
     await waitFor(base, 60_000);
@@ -419,6 +423,30 @@ async function dashboardJourney(target: string, databaseUrl: string): Promise<vo
   });
 }
 
+/** Port de l'API quand le web tourne en même temps sur APP_PORT. */
+const API_PORT = APP_PORT + 1;
+
+/**
+ * Le contrat web ↔ API, en vrai : l'application web construite appelle l'API
+ * construite à travers le paquet partagé. Sonde négative d'abord — tant que
+ * l'API ne tourne pas, /status doit le dire.
+ */
+async function bridgeJourney(webDir: string, apiDir: string): Promise<void> {
+  const env = { API_URL: `http://localhost:${API_PORT}` };
+  await withRunningApp(webDir, env, async (base) => {
+    const status = async () => (await fetch(`${base}/status`)).text();
+    expect(await status(), 'API arrêtée').toContain('API injoignable');
+    await withRunningApp(
+      apiDir,
+      {},
+      async () => {
+        expect(await status(), 'API démarrée').toContain('API joignable — ok');
+      },
+      API_PORT,
+    );
+  });
+}
+
 /** Chaque chemin répond 200 : l'application construite démarre et sert ses routes. */
 async function expectPaths(target: string, paths: readonly string[]): Promise<void> {
   await withRunningApp(target, {}, async (base) => {
@@ -501,7 +529,7 @@ function requireDocker(): void {
 describe('un projet généré passe sa propre CI — gate M3', () => {
   for (const [
     label,
-    { manifest, recipes, database, signUp, dashboard, http, image, cache, apps },
+    { manifest, recipes, database, signUp, dashboard, http, image, cache, apps, bridge },
   ] of Object.entries(PROJECTS)) {
     describe(label, () => {
       let target = '';
@@ -547,6 +575,13 @@ describe('un projet généré passe sa propre CI — gate M3', () => {
       if (http !== undefined) {
         it('l’application construite démarre et sert ses routes', async () => {
           await expectPaths(join(generated(), apps?.http ?? ''), http);
+        });
+      }
+
+      if (bridge !== undefined) {
+        it('contrat web ↔ API : le web construit joint l’API construite', async () => {
+          const project = generated();
+          await bridgeJourney(join(project, bridge.web), join(project, bridge.api));
         });
       }
 

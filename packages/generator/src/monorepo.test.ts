@@ -55,7 +55,9 @@ describe('monorepo : chaque application est générée comme une application seu
   });
 
   it('rien d’une application ne reste à la racine', () => {
-    const root = paths().filter((path) => !path.startsWith('apps/'));
+    const root = paths().filter(
+      (path) => !path.startsWith('apps/') && !path.startsWith('packages/'),
+    );
     expect(root.sort()).toEqual([
       '.github/workflows/ci.yml',
       '.gitignore',
@@ -213,5 +215,51 @@ describe('monorepo : chemins d’erreur et variantes', () => {
     const all = paths({ ...FULLSTACK, infra: [...(FULLSTACK.infra ?? []), 'dev-container'] });
     expect(all).toContain('.devcontainer/devcontainer.json');
     expect(all.filter((path) => path.endsWith('devcontainer.json'))).toHaveLength(1);
+  });
+});
+
+/**
+ * Le contrat web ↔ API : un paquet partagé, que l'API respecte (test de
+ * contrat) et que le web valide à la réception.
+ */
+describe('monorepo : contrat partagé entre Next.js et Hono', () => {
+  it('pose packages/shared, le client côté web et le test de contrat côté API', () => {
+    expect(paths()).toEqual(
+      expect.arrayContaining([
+        'packages/shared/package.json',
+        'packages/shared/src/index.ts',
+        'apps/web/lib/api.ts',
+        'apps/web/app/status/page.tsx',
+        'apps/api/src/contract.test.ts',
+      ]),
+    );
+  });
+
+  it('le paquet partagé porte le nom du projet, et les deux applications en dépendent', () => {
+    expect(JSON.parse(file('packages/shared/package.json')).name).toBe('atelier-shared');
+    for (const app of ['web', 'api']) {
+      expect(JSON.parse(file(`apps/${app}/package.json`)).dependencies['atelier-shared']).toBe(
+        'workspace:*',
+      );
+    }
+    expect(file('apps/api/src/contract.test.ts')).toContain("from 'atelier-shared'");
+  });
+
+  it('l’adresse de l’API est une variable du web, listée et typée', () => {
+    expect(file('apps/web/.env.example')).toContain('API_URL=');
+    expect(file('apps/web/env.d.ts')).toContain('readonly API_URL?: string;');
+  });
+
+  it('le README présente le paquet partagé', () => {
+    expect(file('README.md')).toContain('packages/shared');
+  });
+
+  it('une seule application : pas de contrat à partager', () => {
+    const { backend: _api, ...webOnly } = FULLSTACK;
+    expect(
+      paths({ ...webOnly, targets: ['web'], services: ['zod'] }).some((path) =>
+        path.startsWith('packages/'),
+      ),
+    ).toBe(false);
   });
 });

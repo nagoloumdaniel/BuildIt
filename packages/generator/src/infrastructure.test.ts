@@ -337,3 +337,17 @@ describe('docker-compose.yml — URL de connexion locale', () => {
     expect(compose).toContain('# DATABASE_URL=postgresql://postgres:postgres@localhost:5432/app');
   });
 });
+
+describe('Dockerfile — port du conteneur', () => {
+  it('fixe PORT=3000 : l’application écoute là où EXPOSE le dit, quel que soit son défaut', () => {
+    const dockerfile = fileNamed(
+      buildInfrastructure(
+        [entry({ id: 'docker', category: 'containers' })],
+        { build: 'b', start: 's' },
+        { projectName: 'q' },
+      ),
+      'Dockerfile',
+    );
+    expect(dockerfile).toContain('ENV NODE_ENV=production PORT=3000');
+  });
+});
