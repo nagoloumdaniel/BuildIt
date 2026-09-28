@@ -42,6 +42,12 @@ export function canRunInContainer(scripts: Readonly<Record<string, string>>): bo
 function serviceBlock(service: DockerService): string[] {
   const lines = [
     `  ${service.name}:`,
+    // L'URL qui joint ce conteneur, à recopier dans .env. En commentaire, à
+    // côté des identifiants de bac à sable qu'elle reprend : .env.example ne
+    // porte jamais de valeur (§24).
+    ...(service.connection === undefined
+      ? []
+      : [`    # ${service.connection.env}=${service.connection.url}  (à recopier dans .env)`]),
     `    image: ${service.image}`,
     '    restart: unless-stopped',
   ];
@@ -181,11 +187,16 @@ function dockerfile(workspaceFile: boolean): string {
     'WORKDIR /app',
     '',
     'FROM base AS deps',
+    '# Paquets téléchargés depuis le seul verrou : cette étape reste en cache',
+    '# tant que les dépendances ne changent pas.',
     `COPY ${manifests.join(' ')} ./`,
-    'RUN corepack install && pnpm install --frozen-lockfile',
+    'RUN corepack install && pnpm fetch --frozen-lockfile',
     '',
     'FROM deps AS build',
+    '# Installation une fois le code copié : les scripts postinstall (prisma',
+    '# generate, notamment) ont besoin des fichiers du projet.',
     'COPY . .',
+    'RUN pnpm install --frozen-lockfile --offline',
     'RUN pnpm run build',
     '',
     'FROM base AS runtime',

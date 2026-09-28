@@ -44,6 +44,14 @@ export interface DockerService {
   readonly volume?: { readonly name: string; readonly path: string };
   /** Commande de vérification de démarrage. */
   readonly healthcheck?: string;
+  /**
+   * Variable d'environnement et URL qui joignent ce service en local.
+   *
+   * Écrite en **commentaire** dans docker-compose.yml, à côté des identifiants
+   * de bac à sable qu'elle reprend — jamais dans `.env.example`, qui ne porte
+   * aucune valeur (§24).
+   */
+  readonly connection?: { readonly env: string; readonly url: string };
 }
 
 /** Ce qu'un fichier de configuration peut savoir du projet qu'il configure. */
@@ -67,6 +75,20 @@ export interface IntegrationFile {
 export interface Integration {
   /** Identifiant d'une fiche du registry. */
   readonly id: string;
+  /**
+   * Fiche qui doit **aussi** être dans la stack pour que l'intégration
+   * s'applique.
+   *
+   * Certains fichiers dépendent d'une combinaison, pas d'une technologie :
+   * le client Prisma n'est pas le même sur PostgreSQL et sur MySQL. Poser le
+   * code PostgreSQL pour Prisma seul livrerait un projet faux dès qu'on change
+   * de base. Une combinaison sans intégration ne reçoit rien — et reste
+   * `experimental` tant qu'une de ses fiches l'est.
+   */
+  readonly when?: string;
+  /** Paquets que l'intégration ajoute, avec leur plage — jamais de `*`. */
+  readonly dependencies?: Readonly<Record<string, string>>;
+  readonly devDependencies?: Readonly<Record<string, string>>;
   /** Scripts npm à ajouter au package.json généré. */
   readonly scripts?: Readonly<Record<string, string>>;
   /**
@@ -157,7 +179,7 @@ function envDeclaration(context: IntegrationContext): string {
 const BIOME_JSON = `{
   "files": {
     "ignoreUnknown": true,
-    "includes": ["**", "!**/dist", "!**/.next", "!**/coverage"]
+    "includes": ["**", "!**/dist", "!**/.next", "!**/coverage", "!**/generated"]
   },
   "formatter": {
     "enabled": true,
@@ -175,6 +197,56 @@ const BIOME_JSON = `{
   "css": {
     "parser": { "tailwindDirectives": true }
   }
+}
+`;
+
+/**
+ * Configuration Prisma 7.
+ *
+ * `process.env` et non `env('DATABASE_URL')` de prisma/config : ce dernier
+ * **lève** quand la variable manque, et `prisma generate` — qui n'a pas besoin
+ * de base — échouerait en CI et à l'installation. Schéma en dossier : chaque
+ * intégration (Better Auth, notamment) y ajoute son fichier sans réécrire
+ * celui des autres.
+ */
+const PRISMA_CONFIG = `import { defineConfig } from 'prisma/config';
+
+export default defineConfig({
+  schema: 'prisma/schema',
+  datasource: { url: process.env.DATABASE_URL },
+});
+`;
+
+const PRISMA_SCHEMA_POSTGRESQL = `// Schéma Prisma. Ajoutez vos modèles dans ce dossier, un fichier par domaine.
+// Après modification : pnpm db:migrate
+
+generator client {
+  provider = "prisma-client"
+  output   = "../../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+`;
+
+const PRISMA_CLIENT_POSTGRESQL = `import { PrismaPg } from '@prisma/adapter-pg';
+import { PrismaClient } from '../generated/prisma/client';
+
+/**
+ * Client de base de données, partagé par toute l'application.
+ *
+ * En développement, le rechargement à chaud réévalue les modules : sans ce
+ * cache, chaque modification ouvrirait un nouveau pool de connexions.
+ */
+const cache = globalThis as unknown as { db?: PrismaClient };
+
+export const db: PrismaClient =
+  cache.db ??
+  new PrismaClient({ adapter: new PrismaPg({ connectionString: process.env.DATABASE_URL }) });
+
+if (process.env.NODE_ENV !== 'production') {
+  cache.db = db;
 }
 `;
 
@@ -208,10 +280,33 @@ export const INTEGRATIONS: readonly Integration[] = [
   },
   {
     id: 'prisma',
-    appScripts: { 'db:generate': 'prisma generate', 'db:migrate': 'prisma migrate dev' },
     // Prisma 7 : prisma et @prisma/engines (constaté par le test de fumée).
-    // Prisma 6, encore dans la plage de la fiche, y ajoute @prisma/client.
+    // @prisma/client en avait besoin jusqu'à Prisma 6 ; gardé tant que des
+    // projets générés avant la restriction de plage existent.
     allowBuilds: ['@prisma/client', '@prisma/engines', 'prisma'],
+  },
+  {
+    // Prisma câblé sur PostgreSQL : la seule combinaison vérifiée par le test
+    // de fumée (installation, génération du client, typecheck, build, et
+    // aller-retour avec une vraie base quand Docker est disponible).
+    id: 'prisma',
+    when: 'postgresql',
+    scripts: {
+      // Le client Prisma 7 est engendré dans le projet (generated/), pas dans
+      // node_modules : sans ce postinstall, rien ne se type après installation.
+      postinstall: 'prisma generate',
+      'db:generate': 'prisma generate',
+      'db:migrate': 'prisma migrate dev',
+      'db:push': 'prisma db push',
+    },
+    dependencies: { '@prisma/adapter-pg': '>=7.0.0 <8.0.0' },
+    // lib/db.ts lit process.env.
+    devDependencies: { '@types/node': '^24.0.0' },
+    files: [
+      { path: 'prisma.config.ts', contents: PRISMA_CONFIG },
+      { path: 'prisma/schema/schema.prisma', contents: PRISMA_SCHEMA_POSTGRESQL },
+      { path: 'lib/db.ts', contents: PRISMA_CLIENT_POSTGRESQL },
+    ],
   },
   {
     id: 'eslint',
@@ -255,6 +350,7 @@ export const INTEGRATIONS: readonly Integration[] = [
       },
       volume: { name: 'postgres-data', path: '/var/lib/postgresql/data' },
       healthcheck: 'pg_isready -U postgres',
+      connection: { env: 'DATABASE_URL', url: 'postgresql://postgres:postgres@localhost:5432/app' },
     },
   },
   {

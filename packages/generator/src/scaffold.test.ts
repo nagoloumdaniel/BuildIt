@@ -580,3 +580,68 @@ describe('Docker dans le socle — 5B.6', () => {
     expect(fileNamed(files, '.devcontainer/devcontainer.json')).toContain('"name": "quai3"');
   });
 });
+
+/**
+ * Phase 6.7a — Prisma câblé sur PostgreSQL. Le code dépend de la base :
+ * fournisseur du schéma, adaptateur de pilote. Il n'est donc produit que pour
+ * la combinaison vérifiée par le test de fumée, jamais pour Prisma seul.
+ */
+describe('intégration par combinaison : prisma + postgresql', () => {
+  const PRISMA = entry({ id: 'prisma', category: 'orm' });
+  const POSTGRES = entry({ id: 'postgresql', category: 'database' });
+  const MYSQL = entry({ id: 'mysql', category: 'database' });
+
+  function pkg(files: readonly { path: string; contents: string }[]) {
+    return JSON.parse(fileNamed(files, 'package.json')) as {
+      scripts: Record<string, string>;
+      dependencies?: Record<string, string>;
+      devDependencies?: Record<string, string>;
+    };
+  }
+
+  it('pose la configuration, un schéma PostgreSQL et le client', () => {
+    const files = scaffoldFiles(MANIFEST, [PRISMA, POSTGRES]);
+    expect(fileNamed(files, 'prisma.config.ts')).toContain("schema: 'prisma/schema'");
+    expect(fileNamed(files, 'prisma/schema/schema.prisma')).toContain('provider = "postgresql"');
+    expect(fileNamed(files, 'lib/db.ts')).toContain('PrismaPg');
+  });
+
+  it('la configuration ne fait pas échouer prisma generate sans DATABASE_URL', () => {
+    // `env('DATABASE_URL')` de prisma/config lève quand la variable manque :
+    // la CI, qui n'a pas de base, ne pourrait plus générer le client.
+    const config = fileNamed(scaffoldFiles(MANIFEST, [PRISMA, POSTGRES]), 'prisma.config.ts');
+    expect(config).toContain('process.env');
+    expect(config).not.toContain("env('DATABASE_URL')");
+  });
+
+  it('génère le client à l’installation et ajoute l’adaptateur de pilote', () => {
+    const json = pkg(scaffoldFiles(MANIFEST, [PRISMA, POSTGRES]));
+    expect(json.scripts['postinstall']).toBe('prisma generate');
+    expect(json.scripts['db:migrate']).toBe('prisma migrate dev');
+    expect(json.dependencies?.['@prisma/adapter-pg']).toBeDefined();
+    expect(json.devDependencies?.['@types/node']).toBeDefined();
+  });
+
+  it('Prisma sur une autre base : rien de faux, ni fichier ni script', () => {
+    const files = scaffoldFiles(MANIFEST, [PRISMA, MYSQL]);
+    const paths = files.map((file) => file.path);
+    expect(paths).not.toContain('lib/db.ts');
+    expect(paths).not.toContain('prisma.config.ts');
+    expect(pkg(files).scripts['postinstall']).toBeUndefined();
+    expect(pkg(files).dependencies?.['@prisma/adapter-pg']).toBeUndefined();
+  });
+
+  it('PostgreSQL sans Prisma : pas de code Prisma', () => {
+    expect(scaffoldFiles(MANIFEST, [POSTGRES]).map((file) => file.path)).not.toContain('lib/db.ts');
+  });
+
+  it('le code engendré par Prisma n’est ni versionné ni linté', () => {
+    const files = scaffoldFiles(MANIFEST, [
+      PRISMA,
+      POSTGRES,
+      entry({ id: 'biome', category: 'linting' }),
+    ]);
+    expect(fileNamed(files, '.gitignore')).toContain('generated/');
+    expect(fileNamed(files, 'biome.json')).toContain('"!**/generated"');
+  });
+});

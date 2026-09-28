@@ -69,6 +69,14 @@ beforeAll(async () => {
     fromTemplates = planned.value.plan.files
       .filter((file) => file.source.startsWith('template:'))
       .map((file) => file.path.split('/')[0] ?? file.path);
+    // Le code d'une intégration par combinaison (`integration:prisma+postgresql`)
+    // importe lui aussi des paquets — client Prisma, adaptateur : même
+    // périmètre que les templates, fichier par fichier.
+    fromTemplates.push(
+      ...planned.value.plan.files
+        .filter((file) => /^integration:[^+]+\+/.test(file.source))
+        .map((file) => file.path),
+    );
     fromTemplates = [...new Set(fromTemplates)];
   }
   const result = await generateProject(SAAS, target);

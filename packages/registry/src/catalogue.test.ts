@@ -146,6 +146,8 @@ describe('contenu du catalogue', () => {
     expect([...certified].sort()).toEqual([
       'biome',
       'next',
+      'postgresql',
+      'prisma',
       'shadcn-ui',
       'tailwind',
       'typescript',

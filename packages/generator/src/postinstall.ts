@@ -44,8 +44,11 @@ export interface CommandRunner {
  * tel quel ; un `.cmd` de paquet npm cache un script JavaScript qu'on lance
  * avec Node. Dans les deux cas, aucun interpréteur de commandes n'intervient.
  */
-function resolveWindowsCommand(command: string): { file: string; prefix: string[] } {
-  const directories = (process.env['PATH'] ?? '').split(';').filter((part) => part.length > 0);
+export function resolveWindowsCommand(
+  command: string,
+  searchPath: string = process.env['PATH'] ?? '',
+): { file: string; prefix: string[] } {
+  const directories = searchPath.split(';').filter((part) => part.length > 0);
 
   for (const directory of directories) {
     for (const extension of ['.exe', '.com']) {

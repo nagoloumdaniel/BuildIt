@@ -8,7 +8,7 @@ import {
   ok,
   type ParseResult,
 } from '@project-factory/validation';
-import { resolveDependencies } from './dependencies.js';
+import { type DependencySource, resolveDependencies } from './dependencies.js';
 import { buildInfrastructure, canRunInContainer } from './infrastructure.js';
 import { INTEGRATIONS, type Integration } from './integrations.data.js';
 import type { PlannedFile } from './plan.js';
@@ -69,9 +69,26 @@ export const PACKAGE_MANAGER: string = 'pnpm@11.13.1';
 /** Nom de variable d'environnement acceptable : majuscules, chiffres, tirets bas. */
 const ENV_NAME = /^[A-Z][A-Z0-9_]*$/;
 
-const INTEGRATION_BY_ID = new Map<string, Integration>(
-  INTEGRATIONS.map((integration) => [integration.id, integration]),
-);
+/**
+ * Intégrations qui s'appliquent à une fiche **dans cette stack** : celles de
+ * la fiche seule, plus celles dont la fiche compagne (`when`) est choisie.
+ */
+function integrationsFor(entry: RegistryEntry, stack: ReadonlySet<string>): Integration[] {
+  return INTEGRATIONS.filter(
+    (integration) =>
+      integration.id === entry.id &&
+      (integration.when === undefined || stack.has(integration.when)),
+  );
+}
+
+function stackOf(entries: readonly RegistryEntry[]): Set<string> {
+  return new Set(entries.map((entry) => entry.id));
+}
+
+/** Nom d'une intégration dans les messages et la provenance des fichiers. */
+function labelOf(integration: Integration): string {
+  return integration.when === undefined ? integration.id : `${integration.id}+${integration.when}`;
+}
 
 /**
  * Scripts qu'une technologie apporte à ce projet-ci.
@@ -79,12 +96,16 @@ const INTEGRATION_BY_ID = new Map<string, Integration>(
  * Les scripts d'application ne comptent que si la fiche est certifiée : c'est
  * le seul cas où un template pose le code sur lequel ils opèrent.
  */
-function scriptsOf(entry: RegistryEntry): Readonly<Record<string, string>> {
-  const integration = INTEGRATION_BY_ID.get(entry.id);
-  return {
-    ...integration?.scripts,
-    ...(entry.generation === 'certified' ? integration?.appScripts : {}),
-  };
+function scriptsOf(entry: RegistryEntry, stack: ReadonlySet<string>): Record<string, string> {
+  const scripts: Record<string, string> = {};
+  for (const integration of integrationsFor(entry, stack)) {
+    Object.assign(
+      scripts,
+      integration.scripts,
+      entry.generation === 'certified' ? integration.appScripts : {},
+    );
+  }
+  return scripts;
 }
 
 /** Fichiers de configuration exigés par les outils de la stack. */
@@ -92,12 +113,38 @@ function integrationFiles(
   entries: readonly RegistryEntry[],
   env: readonly string[],
 ): PlannedFile[] {
+  const stack = stackOf(entries);
   return entries.flatMap((entry) =>
-    (INTEGRATION_BY_ID.get(entry.id)?.files ?? []).map((file) => ({
-      path: file.path,
-      contents: typeof file.contents === 'string' ? file.contents : file.contents({ env }),
-      source: `integration:${entry.id}`,
-    })),
+    integrationsFor(entry, stack).flatMap((integration) =>
+      (integration.files ?? []).map((file) => ({
+        path: file.path,
+        contents: typeof file.contents === 'string' ? file.contents : file.contents({ env }),
+        source: `integration:${labelOf(integration)}`,
+      })),
+    ),
+  );
+}
+
+/**
+ * Paquets apportés par les intégrations, vus comme des sources de dépendances :
+ * leurs plages rencontrent celles des fiches et des recettes dans le même
+ * résolveur, avec les mêmes messages de conflit.
+ */
+function integrationDependencySources(entries: readonly RegistryEntry[]): DependencySource[] {
+  const stack = stackOf(entries);
+  return entries.flatMap((entry) =>
+    integrationsFor(entry, stack)
+      .filter(
+        (integration) =>
+          integration.dependencies !== undefined || integration.devDependencies !== undefined,
+      )
+      .map((integration) => ({
+        id: `integration:${labelOf(integration)}`,
+        name: `Intégration ${labelOf(integration)}`,
+        packages: Object.keys(integration.dependencies ?? {}),
+        devPackages: Object.keys(integration.devDependencies ?? {}),
+        packageRanges: { ...integration.dependencies, ...integration.devDependencies },
+      })),
   );
 }
 
@@ -108,9 +155,10 @@ function collectScripts(entries: readonly RegistryEntry[]): {
   const scripts: Record<string, string> = {};
   const owners = new Map<string, RegistryEntry>();
   const issues: ScaffoldIssue[] = [];
+  const stack = stackOf(entries);
 
   for (const entry of entries) {
-    for (const [name, command] of Object.entries(scriptsOf(entry))) {
+    for (const [name, command] of Object.entries(scriptsOf(entry, stack))) {
       const owner = owners.get(name);
       if (owner !== undefined) {
         // Deux outils qui veulent le même script : le générateur ne peut pas
@@ -242,6 +290,7 @@ function readme(
 const GITIGNORE = `node_modules/
 dist/
 build/
+generated/
 coverage/
 .turbo/
 *.tsbuildinfo
@@ -287,7 +336,10 @@ function pnpmWorkspace(monorepo: boolean, allowBuilds: readonly string[]): strin
 }
 
 function collectAllowBuilds(entries: readonly RegistryEntry[]): string[] {
-  const names = entries.flatMap((entry) => INTEGRATION_BY_ID.get(entry.id)?.allowBuilds ?? []);
+  const stack = stackOf(entries);
+  const names = entries.flatMap((entry) =>
+    integrationsFor(entry, stack).flatMap((integration) => integration.allowBuilds ?? []),
+  );
   return [...new Set(names)].sort();
 }
 
@@ -335,7 +387,11 @@ export function buildScaffold(
 
   const { scripts, issues: scriptIssues } = collectScripts(entries);
   const { names, issues: envIssues } = collectEnv([...entries, ...recipes]);
-  const dependencies = resolveDependencies([...entries, ...recipes.map(recipeAsDependencySource)]);
+  const dependencies = resolveDependencies([
+    ...entries,
+    ...integrationDependencySources(entries),
+    ...recipes.map(recipeAsDependencySource),
+  ]);
 
   const ownIssues: ScaffoldIssue[] = [...scriptIssues, ...envIssues];
 

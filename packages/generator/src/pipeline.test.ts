@@ -158,6 +158,8 @@ describe('generateProject — le projet sur le disque', () => {
       'next.config.ts',
       'package.json',
       'pnpm-workspace.yaml',
+      'prisma',
+      'prisma.config.ts',
       'tsconfig.json',
     ]);
   });

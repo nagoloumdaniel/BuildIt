@@ -225,7 +225,7 @@ describe('Dockerfile — 5B.6', () => {
   it('est généré quand Docker est choisi et que l’application sait se construire', () => {
     const files = buildInfrastructure([DOCKER], APP, { projectName: 'quai3' });
     const dockerfile = fileNamed(files, 'Dockerfile');
-    expect(dockerfile).toContain('RUN corepack install && pnpm install --frozen-lockfile');
+    expect(dockerfile).toContain('RUN corepack install && pnpm fetch --frozen-lockfile');
     expect(dockerfile).toContain('RUN pnpm run build');
     expect(dockerfile).toContain('CMD ["pnpm", "start"]');
   });
@@ -310,5 +310,30 @@ describe('Dev Container — 5B.6', () => {
       ),
     ) as { forwardPorts: number[] };
     expect(config.forwardPorts).toContain(5432);
+  });
+});
+
+describe('Dockerfile et scripts d’installation — 6.7a', () => {
+  const DOCKER = entry({ id: 'docker', category: 'containers' });
+
+  it('télécharge les paquets sans le code, installe une fois le code copié', () => {
+    // `prisma generate` tourne en postinstall et exige le schéma : installer
+    // avant d'avoir copié le code ferait échouer la construction.
+    const dockerfile = fileNamed(
+      buildInfrastructure([DOCKER], { build: 'b', start: 's' }, { projectName: 'q' }),
+      'Dockerfile',
+    );
+    expect(dockerfile).toContain('RUN corepack install && pnpm fetch --frozen-lockfile');
+    expect(dockerfile).toContain('RUN pnpm install --frozen-lockfile --offline');
+    expect(dockerfile.indexOf('COPY . .')).toBeLessThan(
+      dockerfile.indexOf('RUN pnpm install --frozen-lockfile --offline'),
+    );
+  });
+});
+
+describe('docker-compose.yml — URL de connexion locale', () => {
+  it('donne l’URL qui correspond au service, en commentaire', () => {
+    const compose = fileNamed(buildInfrastructure([POSTGRES], {}), 'docker-compose.yml');
+    expect(compose).toContain('# DATABASE_URL=postgresql://postgres:postgres@localhost:5432/app');
   });
 });
