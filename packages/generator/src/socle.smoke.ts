@@ -44,6 +44,11 @@ interface SmokeProject {
    * 200. Exige Docker.
    */
   readonly image?: string;
+  /**
+   * Dossier de l'application dont les tests Playwright générés doivent passer
+   * dans un vrai navigateur (`''` pour une application seule).
+   */
+  readonly e2e?: string;
   /** Dockerfile de l'image, relatif à la racine (contexte de construction). */
   readonly imageDockerfile?: string;
   /**
@@ -67,6 +72,7 @@ const PROJECTS: Record<string, SmokeProject> = {
     recipes: ['resend-transactional', 'stripe-checkout'],
     database: { service: 'postgres', url: 'postgresql://postgres:postgres@localhost:5432/app' },
     signUp: true,
+    e2e: '',
     manifest: {
       manifestVersion: 1,
       name: 'quai3',
@@ -84,6 +90,7 @@ const PROJECTS: Record<string, SmokeProject> = {
     recipes: ['dashboard-admin'],
     database: { service: 'postgres', url: 'postgresql://postgres:postgres@localhost:5432/app' },
     dashboard: true,
+    e2e: '',
     manifest: {
       manifestVersion: 1,
       name: 'tableau',
@@ -116,6 +123,7 @@ const PROJECTS: Record<string, SmokeProject> = {
   'preset Full-stack (monorepo)': {
     apps: { http: 'apps/api', data: 'apps/web', cache: 'apps/api' },
     bridge: { web: 'apps/web', api: 'apps/api' },
+    e2e: 'apps/web',
     image: '/',
     imageDockerfile: 'apps/web/Dockerfile',
     http: ['/health', '/openapi.json'],
@@ -454,6 +462,50 @@ async function bridgeJourney(webDir: string, apiDir: string): Promise<void> {
   });
 }
 
+/**
+ * Les tests de bout en bout générés, dans un vrai navigateur : Playwright
+ * construit l'application, la démarre (webServer de la configuration générée)
+ * et exécute les specs `e2e/*.e2e.ts`.
+ *
+ * Navigateur : `playwright install chromium` par défaut. Avec
+ * `PF_SMOKE_CHROMIUM=<exécutable>`, un Chromium déjà présent est utilisé via
+ * une configuration enveloppe — la configuration générée n'est pas modifiée.
+ */
+async function playwrightPasses(app: string): Promise<void> {
+  const chromium = process.env['PF_SMOKE_CHROMIUM'];
+  let config = 'playwright.config.ts';
+  if (chromium !== undefined && chromium !== '') {
+    config = 'playwright.smoke.config.ts';
+    await writeFile(
+      join(app, config),
+      [
+        "import { defineConfig } from '@playwright/test';",
+        "import base from './playwright.config';",
+        '',
+        'export default defineConfig({',
+        '  ...base,',
+        '  projects: [',
+        '    {',
+        "      name: 'chromium',",
+        `      use: { browserName: 'chromium', launchOptions: { executablePath: ${JSON.stringify(chromium)} } },`,
+        '    },',
+        '  ],',
+        '});',
+        '',
+      ].join('\n'),
+    );
+  } else {
+    run('pnpm', ['exec', 'playwright', 'install', 'chromium'], app);
+  }
+  const output = run(
+    'pnpm',
+    ['exec', 'playwright', 'test', '--config', config, '--reporter=line'],
+    app,
+    { CI: '1' },
+  );
+  expect(output).toMatch(/\d+ passed/);
+}
+
 /** Chaque chemin répond 200 : l'application construite démarre et sert ses routes. */
 async function expectPaths(target: string, paths: readonly string[]): Promise<void> {
   await withRunningApp(target, {}, async (base) => {
@@ -525,6 +577,9 @@ afterAll(async () => {
  */
 const SKIP_DOCKER = process.env['PF_SMOKE_SKIP_DOCKER'] === '1';
 
+/** Même règle pour le navigateur des tests de bout en bout. */
+const SKIP_E2E = process.env['PF_SMOKE_SKIP_E2E'] === '1';
+
 function requireDocker(): void {
   if (!DOCKER) {
     throw new Error(
@@ -548,6 +603,7 @@ describe('un projet généré passe sa propre CI — gate M3', () => {
       cache,
       apps,
       bridge,
+      e2e,
     },
   ] of Object.entries(PROJECTS)) {
     describe(label, () => {
@@ -594,6 +650,12 @@ describe('un projet généré passe sa propre CI — gate M3', () => {
       if (http !== undefined) {
         it('l’application construite démarre et sert ses routes', async () => {
           await expectPaths(join(generated(), apps?.http ?? ''), http);
+        });
+      }
+
+      if (e2e !== undefined) {
+        it.skipIf(SKIP_E2E)('Playwright : les tests de bout en bout générés passent', async () => {
+          await playwrightPasses(join(generated(), e2e));
         });
       }
 

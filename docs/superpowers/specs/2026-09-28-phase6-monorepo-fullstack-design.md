@@ -50,8 +50,8 @@ Une technologie `both` est générée dans chaque application. Une technologie `
 |---|---|---|
 | Base de données | Possédée par `apps/web`, comme dans le SaaS | Better Auth en a besoin ; l'API n'en a pas l'usage dans ce preset. Un `packages/db` partagé viendra avec un besoin réel |
 | Noms de paquets | `<projet>-web`, `<projet>-api` | Grammaire du nom de projet ; uniques dans le workspace |
-| Dockerfile par application | **Pas dans cette itération** — avertissement `GEN_DOCKERFILE_MONOREPO_DEFERRED` | Une image par application exige `turbo prune` ; mieux vaut ne rien poser qu'un Dockerfile qui échoue. docker-compose (services locaux) est bien généré |
-| `packages/shared` | **Pas dans cette itération** | Le preset n'a pas encore de contrat partagé qui le justifie ; un dossier vide « pour plus tard » est interdit par le projet |
+| Dockerfile par application | `apps/<app>/Dockerfile`, construit depuis la racine par `turbo prune --docker` ; un seul `.dockerignore` (motifs `**/`) | Ajouté le 28/09 : image web du Full-stack construite et lancée par le test de fumée |
+| `packages/shared` | Le **contrat** web ↔ API : schémas Zod et client typé (pont `next` ↔ `hono`, déclaré en donnée). L'API le respecte (test de contrat), le web le valide (`/status`). API sur 3001, `API_URL` côté web | Ajouté le 28/09 : un contenu réel, pas un dossier « pour plus tard » ; prouvé par le test de fumée, API arrêtée puis démarrée |
 
 ## Preuve
 
@@ -59,4 +59,4 @@ Test de fumée, preset Full-stack : installation à la racine, puis `lint`, `typ
 
 ## Hors périmètre
 
-`packages/shared` (types partagés web ↔ API), Dockerfiles par application, plus de deux applications (mobile, desktop : V1).
+Une bibliothèque de composants partagée (`packages/ui`) : elle ne vaut qu'avec plusieurs applications web. Plus de deux applications (mobile, desktop : V1).

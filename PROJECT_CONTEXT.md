@@ -5,7 +5,7 @@ Référence complète : `docs/cahier-des-charges.md`. Plan d'exécution : `docs/
 
 ## État
 
-Phases 1 (socle monorepo), 2 (Project Manifest), 3 (registry, 282 fiches) et 4 (compatibility engine) livrées. Phase 5 livrée (5A + 5B), gate M3 partiel fermé : le socle généré s'installe et passe lint, typecheck et test (`pnpm test:smoke`), post-install et reprise d'étape, Template Resolver, `packages/recipes` avec deux recettes réelles, Dockerfile/devcontainer, revue sécurité écrite. Phase 6 livrée, gate M3 fermé : les quatre presets — **SaaS**, **API** (Hono), **Dashboard** (recette `dashboard-admin`), **Full-stack** (Next.js + Hono en monorepo) — sont certifiés de bout en bout. Écarts assumés dans la roadmap (pas de `packages/shared`, pas de Dockerfile par application en monorepo, entretiens 6.12 non faits). **Prochaine étape : Phase 7, CLI `pf`.**
+Phases 1 (socle monorepo), 2 (Project Manifest), 3 (registry, 282 fiches) et 4 (compatibility engine) livrées. Phase 5 livrée (5A + 5B), gate M3 partiel fermé : le socle généré s'installe et passe lint, typecheck et test (`pnpm test:smoke`), post-install et reprise d'étape, Template Resolver, `packages/recipes` avec deux recettes réelles, Dockerfile/devcontainer, revue sécurité écrite. Phase 6 livrée, gate M3 fermé : les quatre presets — **SaaS**, **API** (Hono), **Dashboard** (recette `dashboard-admin`), **Full-stack** (Next.js + Hono en monorepo) — sont certifiés de bout en bout. Le Full-stack a son contrat partagé (`packages/shared`) et un Dockerfile par application ; les tests Playwright générés tournent dans le test de fumée. Restent `packages/ui` et les entretiens 6.12. **Prochaine étape : Phase 7, CLI `pf`.**
 
 Remote : `github.com/nagoloumdaniel/BuildIt`. **La CI GitHub n'est pas disponible** : l'intégration continue est locale, portée par le hook `pre-push` — `ci:local` à chaque push, plus `test:smoke` quand le push touche `generator`, `registry` ou `recipes`. `ci.yml` est dormant (déclenchement manuel).
 
@@ -24,6 +24,7 @@ pnpm build         # tsdown, via Turborepo
 pnpm test:smoke    # génère, installe et vérifie de vrais projets — réseau, ~1 min
 pnpm ci:full       # ci:local + test:smoke
 PF_SMOKE_DOCKER_CA=<ca.crt> pnpm test:smoke   # derrière un proxy TLS d'entreprise
+PF_SMOKE_CHROMIUM=<chrome> pnpm test:smoke     # Chromium déjà installé, sans téléchargement
 ```
 
 Le pipeline est défini à un seul endroit : les scripts `ci:local` et `test:smoke` du `package.json` racine. Le hook `pre-push` et `ci.yml` (dormant) n'appellent qu'eux.
@@ -109,5 +110,6 @@ Les packages naissent dans leur phase. Ne pas créer de répertoire vide « pour
 - Services Docker d'un test : `compose down` à la fin de **chaque** projet, pas en fin de suite — le suivant reprend les mêmes ports.
 - Docker Hub : quota anonyme. `compose pull --policy missing` ; quota et réseau sautent l'aller-retour avec un avertissement, une image introuvable reste un échec.
 - Vitest n'affiche pas les `console.warn` d'un test qui passe : un « avertissement » y est invisible. Une preuve sautée doit être un test marqué `skipped` (`it.skipIf`), et le saut doit être demandé explicitement (`PF_SMOKE_SKIP_DOCKER=1`) — sinon le test échoue. Sans cette règle, le test de fumée a réussi en silence avec Docker arrêté.
+- `pkill -f motif` depuis un shell dont la ligne de commande contient le motif tue ce shell (code 144) : écrire `pkill -f "[n]ext-server"`.
 - Un test qui passe sur le code source ne dit rien du **bundle** : ce qui part en production (`dist/`, image Docker) se démarre et s'interroge dans le test de fumée.
 - Pour suggérer une correction de faute de frappe, utiliser **Damerau**-Levenshtein : Levenshtein facture 2 une transposition (« wbe » → « web »), ce qui la met hors d'atteinte de tout seuil raisonnable.

@@ -378,9 +378,10 @@ Preset Full-stack (Next.js + Hono) certifié : le test de fumée installe à la 
 - [x] Un projet généré tourne réellement et s'affiche dans un navigateur — Playwright (vérifié à la main), image Docker (test de fumée)
 - [x] Génération < 90 s hors installation
 
-Écarts assumés, à reprendre :
-- Full-stack : ni `packages/shared` (le « shared UI » du §8), ni Dockerfile par application (`GEN_DOCKERFILE_MONOREPO_DEFERRED`) — spec, « Hors périmètre ».
-- Les tests Playwright générés ne tournent pas dans le test de fumée (navigateurs requis).
+Écarts repris le 28/09 : `packages/shared` (contrat web ↔ API, prouvé API arrêtée puis démarrée), un Dockerfile par application en monorepo (`turbo prune`, image web construite par le test de fumée), les tests Playwright générés exécutés dans un vrai navigateur par le test de fumée (SaaS, Dashboard, Full-stack).
+
+Reste :
+- une bibliothèque de composants partagée (`packages/ui`, le « shared UI » du §8) — elle ne vaut qu'avec plusieurs applications web ;
 - 6.12 : aucun entretien n'a eu lieu ; les presets ont été tranchés par le premier utilisateur (§0).
 
 **Prochaine étape : Phase 7 — CLI `pf`.**
