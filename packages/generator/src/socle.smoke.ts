@@ -1,6 +1,6 @@
 import { execFileSync, spawn } from 'node:child_process';
 import { randomBytes } from 'node:crypto';
-import { mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
+import { copyFile, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import type { Manifest } from '@project-factory/manifest';
@@ -32,6 +32,18 @@ interface SmokeProject {
    * Exige `database`.
    */
   readonly signUp?: boolean;
+  /** Chemins que l'application construite doit servir en 200, sans base. */
+  readonly http?: readonly string[];
+  /**
+   * L'image du Dockerfile généré se construit, démarre, et sert ce chemin en
+   * 200. Exige Docker.
+   */
+  readonly image?: string;
+  /**
+   * Aller-retour avec le Redis du docker-compose.yml généré, par le client
+   * généré (`lib/redis.ts`), exécuté avec tsx. Exige Docker.
+   */
+  readonly cache?: { readonly service: string; readonly url: string };
   /** Recettes appliquées : leurs templates sont vérifiés contre les vrais paquets. */
   readonly recipes?: readonly string[];
 }
@@ -52,6 +64,23 @@ const PROJECTS: Record<string, SmokeProject> = {
       services: ['stripe', 'resend', 'sentry', 'posthog'],
       quality: ['biome', 'vitest', 'playwright'],
       infra: ['vercel', 'github-actions', 'docker', 'dev-container'],
+    },
+  },
+  'preset API': {
+    database: { service: 'postgres', url: 'postgresql://postgres:postgres@localhost:5432/app' },
+    http: ['/health', '/openapi.json'],
+    image: '/health',
+    cache: { service: 'redis', url: 'redis://localhost:6379' },
+    manifest: {
+      manifestVersion: 1,
+      name: 'api-quai3',
+      targets: ['api'],
+      architecture: 'single-app',
+      backend: { framework: 'hono', language: 'typescript' },
+      database: { engine: 'postgresql', orm: 'prisma' },
+      services: ['redis'],
+      quality: ['biome', 'vitest'],
+      infra: ['docker', 'github-actions'],
     },
   },
   'socle React + TypeScript': {
@@ -174,26 +203,140 @@ async function waitFor(url: string, timeoutMs: number): Promise<void> {
 }
 
 /**
+ * Démarre l'application construite (`pnpm start`), attend qu'elle réponde,
+ * exécute `check`, puis l'arrête.
+ *
+ * Le serveur tourne dans son propre groupe de processus : tuer `pnpm` seul
+ * laisserait vivre le `node` qu'il a lancé, et le projet suivant trouverait le
+ * port occupé.
+ */
+async function withRunningApp(
+  target: string,
+  env: NodeJS.ProcessEnv,
+  check: (base: string) => Promise<void>,
+): Promise<void> {
+  const base = `http://localhost:${APP_PORT}`;
+  // Un port qui répond déjà ferait tester une autre application — celle du
+  // projet précédent, en train de s'arrêter — sans que rien ne le signale.
+  const occupied = await fetch(base).then(
+    () => true,
+    () => false,
+  );
+  if (occupied) {
+    throw new Error(`Le port ${APP_PORT} répond déjà : impossible de tester ${target}.`);
+  }
+  const server = spawn('pnpm', ['start'], {
+    cwd: target,
+    stdio: 'ignore',
+    detached: true,
+    env: { ...process.env, PORT: String(APP_PORT), ...env },
+  });
+  try {
+    await waitFor(base, 60_000);
+    await check(base);
+  } finally {
+    // Attendre la fin réelle du groupe : le projet suivant reprend ce port.
+    const exited = new Promise<void>((resolve) => server.once('exit', () => resolve()));
+    if (server.pid !== undefined && server.exitCode === null) {
+      process.kill(-server.pid, 'SIGTERM');
+      await exited;
+    }
+    const deadline = Date.now() + 15_000;
+    while (
+      Date.now() < deadline &&
+      (await fetch(base).then(
+        () => true,
+        () => false,
+      ))
+    ) {
+      await new Promise((resolve) => setTimeout(resolve, 250));
+    }
+  }
+}
+
+/**
+ * Construit l'image du Dockerfile généré, la lance, vérifie un chemin.
+ *
+ * Derrière un proxy TLS d'entreprise, les conteneurs ne connaissent pas son
+ * certificat : `PF_SMOKE_DOCKER_CA=<fichier.crt>` fait construire une **copie**
+ * du Dockerfile qui lui fait confiance, sur le réseau de l'hôte (où vit le
+ * proxy). Le Dockerfile généré n'est jamais modifié ; sans la variable, c'est
+ * lui qui est construit, tel quel.
+ */
+async function imageServes(target: string, path: string): Promise<void> {
+  const tag = `pf-smoke-${randomBytes(4).toString('hex')}`;
+  const ca = process.env['PF_SMOKE_DOCKER_CA'];
+  const args = ['build', '-t', tag];
+  if (ca !== undefined && ca !== '') {
+    await copyFile(ca, join(target, 'smoke-proxy-ca.crt'));
+    const original = await readFile(join(target, 'Dockerfile'), 'utf8');
+    await writeFile(
+      join(target, 'Dockerfile.smoke'),
+      original.replace(
+        'WORKDIR /app',
+        'COPY smoke-proxy-ca.crt /smoke-proxy-ca.crt\nENV NODE_EXTRA_CA_CERTS=/smoke-proxy-ca.crt\nWORKDIR /app',
+      ),
+    );
+    args.push('-f', 'Dockerfile.smoke', '--network', 'host');
+    for (const name of ['HTTPS_PROXY', 'HTTP_PROXY', 'NO_PROXY']) {
+      if (process.env[name] !== undefined) {
+        args.push('--build-arg', name);
+      }
+    }
+  }
+  run('docker', [...args, '.'], target);
+  try {
+    run('docker', ['run', '-d', '--name', tag, '-p', `${APP_PORT}:3000`, tag], target);
+    const base = `http://localhost:${APP_PORT}`;
+    await waitFor(base, 60_000);
+    const response = await fetch(`${base}${path}`);
+    expect(response.status, `${path} dans le conteneur`).toBe(200);
+    // Jamais root dans le conteneur (§24).
+    expect(run('docker', ['exec', tag, 'id', '-u'], target).trim()).not.toBe('0');
+  } finally {
+    try {
+      execFileSync('docker', ['rm', '-f', tag], { stdio: 'ignore' });
+      execFileSync('docker', ['rmi', '-f', tag], { stdio: 'ignore' });
+    } catch {
+      // Le nettoyage ne doit pas masquer l'échec du test lui-même.
+    }
+  }
+}
+
+/** Le client Redis généré se connecte et obtient PONG — pas seulement il se type. */
+function cacheRoundTrip(target: string, service: string, url: string): void {
+  composed.push(target);
+  run('docker', ['compose', 'up', '-d', '--wait', service], target);
+  const script =
+    "import('./lib/redis.ts').then(async ({ redis }) => { const client = await redis(); " +
+    'console.log(await client.ping()); await client.quit(); })';
+  const output = run('pnpm', ['exec', 'tsx', '--eval', script], target, { REDIS_URL: url });
+  expect(output).toContain('PONG');
+}
+
+/** Chaque chemin répond 200 : l'application construite démarre et sert ses routes. */
+async function expectPaths(target: string, paths: readonly string[]): Promise<void> {
+  await withRunningApp(target, {}, async (base) => {
+    for (const path of paths) {
+      const response = await fetch(`${base}${path}`);
+      expect(response.status, `${path} : ${await response.clone().text()}`).toBe(200);
+    }
+  });
+}
+
+/**
  * Inscription puis connexion, par l'API de Better Auth, sur l'application
  * construite par l'étape de validation. Preuve que l'adaptateur Prisma, les
  * tables et la route Next.js fonctionnent ensemble — pas seulement qu'ils se
  * typent.
  */
 async function signUpAndSignIn(target: string, databaseUrl: string): Promise<void> {
-  const base = `http://localhost:${APP_PORT}`;
-  const server = spawn('pnpm', ['start'], {
-    cwd: target,
-    stdio: 'ignore',
-    env: {
-      ...process.env,
-      PORT: String(APP_PORT),
-      DATABASE_URL: databaseUrl,
-      BETTER_AUTH_URL: base,
-      BETTER_AUTH_SECRET: randomBytes(32).toString('hex'),
-    },
-  });
-  try {
-    await waitFor(base, 60_000);
+  const env = {
+    DATABASE_URL: databaseUrl,
+    BETTER_AUTH_URL: `http://localhost:${APP_PORT}`,
+    BETTER_AUTH_SECRET: randomBytes(32).toString('hex'),
+  };
+  await withRunningApp(target, env, async (base) => {
     const credentials = { email: 'smoke@example.invalid', password: 'mot-de-passe-de-test-1' };
     const post = (path: string, body: object) =>
       fetch(`${base}/api/auth/${path}`, {
@@ -212,18 +355,22 @@ async function signUpAndSignIn(target: string, databaseUrl: string): Promise<voi
     // Sonde négative : un mauvais mot de passe doit être refusé.
     const wrong = await post('sign-in/email', { ...credentials, password: 'faux-mot-de-passe' });
     expect(wrong.status).toBe(401);
-  } finally {
-    server.kill();
+  });
+}
+
+/** Arrête les services d'un projet : le suivant reprend les mêmes ports. */
+function composeDown(target: string): void {
+  try {
+    execFileSync('docker', ['compose', 'down', '-v'], { cwd: target, stdio: 'ignore' });
+  } catch {
+    // Le nettoyage ne doit pas masquer l'échec du test lui-même.
   }
 }
 
 afterAll(async () => {
+  // Filet : un projet arrêté en cours de route n'a pas pu nettoyer lui-même.
   for (const target of composed) {
-    try {
-      execFileSync('docker', ['compose', 'down', '-v'], { cwd: target, stdio: 'ignore' });
-    } catch {
-      // Le nettoyage ne doit pas masquer l'échec du test lui-même.
-    }
+    composeDown(target);
   }
   for (const root of roots) {
     await rm(root, { recursive: true, force: true });
@@ -231,7 +378,9 @@ afterAll(async () => {
 });
 
 describe('un projet généré passe sa propre CI — gate M3', () => {
-  for (const [label, { manifest, recipes, database, signUp }] of Object.entries(PROJECTS)) {
+  for (const [label, { manifest, recipes, database, signUp, http, image, cache }] of Object.entries(
+    PROJECTS,
+  )) {
     it(label, async () => {
       const root = await mkdtemp(join(tmpdir(), 'pf-smoke-'));
       roots.push(root);
@@ -258,15 +407,45 @@ describe('un projet généré passe sa propre CI — gate M3', () => {
       expect(CI_SCRIPTS.some((name) => scripts[name] !== undefined)).toBe(true);
       await expect(readFile(join(target, 'pnpm-lock.yaml'), 'utf8')).resolves.toBeTruthy();
 
+      if (http !== undefined) {
+        await expectPaths(target, http);
+      }
+
+      if (cache !== undefined) {
+        if (DOCKER && pullImage(target, cache.service)) {
+          try {
+            cacheRoundTrip(target, cache.service, cache.url);
+          } finally {
+            composeDown(target);
+          }
+        } else {
+          console.warn(
+            `${label} : Docker ou registre indisponible, aller-retour Redis NON vérifié.`,
+          );
+        }
+      }
+
+      if (image !== undefined) {
+        if (DOCKER) {
+          await imageServes(target, image);
+        } else {
+          console.warn(`${label} : Docker indisponible, image NON vérifiée.`);
+        }
+      }
+
       if (database !== undefined) {
         if (DOCKER && !pullImage(target, database.service)) {
           console.warn(
             `${label} : registre d’images indisponible (quota ou réseau), aller-retour avec la base NON vérifié.`,
           );
         } else if (DOCKER) {
-          await databaseRoundTrip(target, database.service, database.url);
-          if (signUp === true) {
-            await signUpAndSignIn(target, database.url);
+          try {
+            await databaseRoundTrip(target, database.service, database.url);
+            if (signUp === true) {
+              await signUpAndSignIn(target, database.url);
+            }
+          } finally {
+            composeDown(target);
           }
         } else {
           // Dit, jamais tu : sans Docker, la preuve « base réelle » manque.

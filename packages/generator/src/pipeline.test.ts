@@ -726,3 +726,63 @@ describe('le nom du projet est revérifié avant tout rendu — revue sécurité
     ]);
   });
 });
+
+/** Le preset API du §8 : Hono documenté par OpenAPI, Prisma, Redis, Docker. */
+const API: Manifest = {
+  manifestVersion: 1,
+  name: 'api-quai3',
+  targets: ['api'],
+  architecture: 'single-app',
+  backend: { framework: 'hono', language: 'typescript' },
+  database: { engine: 'postgresql', orm: 'prisma' },
+  services: ['redis'],
+  quality: ['biome', 'vitest'],
+  infra: ['docker', 'github-actions'],
+};
+
+describe('le preset API du §8 est certifié — 6.7b', () => {
+  it('aucun avertissement de combinaison expérimentale', () => {
+    const result = planProject(API, '/cible');
+    expect(result.ok).toBe(true);
+    if (result.ok) {
+      expect(result.value.warnings.map((w) => w.code)).not.toContain(
+        'COMPAT_EXPERIMENTAL_COMBINATION',
+      );
+    }
+  });
+
+  it('une API Hono est documentée et validée : Zod et OpenAPI sont ajoutés s’ils manquent', () => {
+    const result = planProject(API, '/cible');
+    expect(result.ok).toBe(true);
+    if (result.ok) {
+      const pkg = JSON.parse(
+        result.value.plan.files.find((file) => file.path === 'package.json')?.contents ?? '{}',
+      ) as { dependencies: Record<string, string> };
+      expect(pkg.dependencies['@hono/zod-openapi']).toBeDefined();
+      expect(pkg.dependencies['zod']).toBeDefined();
+    }
+  });
+
+  it('pose l’application, son test, le client Redis et un Dockerfile', () => {
+    const result = planProject(API, '/cible');
+    const paths = result.ok ? result.value.plan.files.map((file) => file.path) : [];
+    expect(paths).toEqual(
+      expect.arrayContaining([
+        'src/app.ts',
+        'src/index.ts',
+        'src/app.test.ts',
+        'lib/redis.ts',
+        'lib/db.ts',
+        'Dockerfile',
+      ]),
+    );
+  });
+
+  it('la documentation porte le nom du projet', () => {
+    const result = planProject(API, '/cible');
+    const app = result.ok
+      ? result.value.plan.files.find((file) => file.path === 'src/app.ts')
+      : undefined;
+    expect(app?.contents).toContain("title: 'api-quai3'");
+  });
+});

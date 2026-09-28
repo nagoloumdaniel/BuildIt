@@ -444,6 +444,27 @@ if (key !== undefined && key !== '') {
 }
 `;
 
+/**
+ * Client Redis partagé. La connexion s'ouvre au premier appel, jamais à
+ * l'import : un build ou un test sans Redis ne doit pas échouer.
+ */
+const REDIS_CLIENT = `import { createClient } from 'redis';
+
+function connect() {
+  return createClient({ url: process.env.REDIS_URL })
+    .on('error', (error) => console.error('Redis :', error))
+    .connect();
+}
+
+let connecting: ReturnType<typeof connect> | undefined;
+
+/** Le client, connecté. Les appels concurrents partagent la même connexion. */
+export function redis(): ReturnType<typeof connect> {
+  connecting ??= connect();
+  return connecting;
+}
+`;
+
 export const INTEGRATIONS: readonly Integration[] = [
   {
     id: 'typescript',
@@ -523,6 +544,26 @@ export const INTEGRATIONS: readonly Integration[] = [
   {
     id: 'next',
     appScripts: { dev: 'next dev', build: 'next build', start: 'next start' },
+  },
+  {
+    // Une API Hono : l'application vient du template backend/hono. tsdown
+    // produit dist/index.mjs ; tsx sert le développement.
+    id: 'hono',
+    appScripts: {
+      dev: 'tsx watch src/index.ts',
+      build: 'tsdown src/index.ts',
+      start: 'node dist/index.mjs',
+    },
+    // tsx embarque esbuild, qui installe son binaire natif.
+    allowBuilds: ['esbuild'],
+  },
+  {
+    id: 'redis',
+    when: 'typescript',
+    env: ['REDIS_URL'],
+    dependencies: { redis: '^5.0.0' },
+    devDependencies: { '@types/node': '^24.0.0' },
+    files: [{ path: 'lib/redis.ts', contents: REDIS_CLIENT }],
   },
   {
     id: 'prisma',
@@ -618,6 +659,7 @@ export const INTEGRATIONS: readonly Integration[] = [
       ports: ['6379:6379'],
       volume: { name: 'redis-data', path: '/data' },
       healthcheck: 'redis-cli ping',
+      connection: { env: 'REDIS_URL', url: 'redis://localhost:6379' },
     },
   },
   {

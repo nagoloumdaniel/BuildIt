@@ -121,6 +121,10 @@ Selon ce qu'apporte la technologie, la preuve prend trois formes :
 
 `vercel` n'apporte aucun fichier : Next.js s'y déploie tel quel, et le `build` que Vercel exécute est celui que vérifie le test de fumée. La certification ne dit rien de plus — pas qu'un déploiement a été fait.
 
+`github-actions` : le workflow généré n'exécute que les scripts que le test de fumée lance déjà, dans le même ordre, avec `--frozen-lockfile`. Le fichier n'a jamais tourné sur GitHub — la CI GitHub n'est pas disponible pour ce dépôt.
+
+`docker` : le test de fumée construit l'image du preset API, la lance, vérifie `/health` et que le conteneur ne tourne pas en root.
+
 Une seule contrainte reste vérifiée par le schéma :
 
 - `declared` **avec** `template` → rejeté. Si le template existe et qu'un test le couvre, la fiche doit être promue.

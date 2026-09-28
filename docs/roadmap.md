@@ -348,7 +348,15 @@ Gate M3, où il en est :
 - [x] Un projet généré tourne réellement et s'affiche dans un navigateur — Docker + Playwright
 - [x] Génération < 90 s hors installation — le plan et l'écriture prennent moins d'une seconde
 
-**Prochaine étape : 6.12 puis 6.7b.** Les entretiens de 6.12 doivent précéder 6.7b (« avant de figer ») ; les trois autres presets réutiliseront les intégrations du SaaS. Full-stack exige NestJS, Redis et Zod ; API exige NestJS ou Hono ; Dashboard reste à cadrer (6.1).
+## État au 28/09/2026 (suite) — preset API certifié
+
+Preset API du §8 certifié : **Hono** (NestJS réservé au Full-stack), OpenAPI et Zod — ajoutés d'office par le moteur, une API Hono est documentée et validée par défaut —, Prisma + PostgreSQL, Redis, Docker, GitHub Actions. Le test de fumée démarre l'API construite (`/health`, `/openapi.json`), l'**image Docker** (200, non root), fait un aller-retour **Redis** par le client généré et un aller-retour **PostgreSQL**.
+
+La CI GitHub n'étant pas disponible, le test de fumée est lancé par le hook pre-push (voir README).
+
+Gate M3 : **2 presets sur 4**. Restent Full-stack (Next.js + NestJS en monorepo — la génération multi-apps n'existe pas encore) et Dashboard (contenu à cadrer, 6.1). Les entretiens de 6.12 n'ont pas eu lieu.
+
+**Prochaine étape (initiale) : 6.12 puis 6.7b.** Les entretiens de 6.12 doivent précéder 6.7b (« avant de figer ») ; les trois autres presets réutiliseront les intégrations du SaaS. Full-stack exige NestJS, Redis et Zod ; API exige NestJS ou Hono ; Dashboard reste à cadrer (6.1).
 
 ---
 

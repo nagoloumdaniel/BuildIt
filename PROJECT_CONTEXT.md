@@ -5,7 +5,7 @@ Référence complète : `docs/cahier-des-charges.md`. Plan d'exécution : `docs/
 
 ## État
 
-Phases 1 (socle monorepo), 2 (Project Manifest), 3 (registry, 282 fiches) et 4 (compatibility engine) livrées. Phase 5 livrée (5A + 5B), gate M3 partiel fermé : le socle généré s'installe et passe lint, typecheck et test (`pnpm test:smoke`), post-install et reprise d'étape, Template Resolver, `packages/recipes` avec deux recettes réelles, Dockerfile/devcontainer, revue sécurité écrite. Phase 6 en cours : **6.7a livrée le 28/09/2026**, le preset SaaS du §8 est certifié de bout en bout (15 fiches). Prochaine étape : entretiens 6.12, puis les trois autres presets (6.7b).
+Phases 1 (socle monorepo), 2 (Project Manifest), 3 (registry, 282 fiches) et 4 (compatibility engine) livrées. Phase 5 livrée (5A + 5B), gate M3 partiel fermé : le socle généré s'installe et passe lint, typecheck et test (`pnpm test:smoke`), post-install et reprise d'étape, Template Resolver, `packages/recipes` avec deux recettes réelles, Dockerfile/devcontainer, revue sécurité écrite. Phase 6 en cours : presets **SaaS** (6.7a) et **API** (6.7b, Hono) certifiés de bout en bout — 21 fiches. Restent Full-stack et Dashboard (6.7b) ; les entretiens de 6.12 n'ont pas eu lieu.
 
 Remote : `github.com/nagoloumdaniel/BuildIt`. **La CI GitHub n'est pas disponible** : l'intégration continue est locale, portée par le hook `pre-push` — `ci:local` à chaque push, plus `test:smoke` quand le push touche `generator`, `registry` ou `recipes`. `ci.yml` est dormant (déclenchement manuel).
 
@@ -23,6 +23,7 @@ pnpm test          # Vitest, via Turborepo
 pnpm build         # tsdown, via Turborepo
 pnpm test:smoke    # génère, installe et vérifie de vrais projets — réseau, ~1 min
 pnpm ci:full       # ci:local + test:smoke
+PF_SMOKE_DOCKER_CA=<ca.crt> pnpm test:smoke   # derrière un proxy TLS d'entreprise
 ```
 
 Le pipeline est défini à un seul endroit : les scripts `ci:local` et `test:smoke` du `package.json` racine. Le hook `pre-push` et `ci.yml` (dormant) n'appellent qu'eux.
@@ -104,4 +105,8 @@ Les packages naissent dans leur phase. Ne pas créer de répertoire vide « pour
 - pnpm 11 : un script d'installation qu'on ne veut pas exécuter se **refuse** (`allowBuilds: { paquet: false }`) ; ni autorisé ni refusé, il fait échouer l'installation.
 - Le code qui dépend de plusieurs choix va dans une intégration à `when`, jamais dans le template d'une seule fiche. Un fichier que plusieurs outils veulent (`instrumentation-client.ts`) se compose, il ne s'écrit pas deux fois.
 - Les modèles de tables d'une bibliothèque (Better Auth) se prennent de son CLI officiel, pas de mémoire.
+- Un serveur lancé par `pnpm start` : `kill()` ne tue que pnpm, le `node` qu'il a lancé survit et garde le port. Groupe de processus (`detached`, `kill(-pid)`), attendre sa fin, et refuser de tester si le port répond déjà — un orphelin a déjà fait « échouer » la mauvaise application.
+- Services Docker d'un test : `compose down` à la fin de **chaque** projet, pas en fin de suite — le suivant reprend les mêmes ports.
+- Docker Hub : quota anonyme. `compose pull --policy missing` ; quota et réseau sautent l'aller-retour avec un avertissement, une image introuvable reste un échec.
+- Un test qui passe sur le code source ne dit rien du **bundle** : ce qui part en production (`dist/`, image Docker) se démarre et s'interroge dans le test de fumée.
 - Pour suggérer une correction de faute de frappe, utiliser **Damerau**-Levenshtein : Levenshtein facture 2 une transposition (« wbe » → « web »), ce qui la met hors d'atteinte de tout seuil raisonnable.
