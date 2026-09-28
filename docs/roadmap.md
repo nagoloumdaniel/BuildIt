@@ -331,6 +331,25 @@ Le rollback est la fonctionnalité la plus facile à « croire faite ». Elle ex
 - [ ] Un projet généré tourne réellement (`run`) et s'affiche dans un navigateur
 - [ ] Temps de génération < 90 s hors `npm install`
 
+## État au 28/09/2026 — 6.7a livrée : le preset SaaS est certifié
+
+Les 15 fiches du preset SaaS du §8 sont `certified`, et le moteur de compatibilité résout la combinaison en `certified`. Chacune est prouvée par `pnpm test:smoke`, qui génère le preset, l'installe depuis npm, lance lint, typecheck, test et **build**, puis, si Docker est là, démarre le Postgres du `docker-compose.yml` généré, y crée une table et va jusqu'à une **inscription et une connexion réelles** par Better Auth.
+
+Vérifié à la main en plus : l'image Docker du preset se construit et sert la page (uid 1000) ; le test Playwright généré passe dans Chromium.
+
+Mécanismes ajoutés au générateur pour y arriver :
+- **intégrations par combinaison** (`when`, une ou plusieurs fiches compagnes) : le code qui dépend de plusieurs choix — Prisma sur PostgreSQL, Better Auth sur Next + Prisma + PostgreSQL, Playwright sur Next — n'est posé que pour la combinaison vérifiée. Une autre combinaison ne reçoit rien de faux et reste `experimental` ;
+- **fichiers composés** : `instrumentation-client.ts` importe le module de chaque outil qui en déclare un (Sentry, PostHog) ;
+- **politique des scripts d'installation** : autorisés quand une technologie en a besoin, refusés explicitement sinon.
+
+Gate M3, où il en est :
+- [ ] 4 presets — **1 sur 4** (SaaS). Full-stack, Dashboard, API : 6.7b
+- [x] No-lock-in vérifié par test (grep des imports du projet généré)
+- [x] Un projet généré tourne réellement et s'affiche dans un navigateur — Docker + Playwright
+- [x] Génération < 90 s hors installation — le plan et l'écriture prennent moins d'une seconde
+
+**Prochaine étape : 6.12 puis 6.7b.** Les entretiens de 6.12 doivent précéder 6.7b (« avant de figer ») ; les trois autres presets réutiliseront les intégrations du SaaS. Full-stack exige NestJS, Redis et Zod ; API exige NestJS ou Hono ; Dashboard reste à cadrer (6.1).
+
 ---
 
 # PHASE 7 — CLI `pf`

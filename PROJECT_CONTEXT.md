@@ -5,7 +5,7 @@ Référence complète : `docs/cahier-des-charges.md`. Plan d'exécution : `docs/
 
 ## État
 
-Phases 1 (socle monorepo), 2 (Project Manifest), 3 (registry, 282 fiches) et 4 (compatibility engine) livrées. Phase 5 livrée (5A + 5B), gate M3 partiel fermé : le socle généré s'installe et passe lint, typecheck et test (`pnpm test:smoke`), post-install et reprise d'étape, Template Resolver, `packages/recipes` avec deux recettes réelles, Dockerfile/devcontainer, revue sécurité écrite. **Prochaine étape : Phase 6** — certifier le preset SaaS de bout en bout (première fiche `certified`, premier `build`).
+Phases 1 (socle monorepo), 2 (Project Manifest), 3 (registry, 282 fiches) et 4 (compatibility engine) livrées. Phase 5 livrée (5A + 5B), gate M3 partiel fermé : le socle généré s'installe et passe lint, typecheck et test (`pnpm test:smoke`), post-install et reprise d'étape, Template Resolver, `packages/recipes` avec deux recettes réelles, Dockerfile/devcontainer, revue sécurité écrite. Phase 6 en cours : **6.7a livrée le 28/09/2026**, le preset SaaS du §8 est certifié de bout en bout (15 fiches). Prochaine étape : entretiens 6.12, puis les trois autres presets (6.7b).
 
 Remote : `github.com/nagoloumdaniel/BuildIt`. La CI GitHub Actions appelle `pnpm ci:local`, plus un job de fumée.
 
@@ -98,4 +98,9 @@ Les packages naissent dans leur phase. Ne pas créer de répertoire vide « pour
 - Sans `biome.json`, Biome formate en **tabulations** : tout JSON généré en espaces échoue au `lint`. Et un tableau court écrit par `JSON.stringify` est remis sur une ligne par Biome — écrire ces fichiers à la main.
 - Dans un Dockerfile, Corepack retélécharge pnpm au démarrage sous un autre utilisateur : fixer `COREPACK_HOME` et recopier le cache dans l'étape d'exécution.
 - La couverture ne dit rien de la sortie : 99 % de couverture n'a pas vu qu'un projet généré échouait à `typecheck`. Toute sortie générée est vérifiée par les outils qu'elle déclare (`socle.test.ts` hors réseau, `pnpm test:smoke` en vrai).
+- Prisma 7 : `env('DATABASE_URL')` de `prisma/config` **lève** quand la variable manque — `prisma generate` échoue alors en CI. Utiliser `process.env.DATABASE_URL`. Le client est engendré dans le projet (`generated/`) : `prisma generate` en postinstall, `generated/` ignoré par git et Biome.
+- Un Dockerfile avec un postinstall qui lit le code (prisma generate) : `pnpm fetch` sur le verrou, puis `pnpm install --offline` **après** `COPY . .`.
+- pnpm 11 : un script d'installation qu'on ne veut pas exécuter se **refuse** (`allowBuilds: { paquet: false }`) ; ni autorisé ni refusé, il fait échouer l'installation.
+- Le code qui dépend de plusieurs choix va dans une intégration à `when`, jamais dans le template d'une seule fiche. Un fichier que plusieurs outils veulent (`instrumentation-client.ts`) se compose, il ne s'écrit pas deux fois.
+- Les modèles de tables d'une bibliothèque (Better Auth) se prennent de son CLI officiel, pas de mémoire.
 - Pour suggérer une correction de faute de frappe, utiliser **Damerau**-Levenshtein : Levenshtein facture 2 une transposition (« wbe » → « web »), ce qui la met hors d'atteinte de tout seuil raisonnable.
