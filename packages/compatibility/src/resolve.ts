@@ -101,7 +101,14 @@ function expand(selection: Selection, registry: Registry): Expansion {
     walk(id, undefined);
   }
 
-  return { entries: [...entries.values()], additions, issues };
+  // Une technologie choisie n'est jamais « ajoutée », même quand une autre,
+  // parcourue avant elle, l'exige : sinon la sortie dépendrait de l'ordre.
+  const selected = new Set(selection.technologies);
+  return {
+    entries: [...entries.values()],
+    additions: additions.filter((addition) => !selected.has(addition.id)),
+    issues,
+  };
 }
 
 function partition(issues: readonly CompatibilityIssue[]): {
