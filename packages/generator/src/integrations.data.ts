@@ -85,7 +85,7 @@ export interface Integration {
    * de base. Une combinaison sans intégration ne reçoit rien — et reste
    * `experimental` tant qu'une de ses fiches l'est.
    */
-  readonly when?: string;
+  readonly when?: string | readonly string[];
   /** Paquets que l'intégration ajoute, avec leur plage — jamais de `*`. */
   readonly dependencies?: Readonly<Record<string, string>>;
   readonly devDependencies?: Readonly<Record<string, string>>;
@@ -284,6 +284,107 @@ test('la page d’accueil répond et affiche son titre', async ({ page }) => {
 });
 `;
 
+/**
+ * Tables de Better Auth, telles que les produit son CLI officiel (1.7.6,
+ * `auth generate`) — reprises sans retouche, sauf le générateur et la source
+ * de données, que le schéma en dossier déclare déjà une fois.
+ */
+const BETTER_AUTH_PRISMA_MODELS = `// Tables de Better Auth. Produites par son CLI ; pour les régénérer après
+// l'ajout d'un plugin : npx auth generate, puis pnpm db:migrate.
+
+model User {
+  id            String    @id
+  name          String
+  email         String
+  emailVerified Boolean   @default(false)
+  image         String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  sessions      Session[]
+  accounts      Account[]
+
+  @@unique([email])
+  @@map("user")
+}
+
+model Session {
+  id        String   @id
+  expiresAt DateTime
+  token     String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  ipAddress String?
+  userAgent String?
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([token])
+  @@index([userId])
+  @@map("session")
+}
+
+model Account {
+  id                    String    @id
+  accountId             String
+  providerId            String
+  userId                String
+  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  accessToken           String?
+  refreshToken          String?
+  idToken               String?
+  accessTokenExpiresAt  DateTime?
+  refreshTokenExpiresAt DateTime?
+  scope                 String?
+  password              String?
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+
+  @@index([userId])
+  @@map("account")
+}
+
+model Verification {
+  id         String   @id
+  identifier String
+  value      String
+  expiresAt  DateTime
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([identifier])
+  @@map("verification")
+}
+`;
+
+const BETTER_AUTH_SERVER = `import { betterAuth } from 'better-auth';
+import { prismaAdapter } from 'better-auth/adapters/prisma';
+import { db } from './db';
+
+/**
+ * Authentification : email et mot de passe, sessions en base.
+ *
+ * BETTER_AUTH_SECRET et BETTER_AUTH_URL viennent de l'environnement (voir
+ * .env.example). Les tables sont déclarées dans prisma/schema/auth.prisma.
+ */
+export const auth = betterAuth({
+  database: prismaAdapter(db, { provider: 'postgresql' }),
+  emailAndPassword: { enabled: true },
+});
+`;
+
+const BETTER_AUTH_CLIENT = `import { createAuthClient } from 'better-auth/react';
+
+/** Côté navigateur : signIn, signUp, signOut, useSession… */
+export const authClient = createAuthClient();
+`;
+
+const BETTER_AUTH_NEXT_ROUTE = `import { toNextJsHandler } from 'better-auth/next-js';
+import { auth } from '@/lib/auth';
+
+/** Toutes les routes de Better Auth : /api/auth/sign-in/email, /api/auth/session… */
+export const { GET, POST } = toNextJsHandler(auth);
+`;
+
 export const INTEGRATIONS: readonly Integration[] = [
   {
     id: 'typescript',
@@ -307,6 +408,21 @@ export const INTEGRATIONS: readonly Integration[] = [
   {
     id: 'playwright',
     scripts: { 'test:e2e': 'playwright test' },
+  },
+  {
+    // Better Auth câblé de bout en bout : tables Prisma, adaptateur, route
+    // Next.js. Chacun des trois dépend d'un autre choix — d'où une combinaison
+    // entière, la seule que le test de fumée vérifie (jusqu'à une inscription
+    // réelle en base). Email et mot de passe : la méthode qui ne demande
+    // aucun compte tiers.
+    id: 'better-auth',
+    when: ['next', 'prisma', 'postgresql'],
+    files: [
+      { path: 'prisma/schema/auth.prisma', contents: BETTER_AUTH_PRISMA_MODELS },
+      { path: 'lib/auth.ts', contents: BETTER_AUTH_SERVER },
+      { path: 'lib/auth-client.ts', contents: BETTER_AUTH_CLIENT },
+      { path: 'app/api/auth/[...all]/route.ts', contents: BETTER_AUTH_NEXT_ROUTE },
+    ],
   },
   {
     // Playwright contre une application Next.js : l'URL et la commande de

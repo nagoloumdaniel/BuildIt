@@ -2,6 +2,7 @@ import { mkdir, mkdtemp, readdir, readFile, rm, writeFile } from 'node:fs/promis
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import type { Manifest } from '@project-factory/manifest';
+import { loadRecipeCatalogue } from '@project-factory/recipes';
 import { loadCatalogue, loadRegistry, type Registry } from '@project-factory/registry';
 import { afterEach, describe, expect, it } from 'vitest';
 import { generateProject, planProject, selectionFromManifest } from './pipeline.js';
@@ -293,9 +294,32 @@ describe('le projet généré ne dépend pas de Project Factory — §1', () => 
   });
 });
 
+/**
+ * Jalon 6.7a : chaque technologie de cette stack SaaS est certifiée — le test
+ * de fumée la génère, l'installe, la construit, et va jusqu'à une inscription
+ * réelle en base. La combinaison n'est plus expérimentale.
+ *
+ * Le preset du §8 compte aussi Sentry et PostHog, pas encore certifiés : ils
+ * entreront dans ce manifest avec leur certification.
+ */
+describe('la stack SaaS, hors observabilité, est certifiée — 6.7a', () => {
+  it('aucun avertissement de combinaison expérimentale', () => {
+    const result = planProject(SAAS, '/cible');
+    expect(result.ok).toBe(true);
+    if (result.ok) {
+      expect(result.value.warnings.map((w) => w.code)).not.toContain(
+        'COMPAT_EXPERIMENTAL_COMBINATION',
+      );
+    }
+  });
+});
+
+/** Une stack réellement expérimentale : Drizzle n'est pas certifié. */
+const EXPERIMENTAL: Manifest = { ...SAAS, database: { engine: 'postgresql', orm: 'drizzle' } };
+
 describe('les avertissements remontent jusqu’au bout', () => {
   it('le plan porte l’avertissement de combinaison expérimentale', () => {
-    const result = planProject(SAAS, '/cible');
+    const result = planProject(EXPERIMENTAL, '/cible');
     expect(result.ok).toBe(true);
     if (result.ok) {
       expect(result.value.warnings.map((w) => w.code)).toContain('COMPAT_EXPERIMENTAL_COMBINATION');
@@ -328,7 +352,7 @@ describe('les avertissements remontent jusqu’au bout', () => {
 
   it('la génération les rend aussi — l’utilisateur les voit après écriture', async () => {
     const target = join(await tempDir(), 'quai3');
-    const result = await generateProject(SAAS, target);
+    const result = await generateProject(EXPERIMENTAL, target);
     expect(result.ok).toBe(true);
     if (result.ok) {
       expect(result.value.warnings.length).toBeGreaterThan(0);
@@ -642,12 +666,18 @@ describe('templates et recettes dans le plan — §22', () => {
     expect(!result.ok && result.issues.map((issue) => issue.code)).toContain('GEN_FILE_CONFLICT');
   });
 
-  it('les recettes officielles s’appliquent avec leurs templates livrés', () => {
-    const result = planProject(SAAS, '/cible', {
-      recipes: ['stripe-checkout', 'better-auth-email-password'],
-    });
+  it('toutes les recettes officielles s’appliquent ensemble au preset SaaS, sans conflit', () => {
+    // Toutes, et pas une sélection : une recette qui écrirait un fichier déjà
+    // posé par une intégration (lib/auth.ts, par exemple) ferait échouer ce
+    // test avant d'atteindre un utilisateur.
+    const catalogue = loadRecipeCatalogue();
+    if (!catalogue.ok) {
+      throw new Error('catalogue de recettes invalide');
+    }
+    const all = catalogue.value.all().map((recipe) => recipe.id);
+    const result = planProject(SAAS, '/cible', { recipes: all });
     expect(paths(result)).toEqual(
-      expect.arrayContaining(['lib/auth.ts', 'lib/stripe/checkout.ts']),
+      expect.arrayContaining(['lib/auth.ts', 'lib/email.ts', 'lib/stripe/checkout.ts']),
     );
     if (result.ok) {
       const checkout = result.value.plan.files.find(

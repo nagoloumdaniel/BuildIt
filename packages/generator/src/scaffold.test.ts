@@ -671,3 +671,50 @@ describe('intégration par combinaison : playwright + next', () => {
     );
   });
 });
+
+describe('intégration par combinaison : better-auth + next + prisma + postgresql', () => {
+  const STACK = [
+    entry({ id: 'better-auth', category: 'authentication' }),
+    entry({ id: 'next', generation: 'certified', template: 'frontend/next' }),
+    entry({ id: 'prisma', category: 'orm' }),
+    entry({ id: 'postgresql', category: 'database' }),
+  ];
+
+  it('pose les tables, la configuration serveur, le client et la route', () => {
+    const files = scaffoldFiles(MANIFEST, STACK);
+    const tables = fileNamed(files, 'prisma/schema/auth.prisma');
+    for (const table of ['"user"', '"session"', '"account"', '"verification"']) {
+      expect(tables).toContain(`@@map(${table})`);
+    }
+    expect(fileNamed(files, 'lib/auth.ts')).toContain(
+      "prismaAdapter(db, { provider: 'postgresql' })",
+    );
+    expect(fileNamed(files, 'lib/auth-client.ts')).toContain('createAuthClient');
+    expect(fileNamed(files, 'app/api/auth/[...all]/route.ts')).toContain('toNextJsHandler');
+  });
+
+  it('les tables n’ont ni générateur ni source de données : le schéma en dossier les a déjà', () => {
+    const tables = fileNamed(scaffoldFiles(MANIFEST, STACK), 'prisma/schema/auth.prisma');
+    expect(tables).not.toContain('generator client');
+    expect(tables).not.toContain('datasource');
+  });
+
+  it.each(['next', 'prisma', 'postgresql'])(
+    'sans %s, rien : la combinaison entière est requise',
+    (missing) => {
+      const paths = scaffoldFiles(
+        MANIFEST,
+        STACK.filter((item) => item.id !== missing),
+      ).map((file) => file.path);
+      expect(paths).not.toContain('lib/auth.ts');
+      expect(paths).not.toContain('prisma/schema/auth.prisma');
+    },
+  );
+
+  it('la provenance nomme toute la combinaison', () => {
+    const route = scaffoldFiles(MANIFEST, STACK).find(
+      (file) => file.path === 'app/api/auth/[...all]/route.ts',
+    );
+    expect(route?.source).toBe('integration:better-auth+next+prisma+postgresql');
+  });
+});

@@ -71,14 +71,22 @@ const ENV_NAME = /^[A-Z][A-Z0-9_]*$/;
 
 /**
  * Intégrations qui s'appliquent à une fiche **dans cette stack** : celles de
- * la fiche seule, plus celles dont la fiche compagne (`when`) est choisie.
+ * la fiche seule, plus celles dont **toutes** les fiches compagnes (`when`)
+ * sont choisies.
  */
 function integrationsFor(entry: RegistryEntry, stack: ReadonlySet<string>): Integration[] {
   return INTEGRATIONS.filter(
     (integration) =>
-      integration.id === entry.id &&
-      (integration.when === undefined || stack.has(integration.when)),
+      integration.id === entry.id && companionsOf(integration).every((id) => stack.has(id)),
   );
+}
+
+/** Fiches compagnes exigées par une intégration — aucune, une ou plusieurs. */
+function companionsOf(integration: Integration): readonly string[] {
+  if (integration.when === undefined) {
+    return [];
+  }
+  return typeof integration.when === 'string' ? [integration.when] : integration.when;
 }
 
 function stackOf(entries: readonly RegistryEntry[]): Set<string> {
@@ -87,7 +95,7 @@ function stackOf(entries: readonly RegistryEntry[]): Set<string> {
 
 /** Nom d'une intégration dans les messages et la provenance des fichiers. */
 function labelOf(integration: Integration): string {
-  return integration.when === undefined ? integration.id : `${integration.id}+${integration.when}`;
+  return [integration.id, ...companionsOf(integration)].join('+');
 }
 
 /**

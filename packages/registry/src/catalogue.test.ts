@@ -140,10 +140,11 @@ describe('contenu du catalogue', () => {
     }
   });
 
-  it('la colonne vertébrale du preset SaaS est certifiée', () => {
+  it('le preset SaaS du §8 est certifié, sauf son observabilité (Sentry, PostHog)', () => {
     const registry = requireRegistry();
     const certified = registry.query({ generation: 'certified' }).map((entry) => entry.id);
     expect([...certified].sort()).toEqual([
+      'better-auth',
       'biome',
       'next',
       'playwright',

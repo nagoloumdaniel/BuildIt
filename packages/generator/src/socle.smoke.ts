@@ -1,4 +1,5 @@
-import { execFileSync } from 'node:child_process';
+import { execFileSync, spawn } from 'node:child_process';
+import { randomBytes } from 'node:crypto';
 import { mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
@@ -24,14 +25,21 @@ interface SmokeProject {
    * Exige Docker ; sans lui, le test le dit et saute cette partie seulement.
    */
   readonly database?: { readonly service: string; readonly url: string };
+  /**
+   * Parcours d'authentification réel : l'application construite démarre
+   * contre la base, un compte est créé puis utilisé pour se connecter.
+   * Exige `database`.
+   */
+  readonly signUp?: boolean;
   /** Recettes appliquées : leurs templates sont vérifiés contre les vrais paquets. */
   readonly recipes?: readonly string[];
 }
 
 const PROJECTS: Record<string, SmokeProject> = {
   'preset SaaS, avec ses recettes': {
-    recipes: ['better-auth-email-password', 'resend-transactional', 'stripe-checkout'],
+    recipes: ['resend-transactional', 'stripe-checkout'],
     database: { service: 'postgres', url: 'postgresql://postgres:postgres@localhost:5432/app' },
+    signUp: true,
     manifest: {
       manifestVersion: 1,
       name: 'quai3',
@@ -122,6 +130,66 @@ async function databaseRoundTrip(target: string, service: string, url: string): 
   expect(() => query('SELECT count(*) FROM "TableAbsente";')).toThrow();
 }
 
+/** Port de l'application pendant le test : loin du 3000 des développeurs. */
+const APP_PORT = 3456;
+
+async function waitFor(url: string, timeoutMs: number): Promise<void> {
+  const deadline = Date.now() + timeoutMs;
+  while (Date.now() < deadline) {
+    try {
+      await fetch(url);
+      return;
+    } catch {
+      await new Promise((resolve) => setTimeout(resolve, 500));
+    }
+  }
+  throw new Error(`${url} ne répond pas après ${timeoutMs} ms`);
+}
+
+/**
+ * Inscription puis connexion, par l'API de Better Auth, sur l'application
+ * construite par l'étape de validation. Preuve que l'adaptateur Prisma, les
+ * tables et la route Next.js fonctionnent ensemble — pas seulement qu'ils se
+ * typent.
+ */
+async function signUpAndSignIn(target: string, databaseUrl: string): Promise<void> {
+  const base = `http://localhost:${APP_PORT}`;
+  const server = spawn('pnpm', ['start'], {
+    cwd: target,
+    stdio: 'ignore',
+    env: {
+      ...process.env,
+      PORT: String(APP_PORT),
+      DATABASE_URL: databaseUrl,
+      BETTER_AUTH_URL: base,
+      BETTER_AUTH_SECRET: randomBytes(32).toString('hex'),
+    },
+  });
+  try {
+    await waitFor(base, 60_000);
+    const credentials = { email: 'smoke@example.invalid', password: 'mot-de-passe-de-test-1' };
+    const post = (path: string, body: object) =>
+      fetch(`${base}/api/auth/${path}`, {
+        method: 'POST',
+        headers: { 'content-type': 'application/json', origin: base },
+        body: JSON.stringify(body),
+      });
+
+    const signUp = await post('sign-up/email', { ...credentials, name: 'Smoke' });
+    expect(signUp.status, await signUp.clone().text()).toBe(200);
+
+    const signIn = await post('sign-in/email', credentials);
+    expect(signIn.status, await signIn.clone().text()).toBe(200);
+    expect(signIn.headers.get('set-cookie')).toContain('better-auth.session_token');
+
+    // Sonde négative : un mauvais mot de passe doit être refusé.
+    const wrong = await post('sign-in/email', { ...credentials, password: 'faux-mot-de-passe' });
+    expect(wrong.status).toBe(401);
+  } finally {
+    server.kill();
+  }
+}
+
 afterAll(async () => {
   for (const target of composed) {
     try {
@@ -136,7 +204,7 @@ afterAll(async () => {
 });
 
 describe('un projet généré passe sa propre CI — gate M3', () => {
-  for (const [label, { manifest, recipes, database }] of Object.entries(PROJECTS)) {
+  for (const [label, { manifest, recipes, database, signUp }] of Object.entries(PROJECTS)) {
     it(label, async () => {
       const root = await mkdtemp(join(tmpdir(), 'pf-smoke-'));
       roots.push(root);
@@ -166,6 +234,9 @@ describe('un projet généré passe sa propre CI — gate M3', () => {
       if (database !== undefined) {
         if (DOCKER) {
           await databaseRoundTrip(target, database.service, database.url);
+          if (signUp === true) {
+            await signUpAndSignIn(target, database.url);
+          }
         } else {
           // Dit, jamais tu : sans Docker, la preuve « base réelle » manque.
           console.warn(`${label} : Docker indisponible, aller-retour avec la base NON vérifié.`);
