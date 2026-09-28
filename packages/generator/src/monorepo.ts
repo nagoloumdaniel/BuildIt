@@ -8,7 +8,12 @@ import {
   ok,
   type ParseResult,
 } from '@project-factory/validation';
-import { buildInfrastructure } from './infrastructure.js';
+import {
+  buildInfrastructure,
+  canRunInContainer,
+  DOCKERIGNORE,
+  monorepoDockerfile,
+} from './infrastructure.js';
 import { envDeclaration } from './integrations.data.js';
 import { BRIDGES, ROLE_BY_CATEGORY, ROLE_BY_ID, type Role } from './monorepo.data.js';
 import type { PlannedFile } from './plan.js';
@@ -37,7 +42,7 @@ const MESSAGES: Readonly<Record<MonorepoIssueCode, string>> = {
   GEN_RECIPE_ACROSS_APPS:
     'La recette « {value} » exige des technologies réparties entre plusieurs applications ({expected}). Elle doit tenir dans une seule.',
   GEN_DOCKERFILE_MONOREPO_DEFERRED:
-    'Docker est choisi : docker-compose.yml est généré pour les services locaux, mais pas de Dockerfile par application — en monorepo, il exige un élagage du dépôt (turbo prune) que le générateur ne fait pas encore. Mieux vaut aucun Dockerfile qu’un Dockerfile qui échoue.',
+    'Docker est choisi, mais l’application « {value} » n’a pas de quoi se construire et démarrer (scripts build et start) : pas de Dockerfile pour elle. Il échouerait dès « docker build ».',
 };
 
 const messageFor = createMessageFormatter(MESSAGES);
@@ -322,12 +327,35 @@ export function planMonorepo(
   warnings.push(
     ...scaffold.value.warnings.filter((warning) => warning.code !== 'GEN_DOCKERFILE_DEFERRED'),
   );
+
+  // Une image par application, construite depuis la racine ; un seul
+  // .dockerignore, à la racine — le contexte de construction.
   if (entries.some((entry) => entry.id === 'docker')) {
-    warnings.push({
-      code: 'GEN_DOCKERFILE_MONOREPO_DEFERRED',
-      path: ['docker'],
-      message: messageFor('GEN_DOCKERFILE_MONOREPO_DEFERRED', {}),
-    });
+    let images = 0;
+    for (const app of apps.keys()) {
+      const manifestFile = files.find((file) => file.path === `apps/${app}/package.json`);
+      const json = JSON.parse(manifestFile?.contents ?? '{}') as {
+        name?: string;
+        scripts?: Record<string, string>;
+      };
+      if (json.name !== undefined && canRunInContainer(json.scripts ?? {})) {
+        files.push({
+          path: `apps/${app}/Dockerfile`,
+          contents: monorepoDockerfile(json.name, `apps/${app}`),
+          source: 'infra:docker',
+        });
+        images += 1;
+      } else {
+        warnings.push({
+          code: 'GEN_DOCKERFILE_MONOREPO_DEFERRED',
+          path: ['docker', app],
+          message: messageFor('GEN_DOCKERFILE_MONOREPO_DEFERRED', { value: app }),
+        });
+      }
+    }
+    if (images > 0) {
+      files.push({ path: '.dockerignore', contents: DOCKERIGNORE, source: 'infra:docker' });
+    }
   }
 
   return ok({ files, warnings });

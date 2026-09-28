@@ -59,6 +59,7 @@ describe('monorepo : chaque application est générée comme une application seu
       (path) => !path.startsWith('apps/') && !path.startsWith('packages/'),
     );
     expect(root.sort()).toEqual([
+      '.dockerignore',
       '.github/workflows/ci.yml',
       '.gitignore',
       'README.md',
@@ -122,11 +123,25 @@ describe('monorepo : la racine porte le dépôt entier', () => {
     expect(ci).toContain('pnpm run lint');
   });
 
-  it('pas de Dockerfile par application : un avertissement le dit', () => {
-    expect(paths().some((path) => path.endsWith('Dockerfile'))).toBe(false);
-    expect(plan().warnings.map((warning) => warning.code)).toContain(
+  it('un Dockerfile par application, construit depuis la racine par turbo prune', () => {
+    for (const app of ['web', 'api']) {
+      const dockerfile = file(`apps/${app}/Dockerfile`);
+      expect(dockerfile).toContain(`docker build -f apps/${app}/Dockerfile .`);
+      expect(dockerfile).toContain(`prune atelier-${app} --docker`);
+      expect(dockerfile).toContain(`turbo run build --filter=atelier-${app}`);
+      expect(dockerfile).toContain(`WORKDIR /repo/apps/${app}`);
+      expect(dockerfile).toContain('USER node');
+    }
+    expect(plan().warnings.map((warning) => warning.code)).not.toContain(
       'GEN_DOCKERFILE_MONOREPO_DEFERRED',
     );
+  });
+
+  it('un seul .dockerignore, à la racine, qui exclut les dépendances et secrets de chaque application', () => {
+    const ignore = file('.dockerignore');
+    expect(ignore).toContain('**/node_modules');
+    expect(ignore).toContain('**/.env');
+    expect(paths().filter((path) => path.endsWith('.dockerignore'))).toEqual(['.dockerignore']);
   });
 
   it('turbo.json déclare dev comme tâche persistante, sans cache', () => {

@@ -44,6 +44,8 @@ interface SmokeProject {
    * 200. Exige Docker.
    */
   readonly image?: string;
+  /** Dockerfile de l'image, relatif à la racine (contexte de construction). */
+  readonly imageDockerfile?: string;
   /**
    * Aller-retour avec le Redis du docker-compose.yml généré, par le client
    * généré (`lib/redis.ts`), exécuté avec tsx. Exige Docker.
@@ -114,6 +116,8 @@ const PROJECTS: Record<string, SmokeProject> = {
   'preset Full-stack (monorepo)': {
     apps: { http: 'apps/api', data: 'apps/web', cache: 'apps/api' },
     bridge: { web: 'apps/web', api: 'apps/api' },
+    image: '/',
+    imageDockerfile: 'apps/web/Dockerfile',
     http: ['/health', '/openapi.json'],
     database: { service: 'postgres', url: 'postgresql://postgres:postgres@localhost:5432/app' },
     signUp: true,
@@ -323,21 +327,24 @@ async function withRunningApp(
  * proxy). Le Dockerfile généré n'est jamais modifié ; sans la variable, c'est
  * lui qui est construit, tel quel.
  */
-async function imageServes(target: string, path: string): Promise<void> {
+async function imageServes(target: string, path: string, dockerfile = 'Dockerfile'): Promise<void> {
   const tag = `pf-smoke-${randomBytes(4).toString('hex')}`;
   const ca = process.env['PF_SMOKE_DOCKER_CA'];
-  const args = ['build', '-t', tag];
+  const args = ['build', '-t', tag, '-f', dockerfile];
   if (ca !== undefined && ca !== '') {
     await copyFile(ca, join(target, 'smoke-proxy-ca.crt'));
-    const original = await readFile(join(target, 'Dockerfile'), 'utf8');
+    const original = await readFile(join(target, dockerfile), 'utf8');
     await writeFile(
       join(target, 'Dockerfile.smoke'),
+      // Juste après `corepack enable`, avant tout accès au réseau — la ligne
+      // existe dans l'image d'une application seule comme de monorepo.
       original.replace(
-        'WORKDIR /app',
-        'COPY smoke-proxy-ca.crt /smoke-proxy-ca.crt\nENV NODE_EXTRA_CA_CERTS=/smoke-proxy-ca.crt\nWORKDIR /app',
+        'RUN corepack enable',
+        'RUN corepack enable\nCOPY smoke-proxy-ca.crt /smoke-proxy-ca.crt\nENV NODE_EXTRA_CA_CERTS=/smoke-proxy-ca.crt',
       ),
     );
-    args.push('-f', 'Dockerfile.smoke', '--network', 'host');
+    args.splice(args.indexOf(dockerfile), 1, 'Dockerfile.smoke');
+    args.push('--network', 'host');
     for (const name of ['HTTPS_PROXY', 'HTTP_PROXY', 'NO_PROXY']) {
       if (process.env[name] !== undefined) {
         args.push('--build-arg', name);
@@ -529,7 +536,19 @@ function requireDocker(): void {
 describe('un projet généré passe sa propre CI — gate M3', () => {
   for (const [
     label,
-    { manifest, recipes, database, signUp, dashboard, http, image, cache, apps, bridge },
+    {
+      manifest,
+      recipes,
+      database,
+      signUp,
+      dashboard,
+      http,
+      image,
+      imageDockerfile,
+      cache,
+      apps,
+      bridge,
+    },
   ] of Object.entries(PROJECTS)) {
     describe(label, () => {
       let target = '';
@@ -601,7 +620,7 @@ describe('un projet généré passe sa propre CI — gate M3', () => {
       if (image !== undefined) {
         it.skipIf(SKIP_DOCKER)('image Docker : construite, démarrée, non root', async () => {
           requireDocker();
-          await imageServes(generated(), image);
+          await imageServes(generated(), image, imageDockerfile);
         });
       }
 

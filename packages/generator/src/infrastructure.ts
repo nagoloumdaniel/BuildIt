@@ -213,15 +213,65 @@ function dockerfile(workspaceFile: boolean): string {
 }
 
 /** Ce qui n'entre jamais dans le contexte de construction — les secrets d'abord. */
-const DOCKERIGNORE = `.env
-.env.*
-!.env.example
+/**
+ * Motifs en `**\/` : ils valent à toutes les profondeurs, donc aussi pour les
+ * applications d'un monorepo, construit depuis la racine.
+ */
+export const DOCKERIGNORE: string = `**/.env
+**/.env.*
+!**/.env.example
 .git
-node_modules
-dist
-.next
-coverage
+**/node_modules
+**/dist
+**/.next
+**/.turbo
+**/coverage
 `;
+
+/**
+ * Image d'une application de monorepo, construite depuis la racine.
+ *
+ * `turbo prune --docker` réduit le dépôt à l'application et à ce dont elle
+ * dépend (paquet partagé compris) : les manifestes d'abord — l'étape de
+ * téléchargement reste en cache tant qu'ils ne changent pas —, le code
+ * ensuite. Même principe que l'image d'une application seule : pnpm embarqué,
+ * installation après la copie du code (postinstall), jamais root.
+ */
+export function monorepoDockerfile(packageName: string, appDir: string): string {
+  return `${[
+    '# syntax=docker/dockerfile:1',
+    `# Image de ${appDir}. À construire depuis la racine du dépôt :`,
+    `#   docker build -f ${appDir}/Dockerfile .`,
+    '',
+    'FROM node:22-alpine AS base',
+    'ENV COREPACK_HOME=/corepack',
+    'RUN corepack enable',
+    'WORKDIR /repo',
+    '',
+    'FROM base AS prune',
+    'COPY . .',
+    `RUN corepack install && pnpm dlx turbo@2 prune ${packageName} --docker`,
+    '',
+    'FROM base AS deps',
+    'COPY --from=prune /repo/out/json/ .',
+    'RUN corepack install && pnpm fetch --frozen-lockfile',
+    '',
+    'FROM deps AS build',
+    'COPY --from=prune /repo/out/full/ .',
+    'RUN pnpm install --frozen-lockfile --offline',
+    `RUN pnpm exec turbo run build --filter=${packageName}`,
+    '',
+    'FROM base AS runtime',
+    'ENV NODE_ENV=production PORT=3000',
+    'COPY --from=deps /corepack /corepack',
+    'COPY --from=build --chown=node:node /repo ./',
+    `WORKDIR /repo/${appDir}`,
+    '# Jamais root : une faille applicative ne donne pas la main sur le conteneur.',
+    'USER node',
+    'EXPOSE 3000',
+    'CMD ["pnpm", "start"]',
+  ].join('\n')}\n`;
+}
 
 /**
  * Dev Container : l'environnement de développement, reproductible.

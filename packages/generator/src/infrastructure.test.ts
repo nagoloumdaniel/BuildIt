@@ -278,7 +278,7 @@ describe('Dockerfile — 5B.6', () => {
       '.dockerignore',
     );
     expect(ignore).toContain('.env');
-    expect(ignore).toContain('!.env.example');
+    expect(ignore).toContain('!**/.env.example');
     expect(ignore).toContain('node_modules');
   });
 });
