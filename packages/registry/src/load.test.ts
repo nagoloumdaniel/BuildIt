@@ -71,9 +71,9 @@ describe('fiche invalide', () => {
     }
   });
 
-  it('signale une fiche certifiée sans template', () => {
+  it('accepte une fiche certifiée sans template', () => {
     const { template: _removed, ...noTemplate } = NEXT;
-    expect(codesOf([TYPESCRIPT, noTemplate])).toContain('REGISTRY_CERTIFIED_WITHOUT_TEMPLATE');
+    expect(codesOf([TYPESCRIPT, noTemplate])).toEqual([]);
   });
 
   it('signale une fiche déclarée avec template', () => {

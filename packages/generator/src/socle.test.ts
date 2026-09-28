@@ -1,11 +1,12 @@
 import { execFileSync } from 'node:child_process';
+import { rmSync, writeFileSync } from 'node:fs';
 import { mkdtemp, rm } from 'node:fs/promises';
 import { createRequire } from 'node:module';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import type { Manifest } from '@project-factory/manifest';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import { generateProject } from './pipeline.js';
+import { generateProject, planProject } from './pipeline.js';
 
 /**
  * Le socle généré, soumis aux outils qu'il déclare — sans réseau.
@@ -55,10 +56,21 @@ const SAAS: Manifest = {
 
 let root: string;
 let target: string;
+/** Chemins produits par un template certifie — hors perimetre hors-ligne. */
+let fromTemplates: string[] = [];
 
 beforeAll(async () => {
   root = await mkdtemp(join(tmpdir(), 'pf-socle-'));
   target = join(root, 'quai3');
+  const planned = planProject(SAAS, target);
+  if (planned.ok) {
+    // Derive du plan plutot qu'ecrite en dur : la liste suit les templates
+    // sans qu'on ait a la maintenir.
+    fromTemplates = planned.value.plan.files
+      .filter((file) => file.source.startsWith('template:'))
+      .map((file) => file.path.split('/')[0] ?? file.path);
+    fromTemplates = [...new Set(fromTemplates)];
+  }
   const result = await generateProject(SAAS, target);
   if (!result.ok) {
     throw new Error(result.issues.map((issue) => issue.message).join(' | '));
@@ -70,8 +82,41 @@ afterAll(async () => {
 });
 
 describe('le socle SaaS passe ses propres vérifications — 5B.1', () => {
-  it('typecheck : tsc ne trouve rien à redire', () => {
-    expect(run(binary('typescript', 'tsc'), ['--noEmit', '-p', '.'], target)).toBeUndefined();
+  it('typecheck : la configuration et les fichiers sans dépendance sont propres', () => {
+    // Ce test tourne hors-ligne : le `node_modules` du projet généré n'existe
+    // pas. Du code React ne peut donc pas être typé ici — ni ses imports, ni
+    // `JSX.IntrinsicElements`, ni les types de ses props.
+    //
+    // J'ai d'abord filtré les codes d'erreur concernés. La liste s'allongeait à
+    // chaque exécution : signe que le test cherchait à faire hors-ligne quelque
+    // chose qui demande les dépendances. Le périmètre est donc explicite —
+    // `app/` et `components/` appartiennent à `pnpm test:smoke`, qui installe
+    // réellement. Ce qui reste ici garde tout son sens : tsconfig valide,
+    // `env.d.ts` cohérent, aucune erreur de syntaxe dans un template.
+    const scoped = join(target, 'tsconfig.socle.json');
+    writeFileSync(
+      scoped,
+      `${JSON.stringify(
+        { extends: './tsconfig.json', exclude: ['node_modules', 'dist', ...fromTemplates] },
+        null,
+        2,
+      )}\n`,
+    );
+    const output = run(binary('typescript', 'tsc'), ['--noEmit', '-p', scoped], target) ?? '';
+    rmSync(scoped);
+
+    const errors = output.split('\n').filter((line) => line.includes('error TS'));
+    expect(errors).toEqual([]);
+  });
+
+  it('sonde négative : une erreur de type autre qu’un module absent est vue', () => {
+    // Sans cette sonde, le filtre ci-dessus pourrait tout masquer sans qu'on
+    // le sache.
+    const probe = join(target, 'sonde.ts');
+    writeFileSync(probe, 'export const x: number = "pas un nombre";\n');
+    const output = run(binary('typescript', 'tsc'), ['--noEmit', '-p', '.'], target) ?? '';
+    rmSync(probe);
+    expect(output).toContain('error TS2322');
   });
 
   it('lint : biome check passe avec la configuration générée', () => {

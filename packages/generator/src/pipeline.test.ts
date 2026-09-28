@@ -139,15 +139,23 @@ describe('generateProject — le projet sur le disque', () => {
 
     expect(result.ok).toBe(true);
     const files = (await readdir(target)).sort();
-    // docker-compose.yml apparaît parce que PostgreSQL est dans la stack : le
+    // `docker-compose.yml` apparaît parce que PostgreSQL est dans la stack : le
     // projet est démarrable sans rien installer d'autre que Docker.
+    //
+    // `app/`, `components/`, `lib/` et `next.config.ts` viennent des templates
+    // certifiés en phase 6 : le projet n'est plus une coquille, il a une
+    // application qui se lance.
     expect(files).toEqual([
       '.env.example',
       '.gitignore',
       'README.md',
+      'app',
       'biome.json',
+      'components',
       'docker-compose.yml',
       'env.d.ts',
+      'lib',
+      'next.config.ts',
       'package.json',
       'pnpm-workspace.yaml',
       'tsconfig.json',
@@ -248,9 +256,21 @@ describe('le projet généré ne dépend pas de Project Factory — §1', () => 
     const target = join(await tempDir(), 'quai3');
     await generateProject(SAAS, target);
 
-    for (const name of await readdir(target)) {
-      const contents = await readFile(join(target, name), 'utf8');
-      expect(contents, `dépendance résiduelle dans ${name}`).not.toContain('@project-factory/');
+    // Parcours récursif : depuis la certification des templates, le projet
+    // généré contient des dossiers (app/, components/, lib/). Lire chaque
+    // entrée de `readdir` comme un fichier levait EISDIR.
+    async function walk(directory: string): Promise<string[]> {
+      const found: string[] = [];
+      for (const item of await readdir(directory, { withFileTypes: true })) {
+        const path = join(directory, item.name);
+        found.push(...(item.isDirectory() ? await walk(path) : [path]));
+      }
+      return found;
+    }
+
+    for (const path of await walk(target)) {
+      const contents = await readFile(path, 'utf8');
+      expect(contents, `dépendance résiduelle dans ${path}`).not.toContain('@project-factory/');
     }
   });
 
@@ -396,6 +416,10 @@ describe('post-install, validation et reprise — §22', () => {
       'pnpm run lint',
       'pnpm run typecheck',
       'pnpm run test',
+      // `build` entre dans la validation depuis la certification de Next.js :
+      // il apporte le script, donc le projet généré doit prouver qu'il se
+      // construit, pas seulement qu'il se type.
+      'pnpm run build',
     ]);
     if (result.ok) {
       expect(result.value.completedSteps).toEqual(['plan', 'write', 'install', 'git', 'validate']);
@@ -520,19 +544,26 @@ describe('post-install, validation et reprise — §22', () => {
  * Template Resolver et Recipe Resolver branchés dans le pipeline (5B.4, 5B.5).
  */
 describe('templates et recettes dans le plan — §22', () => {
-  /** Le catalogue officiel, avec `next` promu certifié pour les besoins du test. */
+  /**
+   * Le catalogue officiel réduit à une seule fiche certifiée : `next`.
+   *
+   * Le helper promouvait `next` au départ ; depuis la phase 6 il l'est pour de
+   * bon, comme `tailwind` et `shadcn-ui`. Isoler plutôt que promouvoir garde
+   * ces tests centrés sur un template, et stables quand d'autres fiches seront
+   * certifiées à leur tour.
+   */
   function registryWithCertifiedNext(): Registry {
     const official = loadCatalogue();
     if (!official.ok) {
       throw new Error('catalogue officiel invalide');
     }
-    const raw = official.value
-      .entries()
-      .map((entry) =>
-        entry.id === 'next'
-          ? { ...entry, generation: 'certified', template: 'frontend/next' }
-          : entry,
-      );
+    const raw = official.value.entries().map((entry) => {
+      if (entry.id === 'next') {
+        return { ...entry, generation: 'certified', template: 'frontend/next' };
+      }
+      const { template: _ignored, ...rest } = entry;
+      return { ...rest, generation: 'declared' };
+    });
     const registry = loadRegistry(raw);
     if (!registry.ok) {
       throw new Error(registry.issues.map((issue) => issue.message).join(' | '));
@@ -640,7 +671,12 @@ describe('templates et recettes dans le plan — §22', () => {
   });
 
   it('sans fiche certifiée ni recette, aucun dossier de templates n’est lu', () => {
-    const result = planProject(SAAS, '/cible', { templatesRoot: '/racine/qui/n-existe/pas' });
+    // Le preset SaaS contient maintenant des fiches certifiées : sa racine de
+    // templates est lue, et une racine absente le fait échouer — ce qui est le
+    // comportement voulu. Le cas « rien à lire » se teste donc sur un manifest
+    // qui ne sélectionne aucune fiche certifiée.
+    const nu = { ...SAAS, frontend: undefined, quality: undefined, infra: undefined };
+    const result = planProject(nu, '/cible', { templatesRoot: '/racine/qui/n-existe/pas' });
     expect(result.ok).toBe(true);
   });
 });

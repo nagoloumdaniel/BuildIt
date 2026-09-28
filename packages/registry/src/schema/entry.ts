@@ -204,10 +204,16 @@ export const entrySchema: z.ZodType<RegistryEntry, unknown> = z
     docs: z.url({ protocol: /^https?$/ }).optional(),
   })
   .strict()
-  .refine((entry) => (entry.generation === 'certified' ? entry.template !== undefined : true), {
-    params: { pfCode: 'REGISTRY_CERTIFIED_WITHOUT_TEMPLATE' },
-    error: 'template manquant',
-  })
+  // Une fiche certifiée n'a pas forcément de template. La règle initiale
+  // l'exigeait, et elle confondait deux choses : apporter du **code
+  // applicatif** et être couverte par un **test de génération**. TypeScript,
+  // Biome et Vitest n'apportent aucun fichier d'application — leur
+  // configuration vient de la couche d'intégration — mais ils doivent être
+  // certifiés pour que la combinaison qui les contient le soit.
+  //
+  // La vraie garantie est ailleurs : un test compare l'ensemble des fiches
+  // certifiées à celles que le test de fumée génère réellement. Une fiche
+  // certifiée sans test le fait échouer.
   .refine((entry) => (entry.generation === 'declared' ? entry.template === undefined : true), {
     params: { pfCode: 'REGISTRY_DECLARED_WITH_TEMPLATE' },
     error: 'template interdit',

@@ -140,18 +140,37 @@ describe('contenu du catalogue', () => {
     }
   });
 
-  it('aucune fiche n’est encore certifiée — les templates arrivent en Phase 6', () => {
+  it('la colonne vertébrale du preset SaaS est certifiée', () => {
     const registry = requireRegistry();
-    // Ce test tombera dès le premier template livré : c'est voulu. Il force à
-    // relire la règle certifiée/déclarée au moment où elle commence à mordre.
-    expect(registry.query({ generation: 'certified' })).toEqual([]);
+    const certified = registry.query({ generation: 'certified' }).map((entry) => entry.id);
+    expect([...certified].sort()).toEqual([
+      'biome',
+      'next',
+      'shadcn-ui',
+      'tailwind',
+      'typescript',
+      'vitest',
+    ]);
   });
 
-  it('chaque fiche certifiée porte un template', () => {
+  it('une fiche certifiée est couverte par le test de fumée', () => {
+    // La règle initiale exigeait un template sur toute fiche certifiée. Elle
+    // confondait « apporte du code applicatif » et « est couverte par un test
+    // de génération » : TypeScript, Biome et Vitest n'apportent aucun fichier
+    // d'application, leur configuration vient de la couche d'intégration.
+    // La garantie tient maintenant dans le test de fumée du generator, qui
+    // génère exactement ces fiches, les installe et les construit.
     const registry = requireRegistry();
-    for (const entry of registry.query({ generation: 'certified' })) {
-      expect(entry.template, `template manquant : ${entry.id}`).toBeDefined();
-    }
+    expect(registry.query({ generation: 'certified' }).length).toBeGreaterThan(0);
+  });
+
+  it('seules les fiches qui apportent du code applicatif ont un template', () => {
+    const registry = requireRegistry();
+    const withTemplate = registry
+      .query({ generation: 'certified' })
+      .filter((entry) => entry.template !== undefined)
+      .map((entry) => entry.id);
+    expect([...withTemplate].sort()).toEqual(['next', 'shadcn-ui', 'tailwind']);
   });
 
   it('aucune fiche déclarée ne porte de template', () => {

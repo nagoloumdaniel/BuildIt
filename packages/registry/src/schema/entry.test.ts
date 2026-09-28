@@ -105,8 +105,12 @@ describe('cibles', () => {
 });
 
 describe('lien entre generation et template', () => {
-  it('refuse une fiche certifiée sans template — elle promettrait ce qui n’existe pas', () => {
-    expect(accepts({ generation: 'certified' })).toBe(false);
+  it('accepte une fiche certifiée sans template', () => {
+    // TypeScript, Biome et Vitest sont certifiés et n'apportent aucun fichier
+    // d'application : leur configuration vient de la couche d'intégration du
+    // générateur. Exiger un template confondrait « apporte du code » et « est
+    // couverte par un test de génération ».
+    expect(accepts({ generation: 'certified' })).toBe(true);
   });
 
   it('accepte une fiche certifiée avec template', () => {

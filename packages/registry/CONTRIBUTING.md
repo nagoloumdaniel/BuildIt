@@ -109,15 +109,12 @@ C'est ce qui permet au catalogue d'être **large** sans jamais **mentir**.
 
 **Écrivez `declared`.** C'est presque toujours la bonne réponse pour une nouvelle fiche.
 
-Une fiche ne devient `certified` que le jour où trois choses existent en même temps :
+Une fiche ne devient `certified` que le jour où un **test de génération** produit un projet qui la contient, l'installe et le construit. C'est `pnpm test:smoke`.
 
-1. un template dans `packages/templates`
-2. un test de génération qui produit un projet, l'installe et le compile
-3. le test tourne dans `ci:local`
+Un template n'est pas exigé. La règle initiale le demandait, et elle confondait deux choses : apporter du **code applicatif** et être couverte par un **test**. TypeScript, Biome et Vitest sont certifiés sans template — leur configuration vient de la couche d'intégration du générateur, pas d'un dossier de templates.
 
-Les deux contraintes sont vérifiées par le schéma, dans les deux sens :
+Une seule contrainte reste vérifiée par le schéma :
 
-- `certified` **sans** `template` → rejeté. La fiche promettrait une génération qui n'existe pas.
 - `declared` **avec** `template` → rejeté. Si le template existe et qu'un test le couvre, la fiche doit être promue.
 
 ---
@@ -207,7 +204,7 @@ Le catalogue est revu chaque trimestre. Quand vous vérifiez qu'une fiche est to
 `pnpm ci:local` échoue si :
 
 - une fiche est malformée, avec le chemin exact et ce qu'il faut corriger
-- une fiche `certified` n'a pas de template, ou une `declared` en a un
+- une fiche `declared` porte un template
 - une référence pointe vers une fiche inexistante
 - deux fiches partagent un identifiant
 - l'index engendré a dérivé de `data/`

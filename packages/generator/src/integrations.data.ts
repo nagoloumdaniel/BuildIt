@@ -106,7 +106,10 @@ const TSCONFIG = `{
     "skipLibCheck": true,
     "isolatedModules": true,
     "resolveJsonModule": true,
-    "noUncheckedIndexedAccess": true
+    "noUncheckedIndexedAccess": true,
+    "jsx": "preserve",
+    "lib": ["ES2023", "DOM", "DOM.Iterable"],
+    "paths": { "@/*": ["./*"] }
   },
   "include": ["**/*.ts", "**/*.tsx"],
   "exclude": ["node_modules", "dist"]
@@ -164,10 +167,13 @@ const BIOME_JSON = `{
   },
   "linter": {
     "enabled": true,
-    "rules": { "recommended": true }
+    "rules": { "preset": "recommended" }
   },
   "javascript": {
     "formatter": { "quoteStyle": "single" }
+  },
+  "css": {
+    "parser": { "tailwindDirectives": true }
   }
 }
 `;
