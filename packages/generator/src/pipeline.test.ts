@@ -49,7 +49,7 @@ const SAAS: Manifest = {
   },
   database: { engine: 'postgresql', orm: 'prisma' },
   auth: { provider: 'better-auth' },
-  services: ['stripe', 'resend'],
+  services: ['stripe', 'resend', 'sentry', 'posthog'],
   quality: ['biome', 'vitest', 'playwright'],
   infra: ['vercel'],
 };
@@ -156,6 +156,8 @@ describe('generateProject — le projet sur le disque', () => {
       'docker-compose.yml',
       'e2e',
       'env.d.ts',
+      'instrumentation-client.ts',
+      'instrumentation.ts',
       'lib',
       'next.config.ts',
       'package.json',
@@ -295,14 +297,11 @@ describe('le projet généré ne dépend pas de Project Factory — §1', () => 
 });
 
 /**
- * Jalon 6.7a : chaque technologie de cette stack SaaS est certifiée — le test
- * de fumée la génère, l'installe, la construit, et va jusqu'à une inscription
- * réelle en base. La combinaison n'est plus expérimentale.
- *
- * Le preset du §8 compte aussi Sentry et PostHog, pas encore certifiés : ils
- * entreront dans ce manifest avec leur certification.
+ * Jalon 6.7a : chaque technologie du preset SaaS du §8 est certifiée — le
+ * test de fumée la génère, l'installe, la construit, et va jusqu'à une
+ * inscription réelle en base. La combinaison n'est plus expérimentale.
  */
-describe('la stack SaaS, hors observabilité, est certifiée — 6.7a', () => {
+describe('le preset SaaS du §8 est certifié — 6.7a', () => {
   it('aucun avertissement de combinaison expérimentale', () => {
     const result = planProject(SAAS, '/cible');
     expect(result.ok).toBe(true);

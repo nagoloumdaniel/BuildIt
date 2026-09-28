@@ -48,7 +48,7 @@ const PROJECTS: Record<string, SmokeProject> = {
       frontend: { framework: 'next', language: 'typescript', styling: 'tailwind', ui: 'shadcn-ui' },
       database: { engine: 'postgresql', orm: 'prisma' },
       auth: { provider: 'better-auth' },
-      services: ['stripe', 'resend'],
+      services: ['stripe', 'resend', 'sentry', 'posthog'],
       quality: ['biome', 'vitest', 'playwright'],
       infra: ['vercel', 'github-actions', 'docker', 'dev-container'],
     },

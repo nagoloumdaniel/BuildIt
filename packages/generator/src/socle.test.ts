@@ -49,7 +49,7 @@ const SAAS: Manifest = {
   frontend: { framework: 'next', language: 'typescript', styling: 'tailwind', ui: 'shadcn-ui' },
   database: { engine: 'postgresql', orm: 'prisma' },
   auth: { provider: 'better-auth' },
-  services: ['stripe', 'resend'],
+  services: ['stripe', 'resend', 'sentry', 'posthog'],
   quality: ['biome', 'vitest', 'playwright'],
   infra: ['vercel', 'github-actions', 'docker', 'dev-container'],
 };
@@ -74,7 +74,12 @@ beforeAll(async () => {
     // périmètre que les templates, fichier par fichier.
     fromTemplates.push(
       ...planned.value.plan.files
-        .filter((file) => /^integration:[^+]+\+/.test(file.source))
+        .filter(
+          (file) =>
+            /^integration:[^+]+\+/.test(file.source) ||
+            // Composé par le socle, il importe les modules des outils.
+            file.source === 'scaffold:instrumentation-client',
+        )
         .map((file) => file.path),
     );
     fromTemplates = [...new Set(fromTemplates)];

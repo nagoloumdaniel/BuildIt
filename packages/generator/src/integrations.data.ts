@@ -86,6 +86,20 @@ export interface Integration {
    * `experimental` tant qu'une de ses fiches l'est.
    */
   readonly when?: string | readonly string[];
+  /**
+   * Variables d'environnement propres à la combinaison — les clés exposées au
+   * navigateur, par exemple, dont le préfixe dépend du framework
+   * (`NEXT_PUBLIC_`). Des noms, jamais des valeurs.
+   */
+  readonly env?: readonly string[];
+  /**
+   * Module à charger dans le navigateur avant l'application
+   * (`instrumentation-client.ts` de Next.js).
+   *
+   * Plusieurs outils veulent ce fichier unique : chacun déclare son module, et
+   * le socle compose le fichier commun qui les importe. Aucun n'écrase l'autre.
+   */
+  readonly clientInstrumentation?: string;
   /** Paquets que l'intégration ajoute, avec leur plage — jamais de `*`. */
   readonly dependencies?: Readonly<Record<string, string>>;
   readonly devDependencies?: Readonly<Record<string, string>>;
@@ -108,6 +122,12 @@ export interface Integration {
    * autorisation d'exécuter du code sur la machine de l'utilisateur.
    */
   readonly allowBuilds?: readonly string[];
+  /**
+   * Paquets dont le script d'installation est **refusé** explicitement : ils
+   * en ont un, mais il ne sert pas ici. pnpm 11 échoue sur un script ni
+   * autorisé ni refusé ; le refuser est le choix du moindre privilège.
+   */
+  readonly denyBuilds?: readonly string[];
   /** Fichiers de configuration sans lesquels les scripts échouent. */
   readonly files?: readonly IntegrationFile[];
   /** Service local à ajouter à docker-compose.yml. */
@@ -385,6 +405,45 @@ import { auth } from '@/lib/auth';
 export const { GET, POST } = toNextJsHandler(auth);
 `;
 
+/**
+ * Sentry côté navigateur. Sans DSN, `init` ne fait rien : aucun envoi tant que
+ * le projet n'est pas configuré.
+ */
+const SENTRY_CLIENT = `import * as Sentry from '@sentry/nextjs';
+
+// Sans DSN, Sentry reste inactif : rien n'est envoyé tant qu'il n'est pas configuré.
+Sentry.init({
+  dsn: process.env.NEXT_PUBLIC_SENTRY_DSN,
+  tracesSampleRate: 0.1,
+});
+`;
+
+const SENTRY_SERVER = `import * as Sentry from '@sentry/nextjs';
+
+/** Initialisation côté serveur, appelée une fois par Next.js au démarrage. */
+export function register(): void {
+  Sentry.init({
+    dsn: process.env.SENTRY_DSN,
+    tracesSampleRate: 0.1,
+  });
+}
+
+/** Erreurs des composants serveur, des routes et du middleware. */
+export const onRequestError = Sentry.captureRequestError;
+`;
+
+const POSTHOG_CLIENT = `import posthog from 'posthog-js';
+
+const key = process.env.NEXT_PUBLIC_POSTHOG_KEY;
+
+// Sans clé, PostHog n'est pas initialisé : aucune donnée ne part.
+if (key !== undefined && key !== '') {
+  posthog.init(key, {
+    api_host: process.env.NEXT_PUBLIC_POSTHOG_HOST ?? 'https://eu.i.posthog.com',
+  });
+}
+`;
+
 export const INTEGRATIONS: readonly Integration[] = [
   {
     id: 'typescript',
@@ -423,6 +482,31 @@ export const INTEGRATIONS: readonly Integration[] = [
       { path: 'lib/auth-client.ts', contents: BETTER_AUTH_CLIENT },
       { path: 'app/api/auth/[...all]/route.ts', contents: BETTER_AUTH_NEXT_ROUTE },
     ],
+  },
+  {
+    // Sentry sur Next.js, sans withSentryConfig : pas d'envoi des source maps
+    // (il exige un jeton et réécrit next.config.ts, qui appartient au template).
+    id: 'sentry',
+    when: 'next',
+    env: ['NEXT_PUBLIC_SENTRY_DSN'],
+    clientInstrumentation: 'lib/observability/sentry.client',
+    // Binaire d'envoi des source maps : non configuré, donc inutile.
+    denyBuilds: ['@sentry/cli'],
+    devDependencies: { '@types/node': '^24.0.0' },
+    files: [
+      { path: 'lib/observability/sentry.client.ts', contents: SENTRY_CLIENT },
+      { path: 'instrumentation.ts', contents: SENTRY_SERVER },
+    ],
+  },
+  {
+    id: 'posthog',
+    when: 'next',
+    env: ['NEXT_PUBLIC_POSTHOG_KEY', 'NEXT_PUBLIC_POSTHOG_HOST'],
+    clientInstrumentation: 'lib/observability/posthog.client',
+    // Dépendance de posthog-js ; son script n'affiche qu'un message.
+    denyBuilds: ['core-js'],
+    devDependencies: { '@types/node': '^24.0.0' },
+    files: [{ path: 'lib/observability/posthog.client.ts', contents: POSTHOG_CLIENT }],
   },
   {
     // Playwright contre une application Next.js : l'URL et la commande de

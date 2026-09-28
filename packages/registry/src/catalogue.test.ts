@@ -140,7 +140,7 @@ describe('contenu du catalogue', () => {
     }
   });
 
-  it('le preset SaaS du §8 est certifié, sauf son observabilité (Sentry, PostHog)', () => {
+  it('le preset SaaS du §8 est entièrement certifié', () => {
     const registry = requireRegistry();
     const certified = registry.query({ generation: 'certified' }).map((entry) => entry.id);
     expect([...certified].sort()).toEqual([
@@ -149,8 +149,10 @@ describe('contenu du catalogue', () => {
       'next',
       'playwright',
       'postgresql',
+      'posthog',
       'prisma',
       'resend',
+      'sentry',
       'shadcn-ui',
       'stripe',
       'tailwind',

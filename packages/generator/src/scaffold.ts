@@ -133,6 +133,52 @@ function integrationFiles(
   );
 }
 
+/** Variables propres aux combinaisons : elles rejoignent celles des fiches. */
+function integrationEnvSources(entries: readonly RegistryEntry[]): EnvSource[] {
+  const stack = stackOf(entries);
+  return entries.flatMap((entry) =>
+    integrationsFor(entry, stack)
+      .filter((integration) => integration.env !== undefined)
+      .map((integration) => ({
+        id: `integration:${labelOf(integration)}`,
+        name: `Intégration ${labelOf(integration)}`,
+        env: integration.env,
+      })),
+  );
+}
+
+/**
+ * `instrumentation-client.ts` composé : un import par outil qui en déclare un.
+ *
+ * Le fichier est unique côté Next.js, et plusieurs outils veulent y
+ * initialiser leur client. Le composer ici, par donnée, évite qu'une
+ * intégration écrase l'autre — et évite toute logique dans un template.
+ */
+function clientInstrumentation(entries: readonly RegistryEntry[]): PlannedFile[] {
+  const stack = stackOf(entries);
+  const modules = entries
+    .flatMap((entry) => integrationsFor(entry, stack))
+    .map((integration) => integration.clientInstrumentation)
+    .filter((module): module is string => module !== undefined)
+    .sort();
+  if (modules.length === 0) {
+    return [];
+  }
+  const lines = [
+    '// Chargé par Next.js dans le navigateur, avant l’application.',
+    '// Chaque outil initialise son client dans son propre module.',
+    '',
+    ...modules.map((module) => `import './${module}';`),
+  ];
+  return [
+    {
+      path: 'instrumentation-client.ts',
+      contents: `${lines.join('\n')}\n`,
+      source: 'scaffold:instrumentation-client',
+    },
+  ];
+}
+
 /**
  * Paquets apportés par les intégrations, vus comme des sources de dépendances :
  * leurs plages rencontrent celles des fiches et des recettes dans le même
@@ -324,31 +370,48 @@ const WORKSPACE_PACKAGES = ['packages:', '  - "apps/*"', '  - "packages/*"'];
  *   script d'installation. Sans elle, `pnpm install` **échoue** dès qu'un tel
  *   paquet est présent (Prisma, notamment) — même dans une application seule.
  */
-function pnpmWorkspace(monorepo: boolean, allowBuilds: readonly string[]): string | undefined {
-  if (!monorepo && allowBuilds.length === 0) {
+function pnpmWorkspace(
+  monorepo: boolean,
+  builds: readonly (readonly [string, boolean])[],
+): string | undefined {
+  if (!monorepo && builds.length === 0) {
     return undefined;
   }
   const lines = monorepo ? [...WORKSPACE_PACKAGES] : [];
-  if (allowBuilds.length > 0) {
+  if (builds.length > 0) {
     if (lines.length > 0) {
       lines.push('');
     }
     lines.push(
-      '# Paquets autorisés à exécuter leur script d’installation (pnpm >= 10).',
-      '# Chacun l’est parce qu’une technologie choisie en a besoin.',
+      '# Scripts d’installation (pnpm >= 10) : true les autorise, parce qu’une',
+      '# technologie choisie en a besoin ; false les refuse, parce qu’ils ne',
+      '# servent pas ici. pnpm échoue sur un script qui n’est dans aucun des deux.',
       'allowBuilds:',
-      ...allowBuilds.map((name) => `  ${/^[a-z0-9-]+$/.test(name) ? name : `"${name}"`}: true`),
+      ...builds.map(
+        ([name, allowed]) => `  ${/^[a-z0-9-]+$/.test(name) ? name : `"${name}"`}: ${allowed}`,
+      ),
     );
   }
   return `${lines.join('\n')}\n`;
 }
 
-function collectAllowBuilds(entries: readonly RegistryEntry[]): string[] {
+/**
+ * Politique des scripts d'installation, triée par paquet.
+ *
+ * Une autorisation l'emporte sur un refus : refuser ce dont une autre
+ * technologie a besoin casserait son installation.
+ */
+function collectBuildPolicy(entries: readonly RegistryEntry[]): (readonly [string, boolean])[] {
   const stack = stackOf(entries);
-  const names = entries.flatMap((entry) =>
-    integrationsFor(entry, stack).flatMap((integration) => integration.allowBuilds ?? []),
-  );
-  return [...new Set(names)].sort();
+  const integrations = entries.flatMap((entry) => integrationsFor(entry, stack));
+  const policy = new Map<string, boolean>();
+  for (const name of integrations.flatMap((integration) => integration.denyBuilds ?? [])) {
+    policy.set(name, false);
+  }
+  for (const name of integrations.flatMap((integration) => integration.allowBuilds ?? [])) {
+    policy.set(name, true);
+  }
+  return [...policy.entries()].sort(([a], [b]) => a.localeCompare(b));
 }
 
 const TURBO_JSON = `{
@@ -394,7 +457,11 @@ export function buildScaffold(
   }
 
   const { scripts, issues: scriptIssues } = collectScripts(entries);
-  const { names, issues: envIssues } = collectEnv([...entries, ...recipes]);
+  const { names, issues: envIssues } = collectEnv([
+    ...entries,
+    ...integrationEnvSources(entries),
+    ...recipes,
+  ]);
   const dependencies = resolveDependencies([
     ...entries,
     ...integrationDependencySources(entries),
@@ -435,11 +502,11 @@ export function buildScaffold(
     { path: 'README.md', contents: readme(manifest, entries, recipes), source: 'scaffold:readme' },
   ];
 
-  files.push(...integrationFiles(entries, names));
+  files.push(...integrationFiles(entries, names), ...clientInstrumentation(entries));
 
   const workspace = pnpmWorkspace(
     manifest.architecture === 'monorepo',
-    collectAllowBuilds(entries),
+    collectBuildPolicy(entries),
   );
 
   // Docker et CI viennent apres le socle : ils dependent des scripts que les

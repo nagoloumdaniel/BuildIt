@@ -718,3 +718,99 @@ describe('intégration par combinaison : better-auth + next + prisma + postgresq
     expect(route?.source).toBe('integration:better-auth+next+prisma+postgresql');
   });
 });
+
+/**
+ * 6.7a — observabilité. Next.js n'a qu'un `instrumentation-client.ts`, et
+ * Sentry comme PostHog veulent y initialiser leur client : chacun pose son
+ * module, le socle compose le fichier commun. Aucun des deux n'écrase l'autre.
+ */
+describe('observabilité : sentry et posthog sur next', () => {
+  const NEXT = entry({ id: 'next', generation: 'certified', template: 'frontend/next' });
+  const SENTRY = entry({ id: 'sentry', category: 'observability' });
+  const POSTHOG = entry({ id: 'posthog', category: 'analytics' });
+
+  it('instrumentation-client.ts importe le module de chaque outil choisi', () => {
+    const client = fileNamed(
+      scaffoldFiles(MANIFEST, [NEXT, SENTRY, POSTHOG]),
+      'instrumentation-client.ts',
+    );
+    expect(client).toContain("import './lib/observability/posthog.client';");
+    expect(client).toContain("import './lib/observability/sentry.client';");
+  });
+
+  it('un seul outil : un seul import', () => {
+    const client = fileNamed(scaffoldFiles(MANIFEST, [NEXT, POSTHOG]), 'instrumentation-client.ts');
+    expect(client).not.toContain('sentry');
+  });
+
+  it('sans outil qui le demande, pas de fichier', () => {
+    expect(scaffoldFiles(MANIFEST, [NEXT]).map((file) => file.path)).not.toContain(
+      'instrumentation-client.ts',
+    );
+  });
+
+  it('Sentry capture les erreurs serveur', () => {
+    const server = fileNamed(scaffoldFiles(MANIFEST, [NEXT, SENTRY]), 'instrumentation.ts');
+    expect(server).toContain('export const onRequestError');
+  });
+
+  it('les clés du navigateur sont en NEXT_PUBLIC_, typées et listées dans .env.example', () => {
+    const files = scaffoldFiles(MANIFEST, [
+      NEXT,
+      SENTRY,
+      POSTHOG,
+      entry({ id: 'typescript', category: 'language' }),
+    ]);
+    const env = fileNamed(files, '.env.example');
+    for (const name of [
+      'NEXT_PUBLIC_SENTRY_DSN',
+      'NEXT_PUBLIC_POSTHOG_KEY',
+      'NEXT_PUBLIC_POSTHOG_HOST',
+    ]) {
+      expect(env).toContain(`${name}=`);
+      expect(fileNamed(files, 'env.d.ts')).toContain(`readonly ${name}?: string;`);
+    }
+  });
+
+  it('sans clé, rien n’est envoyé', () => {
+    const files = scaffoldFiles(MANIFEST, [NEXT, POSTHOG]);
+    expect(fileNamed(files, 'lib/observability/posthog.client.ts')).toMatch(
+      /if \(key !== undefined/,
+    );
+  });
+
+  it('Sentry ou PostHog sans Next : rien de deviné', () => {
+    const paths = scaffoldFiles(MANIFEST, [SENTRY, POSTHOG]).map((file) => file.path);
+    expect(paths).not.toContain('instrumentation-client.ts');
+    expect(paths).not.toContain('instrumentation.ts');
+  });
+});
+
+describe('scripts d’installation refusés explicitement — moindre privilège', () => {
+  it('refuse ce qui ne sert pas, sans faire échouer pnpm', () => {
+    const workspace = fileNamed(
+      scaffoldFiles(MANIFEST, [
+        entry({ id: 'next', generation: 'certified', template: 'frontend/next' }),
+        entry({ id: 'sentry', category: 'observability' }),
+        entry({ id: 'posthog', category: 'analytics' }),
+      ]),
+      'pnpm-workspace.yaml',
+    );
+    // @sentry/cli télécharge un binaire pour envoyer les source maps, non
+    // configuré ; core-js n'affiche qu'un message. Ni l'un ni l'autre ne
+    // s'exécute — mais pnpm 11 échouerait s'ils n'étaient pas nommés.
+    expect(workspace).toContain('  "@sentry/cli": false');
+    expect(workspace).toContain('  core-js: false');
+  });
+
+  it('un paquet autorisé par une fiche et refusé par une autre reste autorisé', () => {
+    // Refuser l'emporterait sur un besoin réel : l'installation casserait
+    // pour une technologie qui en a besoin.
+    const workspace = fileNamed(
+      scaffoldFiles(MANIFEST, [entry({ id: 'prisma', category: 'orm' })]),
+      'pnpm-workspace.yaml',
+    );
+    expect(workspace).toContain('  prisma: true');
+    expect(workspace).not.toContain(': false');
+  });
+});
