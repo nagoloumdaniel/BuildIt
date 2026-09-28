@@ -18,3 +18,6 @@ Thumbs.db
 
 # Outillage copié par le harness, pas du code projet
 .agents/
+
+# Templates recopiés dans le binaire du CLI à la construction
+apps/cli/templates/

@@ -26,6 +26,9 @@ importers:
       '@types/node':
         specifier: 26.6.2
         version: 26.6.2
+      jiti:
+        specifier: 2.6.1
+        version: 2.6.1
       lefthook:
         specifier: 2.1.14
         version: 2.1.14
@@ -38,6 +41,49 @@ importers:
       turbo:
         specifier: 2.11.3
         version: 2.11.3
+      typescript:
+        specifier: 7.0.2
+        version: 7.0.2
+      vitest:
+        specifier: 5.0.1
+        version: 5.0.1(@types/node@26.6.2)(@vitest/coverage-v8@5.0.1)(vite@8.3.0(@types/node@26.6.2)(jiti@2.6.1)(yaml@2.9.1))
+
+  apps/cli:
+    dependencies:
+      semver:
+        specifier: 7.8.5
+        version: 7.8.5
+      zod:
+        specifier: 4.6.5
+        version: 4.6.5
+    devDependencies:
+      '@project-factory/compatibility':
+        specifier: workspace:*
+        version: link:../../packages/compatibility
+      '@project-factory/generator':
+        specifier: workspace:*
+        version: link:../../packages/generator
+      '@project-factory/manifest':
+        specifier: workspace:*
+        version: link:../../packages/manifest
+      '@project-factory/presets':
+        specifier: workspace:*
+        version: link:../../packages/presets
+      '@project-factory/registry':
+        specifier: workspace:*
+        version: link:../../packages/registry
+      '@project-factory/typescript-config':
+        specifier: workspace:*
+        version: link:../../tooling/typescript-config
+      '@project-factory/validation':
+        specifier: workspace:*
+        version: link:../../packages/validation
+      '@vitest/coverage-v8':
+        specifier: 5.0.1
+        version: 5.0.1(vitest@5.0.1)
+      tsdown:
+        specifier: 0.23.0
+        version: 0.23.0(typescript@7.0.2)
       typescript:
         specifier: 7.0.2
         version: 7.0.2
@@ -128,6 +174,31 @@ importers:
         specifier: 4.6.5
         version: 4.6.5
     devDependencies:
+      '@project-factory/typescript-config':
+        specifier: workspace:*
+        version: link:../../tooling/typescript-config
+      '@vitest/coverage-v8':
+        specifier: 5.0.1
+        version: 5.0.1(vitest@5.0.1)
+      tsdown:
+        specifier: 0.23.0
+        version: 0.23.0(typescript@7.0.2)
+      typescript:
+        specifier: 7.0.2
+        version: 7.0.2
+      vitest:
+        specifier: 5.0.1
+        version: 5.0.1(@types/node@26.6.2)(@vitest/coverage-v8@5.0.1)(vite@8.3.0(@types/node@26.6.2)(jiti@2.6.1)(yaml@2.9.1))
+
+  packages/presets:
+    dependencies:
+      '@project-factory/manifest':
+        specifier: workspace:*
+        version: link:../manifest
+    devDependencies:
+      '@project-factory/generator':
+        specifier: workspace:*
+        version: link:../generator
       '@project-factory/typescript-config':
         specifier: workspace:*
         version: link:../../tooling/typescript-config

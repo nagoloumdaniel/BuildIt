@@ -2,7 +2,7 @@
 
 > **Development Environment Factory** — décrire un projet, choisir ses plateformes et ses technologies, obtenir un projet prêt à développer : cohérent, documenté et diagnostiqué.
 
-**Statut : pré-alpha.** Le moteur (manifest, registry, compatibility, generator) existe et est testé ; quatre presets (SaaS, API, Dashboard, Full-stack en monorepo) sont certifiés : générés, installés, construits et démarrés par le test de fumée. Prochaine étape : le CLI `pf` (Phase 7). Rien n'est publié, rien n'est utilisable par un tiers. Voir la [roadmap](docs/roadmap.md).
+**Statut : pré-alpha.** Le moteur (manifest, registry, compatibility, generator) existe et est testé ; quatre presets (SaaS, API, Dashboard, Full-stack en monorepo) sont certifiés : générés, installés, construits et démarrés par le test de fumée. Le CLI `pf` existe ([référence](docs/cli.md)) mais n'est pas encore publié sur npm : rien n'est utilisable par un tiers sans cloner le dépôt. Prochaine étape : Phase 7B, projets existants et GitHub. Voir la [roadmap](docs/roadmap.md).
 
 ---
 
@@ -48,6 +48,7 @@ Commandes individuelles :
 | `pnpm test` | Vitest |
 | `pnpm build` | tsdown, via Turborepo |
 | `pnpm lint:secrets` | secretlint |
+| `pnpm pf <commande>` | Le CLI, sur les sources — [référence](docs/cli.md) |
 
 ### Intégration continue
 
@@ -65,7 +66,8 @@ Le test de fumée exige Docker (base, Redis, images) et un navigateur (tests Pla
 
 ```
 tooling/    configurations partagées (TypeScript, …)
-packages/   moteur — manifest, registry, compatibility, generator…
+packages/   moteur — manifest, registry, compatibility, generator, presets…
+apps/cli/   le CLI pf
 docs/       cahier des charges, roadmap, specs, plans
 ```
 
@@ -75,6 +77,7 @@ docs/       cahier des charges, roadmap, specs, plans
 
 - [Cahier des charges](docs/cahier-des-charges.md) — cadrage produit et technique complet
 - [Roadmap](docs/roadmap.md) — 0 → beta publique, phase par phase
+- [CLI `pf`](docs/cli.md) — référence des commandes
 - [Contribuer](CONTRIBUTING.md)
 
 ## Licence

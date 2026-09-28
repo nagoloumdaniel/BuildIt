@@ -1,0 +1,100 @@
+# `pf` — référence des commandes
+
+`pf` est la façade en ligne de commande du moteur Forge (§9, §21). Elle produit un Project Manifest et le passe au pipeline — le même que celui de la future interface web : **même manifest, même projet, octet pour octet** (vérifié par un test, pour chaque preset).
+
+**Statut :** Phase 7 livrée dans le dépôt, **pas encore publiée sur npm** (il faut un compte et un jeton). En attendant :
+
+```bash
+pnpm pf <commande>                        # depuis la racine du dépôt, sur les sources
+pnpm --filter @project-factory/cli build  # puis node apps/cli/bin/pf.js <commande>
+```
+
+`pnpm pf` s'exécute à la racine du dépôt : un projet créé sans `--dir` y atterrit.
+
+## Conventions
+
+| | |
+|---|---|
+| Codes de sortie | `0` succès · `1` le moteur a refusé ou échoué · `2` usage (argument manquant, drapeau inconnu, commande pas encore livrée) |
+| Erreurs | `✗ message`, puis `→ piste`, puis `(CODE)` — le code est stable, le message est pour vous |
+| Mode non interactif | Hors terminal, ou avec `--yes`, aucune question n'est posée : une information manquante est une erreur qui nomme le drapeau à fournir |
+| Aide | `pf --help`, `pf <commande> --help` |
+
+## `pf`
+
+Menu d'accueil : créer un projet. Cloner un dépôt GitHub et ouvrir un projet local y figurent, désactivés jusqu'à la Phase 7B. Hors terminal, affiche l'aide.
+
+## `pf create [nom] --preset <preset>`
+
+Crée un projet depuis un preset certifié (`saas`, `dashboard`, `api`, `fullstack`), avec ses recettes. Par défaut : écriture, installation des dépendances, `git init` et premier commit.
+
+| Option | |
+|---|---|
+| `--preset <p>` | Preset (`pf template list`) |
+| `--dir <dossier>` | Dossier cible ; par défaut `./<nom>` |
+| `--no-install` | Ne pas installer |
+| `--no-git` | Ne pas créer de dépôt Git |
+| `--dry-run` | Afficher l'arborescence ; rien n'est écrit |
+| `--from <étape>` | Reprendre à `write`, `install`, `git` ou `validate` — après une erreur passagère, `pf` affiche la commande exacte |
+| `--yes`, `-y` | Aucune question |
+
+```bash
+pf create boutique --preset saas
+pf create mon-api --preset api --no-git --dir services/api
+pf create demo --preset fullstack --dry-run
+```
+
+Le nom : minuscules, chiffres et tirets, commençant par une lettre.
+
+## `pf template`
+
+| | |
+|---|---|
+| `pf template list` | Les presets, et à quoi ils servent |
+| `pf template show <preset> [--name <nom>]` | Le manifest du preset sur la sortie standard — et rien d'autre, pour pouvoir le rediriger ; ses recettes sont rappelées sur la sortie d'erreur |
+| `pf template use <preset> [nom] [options]` | Alias de `pf create --preset <preset>` |
+
+## `pf generate <manifest.json>`
+
+Génère depuis un manifest écrit à la main, modifié par `pf add` ou partagé. Le manifest est migré vers la version courante puis validé.
+
+Options : `--dir`, `--recipes <a,b>`, `--no-install`, `--no-git`, `--dry-run`, `--from`. Dossier par défaut : `./<name du manifest>`.
+
+## `pf graph [manifest.json] [--preset <p>]`
+
+La stack résolue : chaque technologie, sa catégorie, certifiée (`✓`) ou seulement déclarée (`·`), celles que le moteur ajoute et **qui les exige**, le statut de la stack (certifiée si toutes le sont, expérimentale sinon) et les avertissements (licences…). Sans argument, lit `pf.manifest.json`.
+
+## `pf add <technologie> [--manifest <fichier>] [--yes]`
+
+Ajoute une technologie au manifest, au champ que désigne sa catégorie (`frontend.ui`, `database.orm`, `quality`, `infra`, `services`…), puis contrôle la compatibilité de l'ensemble. Affiche la modification, ce qu'elle remplace et ce qu'elle entraîne ; **n'écrit qu'avec `--yes` ou après confirmation**. Fichier par défaut : `pf.manifest.json`, réécrit sous forme canonique.
+
+Une technologie qui n'a pas de sens seule est refusée avec la raison (un ORM sans base, un style sans application web, un langage — il se choisit à la création).
+
+### Mode expert
+
+```bash
+pf template show api --name mon-api > pf.manifest.json
+pf add stripe --yes
+pf graph
+pf generate pf.manifest.json
+```
+
+## `pf key set | status | clear`
+
+La clé API LLM locale (§0, §17), pour les fonctions d'analyse à venir.
+
+- `set` lit la clé sur l'entrée standard (`echo "$CLE" | pf key set`) ou par une saisie masquée dans un terminal. **Jamais en argument** : elle resterait dans l'historique du shell et dans `ps` — `pf` refuse.
+- Stockée dans `credentials.json` du répertoire de configuration, fichier en `0600`, dossier en `0700`. Répertoire : `$PF_CONFIG_DIR`, sinon `%APPDATA%\project-factory` (Windows), `$XDG_CONFIG_HOME/project-factory`, `~/.config/project-factory`.
+- `status` dit si une clé est définie, **jamais sa valeur, pas même en partie**.
+- `clear` la supprime.
+
+## À venir
+
+Ces commandes existent, répondent qu'elles ne sont pas encore disponibles et quand elles le seront (code `2`) :
+
+| Commande | Quand |
+|---|---|
+| `clone`, `open`, `login`, `logout`, `repo`, `collab` | Phase 7B — GitHub et projets existants (§18bis, §20bis) |
+| `share` | Phase 9 |
+| `doctor`, `analyze` | V1 |
+| `upgrade` | V2 |
