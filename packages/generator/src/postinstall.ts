@@ -1,4 +1,6 @@
 import { spawn } from 'node:child_process';
+import { existsSync } from 'node:fs';
+import { join } from 'node:path';
 import { createMessageFormatter, type Issue } from '@project-factory/validation';
 import { CI_SCRIPTS } from './infrastructure.js';
 
@@ -30,21 +32,64 @@ export interface CommandRunner {
 }
 
 /**
+ * Résout une commande en exécutable lançable **sans shell** sous Windows.
+ *
+ * Le problème : `pnpm` s'y installe comme `pnpm.cmd`, et depuis la
+ * CVE-2024-27980 Node refuse de lancer un `.cmd` sans shell (`EINVAL`).
+ * Activer le shell « juste pour Windows » ferait réinterpréter les arguments
+ * par `cmd.exe` — un `$(…)` ou un `;` cesserait d'être du texte. L'invariant
+ * « jamais de shell » vaut sur toutes les plateformes ou ne vaut rien.
+ *
+ * La sortie : on cherche la commande dans le PATH. Un vrai exécutable se lance
+ * tel quel ; un `.cmd` de paquet npm cache un script JavaScript qu'on lance
+ * avec Node. Dans les deux cas, aucun interpréteur de commandes n'intervient.
+ */
+function resolveWindowsCommand(command: string): { file: string; prefix: string[] } {
+  const directories = (process.env['PATH'] ?? '').split(';').filter((part) => part.length > 0);
+
+  for (const directory of directories) {
+    for (const extension of ['.exe', '.com']) {
+      const candidate = join(directory, `${command}${extension}`);
+      if (existsSync(candidate)) {
+        return { file: candidate, prefix: [] };
+      }
+    }
+
+    for (const extension of ['.cmd', '.bat']) {
+      if (!existsSync(join(directory, `${command}${extension}`))) {
+        continue;
+      }
+      // Un lanceur npm voisine avec le paquet qu'il lance.
+      for (const entry of ['.cjs', '.mjs', '.js']) {
+        const script = join(directory, 'node_modules', command, 'bin', `${command}${entry}`);
+        if (existsSync(script)) {
+          return { file: process.execPath, prefix: [script] };
+        }
+      }
+    }
+  }
+
+  // Introuvable : on laisse `spawn` échouer avec ENOENT, qui dit la vérité.
+  return { file: command, prefix: [] };
+}
+
+/**
  * L'exécuteur réel.
  *
- * Jamais de shell : les arguments sont passés tels quels au processus, un `;`
- * ou un `$(…)` reste du texte. Exception documentée : sous Windows, `pnpm` est
- * un script `.cmd` que Node ne lance plus sans shell. Les arguments passés ici
- * sont tous des constantes du générateur — jamais une saisie utilisateur ;
- * l'invariant est à revérifier le jour où un appelant en passera une (Phase
- * 7B, URL de clonage).
+ * **Jamais de shell, sur aucune plateforme.** Les arguments sont passés tels
+ * quels au processus : un `;` ou un `$(…)` reste du texte, même sous Windows.
  */
 export const nodeCommandRunner: CommandRunner = {
   run(command, args, cwd) {
     return new Promise((resolve, reject) => {
-      const child = spawn(command, [...args], {
+      const resolved =
+        process.platform === 'win32'
+          ? resolveWindowsCommand(command)
+          : { file: command, prefix: [] };
+
+      const child = spawn(resolved.file, [...resolved.prefix, ...args], {
         cwd,
-        shell: process.platform === 'win32',
+        shell: false,
         stdio: ['ignore', 'pipe', 'pipe'],
       });
       let output = '';
