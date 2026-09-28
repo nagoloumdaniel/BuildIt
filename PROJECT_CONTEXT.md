@@ -5,7 +5,7 @@ Référence complète : `docs/cahier-des-charges.md`. Plan d'exécution : `docs/
 
 ## État
 
-Phases 1 (socle monorepo), 2 (Project Manifest), 3 (registry, 282 fiches) et 4 (compatibility engine) livrées. Phase 5 livrée (5A + 5B), gate M3 partiel fermé : le socle généré s'installe et passe lint, typecheck et test (`pnpm test:smoke`), post-install et reprise d'étape, Template Resolver, `packages/recipes` avec deux recettes réelles, Dockerfile/devcontainer, revue sécurité écrite. Phase 6 en cours : presets **SaaS** (6.7a) et **API** (6.7b, Hono) certifiés de bout en bout — 21 fiches. Restent Full-stack et Dashboard (6.7b) ; les entretiens de 6.12 n'ont pas eu lieu.
+Phases 1 (socle monorepo), 2 (Project Manifest), 3 (registry, 282 fiches) et 4 (compatibility engine) livrées. Phase 5 livrée (5A + 5B), gate M3 partiel fermé : le socle généré s'installe et passe lint, typecheck et test (`pnpm test:smoke`), post-install et reprise d'étape, Template Resolver, `packages/recipes` avec deux recettes réelles, Dockerfile/devcontainer, revue sécurité écrite. Phase 6 en cours : presets **SaaS**, **API** (Hono) et **Dashboard** (recette `dashboard-admin`) certifiés de bout en bout. Reste le **Full-stack** (Next.js + Hono en monorepo), qui exige la génération multi-applications. Les entretiens de 6.12 n'ont pas eu lieu.
 
 Remote : `github.com/nagoloumdaniel/BuildIt`. **La CI GitHub n'est pas disponible** : l'intégration continue est locale, portée par le hook `pre-push` — `ci:local` à chaque push, plus `test:smoke` quand le push touche `generator`, `registry` ou `recipes`. `ci.yml` est dormant (déclenchement manuel).
 
@@ -108,5 +108,6 @@ Les packages naissent dans leur phase. Ne pas créer de répertoire vide « pour
 - Un serveur lancé par `pnpm start` : `kill()` ne tue que pnpm, le `node` qu'il a lancé survit et garde le port. Groupe de processus (`detached`, `kill(-pid)`), attendre sa fin, et refuser de tester si le port répond déjà — un orphelin a déjà fait « échouer » la mauvaise application.
 - Services Docker d'un test : `compose down` à la fin de **chaque** projet, pas en fin de suite — le suivant reprend les mêmes ports.
 - Docker Hub : quota anonyme. `compose pull --policy missing` ; quota et réseau sautent l'aller-retour avec un avertissement, une image introuvable reste un échec.
+- Vitest n'affiche pas les `console.warn` d'un test qui passe : un « avertissement » y est invisible. Une preuve sautée doit être un test marqué `skipped` (`it.skipIf`), et le saut doit être demandé explicitement (`PF_SMOKE_SKIP_DOCKER=1`) — sinon le test échoue. Sans cette règle, le test de fumée a réussi en silence avec Docker arrêté.
 - Un test qui passe sur le code source ne dit rien du **bundle** : ce qui part en production (`dist/`, image Docker) se démarre et s'interroge dans le test de fumée.
 - Pour suggérer une correction de faute de frappe, utiliser **Damerau**-Levenshtein : Levenshtein facture 2 une transposition (« wbe » → « web »), ce qui la met hors d'atteinte de tout seuil raisonnable.

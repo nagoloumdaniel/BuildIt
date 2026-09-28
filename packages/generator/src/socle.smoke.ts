@@ -23,7 +23,7 @@ interface SmokeProject {
   readonly manifest: Manifest;
   /**
    * Aller-retour avec une vraie base, via le docker-compose.yml généré.
-   * Exige Docker ; sans lui, le test le dit et saute cette partie seulement.
+   * Exige Docker ; sans lui, le test échoue, sauf PF_SMOKE_SKIP_DOCKER=1.
    */
   readonly database?: { readonly service: string; readonly url: string };
   /**
@@ -32,6 +32,11 @@ interface SmokeProject {
    * Exige `database`.
    */
   readonly signUp?: boolean;
+  /**
+   * Parcours du tableau de bord : redirection sans session, puis pages
+   * servies avec les vraies données d'un compte créé. Exige `database`.
+   */
+  readonly dashboard?: boolean;
   /** Chemins que l'application construite doit servir en 200, sans base. */
   readonly http?: readonly string[];
   /**
@@ -64,6 +69,22 @@ const PROJECTS: Record<string, SmokeProject> = {
       services: ['stripe', 'resend', 'sentry', 'posthog'],
       quality: ['biome', 'vitest', 'playwright'],
       infra: ['vercel', 'github-actions', 'docker', 'dev-container'],
+    },
+  },
+  'preset Dashboard': {
+    recipes: ['dashboard-admin'],
+    database: { service: 'postgres', url: 'postgresql://postgres:postgres@localhost:5432/app' },
+    dashboard: true,
+    manifest: {
+      manifestVersion: 1,
+      name: 'tableau',
+      targets: ['web'],
+      architecture: 'single-app',
+      frontend: { framework: 'next', language: 'typescript', styling: 'tailwind', ui: 'shadcn-ui' },
+      database: { engine: 'postgresql', orm: 'prisma' },
+      auth: { provider: 'better-auth' },
+      quality: ['biome', 'vitest', 'playwright'],
+      infra: ['docker', 'github-actions'],
     },
   },
   'preset API': {
@@ -155,16 +176,21 @@ function run(
 const REGISTRY_OUTAGE =
   /rate limit|toomanyrequests|too many requests|\b429\b|i\/o timeout|TLS handshake timeout|connection refused|no such host|network is unreachable/i;
 
-/** Télécharge l'image du service ; `false` si le registre est indisponible. */
-function pullImage(target: string, service: string): boolean {
+/**
+ * Télécharge l'image du service si elle manque. Une panne du registre (quota,
+ * réseau) n'est pas un défaut du projet, mais la preuve manque quand même :
+ * le test échoue en le disant, avec la marche à suivre.
+ */
+function requireImage(target: string, service: string): void {
   try {
     // `missing` : une image déjà présente ne recontacte pas le registre, donc
     // ne consomme pas de quota.
     run('docker', ['compose', 'pull', '--policy', 'missing', service], target);
-    return true;
   } catch (error) {
     if (REGISTRY_OUTAGE.test(String(error))) {
-      return false;
+      throw new Error(
+        `Registre d’images indisponible (quota ou réseau) pour « ${service} ». Relancez plus tard, ou PF_SMOKE_SKIP_DOCKER=1 pour sauter explicitement les preuves Docker — et dites-le dans la PR.`,
+      );
     }
     throw error;
   }
@@ -284,7 +310,16 @@ async function imageServes(target: string, path: string): Promise<void> {
       }
     }
   }
-  run('docker', [...args, '.'], target);
+  try {
+    run('docker', [...args, '.'], target);
+  } catch (error) {
+    if (REGISTRY_OUTAGE.test(String(error))) {
+      throw new Error(
+        'Registre d’images indisponible (quota ou réseau) pour l’image de base du Dockerfile. Relancez plus tard, ou PF_SMOKE_SKIP_DOCKER=1 pour sauter explicitement les preuves Docker — et dites-le dans la PR.',
+      );
+    }
+    throw error;
+  }
   try {
     run('docker', ['run', '-d', '--name', tag, '-p', `${APP_PORT}:3000`, tag], target);
     const base = `http://localhost:${APP_PORT}`;
@@ -312,6 +347,46 @@ function cacheRoundTrip(target: string, service: string, url: string): void {
     'console.log(await client.ping()); await client.quit(); })';
   const output = run('pnpm', ['exec', 'tsx', '--eval', script], target, { REDIS_URL: url });
   expect(output).toContain('PONG');
+}
+
+/**
+ * Le tableau de bord de bout en bout, sur l'application construite et une
+ * vraie base : sans session, on est renvoyé à la connexion ; avec un compte
+ * créé par l'API, chaque page s'affiche avec ses données.
+ */
+async function dashboardJourney(target: string, databaseUrl: string): Promise<void> {
+  const env = {
+    DATABASE_URL: databaseUrl,
+    BETTER_AUTH_URL: `http://localhost:${APP_PORT}`,
+    BETTER_AUTH_SECRET: randomBytes(32).toString('hex'),
+  };
+  await withRunningApp(target, env, async (base) => {
+    const anonymous = await fetch(`${base}/dashboard`);
+    expect(new URL(anonymous.url).pathname, 'sans session').toBe('/sign-in');
+    expect(await anonymous.text()).toContain('Connexion');
+
+    const email = 'admin@example.invalid';
+    const signUp = await fetch(`${base}/api/auth/sign-up/email`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json', origin: base },
+      body: JSON.stringify({ email, password: 'mot-de-passe-de-test-1', name: 'Admin' }),
+    });
+    expect(signUp.status, await signUp.clone().text()).toBe(200);
+    const cookie = signUp.headers
+      .getSetCookie()
+      .map((header) => header.split(';')[0])
+      .join('; ');
+
+    const page = async (path: string) => {
+      const response = await fetch(`${base}${path}`, { headers: { cookie } });
+      expect(response.status, path).toBe(200);
+      expect(new URL(response.url).pathname, `${path} avec session`).toBe(path);
+      return response.text();
+    };
+    expect(await page('/dashboard')).toContain('Vue d’ensemble');
+    expect(await page('/dashboard/users')).toContain(email);
+    expect(await page('/dashboard/settings')).toContain(email);
+  });
 }
 
 /** Chaque chemin répond 200 : l'application construite démarre et sert ses routes. */
@@ -377,80 +452,117 @@ afterAll(async () => {
   }
 });
 
+/**
+ * Les preuves les plus fortes exigent Docker : base réelle, Redis, image. Sans
+ * Docker, le test **échoue** — une réussite qui aurait sauté ses preuves en
+ * silence serait un mensonge. `PF_SMOKE_SKIP_DOCKER=1` les saute
+ * explicitement, et chacune apparaît alors comme « skipped » dans le compte.
+ */
+const SKIP_DOCKER = process.env['PF_SMOKE_SKIP_DOCKER'] === '1';
+
+function requireDocker(): void {
+  if (!DOCKER) {
+    throw new Error(
+      'Docker est indisponible : les preuves base de données, Redis et image ne peuvent pas tourner. Démarrez Docker, ou relancez avec PF_SMOKE_SKIP_DOCKER=1 pour les sauter explicitement — et dites-le dans la PR.',
+    );
+  }
+}
+
 describe('un projet généré passe sa propre CI — gate M3', () => {
-  for (const [label, { manifest, recipes, database, signUp, http, image, cache }] of Object.entries(
-    PROJECTS,
-  )) {
-    it(label, async () => {
-      const root = await mkdtemp(join(tmpdir(), 'pf-smoke-'));
-      roots.push(root);
-      const target = join(root, manifest.name);
+  for (const [
+    label,
+    { manifest, recipes, database, signUp, dashboard, http, image, cache },
+  ] of Object.entries(PROJECTS)) {
+    describe(label, () => {
+      let target = '';
 
-      // Le pipeline complet, avec le vrai exécuteur : pnpm install, git, puis
-      // les scripts que la CI générée lancera.
-      const result = await generateProject(manifest, target, {
-        install: true,
-        git: true,
-        validate: true,
-        ...(recipes === undefined ? {} : { recipes }),
-      });
-
-      expect(result.ok, result.ok ? '' : result.issues.map((i) => i.message).join('\n')).toBe(true);
-      if (result.ok) {
-        expect(result.value.completedSteps).toEqual(PIPELINE_STEPS);
+      /** Les preuves suivantes portent sur le projet produit par la première. */
+      function generated(): string {
+        if (target === '') {
+          throw new Error('Le projet n’a pas été généré : voir le premier test de ce groupe.');
+        }
+        return target;
       }
 
-      // Le verrou est commité : la CI générée installe en --frozen-lockfile.
-      const { scripts } = JSON.parse(await readFile(join(target, 'package.json'), 'utf8')) as {
-        scripts: Record<string, string>;
-      };
-      expect(CI_SCRIPTS.some((name) => scripts[name] !== undefined)).toBe(true);
-      await expect(readFile(join(target, 'pnpm-lock.yaml'), 'utf8')).resolves.toBeTruthy();
+      it('génère, installe, et passe lint, typecheck, test et build', async () => {
+        const root = await mkdtemp(join(tmpdir(), 'pf-smoke-'));
+        roots.push(root);
+        const destination = join(root, manifest.name);
+
+        // Le pipeline complet, avec le vrai exécuteur : pnpm install, git, puis
+        // les scripts que la CI générée lancera.
+        const result = await generateProject(manifest, destination, {
+          install: true,
+          git: true,
+          validate: true,
+          ...(recipes === undefined ? {} : { recipes }),
+        });
+
+        expect(result.ok, result.ok ? '' : result.issues.map((i) => i.message).join('\n')).toBe(
+          true,
+        );
+        if (result.ok) {
+          expect(result.value.completedSteps).toEqual(PIPELINE_STEPS);
+        }
+
+        // Le verrou est commité : la CI générée installe en --frozen-lockfile.
+        const { scripts } = JSON.parse(
+          await readFile(join(destination, 'package.json'), 'utf8'),
+        ) as { scripts: Record<string, string> };
+        expect(CI_SCRIPTS.some((name) => scripts[name] !== undefined)).toBe(true);
+        await expect(readFile(join(destination, 'pnpm-lock.yaml'), 'utf8')).resolves.toBeTruthy();
+        target = destination;
+      });
 
       if (http !== undefined) {
-        await expectPaths(target, http);
+        it('l’application construite démarre et sert ses routes', async () => {
+          await expectPaths(generated(), http);
+        });
       }
 
       if (cache !== undefined) {
-        if (DOCKER && pullImage(target, cache.service)) {
+        it.skipIf(SKIP_DOCKER)('Redis réel : le client généré obtient PONG', () => {
+          requireDocker();
+          const project = generated();
+          requireImage(project, cache.service);
           try {
-            cacheRoundTrip(target, cache.service, cache.url);
+            cacheRoundTrip(project, cache.service, cache.url);
           } finally {
-            composeDown(target);
+            composeDown(project);
           }
-        } else {
-          console.warn(
-            `${label} : Docker ou registre indisponible, aller-retour Redis NON vérifié.`,
-          );
-        }
+        });
       }
 
       if (image !== undefined) {
-        if (DOCKER) {
-          await imageServes(target, image);
-        } else {
-          console.warn(`${label} : Docker indisponible, image NON vérifiée.`);
-        }
+        it.skipIf(SKIP_DOCKER)('image Docker : construite, démarrée, non root', async () => {
+          requireDocker();
+          await imageServes(generated(), image);
+        });
       }
 
       if (database !== undefined) {
-        if (DOCKER && !pullImage(target, database.service)) {
-          console.warn(
-            `${label} : registre d’images indisponible (quota ou réseau), aller-retour avec la base NON vérifié.`,
-          );
-        } else if (DOCKER) {
+        const journey =
+          signUp === true
+            ? ', inscription et connexion'
+            : dashboard === true
+              ? ', parcours du tableau de bord'
+              : '';
+        it.skipIf(SKIP_DOCKER)(`PostgreSQL réel${journey}`, async () => {
+          requireDocker();
+          const project = generated();
+          requireImage(project, database.service);
           try {
-            await databaseRoundTrip(target, database.service, database.url);
+            await databaseRoundTrip(project, database.service, database.url);
             if (signUp === true) {
-              await signUpAndSignIn(target, database.url);
+              await signUpAndSignIn(project, database.url);
+            }
+            if (dashboard === true) {
+              await dashboardJourney(project, database.url);
             }
           } finally {
-            composeDown(target);
+            composeDown(project);
           }
-        } else {
-          // Dit, jamais tu : sans Docker, la preuve « base réelle » manque.
-          console.warn(`${label} : Docker indisponible, aller-retour avec la base NON vérifié.`);
-        }
+        });
       }
     });
   }

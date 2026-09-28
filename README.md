@@ -59,7 +59,7 @@ La CI GitHub n'est pas disponible pour ce dépôt : **l'intégration continue es
 | push qui touche `generator`, `registry` ou `recipes` | en plus, `pnpm test:smoke` — génère de vrais projets, les installe depuis npm, les construit ; avec Docker, va jusqu'à une base réelle et une inscription |
 | à la main | `pnpm ci:full` — les deux |
 
-Hors-ligne, le test de fumée échoue franchement : `LEFTHOOK_EXCLUDE=smoke git push`, et le dire dans la PR. Derrière un proxy TLS d'entreprise, `PF_SMOKE_DOCKER_CA=<ca.crt>` permet de construire l'image Docker du test. `.github/workflows/ci.yml` est gardé dormant (déclenchement manuel), prêt à resservir.
+Le test de fumée exige Docker (base, Redis, image) : sans lui, il échoue. `PF_SMOKE_SKIP_DOCKER=1` saute ces preuves **explicitement** — elles apparaissent « skipped » dans le compte — et cela se dit dans la PR. Hors-ligne, `LEFTHOOK_EXCLUDE=smoke git push`. Derrière un proxy TLS d'entreprise, `PF_SMOKE_DOCKER_CA=<ca.crt>` permet de construire l'image Docker du test. `.github/workflows/ci.yml` est gardé dormant (déclenchement manuel), prêt à resservir.
 
 ### Structure
 

@@ -26,7 +26,8 @@ pre-push:
     # Le test de fumée génère, installe (réseau) et construit de vrais projets :
     # environ une minute, plus l'aller-retour en base si Docker répond. Il ne
     # tourne que si le push touche ce qui change un projet généré.
-    # Hors-ligne : LEFTHOOK_EXCLUDE=smoke git push — et le dire dans la PR.
+    # Sans Docker : PF_SMOKE_SKIP_DOCKER=1 git push (preuves « skipped »).
+    # Hors-ligne : LEFTHOOK_EXCLUDE=smoke git push. Les deux se disent dans la PR.
     - name: smoke
       glob: "packages/{generator,registry,recipes}/**"
       run: pnpm run test:smoke

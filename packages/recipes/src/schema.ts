@@ -50,6 +50,7 @@ export const recipeSchema: z.ZodType<Recipe> = z
     name: z.string().min(1),
     description: z.string().min(1),
     for: uniqueList(z.string().regex(SLUG)).refine((values) => values.length > 0, FORMAT),
+    requires: uniqueList(z.string().regex(SLUG)).optional(),
     packages: packageRanges.optional(),
     devPackages: packageRanges.optional(),
     env: uniqueList(z.string().regex(ENV_NAME)).optional(),
@@ -79,6 +80,12 @@ export interface Recipe {
    * sans Stripe.
    */
   readonly for: readonly string[];
+  /**
+   * Technologies qui doivent **toutes** être dans la stack. `for` dit à qui la
+   * recette appartient ; `requires` dit ce que son code importe. Un tableau de
+   * bord porté par Better Auth importe aussi Next.js et Prisma.
+   */
+  readonly requires?: readonly string[];
   /** Paquet → plage de version. Toujours épinglé : une recette n'a pas de `*`. */
   readonly packages?: Readonly<Record<string, string>>;
   readonly devPackages?: Readonly<Record<string, string>>;

@@ -786,3 +786,53 @@ describe('le preset API du §8 est certifié — 6.7b', () => {
     expect(app?.contents).toContain("title: 'api-quai3'");
   });
 });
+
+/** Le preset Dashboard : le SaaS sans paiement, plus la recette dashboard-admin. */
+const DASHBOARD: Manifest = {
+  manifestVersion: 1,
+  name: 'tableau',
+  targets: ['web'],
+  architecture: 'single-app',
+  frontend: { framework: 'next', language: 'typescript', styling: 'tailwind', ui: 'shadcn-ui' },
+  database: { engine: 'postgresql', orm: 'prisma' },
+  auth: { provider: 'better-auth' },
+  quality: ['biome', 'vitest', 'playwright'],
+  infra: ['docker', 'github-actions'],
+};
+
+describe('le preset Dashboard est certifié — 6.7b', () => {
+  it('combinaison certifiée, recette appliquée', () => {
+    const result = planProject(DASHBOARD, '/cible', { recipes: ['dashboard-admin'] });
+    expect(result.ok).toBe(true);
+    if (result.ok) {
+      expect(result.value.warnings.map((w) => w.code)).not.toContain(
+        'COMPAT_EXPERIMENTAL_COMBINATION',
+      );
+      const paths = result.value.plan.files.map((file) => file.path);
+      expect(paths).toEqual(
+        expect.arrayContaining([
+          'app/sign-in/page.tsx',
+          'app/dashboard/layout.tsx',
+          'app/dashboard/page.tsx',
+          'app/dashboard/users/page.tsx',
+          'app/dashboard/settings/page.tsx',
+          'lib/signups.test.ts',
+        ]),
+      );
+      const pkg = JSON.parse(
+        result.value.plan.files.find((file) => file.path === 'package.json')?.contents ?? '{}',
+      ) as { dependencies: Record<string, string> };
+      expect(pkg.dependencies['recharts']).toBeDefined();
+      expect(pkg.dependencies['@tanstack/react-table']).toBeDefined();
+    }
+  });
+
+  it('le tableau de bord exige Prisma : sans lui, la recette est refusée en le nommant', () => {
+    const result = planProject({ ...DASHBOARD, database: { engine: 'postgresql' } }, '/cible', {
+      recipes: ['dashboard-admin'],
+    });
+    expect(!result.ok && result.issues.map((issue) => issue.code)).toEqual([
+      'GEN_RECIPE_MISSING_REQUIREMENT',
+    ]);
+  });
+});

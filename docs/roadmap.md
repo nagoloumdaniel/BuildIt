@@ -356,6 +356,16 @@ La CI GitHub n'étant pas disponible, le test de fumée est lancé par le hook p
 
 Gate M3 : **2 presets sur 4**. Restent Full-stack (Next.js + NestJS en monorepo — la génération multi-apps n'existe pas encore) et Dashboard (contenu à cadrer, 6.1). Les entretiens de 6.12 n'ont pas eu lieu.
 
+## État au 28/09/2026 (suite) — preset Dashboard certifié
+
+Décisions : Hono pour l'API **et** le Full-stack ; un Dashboard **complet** (cahier §8). Le preset Dashboard = la stack SaaS sans paiement + la recette `dashboard-admin` : espace /dashboard protégé côté serveur, indicateurs et graphique des inscriptions (Recharts), tableau des utilisateurs trié, filtré, paginé (TanStack Table), paramètres du compte, page de connexion et d'inscription — sur les tables réelles de Better Auth. Les recettes gagnent `requires` (toutes les technologies que leur code importe).
+
+Le test de fumée le parcourt de bout en bout sur une vraie base : sans session, /dashboard renvoie à /sign-in ; avec un compte créé par l'API, chaque page s'affiche avec ses données.
+
+Le test de fumée **échoue** désormais sans Docker, sauf saut explicite (`PF_SMOKE_SKIP_DOCKER=1`, preuves marquées « skipped ») : il avait réussi en silence avec Docker arrêté.
+
+Gate M3 : **3 presets sur 4**. Reste le Full-stack.
+
 **Prochaine étape (initiale) : 6.12 puis 6.7b.** Les entretiens de 6.12 doivent précéder 6.7b (« avant de figer ») ; les trois autres presets réutiliseront les intégrations du SaaS. Full-stack exige NestJS, Redis et Zod ; API exige NestJS ou Hono ; Dashboard reste à cadrer (6.1).
 
 ---

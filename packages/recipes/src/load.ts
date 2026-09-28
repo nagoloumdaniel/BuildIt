@@ -30,7 +30,7 @@ export type RecipeIssue = Issue<RecipeIssueCode>;
 const MESSAGES: Readonly<Record<RecipeIssueCode, string>> = {
   RECIPE_NOT_OBJECT: 'Une recette doit être un objet JSON ; reçu {value}.',
   RECIPE_UNKNOWN_FIELD:
-    'Champ « {field} » inconnu. Les champs d’une recette sont : id, name, description, for, packages, devPackages, env, files.',
+    'Champ « {field} » inconnu. Les champs d’une recette sont : id, name, description, for, requires, packages, devPackages, env, files.',
   RECIPE_FIELD_REQUIRED: 'Le champ « {field} » est obligatoire.',
   RECIPE_TYPE_MISMATCH: 'Le champ « {field} » a le mauvais type : reçu {value}.',
   RECIPE_FORMAT_INVALID: 'Valeur {value} invalide pour « {field} ».',
