@@ -250,6 +250,40 @@ if (process.env.NODE_ENV !== 'production') {
 }
 `;
 
+/**
+ * Tests de bout en bout en `*.e2e.ts` : Vitest ramasse tout `*.test.*` et
+ * `*.spec.*`, et exécuterait un spec Playwright sans navigateur. Un suffixe à
+ * part sépare les deux sans configuration croisée.
+ *
+ * Le serveur testé est l'application construite (`build` puis `start`), pas le
+ * serveur de développement : c'est elle qui part en production.
+ */
+const PLAYWRIGHT_CONFIG_NEXT = `import { defineConfig, devices } from '@playwright/test';
+
+const port = 3000;
+
+export default defineConfig({
+  testDir: './e2e',
+  testMatch: '**/*.e2e.ts',
+  forbidOnly: process.env.CI !== undefined,
+  use: { baseURL: \`http://localhost:\${port}\` },
+  webServer: {
+    command: 'pnpm build && pnpm start',
+    url: \`http://localhost:\${port}\`,
+    reuseExistingServer: process.env.CI === undefined,
+  },
+  projects: [{ name: 'chromium', use: { ...devices['Desktop Chrome'] } }],
+});
+`;
+
+const PLAYWRIGHT_HOME_TEST = `import { expect, test } from '@playwright/test';
+
+test('la page d’accueil répond et affiche son titre', async ({ page }) => {
+  await page.goto('/');
+  await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
+});
+`;
+
 export const INTEGRATIONS: readonly Integration[] = [
   {
     id: 'typescript',
@@ -273,6 +307,18 @@ export const INTEGRATIONS: readonly Integration[] = [
   {
     id: 'playwright',
     scripts: { 'test:e2e': 'playwright test' },
+  },
+  {
+    // Playwright contre une application Next.js : l'URL et la commande de
+    // démarrage dépendent du framework, d'où une combinaison.
+    id: 'playwright',
+    when: 'next',
+    // playwright.config.ts lit process.env.CI.
+    devDependencies: { '@types/node': '^24.0.0' },
+    files: [
+      { path: 'playwright.config.ts', contents: PLAYWRIGHT_CONFIG_NEXT },
+      { path: 'e2e/home.e2e.ts', contents: PLAYWRIGHT_HOME_TEST },
+    ],
   },
   {
     id: 'next',

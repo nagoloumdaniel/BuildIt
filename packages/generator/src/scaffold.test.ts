@@ -645,3 +645,29 @@ describe('intégration par combinaison : prisma + postgresql', () => {
     expect(fileNamed(files, 'biome.json')).toContain('"!**/generated"');
   });
 });
+
+describe('intégration par combinaison : playwright + next', () => {
+  const PLAYWRIGHT = entry({ id: 'playwright', category: 'testing' });
+  const NEXT = entry({ id: 'next', generation: 'certified', template: 'frontend/next' });
+
+  it('pose une configuration qui démarre l’application, et un premier test', () => {
+    const files = scaffoldFiles(MANIFEST, [PLAYWRIGHT, NEXT]);
+    expect(fileNamed(files, 'playwright.config.ts')).toContain('webServer');
+    expect(fileNamed(files, 'e2e/home.e2e.ts')).toContain("page.goto('/')");
+  });
+
+  it('les tests de bout en bout ne sont pas ramassés par Vitest', () => {
+    // Vitest prend tout *.test.* et *.spec.* : un spec Playwright y serait
+    // exécuté sans navigateur et ferait échouer `pnpm test`.
+    const files = scaffoldFiles(MANIFEST, [PLAYWRIGHT, NEXT]);
+    const specs = files.filter((file) => file.path.startsWith('e2e/'));
+    expect(specs.every((file) => !/\.(test|spec)\.[cm]?[jt]sx?$/.test(file.path))).toBe(true);
+    expect(fileNamed(files, 'playwright.config.ts')).toContain("testMatch: '**/*.e2e.ts'");
+  });
+
+  it('Playwright sans Next : pas de configuration devinée', () => {
+    expect(scaffoldFiles(MANIFEST, [PLAYWRIGHT]).map((file) => file.path)).not.toContain(
+      'playwright.config.ts',
+    );
+  });
+});

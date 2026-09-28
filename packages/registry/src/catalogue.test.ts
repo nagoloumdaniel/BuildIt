@@ -146,11 +146,15 @@ describe('contenu du catalogue', () => {
     expect([...certified].sort()).toEqual([
       'biome',
       'next',
+      'playwright',
       'postgresql',
       'prisma',
+      'resend',
       'shadcn-ui',
+      'stripe',
       'tailwind',
       'typescript',
+      'vercel',
       'vitest',
     ]);
   });

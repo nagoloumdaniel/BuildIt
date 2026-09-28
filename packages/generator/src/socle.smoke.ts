@@ -29,8 +29,8 @@ interface SmokeProject {
 }
 
 const PROJECTS: Record<string, SmokeProject> = {
-  'preset SaaS, avec ses deux recettes': {
-    recipes: ['better-auth-email-password', 'stripe-checkout'],
+  'preset SaaS, avec ses recettes': {
+    recipes: ['better-auth-email-password', 'resend-transactional', 'stripe-checkout'],
     database: { service: 'postgres', url: 'postgresql://postgres:postgres@localhost:5432/app' },
     manifest: {
       manifestVersion: 1,
