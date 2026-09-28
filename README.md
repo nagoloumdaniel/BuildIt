@@ -51,9 +51,15 @@ Commandes individuelles :
 
 ### Intégration continue
 
-**`pnpm ci:local` est la CI** : elle est exécutée automatiquement par le hook `pre-push` de lefthook, et `.github/workflows/ci.yml` appelle exactement la même commande sur GitHub Actions. Aucune divergence possible entre local et distant.
+La CI GitHub n'est pas disponible pour ce dépôt : **l'intégration continue est locale**, et le hook `pre-push` de lefthook la rend obligatoire.
 
-Le test de fumée (`pnpm test:smoke`) génère un vrai projet, l'installe et le vérifie. Il a besoin du réseau et prend environ une minute : il tourne dans un job CI dédié plutôt qu'au pre-push.
+| Quand | Ce qui tourne |
+|---|---|
+| chaque push | `pnpm ci:local` — lint, typecheck, test, build, scan de secrets |
+| push qui touche `generator`, `registry` ou `recipes` | en plus, `pnpm test:smoke` — génère de vrais projets, les installe depuis npm, les construit ; avec Docker, va jusqu'à une base réelle et une inscription |
+| à la main | `pnpm ci:full` — les deux |
+
+Hors-ligne, le test de fumée échoue franchement : `LEFTHOOK_EXCLUDE=smoke git push`, et le dire dans la PR. `.github/workflows/ci.yml` est gardé dormant (déclenchement manuel), prêt à resservir.
 
 ### Structure
 

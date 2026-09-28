@@ -281,7 +281,7 @@ Le rollback est la fonctionnalité la plus facile à « croire faite ». Elle ex
 
 | # | Étape | Skills obligatoires |
 |---|---|---|
-| 5B.1 | **Socle vert** : `tsconfig.json`, configuration de l'outil de qualité choisi, sortie conforme à son formateur, scripts `build`/`dev`/`start` émis seulement quand une application existe. **Test de fumée réel** : générer → installer → typecheck → lint, en script dédié et en job CI | `test-driven-development`, `run` |
+| 5B.1 | **Socle vert** : `tsconfig.json`, configuration de l'outil de qualité choisi, sortie conforme à son formateur, scripts `build`/`dev`/`start` émis seulement quand une application existe. **Test de fumée réel** : générer → installer → typecheck → lint, en script dédié, lancé par le hook pre-push | `test-driven-development`, `run` |
 | 5B.2 | Post Install + Validation (5.10) via `CommandRunner` injectable : `pnpm install`, `git init` + premier commit, typecheck/lint du projet généré | `test-driven-development` |
 | 5B.3 | Reprise (5.9) : échec transitoire/permanent, `retryable`, `failedStep`, reprise `fromStep` | `test-driven-development` |
 | 5B.4 | Template Resolver (5.4) : chargement depuis `templatesRoot`, rendu `{{placeholder}}`, branchement dans le plan | `test-driven-development` |

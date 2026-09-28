@@ -13,7 +13,8 @@ import { generateProject, PIPELINE_STEPS } from './pipeline.js';
  * générée lancera. Si ce test passe, le workflow du projet généré est vert au
  * premier push.
  *
- * Lancé par `pnpm test:smoke` et par un job CI dédié, jamais par `pnpm test` :
+ * Lancé par `pnpm test:smoke` — et par le hook pre-push quand le push touche
+ * generator, registry ou recipes —, jamais par `pnpm test` :
  * il a besoin du réseau. Hors-ligne, il échoue franchement plutôt que de faire
  * semblant.
  */

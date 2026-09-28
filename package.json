@@ -19,6 +19,7 @@
     "lint:fix": "biome check --write .",
     "lint:secrets": "secretlint --maskSecrets \"**/*\"",
     "ci:local": "pnpm run lint && pnpm run typecheck && pnpm run test && pnpm run build && pnpm run lint:secrets",
+    "ci:full": "pnpm run ci:local && pnpm run test:smoke",
     "prepare": "lefthook install"
   },
   "devDependencies": {

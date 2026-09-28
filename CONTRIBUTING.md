@@ -19,6 +19,8 @@ pnpm ci:local
 
 C'est le pipeline complet : lint, typecheck, tests, build, scan de secrets. Le hook `pre-push` l'exécute de toute façon — le lancer à la main évite juste d'attendre pour rien.
 
+Il n'y a pas de CI GitHub : ce hook **est** la CI. Quand le push touche `packages/generator`, `packages/registry` ou `packages/recipes`, il lance aussi `pnpm test:smoke` (réseau, environ une minute ; Docker recommandé pour la partie base de données). `pnpm ci:full` lance les deux à la main.
+
 ## Conventions
 
 ### Commits

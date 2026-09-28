@@ -7,7 +7,7 @@ Référence complète : `docs/cahier-des-charges.md`. Plan d'exécution : `docs/
 
 Phases 1 (socle monorepo), 2 (Project Manifest), 3 (registry, 282 fiches) et 4 (compatibility engine) livrées. Phase 5 livrée (5A + 5B), gate M3 partiel fermé : le socle généré s'installe et passe lint, typecheck et test (`pnpm test:smoke`), post-install et reprise d'étape, Template Resolver, `packages/recipes` avec deux recettes réelles, Dockerfile/devcontainer, revue sécurité écrite. Phase 6 en cours : **6.7a livrée le 28/09/2026**, le preset SaaS du §8 est certifié de bout en bout (15 fiches). Prochaine étape : entretiens 6.12, puis les trois autres presets (6.7b).
 
-Remote : `github.com/nagoloumdaniel/BuildIt`. La CI GitHub Actions appelle `pnpm ci:local`, plus un job de fumée.
+Remote : `github.com/nagoloumdaniel/BuildIt`. **La CI GitHub n'est pas disponible** : l'intégration continue est locale, portée par le hook `pre-push` — `ci:local` à chaque push, plus `test:smoke` quand le push touche `generator`, `registry` ou `recipes`. `ci.yml` est dormant (déclenchement manuel).
 
 Ajouts du 26/09/2026 au cahier des charges : menu d'accueil créer / cloner / ouvrir un projet local (§18bis), intégration GitHub — connexion, clonage, création de dépôt, partage et collaborateurs (§20bis). Exécutés en **Phase 7B**, après le CLI.
 
@@ -22,9 +22,10 @@ pnpm typecheck     # tsc strict, via Turborepo
 pnpm test          # Vitest, via Turborepo
 pnpm build         # tsdown, via Turborepo
 pnpm test:smoke    # génère, installe et vérifie de vrais projets — réseau, ~1 min
+pnpm ci:full       # ci:local + test:smoke
 ```
 
-`.github/workflows/ci.yml` appelle `pnpm ci:local` et rien d'autre. Si le pipeline change, il change à un seul endroit : le script `ci:local` du `package.json` racine.
+Le pipeline est défini à un seul endroit : les scripts `ci:local` et `test:smoke` du `package.json` racine. Le hook `pre-push` et `ci.yml` (dormant) n'appellent qu'eux.
 
 ## Structure
 
