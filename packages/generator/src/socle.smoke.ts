@@ -115,6 +115,30 @@ function run(
  * docker-compose.yml généré démarre, `prisma db push` y crée une table
  * déclarée dans un fichier de schéma ajouté, et une requête la retrouve.
  */
+/**
+ * Pannes du registre d'images, pas du projet : quota Docker Hub, réseau.
+ *
+ * Elles sautent l'aller-retour avec un avertissement, comme l'absence de
+ * Docker. Toute autre erreur de téléchargement — une image mal nommée dans le
+ * docker-compose.yml généré, par exemple — reste un échec : c'est un défaut du
+ * générateur, il ne doit pas passer pour une panne d'infrastructure.
+ */
+const REGISTRY_OUTAGE =
+  /rate limit|toomanyrequests|i\/o timeout|TLS handshake timeout|connection refused|no such host|network is unreachable/i;
+
+/** Télécharge l'image du service ; `false` si le registre est indisponible. */
+function pullImage(target: string, service: string): boolean {
+  try {
+    run('docker', ['compose', 'pull', service], target);
+    return true;
+  } catch (error) {
+    if (REGISTRY_OUTAGE.test(String(error))) {
+      return false;
+    }
+    throw error;
+  }
+}
+
 async function databaseRoundTrip(target: string, service: string, url: string): Promise<void> {
   composed.push(target);
   run('docker', ['compose', 'up', '-d', '--wait', service], target);
@@ -233,7 +257,11 @@ describe('un projet généré passe sa propre CI — gate M3', () => {
       await expect(readFile(join(target, 'pnpm-lock.yaml'), 'utf8')).resolves.toBeTruthy();
 
       if (database !== undefined) {
-        if (DOCKER) {
+        if (DOCKER && !pullImage(target, database.service)) {
+          console.warn(
+            `${label} : registre d’images indisponible (quota ou réseau), aller-retour avec la base NON vérifié.`,
+          );
+        } else if (DOCKER) {
           await databaseRoundTrip(target, database.service, database.url);
           if (signUp === true) {
             await signUpAndSignIn(target, database.url);
