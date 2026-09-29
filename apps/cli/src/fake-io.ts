@@ -1,3 +1,5 @@
+import type { CommandRunner } from '@project-factory/exec';
+import type { Fetch } from '@project-factory/github';
 import type { Choice, Io, Prompter } from './io.js';
 
 /** Réponses scriptées, consommées dans l'ordre ; une question en trop échoue. */
@@ -20,6 +22,9 @@ export function fakeIo(
     interactive?: boolean;
     answers?: Answer[];
     stdin?: string;
+    runner?: CommandRunner;
+    fetch?: Fetch;
+    platform?: NodeJS.Platform;
   } = {},
 ): FakeIo {
   const stdout: string[] = [];
@@ -69,6 +74,19 @@ export function fakeIo(
     interactive: options.interactive ?? false,
     prompter,
     readStdin: async () => options.stdin ?? '',
+    // Par défaut, aucun processus ni réseau : un test qui en a besoin le dit.
+    runner: options.runner ?? {
+      run: async (command) => {
+        throw new Error(`commande inattendue en test : ${command}`);
+      },
+    },
+    fetch:
+      options.fetch ??
+      (async (input) => {
+        throw new Error(`requête inattendue en test : ${input}`);
+      }),
+    platform: options.platform ?? 'linux',
+    sleep: async () => undefined,
     text: () => ({ out: stdout.join('\n'), err: stderr.join('\n') }),
   };
 }

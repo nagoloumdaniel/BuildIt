@@ -6,12 +6,6 @@ import { EXIT, type ExitCode, type Io } from '../io.js';
  * semblant.
  */
 export const PENDING: Readonly<Record<string, string>> = {
-  clone: 'Phase 7B — cloner un dépôt GitHub (par lien ou parmi les vôtres)',
-  open: 'Phase 7B — ouvrir un projet local et installer ses dépendances',
-  login: 'Phase 7B — connexion GitHub',
-  logout: 'Phase 7B — déconnexion GitHub',
-  repo: 'Phase 7B — créer le dépôt GitHub d’un projet',
-  collab: 'Phase 7B — collaborateurs d’un dépôt',
   doctor: 'V1 — diagnostic d’un projet existant',
   analyze: 'V1 — analyse d’un projet existant',
   upgrade: 'V2 — mise à niveau d’un projet généré',

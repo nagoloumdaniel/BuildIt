@@ -60,9 +60,18 @@ importers:
       '@project-factory/compatibility':
         specifier: workspace:*
         version: link:../../packages/compatibility
+      '@project-factory/exec':
+        specifier: workspace:*
+        version: link:../../packages/exec
       '@project-factory/generator':
         specifier: workspace:*
         version: link:../../packages/generator
+      '@project-factory/git':
+        specifier: workspace:*
+        version: link:../../packages/git
+      '@project-factory/github':
+        specifier: workspace:*
+        version: link:../../packages/github
       '@project-factory/manifest':
         specifier: workspace:*
         version: link:../../packages/manifest
@@ -78,6 +87,9 @@ importers:
       '@project-factory/validation':
         specifier: workspace:*
         version: link:../../packages/validation
+      '@project-factory/workspace':
+        specifier: workspace:*
+        version: link:../../packages/workspace
       '@vitest/coverage-v8':
         specifier: 5.0.1
         version: 5.0.1(vitest@5.0.1)

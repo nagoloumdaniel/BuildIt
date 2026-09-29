@@ -1,12 +1,17 @@
 import { readFileSync } from 'node:fs';
 import { suggest } from '@project-factory/validation';
 import { add } from './commands/add.js';
+import { clone } from './commands/clone.js';
+import { collab } from './commands/collab.js';
 import { create } from './commands/create.js';
 import { generate } from './commands/generate.js';
 import { graph } from './commands/graph.js';
 import { key } from './commands/key.js';
+import { login, logout } from './commands/login.js';
 import { menu } from './commands/menu.js';
+import { installCommand, open } from './commands/open.js';
 import { PENDING, pending } from './commands/pending.js';
+import { repo } from './commands/repo.js';
 import { template } from './commands/template.js';
 import { usageError } from './format.js';
 import { EXIT, type ExitCode, type Io } from './io.js';
@@ -20,6 +25,13 @@ const COMMANDS: Readonly<Record<string, Command>> = {
   graph,
   add,
   key,
+  clone,
+  open,
+  install: installCommand,
+  login,
+  logout,
+  repo,
+  collab,
 };
 
 /** Lu depuis `package.json` : `src/` et `dist/` en sont tous deux voisins. */
@@ -41,6 +53,14 @@ Commandes :
   graph [manifest.json]         La stack résolue : choisie, ajoutée, statut
   add <technologie>             Ajoute une technologie au manifest
   key set|status|clear          Clé API LLM locale
+
+Projets existants et GitHub :
+  clone [lien] [dossier]        Clone un dépôt, propose l'installation
+  open <dossier>                Reconnaît un projet local, propose l'installation
+  install                       Installe les dépendances du dossier courant
+  login | logout                Connexion GitHub (jeton dans le trousseau)
+  repo create | share           Dépôt GitHub du projet, privé par défaut
+  collab add|list|remove        Collaborateurs du dépôt
 
 À venir : ${Object.keys(PENDING).join(', ')}.
 

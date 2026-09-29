@@ -1,3 +1,6 @@
+import type { CommandRunner } from '@project-factory/exec';
+import type { Fetch } from '@project-factory/github';
+
 /**
  * Ce que le CLI échange avec le monde, rendu injectable : les tests pilotent
  * `run` sans terminal, sans processus, et lisent ce qu'il a écrit.
@@ -29,6 +32,13 @@ export interface Io {
   readonly prompter: Prompter;
   /** Contenu de l'entrée standard, quand elle n'est pas un terminal. */
   readStdin(): Promise<string>;
+  /** Lance git, pnpm, l'outil du trousseau — jamais par un shell. */
+  readonly runner: CommandRunner;
+  /** Vers l'API GitHub. */
+  readonly fetch: Fetch;
+  readonly platform: NodeJS.Platform;
+  /** Attente entre deux interrogations de GitHub (connexion par code). */
+  sleep(seconds: number): Promise<void>;
 }
 
 /** Codes de sortie : 0 succès, 1 le moteur a refusé ou échoué, 2 mauvais usage. */

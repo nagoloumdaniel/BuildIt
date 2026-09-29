@@ -21,7 +21,21 @@ describe('pf', () => {
   });
 
   it('l’aide nomme chaque commande livrée et celles à venir', () => {
-    for (const command of ['create', 'template', 'generate', 'graph', 'add', 'key']) {
+    for (const command of [
+      'create',
+      'template',
+      'generate',
+      'graph',
+      'add',
+      'key',
+      'clone',
+      'open',
+      'install',
+      'login',
+      'logout',
+      'repo',
+      'collab',
+    ]) {
       expect(HELP).toContain(command);
     }
     for (const command of Object.keys(PENDING)) {
@@ -44,7 +58,7 @@ describe('pf', () => {
   it.each(Object.keys(PENDING))('pf %s existe et dit quand il arrive, code 2', async (command) => {
     const io = fakeIo();
     expect(await run([command], io)).toBe(2);
-    expect(io.text().err).toMatch(/pas encore disponible : (Phase 7B|Phase 9|V1|V2)/);
+    expect(io.text().err).toMatch(/pas encore disponible : (Phase 9|V1|V2)/);
   });
 
   it('un drapeau inconnu est une erreur d’usage, pas un plantage', async () => {
@@ -72,14 +86,14 @@ describe('pf', () => {
       expect(io.asked).toEqual([]);
     });
 
-    it('propose créer, et cloner / ouvrir désactivés jusqu’à la Phase 7B', async () => {
+    it('propose créer, cloner, ouvrir un projet local (§18bis)', async () => {
       const io = fakeIo({ interactive: true, answers: ['help'] });
       expect(await run([], io)).toBe(0);
       const choices = io.offered[0] ?? [];
       expect(choices.map((choice) => [choice.value, choice.disabled === true])).toEqual([
         ['create', false],
-        ['clone', true],
-        ['open', true],
+        ['clone', false],
+        ['open', false],
         ['help', false],
       ]);
     });

@@ -5,7 +5,7 @@ Référence complète : `docs/cahier-des-charges.md`. Plan d'exécution : `docs/
 
 ## État
 
-Phases 1 (socle monorepo), 2 (Project Manifest), 3 (registry, 282 fiches) et 4 (compatibility engine) livrées. Phase 5 livrée (5A + 5B), gate M3 partiel fermé : le socle généré s'installe et passe lint, typecheck et test (`pnpm test:smoke`), post-install et reprise d'étape, Template Resolver, `packages/recipes` avec deux recettes réelles, Dockerfile/devcontainer, revue sécurité écrite. Phase 6 livrée, gate M3 fermé : les quatre presets — **SaaS**, **API** (Hono), **Dashboard** (recette `dashboard-admin`), **Full-stack** (Next.js + Hono en monorepo) — sont certifiés de bout en bout. Le Full-stack a son contrat partagé (`packages/shared`) et un Dockerfile par application ; les tests Playwright générés tournent dans le test de fumée. Restent `packages/ui` et les entretiens 6.12. Phase 7 livrée hors publication npm : le CLI `pf` (`apps/cli`, [référence](docs/cli.md)) — `create`, `template`, `generate`, `graph`, `add`, `key`, menu d'accueil — sur `packages/presets` ; même manifest, même projet que le moteur, octet pour octet. **Prochaine étape : Phase 7B, projets existants et GitHub.**
+Phases 1 (socle monorepo), 2 (Project Manifest), 3 (registry, 282 fiches) et 4 (compatibility engine) livrées. Phase 5 livrée (5A + 5B), gate M3 partiel fermé : le socle généré s'installe et passe lint, typecheck et test (`pnpm test:smoke`), post-install et reprise d'étape, Template Resolver, `packages/recipes` avec deux recettes réelles, Dockerfile/devcontainer, revue sécurité écrite. Phase 6 livrée, gate M3 fermé : les quatre presets — **SaaS**, **API** (Hono), **Dashboard** (recette `dashboard-admin`), **Full-stack** (Next.js + Hono en monorepo) — sont certifiés de bout en bout. Le Full-stack a son contrat partagé (`packages/shared`) et un Dockerfile par application ; les tests Playwright générés tournent dans le test de fumée. Restent `packages/ui` et les entretiens 6.12. Phase 7 livrée hors publication npm : le CLI `pf` (`apps/cli`, [référence](docs/cli.md)) — `create`, `template`, `generate`, `graph`, `add`, `key`, menu d'accueil — sur `packages/presets` ; même manifest, même projet que le moteur, octet pour octet. Phase 7B livrée : `packages/exec`, `workspace`, `git`, `github` ; `pf clone`, `open`, `install`, `login`, `logout`, `repo`, `collab` ; création de dépôt et invitations prouvées contre un faux `fetch` seulement (API GitHub injoignable depuis la session). **Prochaine étape : Phase 8, configurateur web.**
 
 Remote : `github.com/nagoloumdaniel/BuildIt`. **La CI GitHub n'est pas disponible** : l'intégration continue est locale, portée par le hook `pre-push` — `ci:local` à chaque push, plus `test:smoke` quand le push touche `generator`, `registry` ou `recipes`. `ci.yml` est dormant (déclenchement manuel).
 
@@ -41,6 +41,10 @@ packages/registry/           catalogue (§7, §11) — livré, 282 fiches
 packages/compatibility/      règles du §12 — livré
 packages/recipes/            recettes (§22, Recipe Resolver) — livré
   data/<id>.recipe.json              source de vérité ; index engendré comme le registry
+packages/exec/               exécution de commandes sans shell (stdin, env) — partagée par generator, git, workspace, github
+packages/workspace/          projet local : écosystème, gestionnaire de paquets, installation (§18bis)
+packages/git/                liens validés, clone sans reste, init, push — jeton jamais dans une URL (§18bis)
+packages/github/             API GitHub, device flow, jeton dans le trousseau (§20bis)
 packages/presets/            les quatre presets certifiés (§8) : manifest + recettes, partagés CLI / UI
 apps/cli/                    le CLI pf (§21) — aucune logique métier ; embarque le moteur à la construction
 packages/generator/          pipeline du §22 — livré ; monorepo multi-applications (monorepo.ts)

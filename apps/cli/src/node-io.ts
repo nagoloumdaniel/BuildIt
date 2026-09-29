@@ -1,5 +1,6 @@
 import { createInterface } from 'node:readline/promises';
 import { Writable } from 'node:stream';
+import { nodeCommandRunner } from '@project-factory/exec';
 import type { Choice, Io, Prompter } from './io.js';
 
 /**
@@ -82,5 +83,9 @@ export function nodeIo(): Io {
       }
       return Buffer.concat(chunks).toString('utf8');
     },
+    runner: nodeCommandRunner,
+    fetch: (input, init) => fetch(input, init),
+    platform: process.platform,
+    sleep: (seconds) => new Promise((resolve) => setTimeout(resolve, seconds * 1000)),
   };
 }

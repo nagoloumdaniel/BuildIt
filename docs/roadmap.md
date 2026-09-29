@@ -432,7 +432,7 @@ Livré ([spec](superpowers/specs/2026-09-28-phase7-cli-design.md), [référence]
 
 Trouvé en chemin : le compatibility engine marquait « ajoutée » une technologie choisie dès qu'une autre, parcourue avant elle, l'exigeait (TypeScript « exigée par next » dans un manifest qui la choisit) — sortie dépendante de l'ordre de saisie. Corrigé, avec son test.
 
-**Prochaine étape : Phase 7B — projets existants & GitHub.**
+**Étape suivante (réalisée) : Phase 7B — projets existants & GitHub.**
 
 ---
 
@@ -463,12 +463,24 @@ Project Factory ne sert pas qu'à créer. Menu d'accueil à trois chemins (crée
 - Référence de commandes mise à jour
 
 ### Gate — `verification-before-completion`
-- [ ] Un lien commençant par `-`, un protocole `ext::`/`file://` sont **rejetés** avant tout appel à Git (test négatif)
-- [ ] Un clone qui échoue ne laisse aucun dossier derrière lui
-- [ ] Le jeton GitHub n'apparaît dans aucun log, fichier du projet ni variable exportée (test)
-- [ ] Un dépôt créé est privé sauf `--public` explicite
-- [ ] `pf repo share` sur un projet sans dépôt refuse avec la marche à suivre
-- [ ] Aucune commande d'installation n'est lancée sans confirmation (ou `--yes` explicite en mode non interactif)
+- [x] Un lien commençant par `-`, un protocole `ext::`/`file://` sont **rejetés** avant tout appel à Git (test négatif) — 36 liens refusés en test ; `git -c protocol.ext.allow=never -c protocol.file.allow=never clone -- …` en défense en profondeur ; vérifié en réel (`ext::sh -c touch…` : refusé, aucun fichier créé)
+- [x] Un clone qui échoue ne laisse aucun dossier derrière lui — test (dossiers parents créés compris) et réel
+- [x] Le jeton GitHub n'apparaît dans aucun log, fichier du projet ni variable exportée (test) — ni sortie, ni argument de commande, ni URL ; transmis à Git par un credential helper, au trousseau par l'entrée standard
+- [x] Un dépôt créé est privé sauf `--public` explicite
+- [x] `pf repo share` sur un projet sans dépôt refuse avec la marche à suivre — test et réel
+- [x] Aucune commande d'installation n'est lancée sans confirmation (ou `--yes` explicite en mode non interactif)
+
+### État — 29/09/2026
+
+Livré ([spec](superpowers/specs/2026-09-28-phase7b-github-design.md), [référence](cli.md)) : `packages/exec` (l'exécuteur de 5B.2, sorti du generator, avec entrée standard et environnement par commande), `packages/workspace`, `packages/git`, `packages/github`, et les commandes `clone`, `open`, `install`, `login`, `logout`, `repo create|share`, `collab add|list|remove` ; le menu d'accueil a ses trois chemins.
+
+Vérifié en réel dans cette session : clone d'un dépôt public, clone refusé (lien d'injection) et échoué (rien laissé), installation sans scripts d'un dépôt cloné, ouverture et installation d'un projet local, refus du partage sans dépôt, **trousseau Linux réel** (Secret Service) : écrit, relu, effacé.
+
+Trouvé en vérifiant pour de vrai : sous une locale non UTF-8, `secret-tool` refusait l'étiquette (tiret cadratin) — corrigé. Trouvé en écrivant les tests : GitHub met « le nom est pris » dans `errors[]`, pas dans `message` — le client l'aurait présenté comme un refus générique ; corrigé.
+
+**Pas vérifiable ici** : l'API GitHub est bloquée par le réseau de la session et aucun compte de test n'est disponible — création de dépôt, clone privé, invitation de collaborateur (7B.9) sont prouvés contre un faux `fetch` qui rejoue les réponses documentées, **et restent à vérifier sur un vrai compte**. La connexion par code attend l'enregistrement de l'application OAuth de Project Factory (action de mainteneur) ; `pf login --with-token` fonctionne sans elle.
+
+**Prochaine étape : Phase 8 — configurateur web.**
 
 ---
 

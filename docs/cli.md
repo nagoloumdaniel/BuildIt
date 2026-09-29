@@ -2,7 +2,7 @@
 
 `pf` est la façade en ligne de commande du moteur Forge (§9, §21). Elle produit un Project Manifest et le passe au pipeline — le même que celui de la future interface web : **même manifest, même projet, octet pour octet** (vérifié par un test, pour chaque preset).
 
-**Statut :** Phase 7 livrée dans le dépôt, **pas encore publiée sur npm** (il faut un compte et un jeton). En attendant :
+**Statut :** Phases 7 et 7B livrées dans le dépôt, **pas encore publiée sur npm** (il faut un compte et un jeton). En attendant :
 
 ```bash
 pnpm pf <commande>                        # depuis la racine du dépôt, sur les sources
@@ -22,7 +22,7 @@ pnpm --filter @project-factory/cli build  # puis node apps/cli/bin/pf.js <comman
 
 ## `pf`
 
-Menu d'accueil : créer un projet. Cloner un dépôt GitHub et ouvrir un projet local y figurent, désactivés jusqu'à la Phase 7B. Hors terminal, affiche l'aide.
+Menu d'accueil (§18bis) : créer un projet, cloner un projet, ouvrir un projet local. Hors terminal, affiche l'aide.
 
 ## `pf create [nom] --preset <preset>`
 
@@ -88,13 +88,59 @@ La clé API LLM locale (§0, §17), pour les fonctions d'analyse à venir.
 - `status` dit si une clé est définie, **jamais sa valeur, pas même en partie**.
 - `clear` la supprime.
 
+## Projets existants et GitHub (§18bis, §20bis)
+
+### `pf clone [lien|propriétaire/dépôt] [dossier]`
+
+Clone un dépôt, puis propose d'installer ses dépendances. Sans lien, dans un terminal et connecté : la liste de vos dépôts.
+
+- **Liens acceptés** : `https://…`, `git@hôte:chemin`, `ssh://…`, `propriétaire/dépôt` (GitHub). **Refusés avant tout appel à Git** : un lien qui commence par `-`, `ext::`, `file://`, un chemin local, `http://`, un lien contenant des identifiants.
+- **Dossier** : inexistant ou vide. Un clone qui échoue ne laisse rien derrière lui.
+- **Dépôt privé** : connectez-vous d'abord (`pf login`). Le jeton est transmis à Git par un *credential helper*, jamais dans l'URL ni en argument.
+- **Code cloné** : ses scripts d'installation s'exécuteraient sur votre machine — `pf` le dit et propose « sans scripts » en premier.
+
+| Option | |
+|---|---|
+| `--install` | Installer sans demander |
+| `--ignore-scripts` | Installer sans exécuter les scripts (`--ignore-scripts` ; Yarn ≥ 2 : `--mode=skip-build`) |
+| `--yes` | Aucune question |
+
+### `pf open <dossier>` · `pf install`
+
+Reconnaît un projet de la machine et propose l'installation ; `pf install` agit sur le dossier courant. Le gestionnaire de paquets vient du verrou (`pnpm-lock.yaml`, `yarn.lock`, `bun.lock[b]`, `package-lock.json`), sinon du champ `packageManager`, sinon npm — **annoncé comme une supposition**. Python, Rust, Go, PHP et Ruby sont reconnus et nommés, avec la commande à lancer vous-même (installation automatique en V1).
+
+La commande exacte est affichée **avant** d'être lancée. Sans terminal, rien n'est installé sans `--yes`. Options : `--ignore-scripts`, `--yes`.
+
+### `pf login` · `pf logout`
+
+- `pf login` : connexion par code (device flow). Les permissions sont annoncées avant : `repo` (dépôts privés, création, collaborateurs), ou `public_repo` avec `--public-only`. **L'application OAuth de Project Factory n'est pas encore enregistrée** : en attendant, `PF_GITHUB_CLIENT_ID=<identifiant>` ou un jeton existant.
+- `pf login --with-token` : lit un jeton sur l'entrée standard (`echo "$JETON" | pf login --with-token`) ou par saisie masquée. **Jamais en argument.**
+- Le jeton va dans le trousseau du système — Trousseau macOS, Secret Service (Linux, `secret-tool`), Gestionnaire d'identification Windows —, toujours par l'entrée standard de l'outil. **Trousseau absent : refus, aucun repli en clair.** Pour la CI, `PF_GITHUB_TOKEN` est lu (jamais écrit).
+- `pf logout` retire le jeton de la machine ; pour le révoquer côté GitHub : https://github.com/settings/applications.
+
+### `pf repo create` · `pf repo share`
+
+| | |
+|---|---|
+| `pf repo create [--public] [--name <nom>] [--description <texte>] [--dir <dossier>] [--yes]` | Crée le dépôt GitHub du projet — **privé sauf `--public`** — et y pousse le code. Nom proposé : `name` de `package.json`, sinon le dossier. Le premier commit est créé avant tout appel à GitHub ; un nom pris ne crée rien. Confirmation, ou `--yes` |
+| `pf repo share [--dir <dossier>]` | Le lien du dépôt, ses collaborateurs, les invitations en attente |
+
+### `pf collab add | list | remove`
+
+| | |
+|---|---|
+| `pf collab add <utilisateur> [--role read\|triage\|write\|maintain\|admin]` | Invite ; rôle par défaut `write` |
+| `pf collab list` | Collaborateurs et invitations |
+| `pf collab remove <utilisateur> [--yes]` | Annule l'invitation en attente, sinon retire l'accès ; confirmation, ou `--yes` |
+
+**Partager un projet exige un dépôt GitHub.** Sans lui, `pf repo share` et `pf collab` refusent et disent quoi faire (`pf repo create`) ; le lien de configuration en lecture seule arrivera en Phase 9. Les droits sont ceux de GitHub : il faut être administrateur du dépôt.
+
 ## À venir
 
 Ces commandes existent, répondent qu'elles ne sont pas encore disponibles et quand elles le seront (code `2`) :
 
 | Commande | Quand |
 |---|---|
-| `clone`, `open`, `login`, `logout`, `repo`, `collab` | Phase 7B — GitHub et projets existants (§18bis, §20bis) |
-| `share` | Phase 9 |
+| `share` | Phase 9 — lien de configuration en lecture seule |
 | `doctor`, `analyze` | V1 |
 | `upgrade` | V2 |

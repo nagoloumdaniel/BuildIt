@@ -2,7 +2,7 @@
 
 > **Development Environment Factory** — décrire un projet, choisir ses plateformes et ses technologies, obtenir un projet prêt à développer : cohérent, documenté et diagnostiqué.
 
-**Statut : pré-alpha.** Le moteur (manifest, registry, compatibility, generator) existe et est testé ; quatre presets (SaaS, API, Dashboard, Full-stack en monorepo) sont certifiés : générés, installés, construits et démarrés par le test de fumée. Le CLI `pf` existe ([référence](docs/cli.md)) mais n'est pas encore publié sur npm : rien n'est utilisable par un tiers sans cloner le dépôt. Prochaine étape : Phase 7B, projets existants et GitHub. Voir la [roadmap](docs/roadmap.md).
+**Statut : pré-alpha.** Le moteur (manifest, registry, compatibility, generator) existe et est testé ; quatre presets (SaaS, API, Dashboard, Full-stack en monorepo) sont certifiés : générés, installés, construits et démarrés par le test de fumée. Le CLI `pf` existe ([référence](docs/cli.md)) mais n'est pas encore publié sur npm : rien n'est utilisable par un tiers sans cloner le dépôt. Il sait aussi cloner un dépôt, ouvrir un projet local et gérer le dépôt GitHub d'un projet (Phase 7B). Prochaine étape : le configurateur web (Phase 8). Voir la [roadmap](docs/roadmap.md).
 
 ---
 
