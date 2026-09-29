@@ -580,3 +580,237 @@ describe('Docker dans le socle — 5B.6', () => {
     expect(fileNamed(files, '.devcontainer/devcontainer.json')).toContain('"name": "quai3"');
   });
 });
+
+/**
+ * Phase 6.7a — Prisma câblé sur PostgreSQL. Le code dépend de la base :
+ * fournisseur du schéma, adaptateur de pilote. Il n'est donc produit que pour
+ * la combinaison vérifiée par le test de fumée, jamais pour Prisma seul.
+ */
+describe('intégration par combinaison : prisma + postgresql', () => {
+  const PRISMA = entry({ id: 'prisma', category: 'orm' });
+  const POSTGRES = entry({ id: 'postgresql', category: 'database' });
+  const MYSQL = entry({ id: 'mysql', category: 'database' });
+
+  function pkg(files: readonly { path: string; contents: string }[]) {
+    return JSON.parse(fileNamed(files, 'package.json')) as {
+      scripts: Record<string, string>;
+      dependencies?: Record<string, string>;
+      devDependencies?: Record<string, string>;
+    };
+  }
+
+  it('pose la configuration, un schéma PostgreSQL et le client', () => {
+    const files = scaffoldFiles(MANIFEST, [PRISMA, POSTGRES]);
+    expect(fileNamed(files, 'prisma.config.ts')).toContain("schema: 'prisma/schema'");
+    expect(fileNamed(files, 'prisma/schema/schema.prisma')).toContain('provider = "postgresql"');
+    expect(fileNamed(files, 'lib/db.ts')).toContain('PrismaPg');
+  });
+
+  it('la configuration ne fait pas échouer prisma generate sans DATABASE_URL', () => {
+    // `env('DATABASE_URL')` de prisma/config lève quand la variable manque :
+    // la CI, qui n'a pas de base, ne pourrait plus générer le client.
+    const config = fileNamed(scaffoldFiles(MANIFEST, [PRISMA, POSTGRES]), 'prisma.config.ts');
+    expect(config).toContain('process.env');
+    expect(config).not.toContain("env('DATABASE_URL')");
+  });
+
+  it('génère le client à l’installation et ajoute l’adaptateur de pilote', () => {
+    const json = pkg(scaffoldFiles(MANIFEST, [PRISMA, POSTGRES]));
+    expect(json.scripts['postinstall']).toBe('prisma generate');
+    expect(json.scripts['db:migrate']).toBe('prisma migrate dev');
+    expect(json.dependencies?.['@prisma/adapter-pg']).toBeDefined();
+    expect(json.devDependencies?.['@types/node']).toBeDefined();
+  });
+
+  it('Prisma sur une autre base : rien de faux, ni fichier ni script', () => {
+    const files = scaffoldFiles(MANIFEST, [PRISMA, MYSQL]);
+    const paths = files.map((file) => file.path);
+    expect(paths).not.toContain('lib/db.ts');
+    expect(paths).not.toContain('prisma.config.ts');
+    expect(pkg(files).scripts['postinstall']).toBeUndefined();
+    expect(pkg(files).dependencies?.['@prisma/adapter-pg']).toBeUndefined();
+  });
+
+  it('PostgreSQL sans Prisma : pas de code Prisma', () => {
+    expect(scaffoldFiles(MANIFEST, [POSTGRES]).map((file) => file.path)).not.toContain('lib/db.ts');
+  });
+
+  it('le code engendré par Prisma n’est ni versionné ni linté', () => {
+    const files = scaffoldFiles(MANIFEST, [
+      PRISMA,
+      POSTGRES,
+      entry({ id: 'biome', category: 'linting' }),
+    ]);
+    expect(fileNamed(files, '.gitignore')).toContain('generated/');
+    expect(fileNamed(files, 'biome.json')).toContain('"!**/generated"');
+  });
+});
+
+describe('intégration par combinaison : playwright + next', () => {
+  const PLAYWRIGHT = entry({ id: 'playwright', category: 'testing' });
+  const NEXT = entry({ id: 'next', generation: 'certified', template: 'frontend/next' });
+
+  it('pose une configuration qui démarre l’application, et un premier test', () => {
+    const files = scaffoldFiles(MANIFEST, [PLAYWRIGHT, NEXT]);
+    expect(fileNamed(files, 'playwright.config.ts')).toContain('webServer');
+    expect(fileNamed(files, 'e2e/home.e2e.ts')).toContain("page.goto('/')");
+  });
+
+  it('les tests de bout en bout ne sont pas ramassés par Vitest', () => {
+    // Vitest prend tout *.test.* et *.spec.* : un spec Playwright y serait
+    // exécuté sans navigateur et ferait échouer `pnpm test`.
+    const files = scaffoldFiles(MANIFEST, [PLAYWRIGHT, NEXT]);
+    const specs = files.filter((file) => file.path.startsWith('e2e/'));
+    expect(specs.every((file) => !/\.(test|spec)\.[cm]?[jt]sx?$/.test(file.path))).toBe(true);
+    expect(fileNamed(files, 'playwright.config.ts')).toContain("testMatch: '**/*.e2e.ts'");
+  });
+
+  it('Playwright sans Next : pas de configuration devinée', () => {
+    expect(scaffoldFiles(MANIFEST, [PLAYWRIGHT]).map((file) => file.path)).not.toContain(
+      'playwright.config.ts',
+    );
+  });
+});
+
+describe('intégration par combinaison : better-auth + next + prisma + postgresql', () => {
+  const STACK = [
+    entry({ id: 'better-auth', category: 'authentication' }),
+    entry({ id: 'next', generation: 'certified', template: 'frontend/next' }),
+    entry({ id: 'prisma', category: 'orm' }),
+    entry({ id: 'postgresql', category: 'database' }),
+  ];
+
+  it('pose les tables, la configuration serveur, le client et la route', () => {
+    const files = scaffoldFiles(MANIFEST, STACK);
+    const tables = fileNamed(files, 'prisma/schema/auth.prisma');
+    for (const table of ['"user"', '"session"', '"account"', '"verification"']) {
+      expect(tables).toContain(`@@map(${table})`);
+    }
+    expect(fileNamed(files, 'lib/auth.ts')).toContain(
+      "prismaAdapter(db, { provider: 'postgresql' })",
+    );
+    expect(fileNamed(files, 'lib/auth-client.ts')).toContain('createAuthClient');
+    expect(fileNamed(files, 'app/api/auth/[...all]/route.ts')).toContain('toNextJsHandler');
+  });
+
+  it('les tables n’ont ni générateur ni source de données : le schéma en dossier les a déjà', () => {
+    const tables = fileNamed(scaffoldFiles(MANIFEST, STACK), 'prisma/schema/auth.prisma');
+    expect(tables).not.toContain('generator client');
+    expect(tables).not.toContain('datasource');
+  });
+
+  it.each(['next', 'prisma', 'postgresql'])(
+    'sans %s, rien : la combinaison entière est requise',
+    (missing) => {
+      const paths = scaffoldFiles(
+        MANIFEST,
+        STACK.filter((item) => item.id !== missing),
+      ).map((file) => file.path);
+      expect(paths).not.toContain('lib/auth.ts');
+      expect(paths).not.toContain('prisma/schema/auth.prisma');
+    },
+  );
+
+  it('la provenance nomme toute la combinaison', () => {
+    const route = scaffoldFiles(MANIFEST, STACK).find(
+      (file) => file.path === 'app/api/auth/[...all]/route.ts',
+    );
+    expect(route?.source).toBe('integration:better-auth+next+prisma+postgresql');
+  });
+});
+
+/**
+ * 6.7a — observabilité. Next.js n'a qu'un `instrumentation-client.ts`, et
+ * Sentry comme PostHog veulent y initialiser leur client : chacun pose son
+ * module, le socle compose le fichier commun. Aucun des deux n'écrase l'autre.
+ */
+describe('observabilité : sentry et posthog sur next', () => {
+  const NEXT = entry({ id: 'next', generation: 'certified', template: 'frontend/next' });
+  const SENTRY = entry({ id: 'sentry', category: 'observability' });
+  const POSTHOG = entry({ id: 'posthog', category: 'analytics' });
+
+  it('instrumentation-client.ts importe le module de chaque outil choisi', () => {
+    const client = fileNamed(
+      scaffoldFiles(MANIFEST, [NEXT, SENTRY, POSTHOG]),
+      'instrumentation-client.ts',
+    );
+    expect(client).toContain("import './lib/observability/posthog.client';");
+    expect(client).toContain("import './lib/observability/sentry.client';");
+  });
+
+  it('un seul outil : un seul import', () => {
+    const client = fileNamed(scaffoldFiles(MANIFEST, [NEXT, POSTHOG]), 'instrumentation-client.ts');
+    expect(client).not.toContain('sentry');
+  });
+
+  it('sans outil qui le demande, pas de fichier', () => {
+    expect(scaffoldFiles(MANIFEST, [NEXT]).map((file) => file.path)).not.toContain(
+      'instrumentation-client.ts',
+    );
+  });
+
+  it('Sentry capture les erreurs serveur', () => {
+    const server = fileNamed(scaffoldFiles(MANIFEST, [NEXT, SENTRY]), 'instrumentation.ts');
+    expect(server).toContain('export const onRequestError');
+  });
+
+  it('les clés du navigateur sont en NEXT_PUBLIC_, typées et listées dans .env.example', () => {
+    const files = scaffoldFiles(MANIFEST, [
+      NEXT,
+      SENTRY,
+      POSTHOG,
+      entry({ id: 'typescript', category: 'language' }),
+    ]);
+    const env = fileNamed(files, '.env.example');
+    for (const name of [
+      'NEXT_PUBLIC_SENTRY_DSN',
+      'NEXT_PUBLIC_POSTHOG_KEY',
+      'NEXT_PUBLIC_POSTHOG_HOST',
+    ]) {
+      expect(env).toContain(`${name}=`);
+      expect(fileNamed(files, 'env.d.ts')).toContain(`readonly ${name}?: string;`);
+    }
+  });
+
+  it('sans clé, rien n’est envoyé', () => {
+    const files = scaffoldFiles(MANIFEST, [NEXT, POSTHOG]);
+    expect(fileNamed(files, 'lib/observability/posthog.client.ts')).toMatch(
+      /if \(key !== undefined/,
+    );
+  });
+
+  it('Sentry ou PostHog sans Next : rien de deviné', () => {
+    const paths = scaffoldFiles(MANIFEST, [SENTRY, POSTHOG]).map((file) => file.path);
+    expect(paths).not.toContain('instrumentation-client.ts');
+    expect(paths).not.toContain('instrumentation.ts');
+  });
+});
+
+describe('scripts d’installation refusés explicitement — moindre privilège', () => {
+  it('refuse ce qui ne sert pas, sans faire échouer pnpm', () => {
+    const workspace = fileNamed(
+      scaffoldFiles(MANIFEST, [
+        entry({ id: 'next', generation: 'certified', template: 'frontend/next' }),
+        entry({ id: 'sentry', category: 'observability' }),
+        entry({ id: 'posthog', category: 'analytics' }),
+      ]),
+      'pnpm-workspace.yaml',
+    );
+    // @sentry/cli télécharge un binaire pour envoyer les source maps, non
+    // configuré ; core-js n'affiche qu'un message. Ni l'un ni l'autre ne
+    // s'exécute — mais pnpm 11 échouerait s'ils n'étaient pas nommés.
+    expect(workspace).toContain('  "@sentry/cli": false');
+    expect(workspace).toContain('  core-js: false');
+  });
+
+  it('un paquet autorisé par une fiche et refusé par une autre reste autorisé', () => {
+    // Refuser l'emporterait sur un besoin réel : l'installation casserait
+    // pour une technologie qui en a besoin.
+    const workspace = fileNamed(
+      scaffoldFiles(MANIFEST, [entry({ id: 'prisma', category: 'orm' })]),
+      'pnpm-workspace.yaml',
+    );
+    expect(workspace).toContain('  prisma: true');
+    expect(workspace).not.toContain(': false');
+  });
+});

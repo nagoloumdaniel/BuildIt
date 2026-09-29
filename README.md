@@ -2,7 +2,7 @@
 
 > **Development Environment Factory** — décrire un projet, choisir ses plateformes et ses technologies, obtenir un projet prêt à développer : cohérent, documenté et diagnostiqué.
 
-**Statut : pré-alpha.** Le moteur (manifest, registry, compatibility, generator) existe et est testé ; un projet généré s'installe et passe sa propre CI. Prochaine étape : le premier preset certifié (Phase 6). Rien n'est publié, rien n'est utilisable par un tiers. Voir la [roadmap](docs/roadmap.md).
+**Statut : pré-alpha.** Le moteur (manifest, registry, compatibility, generator) existe et est testé ; quatre presets (SaaS, API, Dashboard, Full-stack en monorepo) sont certifiés : générés, installés, construits et démarrés par le test de fumée. Le CLI `pf` existe ([référence](docs/cli.md)) mais n'est pas encore publié sur npm : rien n'est utilisable par un tiers sans cloner le dépôt. Il sait aussi cloner un dépôt, ouvrir un projet local et gérer le dépôt GitHub d'un projet (Phase 7B). Prochaine étape : le configurateur web (Phase 8). Voir la [roadmap](docs/roadmap.md).
 
 ---
 
@@ -48,18 +48,26 @@ Commandes individuelles :
 | `pnpm test` | Vitest |
 | `pnpm build` | tsdown, via Turborepo |
 | `pnpm lint:secrets` | secretlint |
+| `pnpm pf <commande>` | Le CLI, sur les sources — [référence](docs/cli.md) |
 
 ### Intégration continue
 
-**`pnpm ci:local` est la CI** : elle est exécutée automatiquement par le hook `pre-push` de lefthook, et `.github/workflows/ci.yml` appelle exactement la même commande sur GitHub Actions. Aucune divergence possible entre local et distant.
+La CI GitHub n'est pas disponible pour ce dépôt : **l'intégration continue est locale**, et le hook `pre-push` de lefthook la rend obligatoire.
 
-Le test de fumée (`pnpm test:smoke`) génère un vrai projet, l'installe et le vérifie. Il a besoin du réseau et prend environ une minute : il tourne dans un job CI dédié plutôt qu'au pre-push.
+| Quand | Ce qui tourne |
+|---|---|
+| chaque push | `pnpm ci:local` — lint, typecheck, test, build, scan de secrets |
+| push qui touche `generator`, `registry` ou `recipes` | en plus, `pnpm test:smoke` — génère de vrais projets, les installe depuis npm, les construit ; avec Docker, va jusqu'à une base réelle et une inscription |
+| à la main | `pnpm ci:full` — les deux |
+
+Le test de fumée exige Docker (base, Redis, images) et un navigateur (tests Playwright générés, `playwright install chromium` par défaut) : sans eux, il échoue. `PF_SMOKE_SKIP_DOCKER=1` et `PF_SMOKE_SKIP_E2E=1` sautent ces preuves **explicitement** — elles apparaissent « skipped » dans le compte — et cela se dit dans la PR. `PF_SMOKE_CHROMIUM=<exécutable>` utilise un Chromium déjà installé. Hors-ligne, `LEFTHOOK_EXCLUDE=smoke git push`. Derrière un proxy TLS d'entreprise, `PF_SMOKE_DOCKER_CA=<ca.crt>` permet de construire l'image Docker du test. `.github/workflows/ci.yml` est gardé dormant (déclenchement manuel), prêt à resservir.
 
 ### Structure
 
 ```
 tooling/    configurations partagées (TypeScript, …)
-packages/   moteur — manifest, registry, compatibility, generator…
+packages/   moteur — manifest, registry, compatibility, generator, presets…
+apps/cli/   le CLI pf
 docs/       cahier des charges, roadmap, specs, plans
 ```
 
@@ -69,6 +77,7 @@ docs/       cahier des charges, roadmap, specs, plans
 
 - [Cahier des charges](docs/cahier-des-charges.md) — cadrage produit et technique complet
 - [Roadmap](docs/roadmap.md) — 0 → beta publique, phase par phase
+- [CLI `pf`](docs/cli.md) — référence des commandes
 - [Contribuer](CONTRIBUTING.md)
 
 ## Licence

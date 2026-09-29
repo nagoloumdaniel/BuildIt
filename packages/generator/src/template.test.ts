@@ -60,11 +60,13 @@ describe('substitution', () => {
  */
 describe('aucune exécution de code', () => {
   it('laisse passer une interpolation JavaScript sans l’évaluer', () => {
+    // biome-ignore lint/suspicious/noTemplateCurlyInString: le `${…}` littéral est l'objet du test — il ne doit jamais être évalué.
     const source = 'const x = `bonjour ${process.env.SECRET}`;';
     expect(render(source)).toBe(source);
   });
 
   it('laisse passer un appel de fonction sans l’exécuter', () => {
+    // biome-ignore lint/suspicious/noTemplateCurlyInString: le `${…}` littéral est l'objet du test — il ne doit jamais être évalué.
     const source = 'const x = `${process.exit(1)}`;';
     expect(render(source)).toBe(source);
   });

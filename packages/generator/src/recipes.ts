@@ -19,7 +19,11 @@ import type { DependencySource } from './dependencies.js';
  * à qui en voulait un.
  */
 
-export const RECIPE_RESOLUTION_CODES = ['GEN_RECIPE_UNKNOWN', 'GEN_RECIPE_NOT_APPLICABLE'] as const;
+export const RECIPE_RESOLUTION_CODES = [
+  'GEN_RECIPE_UNKNOWN',
+  'GEN_RECIPE_NOT_APPLICABLE',
+  'GEN_RECIPE_MISSING_REQUIREMENT',
+] as const;
 
 export type RecipeResolutionCode = (typeof RECIPE_RESOLUTION_CODES)[number];
 export type RecipeResolutionIssue = Issue<RecipeResolutionCode>;
@@ -28,6 +32,8 @@ const MESSAGES: Readonly<Record<RecipeResolutionCode, string>> = {
   GEN_RECIPE_UNKNOWN: 'La recette « {value} » n’existe pas.',
   GEN_RECIPE_NOT_APPLICABLE:
     'La recette « {value} » s’applique à {expected}, et aucune de ces technologies n’est dans la stack. Ajoutez-en une, ou retirez la recette.',
+  GEN_RECIPE_MISSING_REQUIREMENT:
+    'La recette « {value} » exige aussi {expected}, absent de la stack. Son code l’importe : ajoutez-le, ou retirez la recette.',
 };
 
 const messageFor = createMessageFormatter(MESSAGES);
@@ -61,6 +67,18 @@ export function resolveRecipes(
         message: messageFor('GEN_RECIPE_NOT_APPLICABLE', {
           value: id,
           expected: recipe.for.join(', '),
+        }),
+      });
+      continue;
+    }
+    const missing = (recipe.requires ?? []).filter((entryId) => !inStack.has(entryId));
+    if (missing.length > 0) {
+      issues.push({
+        code: 'GEN_RECIPE_MISSING_REQUIREMENT',
+        path: ['recipes', id],
+        message: messageFor('GEN_RECIPE_MISSING_REQUIREMENT', {
+          value: id,
+          expected: missing.join(', '),
         }),
       });
       continue;

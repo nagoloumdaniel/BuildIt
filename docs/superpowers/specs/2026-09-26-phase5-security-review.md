@@ -39,9 +39,9 @@
 
 | # | Risque | Pourquoi accepté | Quand le revoir |
 |---|---|---|---|
-| R1 | Sous Windows, `nodeCommandRunner` passe par un shell (`pnpm` est un `.cmd`). | Tous les arguments passés aujourd'hui sont des constantes du générateur. | **Phase 7B** : `pf clone` passera une URL saisie par l'utilisateur — soit résoudre le binaire sans shell, soit échapper. Déjà inscrit au gate 7B. |
+| R1 | ~~Sous Windows, `nodeCommandRunner` passe par un shell.~~ **Levé** : résolution sans shell (`resolveWindowsCommand`), et en Phase 7B les liens saisis sont validés avant Git, puis séparés par `--`. | — | — |
 | R2 | Fenêtre entre le contrôle « lien symbolique » et l'écriture (TOCTOU). | N'est exploitable que par un attaquant local qui écrit déjà dans le dossier cible — il a déjà la main. | Si la génération devient un service (cloud, V2). |
-| R3 | Les messages d'échec recopient les 20 dernières lignes de sortie de pnpm/git. | pnpm masque les jetons de registre ; la sortie concerne un projet qui vient d'être généré. | Phase 7B (sortie de `git clone` avec URL authentifiée : ne jamais passer le jeton dans l'URL). |
+| R3 | Les messages d'échec recopient les 20 dernières lignes de sortie de pnpm/git. | pnpm masque les jetons de registre. Phase 7B : le jeton GitHub n'est jamais dans l'URL (credential helper), les liens à identifiants sont refusés, et la sortie de git est de plus expurgée du jeton. | — |
 | R4 | Les plages de version ne sont figées qu'à l'installation. | Reproductibilité assurée par le verrou commité ; pnpm 11 retient par défaut les versions trop récentes. | Phase 6 : épingler les presets certifiés. |
 | R5 | `allowBuilds` autorise l'exécution des scripts de Prisma. | Nécessaire au fonctionnement ; liste minimale et commentée. | À chaque fiche qui en ajoute. |
 | R6 | Noms courts Windows (`GIT~1`) non couverts par S1. | Exige un disque NTFS avec noms 8.3 activés **et** un template malveillant. | Avec le registry communautaire (V2) : liste blanche de chemins plutôt que liste noire. |

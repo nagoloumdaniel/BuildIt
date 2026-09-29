@@ -1,13 +1,15 @@
-# Le job `ci` appelle `pnpm ci:local` et rien d'autre — le pipeline est défini une seule
-# fois, dans le package.json racine, et le hook pre-push de lefthook exécute
-# exactement la même chose. Aucune divergence possible entre local et distant.
+# DORMANT — la CI GitHub n'est pas disponible pour ce dépôt. L'intégration
+# continue est locale : le hook pre-push de lefthook (ci:local, et le test de
+# fumée quand le push touche generator, registry ou recipes).
+#
+# Ce fichier est gardé prêt à servir : il n'appelle que les scripts du
+# package.json racine, donc il ne peut pas diverger du local. Pour le
+# réactiver, remettre les déclencheurs push (main) et pull_request.
 
 name: CI
 
 on:
-  push:
-    branches: [main]
-  pull_request:
+  workflow_dispatch:
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}

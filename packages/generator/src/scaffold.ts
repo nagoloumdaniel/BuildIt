@@ -8,7 +8,7 @@ import {
   ok,
   type ParseResult,
 } from '@project-factory/validation';
-import { resolveDependencies } from './dependencies.js';
+import { type DependencySource, resolveDependencies } from './dependencies.js';
 import { buildInfrastructure, canRunInContainer } from './infrastructure.js';
 import { INTEGRATIONS, type Integration } from './integrations.data.js';
 import type { PlannedFile } from './plan.js';
@@ -69,9 +69,34 @@ export const PACKAGE_MANAGER: string = 'pnpm@11.13.1';
 /** Nom de variable d'environnement acceptable : majuscules, chiffres, tirets bas. */
 const ENV_NAME = /^[A-Z][A-Z0-9_]*$/;
 
-const INTEGRATION_BY_ID = new Map<string, Integration>(
-  INTEGRATIONS.map((integration) => [integration.id, integration]),
-);
+/**
+ * Intégrations qui s'appliquent à une fiche **dans cette stack** : celles de
+ * la fiche seule, plus celles dont **toutes** les fiches compagnes (`when`)
+ * sont choisies.
+ */
+function integrationsFor(entry: RegistryEntry, stack: ReadonlySet<string>): Integration[] {
+  return INTEGRATIONS.filter(
+    (integration) =>
+      integration.id === entry.id && companionsOf(integration).every((id) => stack.has(id)),
+  );
+}
+
+/** Fiches compagnes exigées par une intégration — aucune, une ou plusieurs. */
+function companionsOf(integration: Integration): readonly string[] {
+  if (integration.when === undefined) {
+    return [];
+  }
+  return typeof integration.when === 'string' ? [integration.when] : integration.when;
+}
+
+function stackOf(entries: readonly RegistryEntry[]): Set<string> {
+  return new Set(entries.map((entry) => entry.id));
+}
+
+/** Nom d'une intégration dans les messages et la provenance des fichiers. */
+function labelOf(integration: Integration): string {
+  return [integration.id, ...companionsOf(integration)].join('+');
+}
 
 /**
  * Scripts qu'une technologie apporte à ce projet-ci.
@@ -79,12 +104,16 @@ const INTEGRATION_BY_ID = new Map<string, Integration>(
  * Les scripts d'application ne comptent que si la fiche est certifiée : c'est
  * le seul cas où un template pose le code sur lequel ils opèrent.
  */
-function scriptsOf(entry: RegistryEntry): Readonly<Record<string, string>> {
-  const integration = INTEGRATION_BY_ID.get(entry.id);
-  return {
-    ...integration?.scripts,
-    ...(entry.generation === 'certified' ? integration?.appScripts : {}),
-  };
+function scriptsOf(entry: RegistryEntry, stack: ReadonlySet<string>): Record<string, string> {
+  const scripts: Record<string, string> = {};
+  for (const integration of integrationsFor(entry, stack)) {
+    Object.assign(
+      scripts,
+      integration.scripts,
+      entry.generation === 'certified' ? integration.appScripts : {},
+    );
+  }
+  return scripts;
 }
 
 /** Fichiers de configuration exigés par les outils de la stack. */
@@ -92,12 +121,84 @@ function integrationFiles(
   entries: readonly RegistryEntry[],
   env: readonly string[],
 ): PlannedFile[] {
+  const stack = stackOf(entries);
   return entries.flatMap((entry) =>
-    (INTEGRATION_BY_ID.get(entry.id)?.files ?? []).map((file) => ({
-      path: file.path,
-      contents: typeof file.contents === 'string' ? file.contents : file.contents({ env }),
-      source: `integration:${entry.id}`,
-    })),
+    integrationsFor(entry, stack).flatMap((integration) =>
+      (integration.files ?? []).map((file) => ({
+        path: file.path,
+        contents: typeof file.contents === 'string' ? file.contents : file.contents({ env }),
+        source: `integration:${labelOf(integration)}`,
+      })),
+    ),
+  );
+}
+
+/** Variables propres aux combinaisons : elles rejoignent celles des fiches. */
+function integrationEnvSources(entries: readonly RegistryEntry[]): EnvSource[] {
+  const stack = stackOf(entries);
+  return entries.flatMap((entry) =>
+    integrationsFor(entry, stack)
+      .filter((integration) => integration.env !== undefined)
+      .map((integration) => ({
+        id: `integration:${labelOf(integration)}`,
+        name: `Intégration ${labelOf(integration)}`,
+        env: integration.env,
+      })),
+  );
+}
+
+/**
+ * `instrumentation-client.ts` composé : un import par outil qui en déclare un.
+ *
+ * Le fichier est unique côté Next.js, et plusieurs outils veulent y
+ * initialiser leur client. Le composer ici, par donnée, évite qu'une
+ * intégration écrase l'autre — et évite toute logique dans un template.
+ */
+function clientInstrumentation(entries: readonly RegistryEntry[]): PlannedFile[] {
+  const stack = stackOf(entries);
+  const modules = entries
+    .flatMap((entry) => integrationsFor(entry, stack))
+    .map((integration) => integration.clientInstrumentation)
+    .filter((module): module is string => module !== undefined)
+    .sort();
+  if (modules.length === 0) {
+    return [];
+  }
+  const lines = [
+    '// Chargé par Next.js dans le navigateur, avant l’application.',
+    '// Chaque outil initialise son client dans son propre module.',
+    '',
+    ...modules.map((module) => `import './${module}';`),
+  ];
+  return [
+    {
+      path: 'instrumentation-client.ts',
+      contents: `${lines.join('\n')}\n`,
+      source: 'scaffold:instrumentation-client',
+    },
+  ];
+}
+
+/**
+ * Paquets apportés par les intégrations, vus comme des sources de dépendances :
+ * leurs plages rencontrent celles des fiches et des recettes dans le même
+ * résolveur, avec les mêmes messages de conflit.
+ */
+function integrationDependencySources(entries: readonly RegistryEntry[]): DependencySource[] {
+  const stack = stackOf(entries);
+  return entries.flatMap((entry) =>
+    integrationsFor(entry, stack)
+      .filter(
+        (integration) =>
+          integration.dependencies !== undefined || integration.devDependencies !== undefined,
+      )
+      .map((integration) => ({
+        id: `integration:${labelOf(integration)}`,
+        name: `Intégration ${labelOf(integration)}`,
+        packages: Object.keys(integration.dependencies ?? {}),
+        devPackages: Object.keys(integration.devDependencies ?? {}),
+        packageRanges: { ...integration.dependencies, ...integration.devDependencies },
+      })),
   );
 }
 
@@ -108,9 +209,10 @@ function collectScripts(entries: readonly RegistryEntry[]): {
   const scripts: Record<string, string> = {};
   const owners = new Map<string, RegistryEntry>();
   const issues: ScaffoldIssue[] = [];
+  const stack = stackOf(entries);
 
   for (const entry of entries) {
-    for (const [name, command] of Object.entries(scriptsOf(entry))) {
+    for (const [name, command] of Object.entries(scriptsOf(entry, stack))) {
       const owner = owners.get(name);
       if (owner !== undefined) {
         // Deux outils qui veulent le même script : le générateur ne peut pas
@@ -199,7 +301,7 @@ function packageJson(
   return `${JSON.stringify(content, null, 2)}\n`;
 }
 
-function envExample(names: readonly string[]): string {
+export function envExample(names: readonly string[]): string {
   const lines = [
     '# Variables d’environnement requises par ce projet.',
     '# Aucune valeur n’est fournie : renseignez-les localement, ne les versionnez jamais.',
@@ -242,6 +344,7 @@ function readme(
 const GITIGNORE = `node_modules/
 dist/
 build/
+generated/
 coverage/
 .turbo/
 *.tsbuildinfo
@@ -267,36 +370,59 @@ const WORKSPACE_PACKAGES = ['packages:', '  - "apps/*"', '  - "packages/*"'];
  *   script d'installation. Sans elle, `pnpm install` **échoue** dès qu'un tel
  *   paquet est présent (Prisma, notamment) — même dans une application seule.
  */
-function pnpmWorkspace(monorepo: boolean, allowBuilds: readonly string[]): string | undefined {
-  if (!monorepo && allowBuilds.length === 0) {
+export function pnpmWorkspace(
+  monorepo: boolean,
+  builds: readonly (readonly [string, boolean])[],
+): string | undefined {
+  if (!monorepo && builds.length === 0) {
     return undefined;
   }
   const lines = monorepo ? [...WORKSPACE_PACKAGES] : [];
-  if (allowBuilds.length > 0) {
+  if (builds.length > 0) {
     if (lines.length > 0) {
       lines.push('');
     }
     lines.push(
-      '# Paquets autorisés à exécuter leur script d’installation (pnpm >= 10).',
-      '# Chacun l’est parce qu’une technologie choisie en a besoin.',
+      '# Scripts d’installation (pnpm >= 10) : true les autorise, parce qu’une',
+      '# technologie choisie en a besoin ; false les refuse, parce qu’ils ne',
+      '# servent pas ici. pnpm échoue sur un script qui n’est dans aucun des deux.',
       'allowBuilds:',
-      ...allowBuilds.map((name) => `  ${/^[a-z0-9-]+$/.test(name) ? name : `"${name}"`}: true`),
+      ...builds.map(
+        ([name, allowed]) => `  ${/^[a-z0-9-]+$/.test(name) ? name : `"${name}"`}: ${allowed}`,
+      ),
     );
   }
   return `${lines.join('\n')}\n`;
 }
 
-function collectAllowBuilds(entries: readonly RegistryEntry[]): string[] {
-  const names = entries.flatMap((entry) => INTEGRATION_BY_ID.get(entry.id)?.allowBuilds ?? []);
-  return [...new Set(names)].sort();
+/**
+ * Politique des scripts d'installation, triée par paquet.
+ *
+ * Une autorisation l'emporte sur un refus : refuser ce dont une autre
+ * technologie a besoin casserait son installation.
+ */
+export function collectBuildPolicy(
+  entries: readonly RegistryEntry[],
+): (readonly [string, boolean])[] {
+  const stack = stackOf(entries);
+  const integrations = entries.flatMap((entry) => integrationsFor(entry, stack));
+  const policy = new Map<string, boolean>();
+  for (const name of integrations.flatMap((integration) => integration.denyBuilds ?? [])) {
+    policy.set(name, false);
+  }
+  for (const name of integrations.flatMap((integration) => integration.allowBuilds ?? [])) {
+    policy.set(name, true);
+  }
+  return [...policy.entries()].sort(([a], [b]) => a.localeCompare(b));
 }
 
 const TURBO_JSON = `{
   "$schema": "https://turbo.build/schema.json",
   "tasks": {
-    "build": { "dependsOn": ["^build"], "outputs": ["dist/**", ".next/**"] },
+    "build": { "dependsOn": ["^build"], "outputs": ["dist/**", ".next/**", "!.next/cache/**"] },
     "typecheck": { "dependsOn": ["^build"] },
-    "test": { "dependsOn": ["^build"] }
+    "test": { "dependsOn": ["^build"] },
+    "dev": { "cache": false, "persistent": true }
   }
 }
 `;
@@ -334,8 +460,16 @@ export function buildScaffold(
   }
 
   const { scripts, issues: scriptIssues } = collectScripts(entries);
-  const { names, issues: envIssues } = collectEnv([...entries, ...recipes]);
-  const dependencies = resolveDependencies([...entries, ...recipes.map(recipeAsDependencySource)]);
+  const { names, issues: envIssues } = collectEnv([
+    ...entries,
+    ...integrationEnvSources(entries),
+    ...recipes,
+  ]);
+  const dependencies = resolveDependencies([
+    ...entries,
+    ...integrationDependencySources(entries),
+    ...recipes.map(recipeAsDependencySource),
+  ]);
 
   const ownIssues: ScaffoldIssue[] = [...scriptIssues, ...envIssues];
 
@@ -371,11 +505,11 @@ export function buildScaffold(
     { path: 'README.md', contents: readme(manifest, entries, recipes), source: 'scaffold:readme' },
   ];
 
-  files.push(...integrationFiles(entries, names));
+  files.push(...integrationFiles(entries, names), ...clientInstrumentation(entries));
 
   const workspace = pnpmWorkspace(
     manifest.architecture === 'monorepo',
-    collectAllowBuilds(entries),
+    collectBuildPolicy(entries),
   );
 
   // Docker et CI viennent apres le socle : ils dependent des scripts que les

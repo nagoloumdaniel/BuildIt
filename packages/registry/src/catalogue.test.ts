@@ -140,16 +140,33 @@ describe('contenu du catalogue', () => {
     }
   });
 
-  it('la colonne vertébrale du preset SaaS est certifiée', () => {
+  it('les quatre presets du §8 — SaaS, API, Dashboard, Full-stack — sont certifiés', () => {
     const registry = requireRegistry();
     const certified = registry.query({ generation: 'certified' }).map((entry) => entry.id);
     expect([...certified].sort()).toEqual([
+      'better-auth',
       'biome',
+      'docker',
+      'github-actions',
+      'hono',
       'next',
+      'openapi',
+      'playwright',
+      'pnpm',
+      'postgresql',
+      'posthog',
+      'prisma',
+      'redis',
+      'resend',
+      'sentry',
       'shadcn-ui',
+      'stripe',
       'tailwind',
+      'turborepo',
       'typescript',
+      'vercel',
       'vitest',
+      'zod',
     ]);
   });
 
@@ -170,7 +187,7 @@ describe('contenu du catalogue', () => {
       .query({ generation: 'certified' })
       .filter((entry) => entry.template !== undefined)
       .map((entry) => entry.id);
-    expect([...withTemplate].sort()).toEqual(['next', 'shadcn-ui', 'tailwind']);
+    expect([...withTemplate].sort()).toEqual(['hono', 'next', 'shadcn-ui', 'tailwind']);
   });
 
   it('aucune fiche déclarée ne porte de template', () => {

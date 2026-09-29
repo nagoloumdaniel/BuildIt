@@ -54,11 +54,14 @@ describe('le preset SaaS se résout', () => {
     }
   });
 
-  it('est marquée expérimentale — aucun template n’existe encore', () => {
+  it('est certifiée — chaque fiche du preset passe le test de fumée (phase 6.7a)', () => {
+    // Ce test disait « expérimentale — aucun template n'existe encore » depuis
+    // la phase 4, écrit pour tomber le jour où le preset serait réellement
+    // générable. Il est tombé à la certification de Sentry et PostHog.
     const result = resolve({ targets: ['web'], technologies: SAAS }, catalogue());
     expect(result.ok).toBe(true);
     if (result.ok) {
-      expect(result.value.status).toBe('experimental');
+      expect(result.value.status).toBe('certified');
     }
   });
 

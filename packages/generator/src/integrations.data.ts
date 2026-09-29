@@ -44,6 +44,14 @@ export interface DockerService {
   readonly volume?: { readonly name: string; readonly path: string };
   /** Commande de vérification de démarrage. */
   readonly healthcheck?: string;
+  /**
+   * Variable d'environnement et URL qui joignent ce service en local.
+   *
+   * Écrite en **commentaire** dans docker-compose.yml, à côté des identifiants
+   * de bac à sable qu'elle reprend — jamais dans `.env.example`, qui ne porte
+   * aucune valeur (§24).
+   */
+  readonly connection?: { readonly env: string; readonly url: string };
 }
 
 /** Ce qu'un fichier de configuration peut savoir du projet qu'il configure. */
@@ -67,6 +75,34 @@ export interface IntegrationFile {
 export interface Integration {
   /** Identifiant d'une fiche du registry. */
   readonly id: string;
+  /**
+   * Fiche qui doit **aussi** être dans la stack pour que l'intégration
+   * s'applique.
+   *
+   * Certains fichiers dépendent d'une combinaison, pas d'une technologie :
+   * le client Prisma n'est pas le même sur PostgreSQL et sur MySQL. Poser le
+   * code PostgreSQL pour Prisma seul livrerait un projet faux dès qu'on change
+   * de base. Une combinaison sans intégration ne reçoit rien — et reste
+   * `experimental` tant qu'une de ses fiches l'est.
+   */
+  readonly when?: string | readonly string[];
+  /**
+   * Variables d'environnement propres à la combinaison — les clés exposées au
+   * navigateur, par exemple, dont le préfixe dépend du framework
+   * (`NEXT_PUBLIC_`). Des noms, jamais des valeurs.
+   */
+  readonly env?: readonly string[];
+  /**
+   * Module à charger dans le navigateur avant l'application
+   * (`instrumentation-client.ts` de Next.js).
+   *
+   * Plusieurs outils veulent ce fichier unique : chacun déclare son module, et
+   * le socle compose le fichier commun qui les importe. Aucun n'écrase l'autre.
+   */
+  readonly clientInstrumentation?: string;
+  /** Paquets que l'intégration ajoute, avec leur plage — jamais de `*`. */
+  readonly dependencies?: Readonly<Record<string, string>>;
+  readonly devDependencies?: Readonly<Record<string, string>>;
   /** Scripts npm à ajouter au package.json généré. */
   readonly scripts?: Readonly<Record<string, string>>;
   /**
@@ -86,6 +122,12 @@ export interface Integration {
    * autorisation d'exécuter du code sur la machine de l'utilisateur.
    */
   readonly allowBuilds?: readonly string[];
+  /**
+   * Paquets dont le script d'installation est **refusé** explicitement : ils
+   * en ont un, mais il ne sert pas ici. pnpm 11 échoue sur un script ni
+   * autorisé ni refusé ; le refuser est le choix du moindre privilège.
+   */
+  readonly denyBuilds?: readonly string[];
   /** Fichiers de configuration sans lesquels les scripts échouent. */
   readonly files?: readonly IntegrationFile[];
   /** Service local à ajouter à docker-compose.yml. */
@@ -126,7 +168,7 @@ const TSCONFIG = `{
  * Les variables sont optionnelles : rien ne garantit qu'elles soient
  * renseignées, et un type qui l'affirmerait mentirait.
  */
-function envDeclaration(context: IntegrationContext): string {
+export function envDeclaration(context: IntegrationContext): string {
   const header = [
     '// Variables d’environnement de ce projet, typées pour `process.env`.',
     '// Gardez ce fichier aligné sur .env.example.',
@@ -157,7 +199,7 @@ function envDeclaration(context: IntegrationContext): string {
 const BIOME_JSON = `{
   "files": {
     "ignoreUnknown": true,
-    "includes": ["**", "!**/dist", "!**/.next", "!**/coverage"]
+    "includes": ["**", "!**/dist", "!**/.next", "!**/coverage", "!**/generated"]
   },
   "formatter": {
     "enabled": true,
@@ -175,6 +217,251 @@ const BIOME_JSON = `{
   "css": {
     "parser": { "tailwindDirectives": true }
   }
+}
+`;
+
+/**
+ * Configuration Prisma 7.
+ *
+ * `process.env` et non `env('DATABASE_URL')` de prisma/config : ce dernier
+ * **lève** quand la variable manque, et `prisma generate` — qui n'a pas besoin
+ * de base — échouerait en CI et à l'installation. Schéma en dossier : chaque
+ * intégration (Better Auth, notamment) y ajoute son fichier sans réécrire
+ * celui des autres.
+ */
+const PRISMA_CONFIG = `import { defineConfig } from 'prisma/config';
+
+export default defineConfig({
+  schema: 'prisma/schema',
+  datasource: { url: process.env.DATABASE_URL },
+});
+`;
+
+const PRISMA_SCHEMA_POSTGRESQL = `// Schéma Prisma. Ajoutez vos modèles dans ce dossier, un fichier par domaine.
+// Après modification : pnpm db:migrate
+
+generator client {
+  provider = "prisma-client"
+  output   = "../../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+`;
+
+const PRISMA_CLIENT_POSTGRESQL = `import { PrismaPg } from '@prisma/adapter-pg';
+import { PrismaClient } from '../generated/prisma/client';
+
+/**
+ * Client de base de données, partagé par toute l'application.
+ *
+ * En développement, le rechargement à chaud réévalue les modules : sans ce
+ * cache, chaque modification ouvrirait un nouveau pool de connexions.
+ */
+const cache = globalThis as unknown as { db?: PrismaClient };
+
+export const db: PrismaClient =
+  cache.db ??
+  new PrismaClient({ adapter: new PrismaPg({ connectionString: process.env.DATABASE_URL }) });
+
+if (process.env.NODE_ENV !== 'production') {
+  cache.db = db;
+}
+`;
+
+/**
+ * Tests de bout en bout en `*.e2e.ts` : Vitest ramasse tout `*.test.*` et
+ * `*.spec.*`, et exécuterait un spec Playwright sans navigateur. Un suffixe à
+ * part sépare les deux sans configuration croisée.
+ *
+ * Le serveur testé est l'application construite (`build` puis `start`), pas le
+ * serveur de développement : c'est elle qui part en production.
+ */
+const PLAYWRIGHT_CONFIG_NEXT = `import { defineConfig, devices } from '@playwright/test';
+
+const port = 3000;
+
+export default defineConfig({
+  testDir: './e2e',
+  testMatch: '**/*.e2e.ts',
+  forbidOnly: process.env.CI !== undefined,
+  use: { baseURL: \`http://localhost:\${port}\` },
+  webServer: {
+    command: 'pnpm build && pnpm start',
+    url: \`http://localhost:\${port}\`,
+    reuseExistingServer: process.env.CI === undefined,
+  },
+  projects: [{ name: 'chromium', use: { ...devices['Desktop Chrome'] } }],
+});
+`;
+
+const PLAYWRIGHT_HOME_TEST = `import { expect, test } from '@playwright/test';
+
+test('la page d’accueil répond et affiche son titre', async ({ page }) => {
+  await page.goto('/');
+  await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
+});
+`;
+
+/**
+ * Tables de Better Auth, telles que les produit son CLI officiel (1.7.6,
+ * `auth generate`) — reprises sans retouche, sauf le générateur et la source
+ * de données, que le schéma en dossier déclare déjà une fois.
+ */
+const BETTER_AUTH_PRISMA_MODELS = `// Tables de Better Auth. Produites par son CLI ; pour les régénérer après
+// l'ajout d'un plugin : npx auth generate, puis pnpm db:migrate.
+
+model User {
+  id            String    @id
+  name          String
+  email         String
+  emailVerified Boolean   @default(false)
+  image         String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  sessions      Session[]
+  accounts      Account[]
+
+  @@unique([email])
+  @@map("user")
+}
+
+model Session {
+  id        String   @id
+  expiresAt DateTime
+  token     String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  ipAddress String?
+  userAgent String?
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([token])
+  @@index([userId])
+  @@map("session")
+}
+
+model Account {
+  id                    String    @id
+  accountId             String
+  providerId            String
+  userId                String
+  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  accessToken           String?
+  refreshToken          String?
+  idToken               String?
+  accessTokenExpiresAt  DateTime?
+  refreshTokenExpiresAt DateTime?
+  scope                 String?
+  password              String?
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+
+  @@index([userId])
+  @@map("account")
+}
+
+model Verification {
+  id         String   @id
+  identifier String
+  value      String
+  expiresAt  DateTime
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([identifier])
+  @@map("verification")
+}
+`;
+
+const BETTER_AUTH_SERVER = `import { betterAuth } from 'better-auth';
+import { prismaAdapter } from 'better-auth/adapters/prisma';
+import { db } from './db';
+
+/**
+ * Authentification : email et mot de passe, sessions en base.
+ *
+ * BETTER_AUTH_SECRET et BETTER_AUTH_URL viennent de l'environnement (voir
+ * .env.example). Les tables sont déclarées dans prisma/schema/auth.prisma.
+ */
+export const auth = betterAuth({
+  database: prismaAdapter(db, { provider: 'postgresql' }),
+  emailAndPassword: { enabled: true },
+});
+`;
+
+const BETTER_AUTH_CLIENT = `import { createAuthClient } from 'better-auth/react';
+
+/** Côté navigateur : signIn, signUp, signOut, useSession… */
+export const authClient = createAuthClient();
+`;
+
+const BETTER_AUTH_NEXT_ROUTE = `import { toNextJsHandler } from 'better-auth/next-js';
+import { auth } from '@/lib/auth';
+
+/** Toutes les routes de Better Auth : /api/auth/sign-in/email, /api/auth/session… */
+export const { GET, POST } = toNextJsHandler(auth);
+`;
+
+/**
+ * Sentry côté navigateur. Sans DSN, `init` ne fait rien : aucun envoi tant que
+ * le projet n'est pas configuré.
+ */
+const SENTRY_CLIENT = `import * as Sentry from '@sentry/nextjs';
+
+// Sans DSN, Sentry reste inactif : rien n'est envoyé tant qu'il n'est pas configuré.
+Sentry.init({
+  dsn: process.env.NEXT_PUBLIC_SENTRY_DSN,
+  tracesSampleRate: 0.1,
+});
+`;
+
+const SENTRY_SERVER = `import * as Sentry from '@sentry/nextjs';
+
+/** Initialisation côté serveur, appelée une fois par Next.js au démarrage. */
+export function register(): void {
+  Sentry.init({
+    dsn: process.env.SENTRY_DSN,
+    tracesSampleRate: 0.1,
+  });
+}
+
+/** Erreurs des composants serveur, des routes et du middleware. */
+export const onRequestError = Sentry.captureRequestError;
+`;
+
+const POSTHOG_CLIENT = `import posthog from 'posthog-js';
+
+const key = process.env.NEXT_PUBLIC_POSTHOG_KEY;
+
+// Sans clé, PostHog n'est pas initialisé : aucune donnée ne part.
+if (key !== undefined && key !== '') {
+  posthog.init(key, {
+    api_host: process.env.NEXT_PUBLIC_POSTHOG_HOST ?? 'https://eu.i.posthog.com',
+  });
+}
+`;
+
+/**
+ * Client Redis partagé. La connexion s'ouvre au premier appel, jamais à
+ * l'import : un build ou un test sans Redis ne doit pas échouer.
+ */
+const REDIS_CLIENT = `import { createClient } from 'redis';
+
+function connect() {
+  return createClient({ url: process.env.REDIS_URL })
+    .on('error', (error) => console.error('Redis :', error))
+    .connect();
+}
+
+let connecting: ReturnType<typeof connect> | undefined;
+
+/** Le client, connecté. Les appels concurrents partagent la même connexion. */
+export function redis(): ReturnType<typeof connect> {
+  connecting ??= connect();
+  return connecting;
 }
 `;
 
@@ -203,15 +490,110 @@ export const INTEGRATIONS: readonly Integration[] = [
     scripts: { 'test:e2e': 'playwright test' },
   },
   {
+    // Better Auth câblé de bout en bout : tables Prisma, adaptateur, route
+    // Next.js. Chacun des trois dépend d'un autre choix — d'où une combinaison
+    // entière, la seule que le test de fumée vérifie (jusqu'à une inscription
+    // réelle en base). Email et mot de passe : la méthode qui ne demande
+    // aucun compte tiers.
+    id: 'better-auth',
+    when: ['next', 'prisma', 'postgresql'],
+    files: [
+      { path: 'prisma/schema/auth.prisma', contents: BETTER_AUTH_PRISMA_MODELS },
+      { path: 'lib/auth.ts', contents: BETTER_AUTH_SERVER },
+      { path: 'lib/auth-client.ts', contents: BETTER_AUTH_CLIENT },
+      { path: 'app/api/auth/[...all]/route.ts', contents: BETTER_AUTH_NEXT_ROUTE },
+    ],
+  },
+  {
+    // Sentry sur Next.js, sans withSentryConfig : pas d'envoi des source maps
+    // (il exige un jeton et réécrit next.config.ts, qui appartient au template).
+    id: 'sentry',
+    when: 'next',
+    env: ['NEXT_PUBLIC_SENTRY_DSN'],
+    clientInstrumentation: 'lib/observability/sentry.client',
+    // Binaire d'envoi des source maps : non configuré, donc inutile.
+    denyBuilds: ['@sentry/cli'],
+    devDependencies: { '@types/node': '^24.0.0' },
+    files: [
+      { path: 'lib/observability/sentry.client.ts', contents: SENTRY_CLIENT },
+      { path: 'instrumentation.ts', contents: SENTRY_SERVER },
+    ],
+  },
+  {
+    id: 'posthog',
+    when: 'next',
+    env: ['NEXT_PUBLIC_POSTHOG_KEY', 'NEXT_PUBLIC_POSTHOG_HOST'],
+    clientInstrumentation: 'lib/observability/posthog.client',
+    // Dépendance de posthog-js ; son script n'affiche qu'un message.
+    denyBuilds: ['core-js'],
+    devDependencies: { '@types/node': '^24.0.0' },
+    files: [{ path: 'lib/observability/posthog.client.ts', contents: POSTHOG_CLIENT }],
+  },
+  {
+    // Playwright contre une application Next.js : l'URL et la commande de
+    // démarrage dépendent du framework, d'où une combinaison.
+    id: 'playwright',
+    when: 'next',
+    // playwright.config.ts lit process.env.CI.
+    devDependencies: { '@types/node': '^24.0.0' },
+    files: [
+      { path: 'playwright.config.ts', contents: PLAYWRIGHT_CONFIG_NEXT },
+      { path: 'e2e/home.e2e.ts', contents: PLAYWRIGHT_HOME_TEST },
+    ],
+  },
+  {
     id: 'next',
     appScripts: { dev: 'next dev', build: 'next build', start: 'next start' },
   },
   {
+    // Une API Hono : l'application vient du template backend/hono. tsdown
+    // produit dist/index.mjs ; tsx sert le développement.
+    id: 'hono',
+    appScripts: {
+      dev: 'tsx watch src/index.ts',
+      build: 'tsdown src/index.ts',
+      start: 'node dist/index.mjs',
+    },
+    // tsx embarque esbuild, qui installe son binaire natif.
+    allowBuilds: ['esbuild'],
+  },
+  {
+    id: 'redis',
+    when: 'typescript',
+    env: ['REDIS_URL'],
+    dependencies: { redis: '^5.0.0' },
+    devDependencies: { '@types/node': '^24.0.0' },
+    files: [{ path: 'lib/redis.ts', contents: REDIS_CLIENT }],
+  },
+  {
     id: 'prisma',
-    appScripts: { 'db:generate': 'prisma generate', 'db:migrate': 'prisma migrate dev' },
     // Prisma 7 : prisma et @prisma/engines (constaté par le test de fumée).
-    // Prisma 6, encore dans la plage de la fiche, y ajoute @prisma/client.
+    // @prisma/client en avait besoin jusqu'à Prisma 6 ; gardé tant que des
+    // projets générés avant la restriction de plage existent.
     allowBuilds: ['@prisma/client', '@prisma/engines', 'prisma'],
+  },
+  {
+    // Prisma câblé sur PostgreSQL : la seule combinaison vérifiée par le test
+    // de fumée (installation, génération du client, typecheck, build, et
+    // aller-retour avec une vraie base quand Docker est disponible).
+    id: 'prisma',
+    when: 'postgresql',
+    scripts: {
+      // Le client Prisma 7 est engendré dans le projet (generated/), pas dans
+      // node_modules : sans ce postinstall, rien ne se type après installation.
+      postinstall: 'prisma generate',
+      'db:generate': 'prisma generate',
+      'db:migrate': 'prisma migrate dev',
+      'db:push': 'prisma db push',
+    },
+    dependencies: { '@prisma/adapter-pg': '>=7.0.0 <8.0.0' },
+    // lib/db.ts lit process.env.
+    devDependencies: { '@types/node': '^24.0.0' },
+    files: [
+      { path: 'prisma.config.ts', contents: PRISMA_CONFIG },
+      { path: 'prisma/schema/schema.prisma', contents: PRISMA_SCHEMA_POSTGRESQL },
+      { path: 'lib/db.ts', contents: PRISMA_CLIENT_POSTGRESQL },
+    ],
   },
   {
     id: 'eslint',
@@ -255,6 +637,7 @@ export const INTEGRATIONS: readonly Integration[] = [
       },
       volume: { name: 'postgres-data', path: '/var/lib/postgresql/data' },
       healthcheck: 'pg_isready -U postgres',
+      connection: { env: 'DATABASE_URL', url: 'postgresql://postgres:postgres@localhost:5432/app' },
     },
   },
   {
@@ -276,6 +659,7 @@ export const INTEGRATIONS: readonly Integration[] = [
       ports: ['6379:6379'],
       volume: { name: 'redis-data', path: '/data' },
       healthcheck: 'redis-cli ping',
+      connection: { env: 'REDIS_URL', url: 'redis://localhost:6379' },
     },
   },
   {

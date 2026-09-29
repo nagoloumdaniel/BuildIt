@@ -1,0 +1,73 @@
+{
+  "id": "dashboard-admin",
+  "name": "Tableau de bord d’administration",
+  "description": "Espace /dashboard protégé : indicateurs, graphique des inscriptions, tableau des utilisateurs (tri, recherche, pagination), paramètres du compte, page de connexion — sur les données réelles de Better Auth.",
+  "for": ["better-auth"],
+  "requires": ["next", "shadcn-ui", "tailwind", "prisma", "postgresql"],
+  "packages": {
+    "recharts": "^3.0.0",
+    "@tanstack/react-table": "^8.20.0"
+  },
+  "files": [
+    {
+      "template": "recipes/dashboard-admin/app/dashboard/layout.tsx",
+      "target": "app/dashboard/layout.tsx"
+    },
+    {
+      "template": "recipes/dashboard-admin/app/dashboard/page.tsx",
+      "target": "app/dashboard/page.tsx"
+    },
+    {
+      "template": "recipes/dashboard-admin/app/dashboard/settings/page.tsx",
+      "target": "app/dashboard/settings/page.tsx"
+    },
+    {
+      "template": "recipes/dashboard-admin/app/dashboard/users/page.tsx",
+      "target": "app/dashboard/users/page.tsx"
+    },
+    {
+      "template": "recipes/dashboard-admin/app/sign-in/page.tsx",
+      "target": "app/sign-in/page.tsx"
+    },
+    {
+      "template": "recipes/dashboard-admin/components/dashboard/nav.tsx",
+      "target": "components/dashboard/nav.tsx"
+    },
+    {
+      "template": "recipes/dashboard-admin/components/dashboard/sign-out-button.tsx",
+      "target": "components/dashboard/sign-out-button.tsx"
+    },
+    {
+      "template": "recipes/dashboard-admin/components/dashboard/signups-chart.tsx",
+      "target": "components/dashboard/signups-chart.tsx"
+    },
+    {
+      "template": "recipes/dashboard-admin/components/dashboard/users-table.tsx",
+      "target": "components/dashboard/users-table.tsx"
+    },
+    {
+      "template": "recipes/dashboard-admin/components/ui/input.tsx",
+      "target": "components/ui/input.tsx"
+    },
+    {
+      "template": "recipes/dashboard-admin/components/ui/label.tsx",
+      "target": "components/ui/label.tsx"
+    },
+    {
+      "template": "recipes/dashboard-admin/components/ui/table.tsx",
+      "target": "components/ui/table.tsx"
+    },
+    {
+      "template": "recipes/dashboard-admin/lib/dashboard.ts",
+      "target": "lib/dashboard.ts"
+    },
+    {
+      "template": "recipes/dashboard-admin/lib/signups.test.ts",
+      "target": "lib/signups.test.ts"
+    },
+    {
+      "template": "recipes/dashboard-admin/lib/signups.ts",
+      "target": "lib/signups.ts"
+    }
+  ]
+}

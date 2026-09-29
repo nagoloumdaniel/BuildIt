@@ -1,9 +1,11 @@
-import { describe, expect, it } from 'vitest';
+import { mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+import { afterEach, describe, expect, it } from 'vitest';
 import {
   type CommandResult,
   type CommandRunner,
   isTransientFailure,
-  nodeCommandRunner,
   runGit,
   runInstall,
   runValidation,
@@ -39,34 +41,6 @@ function fakeRunner(
 }
 
 const FAIL = (output: string): CommandResult => ({ exitCode: 1, output });
-
-describe('nodeCommandRunner — le seul exécuteur réel', () => {
-  it('rend le code de sortie et la sortie combinée', async () => {
-    const result = await nodeCommandRunner.run(
-      process.execPath,
-      ['-e', 'process.stdout.write("out");process.stderr.write("err");process.exit(3)'],
-      process.cwd(),
-    );
-    expect(result.exitCode).toBe(3);
-    expect(result.output).toContain('out');
-    expect(result.output).toContain('err');
-  });
-
-  it('ne passe jamais par un shell : un argument reste un argument', async () => {
-    const result = await nodeCommandRunner.run(
-      process.execPath,
-      ['-e', 'process.stdout.write(process.argv[1])', '$(echo injecte); echo ; rm -rf x'],
-      process.cwd(),
-    );
-    expect(result.output).toBe('$(echo injecte); echo ; rm -rf x');
-  });
-
-  it('rejette quand la commande n’existe pas', async () => {
-    await expect(
-      nodeCommandRunner.run('pf-commande-qui-n-existe-pas', [], process.cwd()),
-    ).rejects.toThrow();
-  });
-});
 
 describe('isTransientFailure — réseau ou panne durable', () => {
   it.each([

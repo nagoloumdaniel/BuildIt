@@ -5,9 +5,9 @@ Référence complète : `docs/cahier-des-charges.md`. Plan d'exécution : `docs/
 
 ## État
 
-Phases 1 (socle monorepo), 2 (Project Manifest), 3 (registry, 282 fiches) et 4 (compatibility engine) livrées. Phase 5 livrée (5A + 5B), gate M3 partiel fermé : le socle généré s'installe et passe lint, typecheck et test (`pnpm test:smoke`), post-install et reprise d'étape, Template Resolver, `packages/recipes` avec deux recettes réelles, Dockerfile/devcontainer, revue sécurité écrite. **Prochaine étape : Phase 6** — certifier le preset SaaS de bout en bout (première fiche `certified`, premier `build`).
+Phases 1 (socle monorepo), 2 (Project Manifest), 3 (registry, 282 fiches) et 4 (compatibility engine) livrées. Phase 5 livrée (5A + 5B), gate M3 partiel fermé : le socle généré s'installe et passe lint, typecheck et test (`pnpm test:smoke`), post-install et reprise d'étape, Template Resolver, `packages/recipes` avec deux recettes réelles, Dockerfile/devcontainer, revue sécurité écrite. Phase 6 livrée, gate M3 fermé : les quatre presets — **SaaS**, **API** (Hono), **Dashboard** (recette `dashboard-admin`), **Full-stack** (Next.js + Hono en monorepo) — sont certifiés de bout en bout. Le Full-stack a son contrat partagé (`packages/shared`) et un Dockerfile par application ; les tests Playwright générés tournent dans le test de fumée. Restent `packages/ui` et les entretiens 6.12. Phase 7 livrée hors publication npm : le CLI `pf` (`apps/cli`, [référence](docs/cli.md)) — `create`, `template`, `generate`, `graph`, `add`, `key`, menu d'accueil — sur `packages/presets` ; même manifest, même projet que le moteur, octet pour octet. Phase 7B livrée : `packages/exec`, `workspace`, `git`, `github` ; `pf clone`, `open`, `install`, `login`, `logout`, `repo`, `collab` ; création de dépôt et invitations prouvées contre un faux `fetch` seulement (API GitHub injoignable depuis la session). **Prochaine étape : Phase 8, configurateur web.**
 
-Remote : `github.com/nagoloumdaniel/BuildIt`. La CI GitHub Actions appelle `pnpm ci:local`, plus un job de fumée.
+Remote : `github.com/nagoloumdaniel/BuildIt`. **La CI GitHub n'est pas disponible** : l'intégration continue est locale, portée par le hook `pre-push` — `ci:local` à chaque push, plus `test:smoke` quand le push touche `generator`, `registry` ou `recipes`. `ci.yml` est dormant (déclenchement manuel).
 
 Ajouts du 26/09/2026 au cahier des charges : menu d'accueil créer / cloner / ouvrir un projet local (§18bis), intégration GitHub — connexion, clonage, création de dépôt, partage et collaborateurs (§20bis). Exécutés en **Phase 7B**, après le CLI.
 
@@ -22,9 +22,12 @@ pnpm typecheck     # tsc strict, via Turborepo
 pnpm test          # Vitest, via Turborepo
 pnpm build         # tsdown, via Turborepo
 pnpm test:smoke    # génère, installe et vérifie de vrais projets — réseau, ~1 min
+pnpm ci:full       # ci:local + test:smoke
+PF_SMOKE_DOCKER_CA=<ca.crt> pnpm test:smoke   # derrière un proxy TLS d'entreprise
+PF_SMOKE_CHROMIUM=<chrome> pnpm test:smoke     # Chromium déjà installé, sans téléchargement
 ```
 
-`.github/workflows/ci.yml` appelle `pnpm ci:local` et rien d'autre. Si le pipeline change, il change à un seul endroit : le script `ci:local` du `package.json` racine.
+Le pipeline est défini à un seul endroit : les scripts `ci:local` et `test:smoke` du `package.json` racine. Le hook `pre-push` et `ci.yml` (dormant) n'appellent qu'eux.
 
 ## Structure
 
@@ -38,7 +41,13 @@ packages/registry/           catalogue (§7, §11) — livré, 282 fiches
 packages/compatibility/      règles du §12 — livré
 packages/recipes/            recettes (§22, Recipe Resolver) — livré
   data/<id>.recipe.json              source de vérité ; index engendré comme le registry
-packages/generator/          pipeline du §22 — livré
+packages/exec/               exécution de commandes sans shell (stdin, env) — partagée par generator, git, workspace, github
+packages/workspace/          projet local : écosystème, gestionnaire de paquets, installation (§18bis)
+packages/git/                liens validés, clone sans reste, init, push — jeton jamais dans une URL (§18bis)
+packages/github/             API GitHub, device flow, jeton dans le trousseau (§20bis)
+packages/presets/            les quatre presets certifiés (§8) : manifest + recettes, partagés CLI / UI
+apps/cli/                    le CLI pf (§21) — aucune logique métier ; embarque le moteur à la construction
+packages/generator/          pipeline du §22 — livré ; monorepo multi-applications (monorepo.ts)
   templates/                         templates livrés (recettes aujourd'hui, presets en Phase 6)
   src/*.smoke.ts                     test de fumée réseau : pnpm test:smoke, hors pnpm test
 assets/brand/                logos, provisoires (voir son README)
@@ -98,4 +107,15 @@ Les packages naissent dans leur phase. Ne pas créer de répertoire vide « pour
 - Sans `biome.json`, Biome formate en **tabulations** : tout JSON généré en espaces échoue au `lint`. Et un tableau court écrit par `JSON.stringify` est remis sur une ligne par Biome — écrire ces fichiers à la main.
 - Dans un Dockerfile, Corepack retélécharge pnpm au démarrage sous un autre utilisateur : fixer `COREPACK_HOME` et recopier le cache dans l'étape d'exécution.
 - La couverture ne dit rien de la sortie : 99 % de couverture n'a pas vu qu'un projet généré échouait à `typecheck`. Toute sortie générée est vérifiée par les outils qu'elle déclare (`socle.test.ts` hors réseau, `pnpm test:smoke` en vrai).
+- Prisma 7 : `env('DATABASE_URL')` de `prisma/config` **lève** quand la variable manque — `prisma generate` échoue alors en CI. Utiliser `process.env.DATABASE_URL`. Le client est engendré dans le projet (`generated/`) : `prisma generate` en postinstall, `generated/` ignoré par git et Biome.
+- Un Dockerfile avec un postinstall qui lit le code (prisma generate) : `pnpm fetch` sur le verrou, puis `pnpm install --offline` **après** `COPY . .`.
+- pnpm 11 : un script d'installation qu'on ne veut pas exécuter se **refuse** (`allowBuilds: { paquet: false }`) ; ni autorisé ni refusé, il fait échouer l'installation.
+- Le code qui dépend de plusieurs choix va dans une intégration à `when`, jamais dans le template d'une seule fiche. Un fichier que plusieurs outils veulent (`instrumentation-client.ts`) se compose, il ne s'écrit pas deux fois.
+- Les modèles de tables d'une bibliothèque (Better Auth) se prennent de son CLI officiel, pas de mémoire.
+- Un serveur lancé par `pnpm start` : `kill()` ne tue que pnpm, le `node` qu'il a lancé survit et garde le port. Groupe de processus (`detached`, `kill(-pid)`), attendre sa fin, et refuser de tester si le port répond déjà — un orphelin a déjà fait « échouer » la mauvaise application.
+- Services Docker d'un test : `compose down` à la fin de **chaque** projet, pas en fin de suite — le suivant reprend les mêmes ports.
+- Docker Hub : quota anonyme. `compose pull --policy missing` ; quota et réseau sautent l'aller-retour avec un avertissement, une image introuvable reste un échec.
+- Vitest n'affiche pas les `console.warn` d'un test qui passe : un « avertissement » y est invisible. Une preuve sautée doit être un test marqué `skipped` (`it.skipIf`), et le saut doit être demandé explicitement (`PF_SMOKE_SKIP_DOCKER=1`) — sinon le test échoue. Sans cette règle, le test de fumée a réussi en silence avec Docker arrêté.
+- `pkill -f motif` depuis un shell dont la ligne de commande contient le motif tue ce shell (code 144) : écrire `pkill -f "[n]ext-server"`.
+- Un test qui passe sur le code source ne dit rien du **bundle** : ce qui part en production (`dist/`, image Docker) se démarre et s'interroge dans le test de fumée.
 - Pour suggérer une correction de faute de frappe, utiliser **Damerau**-Levenshtein : Levenshtein facture 2 une transposition (« wbe » → « web »), ce qui la met hors d'atteinte de tout seuil raisonnable.

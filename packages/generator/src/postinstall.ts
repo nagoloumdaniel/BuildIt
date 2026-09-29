@@ -1,8 +1,20 @@
-import { spawn } from 'node:child_process';
 import { existsSync } from 'node:fs';
 import { join } from 'node:path';
+import {
+  type CommandResult,
+  type CommandRunner,
+  isTransientFailure,
+  outputTail as tail,
+} from '@project-factory/exec';
 import { createMessageFormatter, type Issue } from '@project-factory/validation';
 import { CI_SCRIPTS } from './infrastructure.js';
+
+export type { CommandResult, CommandRunner, RunOptions } from '@project-factory/exec';
+export {
+  isTransientFailure,
+  nodeCommandRunner,
+  resolveWindowsCommand,
+} from '@project-factory/exec';
 
 /**
  * Post Install et Validation (§22) : ce qui se passe une fois les fichiers
@@ -14,98 +26,6 @@ import { CI_SCRIPTS } from './infrastructure.js';
  * l'exécuteur répond, y compris les pannes, ce qu'un vrai shell ne permettrait
  * pas de provoquer à la demande.
  */
-
-export interface CommandResult {
-  readonly exitCode: number;
-  /** Sorties standard et d'erreur, dans l'ordre d'arrivée. */
-  readonly output: string;
-}
-
-export interface CommandRunner {
-  /**
-   * Lance `command` avec `args`, **sans shell**, dans `cwd`.
-   *
-   * Rejette si la commande ne peut pas être lancée du tout (introuvable) ;
-   * résout avec son code de sortie dans tous les autres cas.
-   */
-  run(command: string, args: readonly string[], cwd: string): Promise<CommandResult>;
-}
-
-/**
- * Résout une commande en exécutable lançable **sans shell** sous Windows.
- *
- * Le problème : `pnpm` s'y installe comme `pnpm.cmd`, et depuis la
- * CVE-2024-27980 Node refuse de lancer un `.cmd` sans shell (`EINVAL`).
- * Activer le shell « juste pour Windows » ferait réinterpréter les arguments
- * par `cmd.exe` — un `$(…)` ou un `;` cesserait d'être du texte. L'invariant
- * « jamais de shell » vaut sur toutes les plateformes ou ne vaut rien.
- *
- * La sortie : on cherche la commande dans le PATH. Un vrai exécutable se lance
- * tel quel ; un `.cmd` de paquet npm cache un script JavaScript qu'on lance
- * avec Node. Dans les deux cas, aucun interpréteur de commandes n'intervient.
- */
-function resolveWindowsCommand(command: string): { file: string; prefix: string[] } {
-  const directories = (process.env['PATH'] ?? '').split(';').filter((part) => part.length > 0);
-
-  for (const directory of directories) {
-    for (const extension of ['.exe', '.com']) {
-      const candidate = join(directory, `${command}${extension}`);
-      if (existsSync(candidate)) {
-        return { file: candidate, prefix: [] };
-      }
-    }
-
-    for (const extension of ['.cmd', '.bat']) {
-      if (!existsSync(join(directory, `${command}${extension}`))) {
-        continue;
-      }
-      // Un lanceur npm voisine avec le paquet qu'il lance.
-      for (const entry of ['.cjs', '.mjs', '.js']) {
-        const script = join(directory, 'node_modules', command, 'bin', `${command}${entry}`);
-        if (existsSync(script)) {
-          return { file: process.execPath, prefix: [script] };
-        }
-      }
-    }
-  }
-
-  // Introuvable : on laisse `spawn` échouer avec ENOENT, qui dit la vérité.
-  return { file: command, prefix: [] };
-}
-
-/**
- * L'exécuteur réel.
- *
- * **Jamais de shell, sur aucune plateforme.** Les arguments sont passés tels
- * quels au processus : un `;` ou un `$(…)` reste du texte, même sous Windows.
- */
-export const nodeCommandRunner: CommandRunner = {
-  run(command, args, cwd) {
-    return new Promise((resolve, reject) => {
-      const resolved =
-        process.platform === 'win32'
-          ? resolveWindowsCommand(command)
-          : { file: command, prefix: [] };
-
-      const child = spawn(resolved.file, [...resolved.prefix, ...args], {
-        cwd,
-        shell: false,
-        stdio: ['ignore', 'pipe', 'pipe'],
-      });
-      let output = '';
-      child.stdout.on('data', (chunk: Buffer) => {
-        output += chunk.toString();
-      });
-      child.stderr.on('data', (chunk: Buffer) => {
-        output += chunk.toString();
-      });
-      child.on('error', reject);
-      child.on('close', (code) => {
-        resolve({ exitCode: code ?? 1, output });
-      });
-    });
-  },
-};
 
 export const POST_INSTALL_CODES = [
   'GEN_INSTALL_FAILED',
@@ -132,26 +52,6 @@ const MESSAGES: Readonly<Record<PostInstallCode, string>> = {
 };
 
 const messageFor = createMessageFormatter(MESSAGES);
-
-/** Nombre de lignes de sortie recopiées dans un message : la fin, qui dit pourquoi. */
-const OUTPUT_TAIL = 20;
-
-function tail(output: string): string {
-  return output.trimEnd().split('\n').slice(-OUTPUT_TAIL).join('\n');
-}
-
-/**
- * Signatures d'une panne réseau ou d'un registre momentanément indisponible.
- *
- * Seule l'installation y est exposée : Git local et les vérifications du
- * projet sont déterministes, les relancer donnerait le même résultat.
- */
-const TRANSIENT =
-  /\bE(?:CONNRESET|TIMEDOUT|NOTFOUND|AI_AGAIN|CONNREFUSED)\b|ERR_PNPM_(?:META_FETCH_FAIL|FETCH_5\d\d)|ERR_SOCKET_TIMEOUT|socket hang up/;
-
-export function isTransientFailure(output: string): boolean {
-  return TRANSIENT.test(output);
-}
 
 /** Un étage qui échoue : le problème, et si le relancer a un sens. */
 export interface StepFailure {

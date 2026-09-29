@@ -2,6 +2,7 @@ import { mkdir, mkdtemp, readdir, readFile, rm, writeFile } from 'node:fs/promis
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import type { Manifest } from '@project-factory/manifest';
+import { loadRecipeCatalogue } from '@project-factory/recipes';
 import { loadCatalogue, loadRegistry, type Registry } from '@project-factory/registry';
 import { afterEach, describe, expect, it } from 'vitest';
 import { generateProject, planProject, selectionFromManifest } from './pipeline.js';
@@ -48,7 +49,7 @@ const SAAS: Manifest = {
   },
   database: { engine: 'postgresql', orm: 'prisma' },
   auth: { provider: 'better-auth' },
-  services: ['stripe', 'resend'],
+  services: ['stripe', 'resend', 'sentry', 'posthog'],
   quality: ['biome', 'vitest', 'playwright'],
   infra: ['vercel'],
 };
@@ -153,11 +154,17 @@ describe('generateProject — le projet sur le disque', () => {
       'biome.json',
       'components',
       'docker-compose.yml',
+      'e2e',
       'env.d.ts',
+      'instrumentation-client.ts',
+      'instrumentation.ts',
       'lib',
       'next.config.ts',
       'package.json',
+      'playwright.config.ts',
       'pnpm-workspace.yaml',
+      'prisma',
+      'prisma.config.ts',
       'tsconfig.json',
     ]);
   });
@@ -289,9 +296,29 @@ describe('le projet généré ne dépend pas de Project Factory — §1', () => 
   });
 });
 
+/**
+ * Jalon 6.7a : chaque technologie du preset SaaS du §8 est certifiée — le
+ * test de fumée la génère, l'installe, la construit, et va jusqu'à une
+ * inscription réelle en base. La combinaison n'est plus expérimentale.
+ */
+describe('le preset SaaS du §8 est certifié — 6.7a', () => {
+  it('aucun avertissement de combinaison expérimentale', () => {
+    const result = planProject(SAAS, '/cible');
+    expect(result.ok).toBe(true);
+    if (result.ok) {
+      expect(result.value.warnings.map((w) => w.code)).not.toContain(
+        'COMPAT_EXPERIMENTAL_COMBINATION',
+      );
+    }
+  });
+});
+
+/** Une stack réellement expérimentale : Drizzle n'est pas certifié. */
+const EXPERIMENTAL: Manifest = { ...SAAS, database: { engine: 'postgresql', orm: 'drizzle' } };
+
 describe('les avertissements remontent jusqu’au bout', () => {
   it('le plan porte l’avertissement de combinaison expérimentale', () => {
-    const result = planProject(SAAS, '/cible');
+    const result = planProject(EXPERIMENTAL, '/cible');
     expect(result.ok).toBe(true);
     if (result.ok) {
       expect(result.value.warnings.map((w) => w.code)).toContain('COMPAT_EXPERIMENTAL_COMBINATION');
@@ -324,7 +351,7 @@ describe('les avertissements remontent jusqu’au bout', () => {
 
   it('la génération les rend aussi — l’utilisateur les voit après écriture', async () => {
     const target = join(await tempDir(), 'quai3');
-    const result = await generateProject(SAAS, target);
+    const result = await generateProject(EXPERIMENTAL, target);
     expect(result.ok).toBe(true);
     if (result.ok) {
       expect(result.value.warnings.length).toBeGreaterThan(0);
@@ -638,12 +665,18 @@ describe('templates et recettes dans le plan — §22', () => {
     expect(!result.ok && result.issues.map((issue) => issue.code)).toContain('GEN_FILE_CONFLICT');
   });
 
-  it('les recettes officielles s’appliquent avec leurs templates livrés', () => {
-    const result = planProject(SAAS, '/cible', {
-      recipes: ['stripe-checkout', 'better-auth-email-password'],
-    });
+  it('toutes les recettes officielles s’appliquent ensemble au preset SaaS, sans conflit', () => {
+    // Toutes, et pas une sélection : une recette qui écrirait un fichier déjà
+    // posé par une intégration (lib/auth.ts, par exemple) ferait échouer ce
+    // test avant d'atteindre un utilisateur.
+    const catalogue = loadRecipeCatalogue();
+    if (!catalogue.ok) {
+      throw new Error('catalogue de recettes invalide');
+    }
+    const all = catalogue.value.all().map((recipe) => recipe.id);
+    const result = planProject(SAAS, '/cible', { recipes: all });
     expect(paths(result)).toEqual(
-      expect.arrayContaining(['lib/auth.ts', 'lib/stripe/checkout.ts']),
+      expect.arrayContaining(['lib/auth.ts', 'lib/email.ts', 'lib/stripe/checkout.ts']),
     );
     if (result.ok) {
       const checkout = result.value.plan.files.find(
@@ -690,6 +723,116 @@ describe('le nom du projet est revérifié avant tout rendu — revue sécurité
     );
     expect(!result.ok && result.issues.map((issue) => issue.code)).toEqual([
       'GEN_INVALID_PROJECT_NAME',
+    ]);
+  });
+});
+
+/** Le preset API du §8 : Hono documenté par OpenAPI, Prisma, Redis, Docker. */
+const API: Manifest = {
+  manifestVersion: 1,
+  name: 'api-quai3',
+  targets: ['api'],
+  architecture: 'single-app',
+  backend: { framework: 'hono', language: 'typescript' },
+  database: { engine: 'postgresql', orm: 'prisma' },
+  services: ['redis'],
+  quality: ['biome', 'vitest'],
+  infra: ['docker', 'github-actions'],
+};
+
+describe('le preset API du §8 est certifié — 6.7b', () => {
+  it('aucun avertissement de combinaison expérimentale', () => {
+    const result = planProject(API, '/cible');
+    expect(result.ok).toBe(true);
+    if (result.ok) {
+      expect(result.value.warnings.map((w) => w.code)).not.toContain(
+        'COMPAT_EXPERIMENTAL_COMBINATION',
+      );
+    }
+  });
+
+  it('une API Hono est documentée et validée : Zod et OpenAPI sont ajoutés s’ils manquent', () => {
+    const result = planProject(API, '/cible');
+    expect(result.ok).toBe(true);
+    if (result.ok) {
+      const pkg = JSON.parse(
+        result.value.plan.files.find((file) => file.path === 'package.json')?.contents ?? '{}',
+      ) as { dependencies: Record<string, string> };
+      expect(pkg.dependencies['@hono/zod-openapi']).toBeDefined();
+      expect(pkg.dependencies['zod']).toBeDefined();
+    }
+  });
+
+  it('pose l’application, son test, le client Redis et un Dockerfile', () => {
+    const result = planProject(API, '/cible');
+    const paths = result.ok ? result.value.plan.files.map((file) => file.path) : [];
+    expect(paths).toEqual(
+      expect.arrayContaining([
+        'src/app.ts',
+        'src/index.ts',
+        'src/app.test.ts',
+        'lib/redis.ts',
+        'lib/db.ts',
+        'Dockerfile',
+      ]),
+    );
+  });
+
+  it('la documentation porte le nom du projet', () => {
+    const result = planProject(API, '/cible');
+    const app = result.ok
+      ? result.value.plan.files.find((file) => file.path === 'src/app.ts')
+      : undefined;
+    expect(app?.contents).toContain("title: 'api-quai3'");
+  });
+});
+
+/** Le preset Dashboard : le SaaS sans paiement, plus la recette dashboard-admin. */
+const DASHBOARD: Manifest = {
+  manifestVersion: 1,
+  name: 'tableau',
+  targets: ['web'],
+  architecture: 'single-app',
+  frontend: { framework: 'next', language: 'typescript', styling: 'tailwind', ui: 'shadcn-ui' },
+  database: { engine: 'postgresql', orm: 'prisma' },
+  auth: { provider: 'better-auth' },
+  quality: ['biome', 'vitest', 'playwright'],
+  infra: ['docker', 'github-actions'],
+};
+
+describe('le preset Dashboard est certifié — 6.7b', () => {
+  it('combinaison certifiée, recette appliquée', () => {
+    const result = planProject(DASHBOARD, '/cible', { recipes: ['dashboard-admin'] });
+    expect(result.ok).toBe(true);
+    if (result.ok) {
+      expect(result.value.warnings.map((w) => w.code)).not.toContain(
+        'COMPAT_EXPERIMENTAL_COMBINATION',
+      );
+      const paths = result.value.plan.files.map((file) => file.path);
+      expect(paths).toEqual(
+        expect.arrayContaining([
+          'app/sign-in/page.tsx',
+          'app/dashboard/layout.tsx',
+          'app/dashboard/page.tsx',
+          'app/dashboard/users/page.tsx',
+          'app/dashboard/settings/page.tsx',
+          'lib/signups.test.ts',
+        ]),
+      );
+      const pkg = JSON.parse(
+        result.value.plan.files.find((file) => file.path === 'package.json')?.contents ?? '{}',
+      ) as { dependencies: Record<string, string> };
+      expect(pkg.dependencies['recharts']).toBeDefined();
+      expect(pkg.dependencies['@tanstack/react-table']).toBeDefined();
+    }
+  });
+
+  it('le tableau de bord exige Prisma : sans lui, la recette est refusée en le nommant', () => {
+    const result = planProject({ ...DASHBOARD, database: { engine: 'postgresql' } }, '/cible', {
+      recipes: ['dashboard-admin'],
+    });
+    expect(!result.ok && result.issues.map((issue) => issue.code)).toEqual([
+      'GEN_RECIPE_MISSING_REQUIREMENT',
     ]);
   });
 });

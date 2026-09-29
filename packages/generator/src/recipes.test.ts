@@ -27,6 +27,13 @@ const CATALOGUE: RecipeCatalogue = (() => {
       devPackages: { '@types/node': '^24.0.0' },
     },
     { id: 'stripe-checkout', name: 'Checkout', description: 'x', for: ['stripe'] },
+    {
+      id: 'tableau-de-bord',
+      name: 'Tableau de bord',
+      description: 'x',
+      for: ['better-auth'],
+      requires: ['next', 'prisma'],
+    },
   ]);
   if (!result.ok) {
     throw new Error('fixture invalide');
@@ -84,6 +91,26 @@ describe('resolveRecipes — Recipe Resolver (§22)', () => {
       'GEN_RECIPE_UNKNOWN',
       'GEN_RECIPE_NOT_APPLICABLE',
     ]);
+  });
+});
+
+describe('technologies exigées par une recette', () => {
+  it('s’applique quand toutes sont dans la stack', () => {
+    expect(
+      codes(['tableau-de-bord'], [entry('better-auth'), entry('next'), entry('prisma')]),
+    ).toEqual([]);
+  });
+
+  it('refuse quand l’une manque, et la nomme', () => {
+    const result = resolveRecipes(
+      ['tableau-de-bord'],
+      [entry('better-auth'), entry('next')],
+      CATALOGUE,
+    );
+    expect(!result.ok && result.issues.map((issue) => issue.code)).toEqual([
+      'GEN_RECIPE_MISSING_REQUIREMENT',
+    ]);
+    expect(!result.ok && result.issues[0]?.message).toContain('prisma');
   });
 });
 

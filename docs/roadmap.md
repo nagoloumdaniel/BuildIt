@@ -281,7 +281,7 @@ Le rollback est la fonctionnalité la plus facile à « croire faite ». Elle ex
 
 | # | Étape | Skills obligatoires |
 |---|---|---|
-| 5B.1 | **Socle vert** : `tsconfig.json`, configuration de l'outil de qualité choisi, sortie conforme à son formateur, scripts `build`/`dev`/`start` émis seulement quand une application existe. **Test de fumée réel** : générer → installer → typecheck → lint, en script dédié et en job CI | `test-driven-development`, `run` |
+| 5B.1 | **Socle vert** : `tsconfig.json`, configuration de l'outil de qualité choisi, sortie conforme à son formateur, scripts `build`/`dev`/`start` émis seulement quand une application existe. **Test de fumée réel** : générer → installer → typecheck → lint, en script dédié, lancé par le hook pre-push | `test-driven-development`, `run` |
 | 5B.2 | Post Install + Validation (5.10) via `CommandRunner` injectable : `pnpm install`, `git init` + premier commit, typecheck/lint du projet généré | `test-driven-development` |
 | 5B.3 | Reprise (5.9) : échec transitoire/permanent, `retryable`, `failedStep`, reprise `fromStep` | `test-driven-development` |
 | 5B.4 | Template Resolver (5.4) : chargement depuis `templatesRoot`, rendu `{{placeholder}}`, branchement dans le plan | `test-driven-development` |
@@ -331,6 +331,63 @@ Le rollback est la fonctionnalité la plus facile à « croire faite ». Elle ex
 - [ ] Un projet généré tourne réellement (`run`) et s'affiche dans un navigateur
 - [ ] Temps de génération < 90 s hors `npm install`
 
+## État au 28/09/2026 — 6.7a livrée : le preset SaaS est certifié
+
+Les 15 fiches du preset SaaS du §8 sont `certified`, et le moteur de compatibilité résout la combinaison en `certified`. Chacune est prouvée par `pnpm test:smoke`, qui génère le preset, l'installe depuis npm, lance lint, typecheck, test et **build**, puis, si Docker est là, démarre le Postgres du `docker-compose.yml` généré, y crée une table et va jusqu'à une **inscription et une connexion réelles** par Better Auth.
+
+Vérifié à la main en plus : l'image Docker du preset se construit et sert la page (uid 1000) ; le test Playwright généré passe dans Chromium.
+
+Mécanismes ajoutés au générateur pour y arriver :
+- **intégrations par combinaison** (`when`, une ou plusieurs fiches compagnes) : le code qui dépend de plusieurs choix — Prisma sur PostgreSQL, Better Auth sur Next + Prisma + PostgreSQL, Playwright sur Next — n'est posé que pour la combinaison vérifiée. Une autre combinaison ne reçoit rien de faux et reste `experimental` ;
+- **fichiers composés** : `instrumentation-client.ts` importe le module de chaque outil qui en déclare un (Sentry, PostHog) ;
+- **politique des scripts d'installation** : autorisés quand une technologie en a besoin, refusés explicitement sinon.
+
+Gate M3, où il en est :
+- [ ] 4 presets — **1 sur 4** (SaaS). Full-stack, Dashboard, API : 6.7b
+- [x] No-lock-in vérifié par test (grep des imports du projet généré)
+- [x] Un projet généré tourne réellement et s'affiche dans un navigateur — Docker + Playwright
+- [x] Génération < 90 s hors installation — le plan et l'écriture prennent moins d'une seconde
+
+## État au 28/09/2026 (suite) — preset API certifié
+
+Preset API du §8 certifié : **Hono** (NestJS réservé au Full-stack), OpenAPI et Zod — ajoutés d'office par le moteur, une API Hono est documentée et validée par défaut —, Prisma + PostgreSQL, Redis, Docker, GitHub Actions. Le test de fumée démarre l'API construite (`/health`, `/openapi.json`), l'**image Docker** (200, non root), fait un aller-retour **Redis** par le client généré et un aller-retour **PostgreSQL**.
+
+La CI GitHub n'étant pas disponible, le test de fumée est lancé par le hook pre-push (voir README).
+
+Gate M3 : **2 presets sur 4**. Restent Full-stack (Next.js + NestJS en monorepo — la génération multi-apps n'existe pas encore) et Dashboard (contenu à cadrer, 6.1). Les entretiens de 6.12 n'ont pas eu lieu.
+
+## État au 28/09/2026 (suite) — preset Dashboard certifié
+
+Décisions : Hono pour l'API **et** le Full-stack ; un Dashboard **complet** (cahier §8). Le preset Dashboard = la stack SaaS sans paiement + la recette `dashboard-admin` : espace /dashboard protégé côté serveur, indicateurs et graphique des inscriptions (Recharts), tableau des utilisateurs trié, filtré, paginé (TanStack Table), paramètres du compte, page de connexion et d'inscription — sur les tables réelles de Better Auth. Les recettes gagnent `requires` (toutes les technologies que leur code importe).
+
+Le test de fumée le parcourt de bout en bout sur une vraie base : sans session, /dashboard renvoie à /sign-in ; avec un compte créé par l'API, chaque page s'affiche avec ses données.
+
+Le test de fumée **échoue** désormais sans Docker, sauf saut explicite (`PF_SMOKE_SKIP_DOCKER=1`, preuves marquées « skipped ») : il avait réussi en silence avec Docker arrêté.
+
+Gate M3 : **3 presets sur 4**. Reste le Full-stack.
+
+## État au 28/09/2026 (fin) — Full-stack certifié, gate M3 fermé
+
+Le générateur sait produire un **monorepo multi-applications** ([spec](superpowers/specs/2026-09-28-phase6-monorepo-fullstack-design.md)) : la stack est répartie entre `apps/web` et `apps/api` par une table de rôles, chaque application est générée par le chemin des applications seules — celui que le test de fumée certifie —, la racine porte Turborepo, Biome, `pnpm-workspace.yaml` (réunion des scripts d'installation), `docker-compose.yml` (réunion des services) et la CI.
+
+Preset Full-stack (Next.js + Hono) certifié : le test de fumée installe à la racine, passe lint, typecheck, test et build via Turborepo, démarre l'API construite, fait l'aller-retour Redis depuis `apps/api` et l'inscription réelle sur `apps/web`. `turborepo` et `pnpm` certifiés.
+
+### Gate M3 — `verification-before-completion`
+- [x] Les 4 presets génèrent, installent, buildent et typechecken — en CI **locale** (hook pre-push, la CI GitHub n'étant pas disponible)
+- [x] No-lock-in vérifié par test
+- [x] Un projet généré tourne réellement et s'affiche dans un navigateur — Playwright (vérifié à la main), image Docker (test de fumée)
+- [x] Génération < 90 s hors installation
+
+Écarts repris le 28/09 : `packages/shared` (contrat web ↔ API, prouvé API arrêtée puis démarrée), un Dockerfile par application en monorepo (`turbo prune`, image web construite par le test de fumée), les tests Playwright générés exécutés dans un vrai navigateur par le test de fumée (SaaS, Dashboard, Full-stack).
+
+Reste :
+- une bibliothèque de composants partagée (`packages/ui`, le « shared UI » du §8) — elle ne vaut qu'avec plusieurs applications web ;
+- 6.12 : aucun entretien n'a eu lieu ; les presets ont été tranchés par le premier utilisateur (§0).
+
+**Étape suivante (réalisée) : Phase 7 — CLI `pf`.**
+
+**Prochaine étape (initiale) : 6.12 puis 6.7b.** Les entretiens de 6.12 doivent précéder 6.7b (« avant de figer ») ; les trois autres presets réutiliseront les intégrations du SaaS. Full-stack exige NestJS, Redis et Zod ; API exige NestJS ou Hono ; Dashboard reste à cadrer (6.1).
+
 ---
 
 # PHASE 7 — CLI `pf`
@@ -360,10 +417,22 @@ Le CLI est une **façade au même niveau que l'UI** (§9, §21, §24), pas un bo
 - Clé API gérée localement
 
 ### Gate M4 — `verification-before-completion`
-- [ ] `npx <paquet CLI>@next create` (binaire `pf`) fonctionne depuis un dossier vide sur machine propre
-- [ ] Les commandes du §21 (hors celles de la Phase 7B) existent et ont un `--help` utile
-- [ ] `security-review` : la clé API n'apparaît ni en logs, ni en fichier versionné, ni en variable exportée
-- [ ] Un projet créé au CLI et un projet créé plus tard à l'UI sont **byte-identical** à partir du même manifest
+- [ ] `npx <paquet CLI>@next create` (binaire `pf`) fonctionne depuis un dossier vide sur machine propre — **prouvé sur le paquet empaqueté** (`pnpm pack`, installé par npm dans un dossier vierge, `pf create --preset saas`) ; **la publication reste à faire** : il faut un compte npm et un jeton
+- [x] Les commandes du §21 (hors celles de la Phase 7B) existent et ont un `--help` utile — `doctor`, `analyze`, `upgrade`, `share` et celles de 7B répondent qu'elles arrivent, et quand (code 2)
+- [x] `security-review` : la clé API n'apparaît ni en logs, ni en fichier versionné, ni en variable exportée — refusée en argument, lue sur l'entrée standard ou masquée, fichier `0600` hors du dépôt, `status` ne l'affiche jamais ; chaque point a son test
+- [x] Un projet créé au CLI et un projet créé plus tard à l'UI sont **byte-identical** à partir du même manifest — test par preset : `pf create` contre `generateProject` appelé directement, comme le fera l'UI
+
+### État — 28/09/2026
+
+Livré ([spec](superpowers/specs/2026-09-28-phase7-cli-design.md), [référence](cli.md)) : `packages/presets` (les quatre presets en donnée, partagés CLI / UI) et `apps/cli` — menu d'accueil, `create`, `template list|show|use`, `generate`, `graph`, `add`, `key set|status|clear`. Aucune dépendance d'interface : `parseArgs` et `readline` de Node. Le paquet publié embarque le moteur (privé) et ses templates.
+
+Écarts :
+- 7.3 : `pf create` part d'un preset ; le mode expert passe par le manifest (`pf template show` → `pf add` → `pf generate`). `--web --mobile` attend un preset mobile certifié (V1).
+- 7.10 : publication npm non faite (compte et jeton requis).
+
+Trouvé en chemin : le compatibility engine marquait « ajoutée » une technologie choisie dès qu'une autre, parcourue avant elle, l'exigeait (TypeScript « exigée par next » dans un manifest qui la choisit) — sortie dépendante de l'ordre de saisie. Corrigé, avec son test.
+
+**Étape suivante (réalisée) : Phase 7B — projets existants & GitHub.**
 
 ---
 
@@ -394,12 +463,24 @@ Project Factory ne sert pas qu'à créer. Menu d'accueil à trois chemins (crée
 - Référence de commandes mise à jour
 
 ### Gate — `verification-before-completion`
-- [ ] Un lien commençant par `-`, un protocole `ext::`/`file://` sont **rejetés** avant tout appel à Git (test négatif)
-- [ ] Un clone qui échoue ne laisse aucun dossier derrière lui
-- [ ] Le jeton GitHub n'apparaît dans aucun log, fichier du projet ni variable exportée (test)
-- [ ] Un dépôt créé est privé sauf `--public` explicite
-- [ ] `pf repo share` sur un projet sans dépôt refuse avec la marche à suivre
-- [ ] Aucune commande d'installation n'est lancée sans confirmation (ou `--yes` explicite en mode non interactif)
+- [x] Un lien commençant par `-`, un protocole `ext::`/`file://` sont **rejetés** avant tout appel à Git (test négatif) — 36 liens refusés en test ; `git -c protocol.ext.allow=never -c protocol.file.allow=never clone -- …` en défense en profondeur ; vérifié en réel (`ext::sh -c touch…` : refusé, aucun fichier créé)
+- [x] Un clone qui échoue ne laisse aucun dossier derrière lui — test (dossiers parents créés compris) et réel
+- [x] Le jeton GitHub n'apparaît dans aucun log, fichier du projet ni variable exportée (test) — ni sortie, ni argument de commande, ni URL ; transmis à Git par un credential helper, au trousseau par l'entrée standard
+- [x] Un dépôt créé est privé sauf `--public` explicite
+- [x] `pf repo share` sur un projet sans dépôt refuse avec la marche à suivre — test et réel
+- [x] Aucune commande d'installation n'est lancée sans confirmation (ou `--yes` explicite en mode non interactif)
+
+### État — 29/09/2026
+
+Livré ([spec](superpowers/specs/2026-09-28-phase7b-github-design.md), [référence](cli.md)) : `packages/exec` (l'exécuteur de 5B.2, sorti du generator, avec entrée standard et environnement par commande), `packages/workspace`, `packages/git`, `packages/github`, et les commandes `clone`, `open`, `install`, `login`, `logout`, `repo create|share`, `collab add|list|remove` ; le menu d'accueil a ses trois chemins.
+
+Vérifié en réel dans cette session : clone d'un dépôt public, clone refusé (lien d'injection) et échoué (rien laissé), installation sans scripts d'un dépôt cloné, ouverture et installation d'un projet local, refus du partage sans dépôt, **trousseau Linux réel** (Secret Service) : écrit, relu, effacé.
+
+Trouvé en vérifiant pour de vrai : sous une locale non UTF-8, `secret-tool` refusait l'étiquette (tiret cadratin) — corrigé. Trouvé en écrivant les tests : GitHub met « le nom est pris » dans `errors[]`, pas dans `message` — le client l'aurait présenté comme un refus générique ; corrigé.
+
+**Pas vérifiable ici** : l'API GitHub est bloquée par le réseau de la session et aucun compte de test n'est disponible — création de dépôt, clone privé, invitation de collaborateur (7B.9) sont prouvés contre un faux `fetch` qui rejoue les réponses documentées, **et restent à vérifier sur un vrai compte**. La connexion par code attend l'enregistrement de l'application OAuth de Project Factory (action de mainteneur) ; `pf login --with-token` fonctionne sans elle.
+
+**Prochaine étape : Phase 8 — configurateur web.**
 
 ---
 

@@ -4,8 +4,21 @@
   "category": "backend",
   "targets": ["api"],
   "status": "stable",
-  "generation": "declared",
+  "generation": "certified",
   "license": "MIT",
-  "lastReviewedAt": "2026-09-23",
+  "lastReviewedAt": "2026-09-28",
+  "versionRange": ">=4.0.0 <5.0.0",
+  "requires": ["typescript", "zod", "openapi"],
+  "packages": ["hono", "@hono/node-server", "@hono/zod-openapi"],
+  "devPackages": ["tsdown", "tsx", "@types/node"],
+  "packageRanges": {
+    "hono": ">=4.0.0 <5.0.0",
+    "@hono/node-server": "^1.19.0",
+    "@hono/zod-openapi": "^1.0.0",
+    "tsdown": ">=0.15.0 <1.0.0",
+    "tsx": "^4.0.0",
+    "@types/node": "^24.0.0"
+  },
+  "template": "backend/hono",
   "docs": "https://hono.dev"
 }

@@ -1,6 +1,6 @@
-# Garde-fous locaux. Tant que le dépôt n'a pas de remote (compte GitHub
-# indisponible), ces hooks SONT l'intégration continue — `pre-push` exécute
-# exactement le même pipeline que .github/workflows/ci.yml.
+# Garde-fous locaux. La CI GitHub n'est pas disponible pour ce dépôt : ces
+# hooks SONT l'intégration continue. Rien ne part sur le remote sans être
+# passé par pre-push.
 
 pre-commit:
   parallel: true
@@ -22,3 +22,13 @@ pre-push:
   jobs:
     - name: ci-local
       run: pnpm run ci:local
+
+    # Le test de fumée génère, installe (réseau) et construit de vrais projets :
+    # environ une minute, plus l'aller-retour en base si Docker répond. Il ne
+    # tourne que si le push touche ce qui change un projet généré.
+    # Sans Docker : PF_SMOKE_SKIP_DOCKER=1 ; sans navigateur : PF_SMOKE_SKIP_E2E=1
+    # (preuves « skipped »). Chromium présent : PF_SMOKE_CHROMIUM=<chemin>.
+    # Hors-ligne : LEFTHOOK_EXCLUDE=smoke git push. Les deux se disent dans la PR.
+    - name: smoke
+      glob: "packages/{generator,registry,recipes}/**"
+      run: pnpm run test:smoke

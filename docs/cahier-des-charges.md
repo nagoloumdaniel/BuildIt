@@ -225,12 +225,15 @@ Monolith, Modular Monolith, Monorepo, Microservices, Serverless, Event-driven, C
 ## 8. Presets / Blueprints
 
 - **SaaS Web** — Next.js + TypeScript + Tailwind + shadcn/ui + PostgreSQL + Prisma + Better Auth + Stripe + Resend + Sentry + PostHog + Vercel + Vitest + Playwright.
-- **Full-stack Monorepo** — Next.js + NestJS + TypeScript + Tailwind + shared UI + PostgreSQL + Prisma + Better Auth + Redis + Zod + Vitest + Playwright + Docker + GitHub Actions.
+- **Full-stack Monorepo** — Next.js + Hono + TypeScript + Tailwind + shared UI + PostgreSQL + Prisma + Better Auth + Redis + Zod + Vitest + Playwright + Docker + GitHub Actions.
 - **AI SaaS** — Next.js + TypeScript + Tailwind + shadcn/ui + PostgreSQL + Prisma + Better Auth + Vercel AI SDK + OpenAI/Anthropic + pgvector + Redis + Stripe + PostHog + Sentry.
 - **Marketplace** — Web + Mobile + Admin + API : Next.js + Expo + NestJS + PostgreSQL + Prisma + Auth + Storage + Payments + Notifications + Search + Redis.
 - **Mobile + API** — Expo + React Native + TypeScript + Expo Router + NativeWind + NestJS/Hono + PostgreSQL + Prisma + Auth + Redis + Docker.
 - **Desktop + Web** — Next.js/React + Tauri + TypeScript + shared packages + API + PostgreSQL + Auth.
-- **API** — NestJS/Hono + TypeScript + PostgreSQL + Prisma + Redis + OpenAPI + Docker + GitHub Actions.
+- **API** — Hono + TypeScript + PostgreSQL + Prisma + Redis + OpenAPI + Zod + Docker + GitHub Actions.
+- **Dashboard** — Next.js + TypeScript + Tailwind + shadcn/ui + PostgreSQL + Prisma + Better Auth + recette `dashboard-admin` (Recharts, TanStack Table) + Vitest + Playwright + Docker + GitHub Actions. Un espace d'administration complet et protégé : indicateurs, graphique des inscriptions, tableau des utilisateurs (tri, recherche, pagination), paramètres du compte, connexion et inscription — sur les données réelles de l'application, jamais d'exemple inventé.
+
+**Décision du 28/09/2026 — backend : Hono, pour l'API comme pour le Full-stack.** Plus léger que NestJS, standard Web (`fetch`), et une seule façon de faire à maintenir. Une API Hono est documentée (OpenAPI) et validée (Zod) par défaut : le moteur ajoute les deux s'ils manquent. NestJS reste au catalogue (§7.5).
 
 **Décision du 23/09/2026 — ORM par défaut : Prisma.** Les presets livrés utilisent Prisma parce que c'est l'outil réellement employé par le premier utilisateur (§0). Drizzle reste au catalogue (§7.7) comme alternative certifiée. Conséquence sur le pipeline : Prisma exige un `prisma generate` à l'étape Post Install (§22), qui doit échouer explicitement plutôt que livrer un projet qui ne compile pas.
 

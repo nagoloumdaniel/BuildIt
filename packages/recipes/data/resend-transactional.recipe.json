@@ -1,0 +1,19 @@
+{
+  "id": "resend-transactional",
+  "name": "Resend — emails transactionnels",
+  "description": "Client Resend et fonction d’envoi, clé lue dans l’environnement.",
+  "for": ["resend"],
+  "packages": {
+    "resend": "^6.0.0"
+  },
+  "devPackages": {
+    "@types/node": "^24.0.0"
+  },
+  "env": ["RESEND_API_KEY"],
+  "files": [
+    {
+      "template": "recipes/resend-transactional/email.ts",
+      "target": "lib/email.ts"
+    }
+  ]
+}

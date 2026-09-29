@@ -41,6 +41,14 @@ describe('schéma d’une recette', () => {
     expect(codes([{ ...VALID, for: [] }])).toContain('RECIPE_FORMAT_INVALID');
   });
 
+  it('accepte des technologies exigées, en plus de celles qui portent la recette', () => {
+    expect(codes([{ ...VALID, requires: ['next', 'prisma'] }])).toEqual([]);
+  });
+
+  it('refuse une technologie exigée qui n’est pas un slug', () => {
+    expect(codes([{ ...VALID, requires: ['Next JS'] }])).toEqual(['RECIPE_FORMAT_INVALID']);
+  });
+
   it('refuse un identifiant qui n’est pas un slug', () => {
     expect(codes([{ ...VALID, id: 'Better Auth' }])).toEqual(['RECIPE_FORMAT_INVALID']);
   });

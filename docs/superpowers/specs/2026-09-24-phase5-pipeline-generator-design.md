@@ -118,7 +118,7 @@ Un seul champ **optionnel** ajouté au schéma de fiche : `packageRanges?: Recor
 - [x] Aucune écriture hors du dossier cible — `plan.test.ts` (`../`, absolu, lecteur, `\`, `.git/`), `write.test.ts` (lien symbolique)
 - [x] Pas d'exécution de code de template — `template.test.ts` (`<%= %>`, `{{eval}}`, `{{constructor}}`, backticks)
 - [x] `.env.example` sans aucune valeur réelle — `scaffold.test.ts`, `pipeline.test.ts`
-- [x] Un projet socle généré passe `install + typecheck` sur la machine — et aussi `lint` et `test` : `pnpm test:smoke` (preset SaaS avec ses deux recettes, et socle React), via le pipeline lui-même avec le vrai pnpm et le vrai git. Job CI dédié.
+- [x] Un projet socle généré passe `install + typecheck` sur la machine — et aussi `lint` et `test` : `pnpm test:smoke` (preset SaaS avec ses deux recettes, et socle React), via le pipeline lui-même avec le vrai pnpm et le vrai git. Lancé par le hook pre-push (la CI GitHub n’est pas disponible).
 - [x] Couverture ≥ 90 % sur `generator` et `recipes`
 - [x] Revue sécurité écrite (5.13) sans finding haut ouvert — [2026-09-26-phase5-security-review.md](2026-09-26-phase5-security-review.md)
 

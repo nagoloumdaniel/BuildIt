@@ -16,6 +16,10 @@ export { DEPENDENCY_ISSUE_CODES, resolveDependencies } from './dependencies.js';
 export { buildInfrastructure, CI_SCRIPTS } from './infrastructure.js';
 export type { DockerService, Integration } from './integrations.data.js';
 export { INTEGRATIONS } from './integrations.data.js';
+export type { Role } from './monorepo.data.js';
+export { ROLE_BY_CATEGORY, ROLE_BY_ID } from './monorepo.data.js';
+export type { AppName, GenerateApp, GeneratedFiles, MonorepoIssueCode } from './monorepo.js';
+export { MONOREPO_ISSUE_CODES, partition, planMonorepo } from './monorepo.js';
 export type {
   GenerationFailure,
   GenerationOutcome,

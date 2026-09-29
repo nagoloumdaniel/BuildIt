@@ -63,6 +63,19 @@ describe('résolution', () => {
     }
   });
 
+  it('ne dit jamais « ajoutée » d’une technologie choisie, quel que soit l’ordre', () => {
+    for (const technologies of [
+      ['next', 'typescript'],
+      ['typescript', 'next'],
+    ]) {
+      const result = resolve({ targets: ['web'], technologies }, BASE);
+      expect(result.ok).toBe(true);
+      if (result.ok) {
+        expect(result.value.additions).toEqual([]);
+      }
+    }
+  });
+
   it('résout en profondeur', () => {
     const deep = registryOf([
       entry({ id: 'a', requires: ['b'] }),
