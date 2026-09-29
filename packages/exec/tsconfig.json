@@ -1,0 +1,4 @@
+{
+  "extends": "@project-factory/typescript-config/base.json",
+  "include": ["src"]
+}

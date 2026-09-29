@@ -6,8 +6,6 @@ import {
   type CommandResult,
   type CommandRunner,
   isTransientFailure,
-  nodeCommandRunner,
-  resolveWindowsCommand,
   runGit,
   runInstall,
   runValidation,
@@ -43,34 +41,6 @@ function fakeRunner(
 }
 
 const FAIL = (output: string): CommandResult => ({ exitCode: 1, output });
-
-describe('nodeCommandRunner — le seul exécuteur réel', () => {
-  it('rend le code de sortie et la sortie combinée', async () => {
-    const result = await nodeCommandRunner.run(
-      process.execPath,
-      ['-e', 'process.stdout.write("out");process.stderr.write("err");process.exit(3)'],
-      process.cwd(),
-    );
-    expect(result.exitCode).toBe(3);
-    expect(result.output).toContain('out');
-    expect(result.output).toContain('err');
-  });
-
-  it('ne passe jamais par un shell : un argument reste un argument', async () => {
-    const result = await nodeCommandRunner.run(
-      process.execPath,
-      ['-e', 'process.stdout.write(process.argv[1])', '$(echo injecte); echo ; rm -rf x'],
-      process.cwd(),
-    );
-    expect(result.output).toBe('$(echo injecte); echo ; rm -rf x');
-  });
-
-  it('rejette quand la commande n’existe pas', async () => {
-    await expect(
-      nodeCommandRunner.run('pf-commande-qui-n-existe-pas', [], process.cwd()),
-    ).rejects.toThrow();
-  });
-});
 
 describe('isTransientFailure — réseau ou panne durable', () => {
   it.each([
@@ -220,58 +190,5 @@ describe('runValidation', () => {
     const runner = fakeRunner();
     expect(await runValidation(runner, '/cible', {})).toBeUndefined();
     expect(runner.calls).toHaveLength(0);
-  });
-});
-
-/**
- * La résolution Windows ne tourne que sous Windows, mais sa logique — chercher
- * dans le PATH, lancer le script JavaScript derrière un `.cmd` — se vérifie
- * partout avec de faux dossiers. Sans ces tests, la CI Linux ne l'exécuterait
- * jamais.
- */
-describe('resolveWindowsCommand — aucun shell, même pour un .cmd', () => {
-  const created: string[] = [];
-  afterEach(async () => {
-    while (created.length > 0) {
-      await rm(created.pop() as string, { recursive: true, force: true });
-    }
-  });
-
-  async function directory(files: string[]): Promise<string> {
-    const root = await mkdtemp(join(tmpdir(), 'pf-path-'));
-    created.push(root);
-    for (const file of files) {
-      await mkdir(join(root, file, '..'), { recursive: true });
-      await writeFile(join(root, file), '');
-    }
-    return root;
-  }
-
-  it('un vrai exécutable se lance tel quel', async () => {
-    const bin = await directory(['git.exe']);
-    expect(resolveWindowsCommand('git', bin)).toEqual({ file: join(bin, 'git.exe'), prefix: [] });
-  });
-
-  it('un lanceur .cmd de paquet npm : Node lance le script qu’il cache', async () => {
-    const bin = await directory(['pnpm.cmd', 'node_modules/pnpm/bin/pnpm.cjs']);
-    expect(resolveWindowsCommand('pnpm', bin)).toEqual({
-      file: process.execPath,
-      prefix: [join(bin, 'node_modules/pnpm/bin/pnpm.cjs')],
-    });
-  });
-
-  it('un .cmd sans script JavaScript voisin n’est jamais confié à cmd.exe', async () => {
-    const bin = await directory(['outil.cmd']);
-    expect(resolveWindowsCommand('outil', bin)).toEqual({ file: 'outil', prefix: [] });
-  });
-
-  it('cherche dans chaque dossier du PATH, dans l’ordre', async () => {
-    const empty = await directory([]);
-    const bin = await directory(['git.exe']);
-    expect(resolveWindowsCommand('git', `${empty};;${bin}`).file).toBe(join(bin, 'git.exe'));
-  });
-
-  it('introuvable : la commande est rendue telle quelle, spawn dira ENOENT', () => {
-    expect(resolveWindowsCommand('absente', '')).toEqual({ file: 'absente', prefix: [] });
   });
 });
