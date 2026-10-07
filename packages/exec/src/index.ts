@@ -133,6 +133,11 @@ export const nodeCommandRunner: CommandRunner = {
       });
       child.on('error', reject);
       child.on('close', (code) => {
+        // Un code null — tué par un signal — n'arrive que si le parent tue
+        // l'enfant : la preuve vit au test « tué par un signal », qui tourne
+        // là où SIGKILL est natif. Windows ne le produit que pour un kill
+        // par le parent, hors d'atteinte sans exposer le processus enfant.
+        /* v8 ignore next */
         resolve({ exitCode: code ?? 1, output });
       });
     });

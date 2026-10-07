@@ -115,6 +115,23 @@ describe('resolveWindowsCommand — aucun shell, même pour un .cmd', () => {
   it('introuvable : la commande est rendue telle quelle, spawn dira ENOENT', () => {
     expect(resolveWindowsCommand('absente', '')).toEqual({ file: 'absente', prefix: [] });
   });
+
+  it('sans argument, cherche dans le PATH du processus', () => {
+    expect(resolveWindowsCommand('pf-absente-de-tout-path')).toEqual({
+      file: 'pf-absente-de-tout-path',
+      prefix: [],
+    });
+  });
+
+  it('sans PATH dans l’environnement, il n’y a rien où chercher', () => {
+    const path = process.env['PATH'];
+    delete process.env['PATH'];
+    try {
+      expect(resolveWindowsCommand('absente')).toEqual({ file: 'absente', prefix: [] });
+    } finally {
+      process.env['PATH'] = path;
+    }
+  });
 });
 
 describe('resolveCommand', () => {
