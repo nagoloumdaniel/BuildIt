@@ -13,7 +13,8 @@
       "!**/.turbo",
       "!**/coverage",
       "!**/src/generated",
-      "!packages/generator/templates"
+      "!packages/generator/templates",
+      "!**/next-env.d.ts"
     ]
   },
   "formatter": {

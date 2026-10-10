@@ -1,0 +1,17 @@
+@import "tailwindcss";
+
+/* Tokens provisoires — la direction 8A les fige. Clair/sombre imposés par §6. */
+:root {
+  --pf-background: #ffffff;
+  --pf-foreground: #111111;
+}
+
+[data-theme="dark"] {
+  --pf-background: #111111;
+  --pf-foreground: #f5f5f5;
+}
+
+body {
+  background: var(--pf-background);
+  color: var(--pf-foreground);
+}

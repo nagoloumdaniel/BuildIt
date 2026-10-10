@@ -1,0 +1,25 @@
+{
+  "extends": "@project-factory/typescript-config/base.json",
+  "compilerOptions": {
+    "lib": ["ES2023", "DOM", "DOM.Iterable"],
+    "jsx": "preserve",
+    "types": ["node"],
+    "plugins": [
+      {
+        "name": "next"
+      }
+    ],
+    // TS 7 vérifie les imports à effet de bord (TS2882) ; `import './globals.css'`
+    // est la façon canonique de charger les styles dans un layout Next, et next
+    // ne déclare que `*.module.css`. On désactive donc ce contrôle ici.
+    "noUncheckedSideEffectImports": false,
+    // Application non publiée : pas de .d.ts à produire, et les exports RSC de
+    // Next (metadata, route handlers) sont inférés. Seule déviation à la
+    // convention du dépôt — documentée ici.
+    "isolatedDeclarations": false,
+    "allowJs": true,
+    "incremental": true
+  },
+  "include": ["src/**/*.ts", "src/**/*.tsx", ".next/types/**/*.ts"],
+  "exclude": ["node_modules"]
+}
