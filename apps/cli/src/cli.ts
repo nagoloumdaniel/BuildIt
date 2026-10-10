@@ -13,6 +13,7 @@ import { installCommand, open } from './commands/open.js';
 import { PENDING, pending } from './commands/pending.js';
 import { repo } from './commands/repo.js';
 import { template } from './commands/template.js';
+import { web } from './commands/web.js';
 import { usageError } from './format.js';
 import { EXIT, type ExitCode, type Io } from './io.js';
 
@@ -32,6 +33,7 @@ const COMMANDS: Readonly<Record<string, Command>> = {
   logout,
   repo,
   collab,
+  web,
 };
 
 /** Lu depuis `package.json` : `src/` et `dist/` en sont tous deux voisins. */
@@ -61,6 +63,9 @@ Projets existants et GitHub :
   login | logout                Connexion GitHub (jeton dans le trousseau)
   repo create | share           Dépôt GitHub du projet, privé par défaut
   collab add|list|remove        Collaborateurs du dépôt
+
+Configurateur web :
+  web [--port <n>] [--no-open]   Sert le configurateur construit, sur 127.0.0.1
 
 À venir : ${Object.keys(PENDING).join(', ')}.
 

@@ -135,6 +135,29 @@ La commande exacte est affichée **avant** d'être lancée. Sans terminal, rien 
 
 **Partager un projet exige un dépôt GitHub.** Sans lui, `pf repo share` et `pf collab` refusent et disent quoi faire (`pf repo create`) ; le lien de configuration en lecture seule arrivera en Phase 9. Les droits sont ceux de GitHub : il faut être administrateur du dépôt.
 
+## Configurateur web (§8)
+
+### `pf web [--port <n>] [--no-open]`
+
+Sert le configurateur web — le même manifest, le même projet que le CLI — depuis le serveur Next déjà construit (`apps/web/.next/standalone/apps/web/server.js`, sous le dossier courant), ouvre le navigateur, et **reste au premier plan : Ctrl-C arrête le serveur**.
+
+| Option | |
+|---|---|
+| `--port <n>` | Port d'écoute ; par défaut `4173` |
+| `--no-open` | Ne pas ouvrir le navigateur |
+
+```bash
+pnpm build          # une fois, depuis la racine du dépôt
+pnpm pf web         # http://127.0.0.1:4173
+pnpm pf web --port 5000 --no-open
+```
+
+- **Prérequis : le web doit être construit** (`pnpm build`, c'est-à-dire `next build`). Sans `apps/web/.next/standalone/apps/web/server.js`, `pf web` refuse et le dit (code 1) — rien n'est lancé à moitié. En monorepo, Next dépose le serveur sous `standalone/apps/web/` (il trace depuis la racine du dépôt) ; construit seul, il le met sous `standalone/`. Les deux emplacements sont acceptés.
+- **Local uniquement** : le serveur écoute sur `127.0.0.1`, jamais `0.0.0.0`. Le configurateur n'est pas joignable depuis le réseau.
+- **Un port qui répond déjà est refusé** (code 1) : `pf` n'ajoute pas un second serveur à côté d'un autre — le premier resterait, et le port serait tenu par un processus qu'on ne voit plus. Arrêtez-le, ou changez de port.
+- Le navigateur est ouvert par `explorer` (Windows), `open` (macOS), `xdg-open` (Linux), **sans shell** : l'URL est un argument. Un navigateur absent n'empêche pas le serveur de tourner — `pf` dit alors quelle adresse ouvrir vous-même.
+- Le serveur qui s'arrête en erreur fait rendre le code `1` à `pf`, avec sa sortie — de quoi comprendre.
+
 ## À venir
 
 Ces commandes existent, répondent qu'elles ne sont pas encore disponibles et quand elles le seront (code `2`) :

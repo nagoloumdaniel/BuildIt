@@ -1,3 +1,4 @@
+import { connect } from 'node:net';
 import { createInterface } from 'node:readline/promises';
 import { Writable } from 'node:stream';
 import { nodeCommandRunner } from '@project-factory/exec';
@@ -68,6 +69,34 @@ function terminalPrompter(): Prompter {
   };
 }
 
+/** Au-delà, on considère que personne ne répond : inutile de faire attendre. */
+const PROBE_TIMEOUT_MS = 2000;
+
+/**
+ * La vraie sonde de port : une connexion TCP, refermée aussitôt.
+ *
+ * Une connexion acceptée veut dire qu'un serveur répond ; un refus, un délai
+ * dépassé ou une erreur réseau veulent dire que le port est libre — la sonde
+ * ne doit jamais faire échouer la commande qui l'interroge.
+ */
+function tcpPortProbe(host: string, port: number): Promise<boolean> {
+  return new Promise((finish) => {
+    const socket = connect({ host, port });
+    let settled = false;
+    const settle = (answered: boolean): void => {
+      if (!settled) {
+        settled = true;
+        socket.destroy();
+        finish(answered);
+      }
+    };
+    socket.setTimeout(PROBE_TIMEOUT_MS);
+    socket.once('connect', () => settle(true));
+    socket.once('timeout', () => settle(false));
+    socket.once('error', () => settle(false));
+  });
+}
+
 export function nodeIo(): Io {
   return {
     out: (text) => process.stdout.write(text.endsWith('\n') ? text : `${text}\n`),
@@ -85,6 +114,7 @@ export function nodeIo(): Io {
     },
     runner: nodeCommandRunner,
     fetch: (input, init) => fetch(input, init),
+    portProbe: tcpPortProbe,
     platform: process.platform,
     sleep: (seconds) => new Promise((resolve) => setTimeout(resolve, seconds * 1000)),
   };

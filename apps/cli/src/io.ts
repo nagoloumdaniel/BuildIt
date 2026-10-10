@@ -36,6 +36,12 @@ export interface Io {
   readonly runner: CommandRunner;
   /** Vers l'API GitHub. */
   readonly fetch: Fetch;
+  /**
+   * Quelqu'un répond-il déjà sur ce port ? Sonde TCP : c'est ce qui permet de
+   * refuser de démarrer un second serveur — un orphelin a déjà fait passer la
+   * mauvaise application pour fautive.
+   */
+  portProbe(host: string, port: number): Promise<boolean>;
   readonly platform: NodeJS.Platform;
   /** Attente entre deux interrogations de GitHub (connexion par code). */
   sleep(seconds: number): Promise<void>;

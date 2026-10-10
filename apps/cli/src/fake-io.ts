@@ -24,6 +24,7 @@ export function fakeIo(
     stdin?: string;
     runner?: CommandRunner;
     fetch?: Fetch;
+    portProbe?: (host: string, port: number) => Promise<boolean>;
     platform?: NodeJS.Platform;
   } = {},
 ): FakeIo {
@@ -85,6 +86,8 @@ export function fakeIo(
       (async (input) => {
         throw new Error(`requête inattendue en test : ${input}`);
       }),
+    // Par défaut, aucun port ne répond : un test qui a besoin du contraire le dit.
+    portProbe: options.portProbe ?? (async () => false),
     platform: options.platform ?? 'linux',
     sleep: async () => undefined,
     text: () => ({ out: stdout.join('\n'), err: stderr.join('\n') }),
