@@ -580,6 +580,24 @@ Couvre §6.1 (menu), §6.21 à §6.24. Consomme `workspace`, `git` et `github` d
 - [ ] Brouillon restauré après fermeture du navigateur
 - [ ] UI et CLI produisent le même manifest pour les mêmes choix
 
+## État au 11/10/2026 — 8B livrée : le socle web
+
+Livré ([plan](superpowers/plans/2026-10-06-phase8-web-socle.md)) : `apps/web` dans le workspace et le socle de la sous-phase 8B. **Aucun des 18 écrans n'est encore codé** — ils sont l'affaire de 8C, 8D et 8G.
+
+- **8B.1 / 8B.2** — `src/lib/engine.ts` est le seul adaptateur vers le moteur (`registry`, `compatibility`, `generator`, `presets`). Le web consomme les mêmes paquets que le CLI, aucune règle métier n'est réécrite, et `server-only` interdit au moteur de partir dans le bundle client.
+- **8B.4** — brouillon auto-sauvegardé (`src/lib/draft.ts`) : versionné, réinitialisé proprement s'il est corrompu ou d'une autre version, et **structurellement incapable** de porter une valeur de variable d'environnement (§6.8, §24).
+- **8B.5** — toasts sans dépendance (`src/lib/toasts.ts` + `<Toaster />`), `role="status"` posé.
+- **8B.6 tranchée** — l'UI n'est pas hébergée : `pf web` la sert en local, dans le même processus Node que le moteur, liée à `127.0.0.1` ; le jeton GitHub ne quitte jamais le serveur. Décision écrite dans le plan, à relire en 8G.2.
+- Le reste du socle : thème clair/sombre sans flash, machine à états du parcours avec les bloquants du §6 en tests, `draftToManifest` prouvé **octet pour octet** contre le preset SaaS — les prémices du gate M5, pas le gate.
+
+Constats trouvés en chemin :
+
+- Next 15 refuse TypeScript 7 (l'API JavaScript du compilateur a disparu) : `apps/web` est en `typescript@6.0.3`, seule exception du dépôt, avec `next.config.mjs`.
+- Le catalogue n'a **aucune fiche mobile ni desktop** alors que `TARGETS` les accepte : un brouillon mobile/desktop ne peut pas produire de manifest valide. À arbitrer (§7.9, §7.10) — écrire les fiches, ou borner l'écran Target.
+- La règle « catégorie du catalogue → emplacement dans le manifest » vit en deux copies (`apps/cli/src/commands/add.ts`, `apps/web/src/lib/draft-to-manifest.ts`), tenues ensemble par un test d'égalité octet pour octet. À sortir dans un module partagé pour supprimer le risque de divergence.
+
+**Prochaine étape : 8A (direction artistique — gate humain sur trois maquettes) puis 8C (écrans 1 → 9).**
+
 ---
 
 # PHASE 9 — Partage lecture seule
