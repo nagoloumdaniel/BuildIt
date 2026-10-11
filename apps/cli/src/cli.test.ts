@@ -35,6 +35,8 @@ describe('pf', () => {
       'logout',
       'repo',
       'collab',
+      'share',
+      'doctor',
     ]) {
       expect(HELP).toContain(command);
     }

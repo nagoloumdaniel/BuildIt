@@ -32,6 +32,7 @@
   },
   "devDependencies": {
     "@project-factory/compatibility": "workspace:*",
+    "@project-factory/doctor": "workspace:*",
     "@project-factory/exec": "workspace:*",
     "@project-factory/generator": "workspace:*",
     "@project-factory/git": "workspace:*",

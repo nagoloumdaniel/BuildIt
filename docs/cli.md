@@ -79,6 +79,32 @@ pf graph
 pf generate pf.manifest.json
 ```
 
+## `pf doctor [dossier] [--fix] [--json]`
+
+Le Project Doctor (§16) : un **score de 0 à 100**, un constat par point de contrôle, et les corrections proposées. Sans argument, analyse le dossier courant.
+
+```bash
+$ pf doctor
+quai3 — santé du projet : 89/100
+
+✓ TypeScript — Le projet est vérifié par TypeScript (tsconfig.json ou dépendance `typescript`).
+✓ Dépendances — 13 dépendances déclarées et installées.
+✕ Variables d'environnement — 1 variable lue par le code (DATABASE_URL) sans .env.example :
+  personne ne sait quoi remplir.
+⚠ Monitoring d'erreurs — Rien ne remonte les erreurs de production (Sentry, OpenTelemetry…).
+…
+
+Corrections proposées :
+1. documenter les variables que le code lit, sans aucune valeur → .env.example
+
+3 point(s) ouvert(s) sur 11 constats.
+```
+
+- Le score est la part des constats **satisfaits** : un avertissement compte la moitié, un constat sans objet (pas de base de données, pas de Docker) sort de l'équation au lieu de pénaliser.
+- **`--fix` propose, puis applique après confirmation.** Il n'écrase jamais un fichier existant (`create`) et n'ajoute que des clés absentes à un `package.json` (`merge-json`) : un `scripts.test` déjà écrit reste celui de l'auteur. Sans terminal, il n'écrit rien et le dit.
+- **Code de sortie `1` si un constat est un échec**, `0` sinon : `pf doctor` s'utilise comme contrôle dans un pipeline, et `--json` rend le rapport exploitable par un outil.
+- Les constats portent sur ce qui est **observé**, jamais sur une catégorie : la limitation de débit se lit sur les paquets déclarés, pas sur une famille du catalogue (§11).
+
 ## `pf key set | status | clear`
 
 La clé API LLM locale (§0, §17), pour les fonctions d'analyse à venir.
@@ -187,5 +213,5 @@ Ces commandes existent, répondent qu'elles ne sont pas encore disponibles et qu
 
 | Commande | Quand |
 |---|---|
-| `doctor`, `analyze` | V1 |
+| `analyze` | V1 |
 | `upgrade` | V2 |

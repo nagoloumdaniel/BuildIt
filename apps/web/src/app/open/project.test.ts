@@ -225,8 +225,8 @@ describe('installProject — seulement ce qui a été confirmé', () => {
         command: 'pnpm',
         args: ['install'],
         cwd: dir,
-        // Le jeton du serveur est vidé pour le code du projet (§24).
-        options: { env: { PF_GITHUB_TOKEN: '' } },
+        // Les jetons du serveur sont vidés pour le code du projet (§24).
+        options: { env: { ...SCRUBBED } },
       },
     ]);
   });
@@ -274,6 +274,19 @@ describe('installProject — seulement ce qui a été confirmé', () => {
     expect(fake.calls).toHaveLength(0);
   });
 });
+
+/**
+ * Les jetons du serveur que le garde-fou vide, recopiés **à dessein** : si
+ * quelqu'un retire un nom de la liste de `project.ts`, les tests qui comparent
+ * l'environnement exact de la commande tombent. C'est la sonde du contrat.
+ */
+const SCRUBBED = {
+  PF_GITHUB_TOKEN: '',
+  PF_GIT_TOKEN: '',
+  GITHUB_TOKEN: '',
+  GH_TOKEN: '',
+  NPM_TOKEN: '',
+} as const;
 
 describe('installProject — le jeton du serveur n’atteint pas le code du projet (§24)', () => {
   const SECRET = 'ghp_serveur_0123456789abcdefghij';
@@ -333,6 +346,57 @@ describe('installProject — le jeton du serveur n’atteint pas le code du proj
     });
 
     expect(fake.calls[0]?.options?.env?.['PF_GIT_TOKEN']).toBe('jeton-du-helper');
+  });
+
+  it('vide aussi les jetons hérités du shell, pas seulement celui du produit', async () => {
+    // Trouvé en revue (MAJOR-1) : la liste ne contenait que `PF_GITHUB_TOKEN`.
+    // Un serveur lancé depuis un shell de CI porte aussi `GITHUB_TOKEN`,
+    // `GH_TOKEN` ou `NPM_TOKEN` — mêmes portes, même `postinstall`.
+    for (const name of ['GITHUB_TOKEN', 'GH_TOKEN', 'NPM_TOKEN', 'PF_GIT_TOKEN'] as const) {
+      const read = ['-e', `process.stdout.write(process.env.${name} ?? "<absent>")`];
+      const saved = process.env[name];
+      process.env[name] = SECRET;
+      try {
+        const brut = await nodeCommandRunner.run(process.execPath, read, process.cwd());
+        expect(brut.output, `${name} hérité du shell`).toBe(SECRET);
+
+        const ferme = await withoutServerSecrets(nodeCommandRunner).run(
+          process.execPath,
+          read,
+          process.cwd(),
+        );
+        expect(ferme.output, `${name} vidé pour l’enfant`).toBe('');
+      } finally {
+        if (saved === undefined) {
+          delete process.env[name];
+        } else {
+          process.env[name] = saved;
+        }
+      }
+    }
+  });
+
+  it('laisse gagner l’appelant : le jeton posé pour git n’est pas vidé', async () => {
+    // L'ordre du merge est le point sensible : écraser `options.env` par la
+    // liste vidée casserait `git push`, qui attend son jeton par là.
+    const read = ['-e', 'process.stdout.write(process.env.PF_GIT_TOKEN ?? "<absent>")'];
+    const saved = process.env['PF_GIT_TOKEN'];
+    process.env['PF_GIT_TOKEN'] = 'jeton-herite-a-vider';
+    try {
+      const ferme = await withoutServerSecrets(nodeCommandRunner).run(
+        process.execPath,
+        read,
+        process.cwd(),
+        { env: { PF_GIT_TOKEN: 'jeton-du-helper' } },
+      );
+      expect(ferme.output).toBe('jeton-du-helper');
+    } finally {
+      if (saved === undefined) {
+        delete process.env['PF_GIT_TOKEN'];
+      } else {
+        process.env['PF_GIT_TOKEN'] = saved;
+      }
+    }
   });
 });
 

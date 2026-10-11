@@ -27,15 +27,27 @@ export interface OptionButtonProps {
   readonly option: StackOption;
   /** Badge « Recommandé » du §5 — jamais posé sur une option bloquée. */
   readonly recommended?: boolean;
+  /**
+   * Le choix **local** du brouillon, quand il différe de l'état rendu par le
+   * moteur. L'état du moteur arrive après un aller-retour serveur (c'est lui qui
+   * tranche la compatibilité, §12) : sans ce drapeau, `aria-pressed` annonce
+   * pendant un aller-retour le contraire de ce que l'utilisateur vient de faire —
+   * un lecteur d'écran lit « non appuyé » sur un bouton qu'il vient d'appuyer.
+   * Le badge « Choisi » reste indexé sur le moteur : l'assistif dit l'intention,
+   * l'affichage dit l'état validé, et les deux convergent au rendu suivant.
+   */
+  readonly chosenLocally?: boolean;
   readonly onToggle: (id: string) => void;
 }
 
 export function OptionButton({
   option,
   recommended = false,
+  chosenLocally,
   onToggle,
 }: OptionButtonProps): ReactElement {
   const chosen = option.state === 'selected';
+  const pressed = chosenLocally ?? chosen;
   const blocked = option.state === 'blocked';
   const reason = optionReason(option);
 
@@ -43,7 +55,7 @@ export function OptionButton({
     <button
       type="button"
       className={blocked ? 'pf-choice cursor-not-allowed opacity-50' : 'pf-choice'}
-      aria-pressed={chosen}
+      aria-pressed={pressed}
       aria-disabled={blocked}
       {...(reason === undefined ? {} : { title: reason })}
       onClick={() => {

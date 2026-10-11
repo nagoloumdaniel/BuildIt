@@ -7,10 +7,10 @@ import {
   type Target,
 } from '@project-factory/manifest';
 import {
-  type Category,
   loadCatalogue,
   type Registry,
   type RegistryEntry,
+  slotFor,
 } from '@project-factory/registry';
 import type { DraftState } from './draft';
 
@@ -71,67 +71,16 @@ type Slot =
   | { readonly kind: 'list'; readonly field: 'services' | 'quality' | 'infra' };
 
 /**
- * Où va chaque catégorie du catalogue.
+ * Où va chaque catégorie : la table vit désormais dans le registry
+ * (`@project-factory/registry`, module `slots.ts`), avec celle que `pf add`
+ * lisait de son côté. Deux copies tenues ensemble par un test finissent par
+ * diverger — la règle n'existe plus qu'une fois.
  *
- * Table **complète** : ajouter une catégorie au registry casse la compilation
- * ici, et force à décider de sa place — c'est une décision de produit, pas un
- * détail d'implémentation.
- *
- * Elle est la même règle que `PLACES` dans `apps/cli/src/commands/add.ts` : le
- * CLI et l'UI doivent placer un id au même endroit, sinon « les mêmes choix »
- * ne donnent plus le même manifest. Les catégories sans emplacement dédié
- * tombent dans `services`, exactement comme `pf add` les y met — y compris
- * `security`, qui n'est pas un outil de qualité au sens du manifest.
+ * Ce qui reste ici, et qui n'appartient qu'au brouillon : la **politique** de
+ * placement. Le brouillon assemble un manifest neuf : le premier framework
+ * arrivé occupe le rôle, les suivants rejoignent `services` plutôt que d'être
+ * écartés. `pf add`, lui, remplace la valeur en place et le dit.
  */
-const SLOTS: Readonly<Record<Category, Slot>> = {
-  // Un rôle par application : le framework va à l'application que la fiche sert.
-  frontend: { kind: 'app', field: 'framework' },
-  backend: { kind: 'app', field: 'framework' },
-  language: { kind: 'app', field: 'language' },
-  styling: { kind: 'app', field: 'styling' },
-  ui: { kind: 'app', field: 'ui' },
-
-  // Une seule valeur possible dans le manifest.
-  database: { kind: 'single', field: 'engine' },
-  orm: { kind: 'single', field: 'orm' },
-  authentication: { kind: 'single', field: 'provider' },
-
-  // Le socle de qualité du projet : c'est ce que les presets posent.
-  testing: { kind: 'list', field: 'quality' },
-  linting: { kind: 'list', field: 'quality' },
-  formatting: { kind: 'list', field: 'quality' },
-  'git-hooks': { kind: 'list', field: 'quality' },
-
-  // Ce qui fait tourner et livrer le projet.
-  containers: { kind: 'list', field: 'infra' },
-  'ci-cd': { kind: 'list', field: 'infra' },
-  hosting: { kind: 'list', field: 'infra' },
-  monorepo: { kind: 'list', field: 'infra' },
-  'package-manager': { kind: 'list', field: 'infra' },
-  'dev-environment': { kind: 'list', field: 'infra' },
-
-  // Le reste : des capacités (§6.7). Le manifest n'a pas de champ par famille,
-  // et c'est heureux — une catégorie nouvelle n'oblige à migrer aucun manifest.
-  authorization: { kind: 'list', field: 'services' },
-  state: { kind: 'list', field: 'services' },
-  'data-fetching': { kind: 'list', field: 'services' },
-  forms: { kind: 'list', field: 'services' },
-  validation: { kind: 'list', field: 'services' },
-  api: { kind: 'list', field: 'services' },
-  build: { kind: 'list', field: 'services' },
-  storage: { kind: 'list', field: 'services' },
-  cache: { kind: 'list', field: 'services' },
-  queue: { kind: 'list', field: 'services' },
-  search: { kind: 'list', field: 'services' },
-  email: { kind: 'list', field: 'services' },
-  payments: { kind: 'list', field: 'services' },
-  observability: { kind: 'list', field: 'services' },
-  analytics: { kind: 'list', field: 'services' },
-  security: { kind: 'list', field: 'services' },
-  ai: { kind: 'list', field: 'services' },
-  cms: { kind: 'list', field: 'services' },
-  ecommerce: { kind: 'list', field: 'services' },
-};
 
 /**
  * Les deux seuls ids que le brouillon nomme lui-même : l'écran Infrastructure
@@ -239,7 +188,7 @@ function chosenIds(draft: DraftState): string[] {
  * conflit, au lieu de générer un projet amputé d'un choix.
  */
 function place(assembly: Assembly, entry: RegistryEntry, targets: ReadonlySet<string>): void {
-  const slot = SLOTS[entry.category];
+  const slot = slotFor(entry.category);
 
   if (slot.kind === 'list') {
     assembly.lists[slot.field].add(entry.id);

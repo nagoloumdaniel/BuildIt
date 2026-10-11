@@ -21,11 +21,20 @@
   --pf-surface: #ffffff;
   --pf-surface-2: #efefec;
   --pf-border: #d9d9d3;
-  --pf-border-strong: #b4b4ac;
+  /* 8F.3 : 3,25:1 sur `--pf-surface` et 3,01:1 sur `--pf-bg`. La valeur
+     précédente (#b4b4ac) donnait 2,09:1 : c'est la **seule** frontière d'un
+     `pf-input`, dont le fond est celui de la carte qui le porte (WCAG 1.4.11
+     demande 3:1). Les bordures décoratives des cartes restent `--pf-border`. */
+  --pf-border-strong: #8f8f88;
   --pf-text: #191919;
   --pf-muted: #5d5d56;
   --pf-accent: #b4530a;
-  --pf-accent-soft: #fbf0e5;
+  /* Plus clair que #fbf0e5 : le texte `--pf-accent` du badge doit rester
+     lisible sur ce fond (4,47:1 → 4,66:1, le seuil AA est 4,5). */
+  --pf-accent-soft: #fdf5ee;
+  /* Le survol assombrit, il n'éclaircit plus : `filter: brightness(1.08)`
+     faisait tomber le blanc à 4,41:1 sur le bouton principal. Ici 5,67:1. */
+  --pf-accent-hover: #a84c09;
   --pf-accent-text: #ffffff;
   --pf-ok: #1c6f47;
   --pf-ok-soft: #e7f4ec;
@@ -46,11 +55,16 @@
   --pf-surface: #16181b;
   --pf-surface-2: #1e2125;
   --pf-border: #2b2f34;
-  --pf-border-strong: #414750;
+  /* 3,10:1 sur `--pf-surface`, 3,32:1 sur `--pf-bg` (1,90:1 et 2,04:1
+     avant) : même raison que le thème clair, cf. `--pf-border-strong`. */
+  --pf-border-strong: #63666f;
   --pf-text: #ecedee;
   --pf-muted: #9ba1a9;
   --pf-accent: #ff9a45;
   --pf-accent-soft: #2a1c10;
+  /* Équivalent exact du `brightness(1.08)` d'avant, en couleur et non en
+     filtre : le texte sombre y gagne (8,79:1 → 9,54:1). */
+  --pf-accent-hover: #ffa64b;
   --pf-accent-text: #1a1206;
   --pf-ok: #55d68d;
   --pf-ok-soft: #12261b;
@@ -185,8 +199,7 @@
   }
 
   .pf-btn-primary:hover:not(:disabled) {
-    background: var(--pf-accent);
-    filter: brightness(1.08);
+    background: var(--pf-accent-hover);
   }
 
   .pf-btn-ghost {

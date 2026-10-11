@@ -154,17 +154,40 @@ export interface InstallResultView {
  * (§18bis : « un dépôt cloné n'est pas du code de confiance »). Un `postinstall`
  * qui lit `process.env.PF_GITHUB_TOKEN` exfiltrerait le jeton du serveur.
  *
- * `PF_GIT_TOKEN` n'est **pas** ici : c'est la variable du helper d'authentification
- * Git, posée explicitement par `packages/git` pour la seule commande qui en a
- * besoin, et neutralisée par ce garde-fou si on l'y ajoutait.
+ * La liste ne pouvait pas se limiter au jeton du produit : un serveur lancé
+ * depuis un shell de CI porte aussi `GITHUB_TOKEN`, `GH_TOKEN`, `NPM_TOKEN` ou
+ * `PF_GIT_TOKEN`, qui ouvrent les mêmes portes. `PF_GIT_TOKEN` **hérité du
+ * shell** (un `pf login` exporté à la main) est vidé comme les autres ; c'est le
+ * jeton que `packages/git` pose lui-même par `options.env` qui survit, et c'est
+ * l'ordre du merge ci-dessous qui fait la différence.
+ *
+ * Reste ouvert, et assumé : un secret **non listé** exporté dans le shell qui
+ * lance `pf web` atteint encore l'enfant. Une liste d'autorisation fermerait
+ * cette classe au prix de casser des installations légitimes sur une machine
+ * inconnue (variables de proxy, de registre privé, de CI) ; le garde-fou nomme
+ * donc les portes connues, et la fermeture complète est écrite au rapport de
+ * revue plutôt que devinée ici.
  */
-const SERVER_SECRETS = ['PF_GITHUB_TOKEN'] as const;
+const SERVER_SECRETS = [
+  'PF_GITHUB_TOKEN',
+  'PF_GIT_TOKEN',
+  'GITHUB_TOKEN',
+  'GH_TOKEN',
+  'NPM_TOKEN',
+] as const;
 
 /**
  * Un exécuteur dont les commandes **enfants** ne reçoivent aucun secret du
  * serveur. Le nom de la variable reste présent, vidé : `packages/exec` empile
  * `process.env` puis `options.env`, on ne peut donc pas la retirer — mais le
  * code du projet y lit une chaîne vide.
+ *
+ * L'ordre du merge est le point sensible : `scrubbed` **puis** `options.env`.
+ * L'appelant est le seul à savoir ce qu'il pose, et `packages/git` y met
+ * `PF_GIT_TOKEN` pour la seule commande qui en a besoin ; écraser cet ordre
+ * viderait le jeton que `git push` attend, ou — pire — laisserait passer un
+ * secret hérité du shell. Le test négatif du fichier voisin exécute un vrai
+ * processus enfant pour le prouver.
  */
 export function withoutServerSecrets(runner: CommandRunner): CommandRunner {
   const scrubbed: Readonly<Record<string, string>> = Object.fromEntries(
@@ -172,7 +195,7 @@ export function withoutServerSecrets(runner: CommandRunner): CommandRunner {
   );
   return {
     run: (command, args, cwd, options) =>
-      runner.run(command, args, cwd, { ...options, env: { ...options?.env, ...scrubbed } }),
+      runner.run(command, args, cwd, { ...options, env: { ...scrubbed, ...options?.env } }),
   };
 }
 

@@ -52,21 +52,23 @@ $ pnpm pf --version
 | `pf repo create\|share` | **livrée** | Dépôt GitHub du projet, privé par défaut |
 | `pf collab add\|list\|remove` | **livrée** | Collaborateurs du dépôt |
 | `pf share` | **livrée** (Phase 9) | Lien de partage en lecture seule — le manifest est dans le fragment de l'URL |
-| `pf doctor` | **à venir — V1** | Diagnostic d'un projet existant |
+| `pf doctor` | **livrée** (Phase 10) | Diagnostic d'un projet : score, constats, corrections proposées |
 | `pf analyze` | **à venir — V1** | Analyse d'un projet existant |
 | `pf upgrade` | **à venir — V2** | Mise à niveau d'un projet généré |
 
 ```text
-$ pnpm pf doctor
-pf doctor n'est pas encore disponible : V1 — diagnostic d’un projet existant.      # code 2
+$ pnpm pf doctor --help
+Usage : pf doctor [dossier] [--fix] [--json]
 $ pnpm pf analyze
-pf analyze n'est pas encore disponible : V1 — analyse d’un projet existant.
+pf analyze n'est pas encore disponible : V1 — analyse d’un projet existant.        # code 2
 $ pnpm pf upgrade
-pf upgrade n'est pas encore disponible : V2 — mise à niveau d’un projet généré.
+pf upgrade n'est pas encore disponible : V2 — mise à niveau d’un projet généré.    # code 2
 ```
 
-Ces trois commandes **existent et le disent** : ni commande muette, ni commande
-qui fait semblant. `pf --help` les liste sous « À venir ».
+`pf analyze` et `pf upgrade` **existent et le disent** : ni commande muette, ni
+commande qui fait semblant. `pf --help` les liste sous « À venir ». `pf doctor`,
+lui, est livré — il rend `0` quand le projet est sain, `1` dès qu'un constat
+échoue, ce qui en fait un contrôle utilisable dans un pipeline.
 
 ## Le détail, commande par commande
 
@@ -150,6 +152,38 @@ http://127.0.0.1:4173/share#ewogICJtYW5pZmVzdFZlcnNpb24iOiAxLAogICJuYW1lIjog…
 ```
 
 Ce n'est **pas** le partage d'un dépôt GitHub : pour cela, `pf repo create`.
+
+### `pf doctor [dossier] [--fix] [--json]`
+
+Le Project Doctor (§16) : un **score de 0 à 100**, un constat par point de
+contrôle, et les corrections proposées. Sans argument, analyse le dossier
+courant.
+
+```text
+$ pnpm pf doctor
+project-factory — santé du projet : 89/100
+
+✓ TypeScript — Le projet est vérifié par TypeScript (tsconfig.json ou dépendance `typescript`).
+✓ Dépendances — 13 dépendances déclarées et installées.
+✕ Variables d’environnement — 7 variables lues par le code (…) sans .env.example :
+  personne ne sait quoi remplir.
+…
+
+Corrections proposées :
+1. documenter les variables que le code lit, sans aucune valeur → .env.example
+
+3 point(s) ouvert(s) sur 11 constats.
+```
+
+- Le score est la part des constats **satisfaits** : un avertissement compte la
+  moitié, et un constat **sans objet** (pas de base de données, pas de Docker)
+  sort de l'équation au lieu de pénaliser un projet qui n'en a pas besoin.
+- `--fix` affiche le plan, demande confirmation, puis écrit. Il **n'écrase
+  jamais** un fichier existant et n'ajoute que des clés absentes à un
+  `package.json` : un `scripts.test` déjà écrit reste celui de l'auteur. Sans
+  terminal, il n'écrit rien et le dit.
+- **Code de sortie `1` dès qu'un constat échoue**, `0` sinon : c'est un contrôle
+  utilisable dans un pipeline. `--json` rend le rapport exploitable par un outil.
 
 ### `pf web [--port <n>] [--no-open]`
 

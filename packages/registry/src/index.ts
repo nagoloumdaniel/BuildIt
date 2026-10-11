@@ -28,3 +28,5 @@ export {
   LICENSES,
   LIFECYCLE_STATUSES,
 } from './schema/entry.js';
+export type { AppField, Slot } from './slots.js';
+export { SLOTS, slotFor } from './slots.js';

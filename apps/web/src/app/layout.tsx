@@ -6,9 +6,36 @@ import { ThemeToggle } from './theme-toggle';
 import { Toaster } from './toaster';
 import './globals.css';
 
+/**
+ * Métadonnées de tout le site.
+ *
+ * `metadataBase` donne une origine absolue aux URL relatives (canonique, Open
+ * Graph) : elle vient de `PF_SITE_URL`, avec le repli sur ce que `pf web` sert
+ * (`http://127.0.0.1:4173`). Aucun domaine n'est écrit en dur — l'hébergement
+ * est la Phase 12, et le jour venu une variable d'environnement suffira.
+ *
+ * Le titre passe par un gabarit : un écran qui déclare son propre titre n'a plus
+ * à répéter « Project Factory » (`/share` le faisait).
+ */
 export const metadata: Metadata = {
-  title: 'Project Factory',
+  metadataBase: new URL(process.env['PF_SITE_URL'] ?? 'http://127.0.0.1:4173'),
+  title: {
+    default: 'Project Factory',
+    template: '%s · Project Factory',
+  },
   description: 'Décrire un projet, obtenir un projet prêt à développer.',
+  applicationName: 'Project Factory',
+  openGraph: {
+    type: 'website',
+    siteName: 'Project Factory',
+    locale: 'fr_FR',
+    url: '/',
+    // `title` et `description` sont volontairement absents : Next les reprend du
+    // titre résolu de **chaque** page. Les fixer ici les figerait pour tout le
+    // site — `/share` afficherait « Project Factory » au lieu de son propre
+    // titre dans les aperçus de lien.
+  },
+  twitter: { card: 'summary' },
 };
 
 /**
@@ -38,7 +65,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
             <ThemeToggle />
           </div>
         </header>
-        <div id="contenu">
+        <div id="contenu" tabIndex={-1}>
           {/* Le brouillon est partagé par tous les écrans : un seul endroit (§3). */}
           <DraftProvider>{children}</DraftProvider>
         </div>

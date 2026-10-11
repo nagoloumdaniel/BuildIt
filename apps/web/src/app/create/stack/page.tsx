@@ -228,7 +228,12 @@ export default function StackPage() {
               </p>
               <div className="pf-grid mt-2">
                 {block.options.map((option) => (
-                  <OptionButton key={option.id} option={option} onToggle={toggleTechnology} />
+                  <OptionButton
+                    key={option.id}
+                    option={option}
+                    chosenLocally={draft.technologies.includes(option.id)}
+                    onToggle={toggleTechnology}
+                  />
                 ))}
               </div>
             </div>
@@ -271,6 +276,7 @@ export default function StackPage() {
                   <OptionButton
                     key={option.id}
                     option={option}
+                    chosenLocally={draft.technologies.includes(option.id)}
                     recommended={
                       draft.mode === 'guided' &&
                       !expandedHere &&

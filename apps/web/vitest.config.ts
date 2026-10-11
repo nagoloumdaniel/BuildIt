@@ -29,8 +29,30 @@ export default defineConfig({
   test: {
     include: ['src/**/*.test.ts', 'src/**/*.test.tsx'],
     environment: 'node',
+    /**
+     * Les tests de l'écran de génération écrivent un vrai projet sur le disque :
+     * sous `turbo run test` (13 paquets en parallèle), le délai par défaut de
+     * 5 s a été dépassé deux fois de façon reproductible — et passé à chaque
+     * fois en isolation. Un test qui échoue selon la charge ne prouve rien :
+     * le délai est donc porté à 30 s, ce qui reste un plafond, pas une attente.
+     * Trouvé pendant la vérification finale de la Phase 10.
+     */
+    testTimeout: 30_000,
     coverage: {
       provider: 'v8',
+      /**
+       * La portée mesurée est `src/lib` — l'état d'UI pur (brouillon, parcours,
+       * thème, codec de partage). Elle est **étroite exprès** : le seuil de 90 %
+       * y est tenu, alors que sur tout `src` (les 18 écrans et les Server
+       * Actions, ~9 000 lignes) la même mesure donne 68 %.
+       *
+       * Élargir `include` sans élargir les tests ferait échouer la suite sur un
+       * chiffre, pas sur un défaut : la preuve des écrans est ailleurs — tests
+       * de composant, tests de Server Action, et `pnpm test:e2e` qui pilote le
+       * parcours dans un vrai navigateur. Trouvé en revue (MAJOR-3) : le
+       * roadmap annonçait « apps/web 98,7 % » sans dire la portée ; c'est
+       * désormais écrit ici et là-bas.
+       */
       include: ['src/lib/**/*.ts'],
       thresholds: { statements: 90, branches: 90, functions: 90, lines: 90 },
     },

@@ -1,5 +1,6 @@
 'use client';
 
+import { badgeClassName, buttonClassName, StatusMessage } from '@project-factory/ui';
 import { type ReactElement, useEffect, useMemo, useState } from 'react';
 import { ScreenShell } from '../../components/wizard/shell';
 import { loadGraphAction } from '../actions';
@@ -27,7 +28,7 @@ function ShareLoading(): ReactElement {
       title="Configuration partagée"
       description="Lecture seule : ce lien décrit une configuration, il ne l’exécute pas."
     >
-      <p className="pf-hint">Lecture du lien…</p>
+      <StatusMessage>Lecture du lien…</StatusMessage>
     </ScreenShell>
   );
 }
@@ -52,18 +53,16 @@ export function SharePreview({ result, labels }: SharePreviewProps): ReactElemen
         description="Lecture seule : ce lien décrit une configuration, il ne l’exécute pas."
       >
         <section className="pf-card pf-card-pad">
-          <p className="pf-error" role="status">
-            Ce lien n’a pas pu être lu.
-          </p>
+          <StatusMessage tone="error">Ce lien n’a pas pu être lu.</StatusMessage>
           <ul className="mt-2 list-disc pl-5">
             {result.issues.map((issue) => (
               <li key={issue}>{issue}</li>
             ))}
           </ul>
-          <p className="pf-hint mt-3">
+          <StatusMessage className="mt-3">
             Demandez à la personne qui vous l’a envoyé de le recopier en entier, ou repartez de{' '}
             <a href="/">l’accueil</a>.
-          </p>
+          </StatusMessage>
         </section>
       </ScreenShell>
     );
@@ -75,19 +74,19 @@ export function SharePreview({ result, labels }: SharePreviewProps): ReactElemen
       description="Lecture seule : cette page montre les choix d’un projet. Elle ne modifie rien et ne génère rien."
     >
       <section className="pf-card pf-card-pad">
-        <p className="pf-badge">Lecture seule</p>
+        <p className={badgeClassName()}>Lecture seule</p>
         <div className="mt-3">
           <BlueprintSummary view={blueprintView(result.value, labels)} />
         </div>
       </section>
 
-      <p className="pf-hint mt-3">
+      <StatusMessage className="mt-3">
         La configuration est portée par le fragment du lien : elle n’a été envoyée à aucun serveur,
         et cette page n’en conserve aucune trace.
-      </p>
+      </StatusMessage>
 
       <nav className="mt-4 flex flex-wrap items-center gap-3" aria-label="Suite">
-        <a className="pf-btn" href="/">
+        <a className={buttonClassName()} href="/">
           Accueil
         </a>
       </nav>

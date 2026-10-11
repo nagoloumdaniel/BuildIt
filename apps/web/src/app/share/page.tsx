@@ -12,7 +12,7 @@ import { ShareView } from './view';
  * elle-même.
  */
 export const metadata: Metadata = {
-  title: 'Configuration partagée — Project Factory',
+  title: 'Configuration partagée',
   description:
     'Lecture seule d’une configuration partagée : un manifest porté par le lien, sans compte et sans serveur.',
   robots: { index: false, follow: false },

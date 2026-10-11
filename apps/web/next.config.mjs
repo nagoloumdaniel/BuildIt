@@ -28,6 +28,7 @@ const config = {
     '@project-factory/manifest',
     '@project-factory/presets',
     '@project-factory/registry',
+    '@project-factory/ui',
     '@project-factory/workspace',
   ],
   eslint: {

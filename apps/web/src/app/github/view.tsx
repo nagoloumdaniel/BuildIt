@@ -1,5 +1,6 @@
 'use client';
 
+import { Badge, Button, StatusMessage } from '@project-factory/ui';
 import type { ReactElement } from 'react';
 import { ScreenShell } from '../../components/wizard/shell';
 import type { DeviceStartView, PermissionView } from './device';
@@ -42,9 +43,7 @@ export function GithubView({
       description="La connexion se fait par un code à saisir sur github.com : aucun mot de passe ne transite par Project Factory, et le jeton reste dans le trousseau de cette machine."
     >
       {message === undefined || message === '' ? null : (
-        <p className="pf-hint mb-3" role="status">
-          {message}
-        </p>
+        <StatusMessage className="mb-3">{message}</StatusMessage>
       )}
 
       <section className="pf-card pf-card-pad">
@@ -55,7 +54,9 @@ export function GithubView({
           <>
             <p className="pf-title mt-2">
               {status.login}
-              <span className="pf-badge pf-badge-ok ml-2">Connecté</span>
+              <Badge tone="ok" className="ml-2">
+                Connecté
+              </Badge>
             </p>
             <p className="pf-hint mt-1">
               Permissions accordées :{' '}
@@ -68,9 +69,9 @@ export function GithubView({
               Jeton rangé dans : {status.store}. Il ne quitte pas cette machine.
             </p>
             <div className="mt-3">
-              <button type="button" className="pf-btn" disabled={busy} onClick={onDisconnect}>
+              <Button disabled={busy} onClick={onDisconnect}>
                 Se déconnecter
-              </button>
+              </Button>
             </div>
           </>
         ) : (
@@ -78,14 +79,13 @@ export function GithubView({
             <p className="pf-hint mt-2">Aucun compte GitHub connecté.</p>
             {device === null ? (
               <div className="mt-3 flex items-center gap-3">
-                <button
-                  type="button"
-                  className="pf-btn pf-btn-primary"
+                <Button
                   disabled={busy || !status.deviceFlowAvailable}
                   onClick={onConnect}
+                  variant="primary"
                 >
                   Se connecter à GitHub
-                </button>
+                </Button>
                 {busy ? <span className="pf-hint">En attente de GitHub…</span> : null}
               </div>
             ) : (

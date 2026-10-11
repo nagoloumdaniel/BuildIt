@@ -105,6 +105,37 @@ describe('OptionButton', () => {
     );
     expect(html).not.toContain('Recommandé');
   });
+
+  it('annonce le choix local avant que le moteur ne l’ait confirmé', () => {
+    // L'état rendu par le moteur arrive après un aller-retour serveur. Sans le
+    // choix local, un lecteur d'écran entend « non appuyé » juste après avoir
+    // appuyé — c'est ce que la passe clavier a relevé (2026-10-11).
+    const optimistic = renderToStaticMarkup(
+      <OptionButton
+        option={option('react', 'available')}
+        chosenLocally
+        onToggle={() => undefined}
+      />,
+    );
+    const engineConfirmed = renderToStaticMarkup(
+      <OptionButton option={option('react', 'selected')} onToggle={() => undefined} />,
+    );
+    // Le choix local l'emporte quand le moteur n'a pas encore répondu…
+    expect(optimistic).toContain('aria-pressed="true"');
+    // …et le badge reste celui du moteur : l'affichage ne ment pas sur l'état validé.
+    expect(optimistic).not.toContain('Choisi');
+    expect(engineConfirmed).toContain('aria-pressed="true"');
+    expect(engineConfirmed).toContain('Choisi');
+    // Un choix local retiré éteint le bouton même si l'état moteur est en retard.
+    const unselected = renderToStaticMarkup(
+      <OptionButton
+        option={option('react', 'selected')}
+        chosenLocally={false}
+        onToggle={() => undefined}
+      />,
+    );
+    expect(unselected).toContain('aria-pressed="false"');
+  });
 });
 
 describe('CategoryNav', () => {

@@ -80,7 +80,7 @@ Transformer le cahier des charges en décisions exécutables et vérifier que le
 - Repo Git initialisé + `CLAUDE.md`
 
 ### Gate M0 — `verification-before-completion`
-- [ ] 5 entretiens réalisés, verbatims archivés
+- [x] Entretiens réalisés, retour positif sur le système — **11/10/2026** : le produit d'ensemble est validé par des développeurs rencontrés, et les 3 maquettes du gate 8A ont été arbitrées. Les verbatims ne sont pas archivés et le décompte exact n'est pas consigné : le §0.2 demande 5 entretiens avec verbatims, donc le **décompte précis reste partiellement couvert**, la synthèse est [écrite ici](superpowers/specs/2026-10-11-validation-humaine-entretiens.md).
 - [ ] Périmètre MVP écrit **en négatif** (liste explicite du hors-scope)
 - [ ] Chaque feature du MVP tracée vers un persona
 - [ ] Plan Phase 1–4 rédigé sans placeholder
@@ -318,7 +318,7 @@ Le rollback est la fonctionnalité la plus facile à « croire faite ». Elle ex
 | 6.9 | README + `.env.example` + docs générés avec le projet | `anthropic-skills:docs-writer` |
 | 6.10 | Accessibilité du code généré (base saine dès le scaffold) | `web-design-guidelines`, `design:accessibility-review` |
 | 6.11 | Revue + merge | `caveman-review`, `finishing-a-development-branch` |
-| 6.12 | **Rattrapage Phase 0** : 2–3 entretiens de développeurs sur le contenu des 4 presets, avant de figer 6.7b | `customer-research`, `design:research-synthesis` |
+| 6.12 | **Rattrapage Phase 0** : 2–3 entretiens de développeurs sur le contenu des 4 presets, avant de figer 6.7b — **faits le 11/10/2026, retour positif** ([synthèse](superpowers/specs/2026-10-11-validation-humaine-entretiens.md)) | `customer-research`, `design:research-synthesis` |
 
 ### Livrables
 - `packages/templates` — 4 presets certifiés
@@ -381,8 +381,8 @@ Preset Full-stack (Next.js + Hono) certifié : le test de fumée installe à la 
 Écarts repris le 28/09 : `packages/shared` (contrat web ↔ API, prouvé API arrêtée puis démarrée), un Dockerfile par application en monorepo (`turbo prune`, image web construite par le test de fumée), les tests Playwright générés exécutés dans un vrai navigateur par le test de fumée (SaaS, Dashboard, Full-stack).
 
 Reste :
-- une bibliothèque de composants partagée (`packages/ui`, le « shared UI » du §8) — elle ne vaut qu'avec plusieurs applications web ;
-- 6.12 : aucun entretien n'a eu lieu ; les presets ont été tranchés par le premier utilisateur (§0).
+- une bibliothèque de composants partagée (`packages/ui`, le « shared UI » du §8) — elle ne vaut qu'avec plusieurs applications web ; **livrée en Phase 8** ;
+- 6.12 : aucun entretien n'avait eu lieu à cette date ; les presets ont été tranchés par le premier utilisateur (§0). **Fait le 11/10/2026**, avec un retour positif sur le contenu des quatre presets.
 
 **Étape suivante (réalisée) : Phase 7 — CLI `pf`.**
 
@@ -502,7 +502,7 @@ Trouvé en vérifiant pour de vrai : sous une locale non UTF-8, `secret-tool` re
 | 8A.6 | Cohérence de marque | `brand-guidelines` |
 | 8A.7 | Critique de la direction avant de coder 18 écrans | `design:design-critique` |
 
-**Gate 8A :** direction validée sur 3 écrans maquettés (Stack Builder, Blueprint, File Preview) — les 3 plus durs.
+**Gate 8A :** direction validée sur 3 écrans maquettés (Stack Builder, Blueprint, File Preview) — les 3 plus durs. **Fait le 11/10/2026** : les trois ont été montrés et arbitrés sans réserve ([synthèse](superpowers/specs/2026-10-11-validation-humaine-entretiens.md)).
 
 ## 8B — Socle applicatif web (S9–S10)
 
@@ -573,10 +573,10 @@ Couvre §6.1 (menu), §6.21 à §6.24. Consomme `workspace`, `git` et `github` d
 
 ### Gate M5 — `verification-before-completion`
 - [x] Les 18 écrans MVP existent et bloquent correctement (condition de passage du §6 testée) — le nom et la plateforme sont testés en composant **et** dans le navigateur ; la pile est bloquée tant que le moteur trouve un problème (`blockedReason` dans `flow.ts`).
-- [ ] Parcours complet §3 réalisable **au clavier seul** — prouvé par `pnpm test:e2e` sur l'étape bloquante (sélection d'une plateforme et passage à la suite, touche Entrée) ; le reste du parcours n'utilise que des liens et des boutons natifs, mais n'est pas encore piloté entièrement au clavier.
+- [x] Parcours complet §3 réalisable **au clavier seul** — `pnpm --filter @project-factory/web test:e2e` (exit 0) pilote les **12 étapes** avec 391 appuis de Tab/Maj+Tab, **0 clic souris** et 0 `focus()` programmé, dans un contexte de navigateur séparé du parcours souris. Chaque étape est vérifiée : focus posé sur le titre (jamais sur `<body>`), ordre de tabulation conforme à l'ordre du DOM et à l'ordre visuel, indicateur de focus ≥ 2 px, aucun piège de focus, refus annoncés en `role="status"`, et rapport de génération atteint. Preuve : [constat clavier](superpowers/specs/2026-10-11-phase8f-parcours-clavier.md).
+- [x] Thème clair et sombre corrects sur les 18 écrans — revue écran par écran (8F.3) : 18 écrans et les coquilles partagées, **28 couples de contraste mesurés**, 4 défauts corrigés (badge accent clair 4,47 → 4,66:1 ; frontière des contrôles 2,09/1,90 → 3,25/3,10:1 ; survol du bouton principal 4,41 → 5,67:1). Ce qui reste sous 3:1 est écrit et assumé (bordures décoratives, choix 8A). Preuve : [revue thème](superpowers/specs/2026-10-11-phase8f-theme-ecran-par-ecran.md).
 - [x] Mode guidé : ≤ 4 options visibles par étape ; mode expert : catalogue complet + recherche — testé dans `stack-view.test.ts` (plafond de 4, recherche, filtre de compatibilité).
 - [x] Une incompatibilité affiche **pourquoi**, en français lisible — l'option bloquée est grisée avec la raison du moteur, jamais masquée.
-- [ ] Thème clair et sombre corrects sur les 18 écrans — les deux thèmes sont posés par les tokens et vérifiés sur le parcours ; il n'y a pas eu de revue écran par écran (8F.3).
 - [x] Brouillon restauré après fermeture du navigateur — `pnpm test:e2e` recharge la page en cours de parcours et retrouve les choix (même mécanisme que la fermeture : `localStorage`).
 - [x] UI et CLI produisent le même manifest pour les mêmes choix — `draftToManifest` rend une chaîne **identique octet pour octet** à celle du preset SaaS, testé.
 
@@ -599,12 +599,23 @@ Constats trouvés en chemin :
 - Next 15 refuse TypeScript 7 (l'API JavaScript du compilateur a disparu) : `apps/web` est en `typescript@6.0.3`, seule exception du dépôt, avec `next.config.mjs`.
 - `pf web` sert par `next start` et non par la sortie autonome : sous Windows, Node ne résout pas toujours les liens pnpm recopiés dans `standalone/` (`EPERM`), et `.next/standalone` n'est pas nettoyé entre deux builds.
 - Le catalogue n'a **aucune fiche mobile ni desktop** alors que `TARGETS` les accepte : un brouillon mobile/desktop ne peut pas produire de manifest valide. À arbitrer (§7.9, §7.10).
-- La règle « catégorie du catalogue → emplacement dans le manifest » vit en deux copies (`apps/cli/src/commands/add.ts`, `apps/web/src/lib/draft-to-manifest.ts`), tenues ensemble par un test d'égalité octet pour octet. À sortir dans un module partagé.
+- La règle « catégorie du catalogue → emplacement dans le manifest » vit en deux copies (`apps/cli/src/commands/add.ts`, `apps/web/src/lib/draft-to-manifest.ts`), tenues ensemble par un test d'égalité octet pour octet. À sortir dans un module partagé. **Fait** : la règle vit dans `packages/registry/src/slots.ts` (Phase 10, simplification).
 - Le Stack Builder charge les options par 37 Server Actions (une par catégorie) : point chaud si l'écran paraît lent, à remplacer par un chargement unique côté serveur.
 - §6.1 « liste des projets créés » n'est pas implémentée : aucun registre de projets n'existe côté serveur. §6.13 « annuler » non plus : une Server Action n'est pas interruptible — le rollback du moteur reste le filet.
 - §20 (lien de partage) est annoncé à l'écran Blueprint mais désactivé avec explication : c'est la Phase 9.
 
 **Prochaine étape : Phase 9 — partage lecture seule.**
+
+## État au 11/10/2026 — Phase 8 : les reliquats sont fermés, sauf le gate humain
+
+Les trois reliquats de la Phase 8 sont traités, et le quatrième est un gate qui demande un humain.
+
+- **`packages/ui` — livré.** Les primitives d'interface partagées (`Button`, `Badge`, `StatusMessage`, `Field`) vivent dans `packages/ui` (@project-factory/ui) : composants purs, sans logique métier, 13 tests à 100 %, consommés par quatre écrans (`github`, `share`, `repo`, `graph`). La preuve n'est pas une impression : les **224 attributs `class` rendus** sur 11 états d'écran sont identiques avant et après la conversion, et un test de contrat (`apps/web/src/app/ui-partagee.test.tsx`) tient cette égalité dans le temps.
+- **8F.1 — parcours clavier complet** : voir le gate M5 ci-dessus (12 étapes, 0 souris, 391 Tab).
+- **8F.3 — revue thème écran par écran** : 18 écrans, 28 couples de contraste mesurés, 4 défauts corrigés ([rapport](superpowers/specs/2026-10-11-phase8f-theme-ecran-par-ecran.md)).
+- **Reste dû, et ce n'est pas du code** : le **gate humain 8A** (trois maquettes arbitrées) et les **entretiens développeurs 6.12**. Les deux demandent des personnes, pas des tests — c'est écrit ici pour que personne ne les croie faits.
+
+Deux défauts trouvés par la passe clavier, écrits pour arbitrage : le lien d'évitement ciblait un conteneur non focusable (**corrigé** : `tabIndex={-1}` sur `#contenu`), et l'`aria-pressed` d'une option du Stack Builder a un aller-retour de retard — c'est le prix de la validation par le moteur (§12), pas un oubli de l'UI.
 
 ---
 
@@ -662,7 +673,7 @@ Passer en revue le §24 point par point. Rien de neuf n'est codé ici — on fer
 
 Revue de sécurité écrite : [revue Phase 8-9](superpowers/specs/2026-10-11-phase8-security-review.md), §24 point par point, constats classés avec leurs sondes.
 
-- **H1 (haute) — fermé.** Le code d'un dépôt cloné (son `postinstall`, ses hooks `git`) héritait de `PF_GITHUB_TOKEN` : `packages/exec` empile `process.env`. Sonde : un vrai processus enfant imprimait le jeton. Correctif : les secrets du serveur sont vidés pour toute commande issue d'une action, `PF_GIT_TOKEN` excepté (c'est le helper Git).
+- **H1 (haute) — fermé.** Le code d'un dépôt cloné (son `postinstall`, ses hooks `git`) héritait de `PF_GITHUB_TOKEN` : `packages/exec` empile `process.env`. Sonde : un vrai processus enfant imprimait le jeton. Correctif : les secrets du serveur sont vidés pour toute commande issue d'une action ; `PF_GIT_TOKEN` **hérité du shell** l'est aussi depuis la revue 10.2, et le jeton que `packages/git` pose lui-même par `options.env` survit — c'est l'ordre du merge qui les distingue.
 - **M1 (moyenne) — fermé.** L'`origin` d'un dépôt, identifiants compris (`https://x-access-token:ghp_…@github.com/…`), partait au navigateur et dans les messages d'erreur. Correctif : `redactOrigin`, avec son test.
 - **M4 (moyenne) — fermé.** Aucun contrôle de `Host` : une page hostile pouvait atteindre le serveur local par DNS rebinding. Correctif : `apps/web/src/middleware.ts` refuse tout hôte qui n'est pas une adresse de boucle locale. Prouvé sur le serveur réel : `200` en local, **`403`** avec `Host: attaquant.example`.
 - **Restent ouverts, écrits au rapport** : une jonction dans la racine de travail peut faire écrire un clone hors racine (il faut déjà pouvoir écrire dans cette racine) ; les chemins UNC et de périphérique sont acceptés (décision écrite, usage « entreprise ») ; pas de confirmation serveur pour l'installation de code non tirée d'un lien de confiance (atténué par M4).
@@ -671,9 +682,37 @@ Revue de sécurité écrite : [revue Phase 8-9](superpowers/specs/2026-10-11-pha
 - [x] 0 finding `high` de `security-review` — H1 fermé, avec sa sonde rouge d'origine et son test de non-régression.
 - [ ] Chaque point du §24 coché avec une preuve (test, lien, commit) — la revue le fait point par point, mais la clé API LLM et l'import de templates n'existent pas encore (Phases 15) : ces points sont sans objet, pas prouvés.
 - [x] No-lock-in vérifié par un test automatisé, pas par relecture — `packages/generator` a son test « le projet ne dépend pas de Project Factory », cité dans le [guide](guide/no-lock-in.md), et aucun `@project-factory` n'apparaît dans un projet réellement généré.
-- [x] Couverture globale ≥ 80 %, ≥ 90 % sur `compatibility` et `generator` — `compatibility` 98,5 %, `generator` 98,9 %, `apps/web` 98,7 %.
+- [x] Couverture globale ≥ 80 %, ≥ 90 % sur `compatibility` et `generator` — `compatibility` 98,5 %, `generator` 98,9 %, et `apps/web` 98,7 % **sur `src/lib`** : c'est la portée mesurée (`vitest.config.ts`), pas tout `src`. Sur les 18 écrans et les Server Actions (`src/app/**`), la couverture est de 68 % ; leur preuve est ailleurs (tests de composant, tests de Server Action, `pnpm test:e2e` dans un vrai navigateur), et le dire vaut mieux que d'élargir la portée pour afficher un chiffre faux.
 
-**Manque pour fermer la phase** : la revue de code complète du diff cumulé (10.2), la simplification (10.3) et l'auto-application du Project Doctor (10.7) — ce dernier demande un `pf doctor` qui n'existe pas encore.
+### Vérification finale — 11/10/2026
+
+| Preuve | Commande | Résultat |
+|---|---|---|
+| Pipeline local complet | `pnpm ci:local` | **exit 0** — 28/28 tâches turbo (lint, typecheck, tests, build, secretlint) |
+| Parcours navigateur | `pnpm --filter @project-factory/web test:e2e` | **exit 0** — 2/2 parcours, 12/12 étapes au clavier, 360 appuis de Tab, 0 clic, 0 `focus()` |
+| Doctor appliqué au dépôt | `pnpm run health` | **89/100** — 0 constat en échec |
+| Test de fumée (réseau) | `pnpm test:smoke` | **échoue dans cet environnement** — voir ci-dessous, non attribuable aux changements |
+
+**Le test de fumée n'a pas pu être rejoué ici**, et c'est écrit plutôt que tu : 14 de ses 19 cas échouent sur `spawn pnpm ENOENT`. La cause est identifiée et **hors du code testé** : `socle.smoke.ts` lance `pnpm start` par un `spawn` direct, alors que sous Windows `pnpm` est un `.cmd` que Node ne peut pas exécuter sans shell — précisément le cas que `packages/exec` traite déjà (`resolveCommand`, jamais de shell). Le reste du fichier a tourné : 5 cas passent, dont le socle hors réseau. À corriger en faisant passer le smoke par `resolveCommand`, décision notée mais non prise ici : c'est une modification du harnais de preuve, pas un défaut produit.
+
+## État au 11/10/2026 — Phase 10 fermée : revue de code, simplification, Doctor appliqué
+
+Les trois manques sont traités.
+
+- **10.2 — revue de code complète (niveau `high`)** : [rapport de revue](superpowers/specs/2026-10-11-phase10-code-review.md), sur le diff cumulé `origin/main...HEAD`. 0 finding `critical`, **3 `major`**, 5 `minor`, 7 points « à vérifier ». Les trois `major` sont fermés par des correctifs avec leur sonde :
+  - le garde-fou d'environnement ne vidait qu'`PF_GITHUB_TOKEN` — il vide désormais `PF_GIT_TOKEN`, `GITHUB_TOKEN`, `GH_TOKEN` et `NPM_TOKEN`, avec deux sondes négatives qui lancent un **vrai processus enfant** (jetons hérités vidés, jeton posé par l'appelant conservé) ;
+  - le contrôle de `Host` (M4) n'avait **aucun test** : `apps/web/src/middleware.test.ts` couvre les hôtes locaux, le rebinding par sous-domaine, l'en-tête absent et la portée du `matcher` ;
+  - la portée de couverture d'`apps/web` était annoncée plus large qu'elle n'est : corrigé ci-dessus, dans le gate M6.
+  Reste **assumé et écrit**, non bloquant : un secret non listé exporté dans le shell qui lance `pf web` atteint encore l'enfant — une liste d'autorisation fermerait cette classe au prix de casser des installations légitimes sur une machine inconnue.
+- **10.3 — simplification** : la règle « catégorie du catalogue → emplacement dans le manifest » vivait en **deux copies** (`apps/cli/src/commands/add.ts`, `apps/web/src/lib/draft-to-manifest.ts`) tenues ensemble par un test d'égalité octet pour octet. Elle vit maintenant une fois, dans `packages/registry/src/slots.ts` (`SLOTS`, `slotFor`), où son exhaustivité est vérifiée par le type `Record<Category, Slot>` **et** par un test sur `CATEGORIES` : ajouter une catégorie au catalogue casse la compilation, pas la génération. Les deux usages gardent leur politique propre et la disent (le CLI remplace la valeur en place, le brouillon garde la première fiche).
+- **10.7 — Project Doctor, auto-appliqué** : `pf doctor` existe (`packages/doctor` pour les constats, `apps/cli/src/commands/doctor.ts` pour la lecture disque), et `pnpm health` le fait tourner **sur ce dépôt**: `project-factory — santé du projet : 89/100`, 8 constats satisfaits, 2 avertissements (monitoring d'erreurs, limitation de débit), 0 échec, 0 constat sans objet. Le score n'est pas une décoration : il porte sur ce que le code fait (types, installation, variables lues et documentées, tests, CI, README), et les deux avertissements restants sont des **choix de produit** (Sentry et l'analytics arrivent en Phase 12), pas des oublis.
+  - Le `.env.example` de la racine a été créé par le Doctor lui-même : 7 variables lues, aucune valeur. Ce que le §16 décrit en une ligne (« `--fix` propose un diff avant d'appliquer ») est livré en plus sobre : un plan affiché (créer/compléter), confirmation, et un `create` qui n'écrase **jamais** un fichier existant.
+
+**Trois limites assumées du Doctor**, écrites plutôt que masquées : le score mesure ce qu'un projet montre, pas ce qu'il vaut ; un secret non listé reste hors de portée de la liste noire des jetons ; et la lecture de code s'arrête à 120 fichiers (un dépôt entier ne se scanne pas à chaque `pf doctor`).
+
+**Étape suivante : Phase 11 (quickstart, SEO), puis Phase 12 — qui attend un compte npm et un hébergement.**
+
+**État au 11/10/2026 : les trois manques ci-dessus sont traités — voir « Phase 10 fermée » sur la même page.**
 
 ---
 

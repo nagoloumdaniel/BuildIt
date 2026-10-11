@@ -29,6 +29,7 @@
     "@project-factory/presets": "workspace:*",
     "@project-factory/registry": "workspace:*",
     "@project-factory/typescript-config": "workspace:*",
+    "@project-factory/ui": "workspace:*",
     "@project-factory/workspace": "workspace:*",
     "@tailwindcss/postcss": "4.3.3",
     "@types/react": "19.3.0",

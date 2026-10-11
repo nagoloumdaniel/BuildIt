@@ -4,6 +4,7 @@ import { add } from './commands/add.js';
 import { clone } from './commands/clone.js';
 import { collab } from './commands/collab.js';
 import { create } from './commands/create.js';
+import { doctor } from './commands/doctor.js';
 import { generate } from './commands/generate.js';
 import { graph } from './commands/graph.js';
 import { key } from './commands/key.js';
@@ -25,6 +26,7 @@ const COMMANDS: Readonly<Record<string, Command>> = {
   template,
   generate,
   graph,
+  doctor,
   add,
   key,
   clone,
@@ -71,6 +73,9 @@ Configurateur web :
 
 Partage en lecture seule (§20) :
   share <manifest.json>         Imprime un lien dont le fragment porte le manifest
+
+Diagnostic (§16) :
+  doctor [dossier] [--fix] [--json]   Score de santé, constats, corrections proposées
 
 À venir : ${Object.keys(PENDING).join(', ')}.
 

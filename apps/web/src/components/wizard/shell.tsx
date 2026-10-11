@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { type ReactElement, type ReactNode, useEffect } from 'react';
+import { type ReactElement, type ReactNode, useEffect, useRef } from 'react';
 import {
   blockedReason,
   nextStep,
@@ -50,6 +50,22 @@ export function Progress({ current }: { current: StepId }): ReactElement {
   );
 }
 
+/**
+ * L'**adresse demandée** au chargement du document, lue quand ce module est
+ * évalué (donc à l'hydratation).
+ *
+ * Elle distingue les deux façons d'arriver sur un écran :
+ *
+ * - **accès direct** à l'adresse (`window.location.href` est inchangée) : le
+ *   focus reste où le navigateur l'a mis — le déplacer serait intrusif et
+ *   ferait sauter le lien d'évitement et la bascule de thème du premier Tab ;
+ * - **navigation dans le parcours** (l'adresse a changé) : le routeur de Next
+ *   retire l'élément qui portait le focus (« Continuer »), et sans transfert il
+ *   retombe sur `<body>` — l'utilisateur au clavier devrait alors retraverser
+ *   tout l'en-tête à chaque étape, et rien n'annonce l'écran suivant.
+ */
+const requestedUrl = typeof window === 'undefined' ? null : window.location.href;
+
 export interface StepShellProps {
   readonly step: StepId;
   readonly title: string;
@@ -66,12 +82,29 @@ export interface StepShellProps {
 export function StepShell({ step, title, description, children }: StepShellProps): ReactElement {
   const draft = useDraft();
   const session = useSession();
+  const titleRef = useRef<HTMLHeadingElement>(null);
+  const focusHandled = useRef(false);
   const previous = previousStep(step);
   const next = nextStep(step);
   // La condition évaluée est celle de l'étape **affichée**, jamais celle que le
   // brouillon portait avant qu'on arrive ici.
   const reason = blockedReason({ ...draft, step });
   const ready = reason === undefined;
+
+  // Le focus ne se rattrape pas après coup (8F.1) : il est posé ici, à l'entrée
+  // de l'écran. La `ref` garde le premier passage d'un montage unique — le mode
+  // strict de React rejoue les effets en développement et ne doit pas
+  // transformer ce montage en « navigation ».
+  useEffect(() => {
+    if (focusHandled.current) {
+      return;
+    }
+    focusHandled.current = true;
+    if (requestedUrl === window.location.href) {
+      return;
+    }
+    titleRef.current?.focus();
+  }, []);
 
   // La reprise (§3) repart de l'écran quitté : le brouillon retient l'étape.
   useEffect(() => {
@@ -87,7 +120,11 @@ export function StepShell({ step, title, description, children }: StepShellProps
         <p className="pf-eyebrow">
           Étape {stepIndex(step) + 1} sur {STEP_ORDER.length}
         </p>
-        <h1 className="pf-title">{title}</h1>
+        {/* `tabIndex={-1}` : le titre est une cible de focus programmée (entrée
+            dans l'étape), jamais un arrêt de tabulation de plus. */}
+        <h1 className="pf-title" tabIndex={-1} ref={titleRef}>
+          {title}
+        </h1>
         <p className="pf-subtitle">{description}</p>
         <div className="mt-5">{children}</div>
       </section>

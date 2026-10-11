@@ -4,7 +4,8 @@ import { parseArgs } from 'node:util';
 import { resolve } from '@project-factory/compatibility';
 import { selectionFromManifest } from '@project-factory/generator';
 import { type Manifest, parseManifest, serializeManifest } from '@project-factory/manifest';
-import { type Category, loadCatalogue, type RegistryEntry } from '@project-factory/registry';
+import type { RegistryEntry, Slot } from '@project-factory/registry';
+import { loadCatalogue, slotFor } from '@project-factory/registry';
 import { suggest } from '@project-factory/validation';
 import { printIssues, printWarnings, usageError } from '../format.js';
 import { EXIT, type ExitCode, type Io } from '../io.js';
@@ -16,7 +17,7 @@ Ajoute une technologie au manifest, au champ que sa catégorie désigne, après
 contrôle de compatibilité. Affiche la modification ; n'écrit qu'avec --yes ou
 après confirmation. Manifest par défaut : ${DEFAULT_MANIFEST_FILE}.`;
 
-/** Le résultat d'un placement : le nouveau manifest et ce qu'il a changé. */
+/** Le résultat d'un placement : le nouveau manifest et le champ touché. */
 interface Placement {
   readonly manifest: Manifest;
   readonly field: string;
@@ -25,81 +26,98 @@ interface Placement {
 
 type Place = (manifest: Manifest, id: string) => Placement | string;
 
-function list(field: 'services' | 'quality' | 'infra'): Place {
-  return (manifest, id) => ({
-    manifest: { ...manifest, [field]: [...(manifest[field] ?? []), id] },
-    field,
-  });
+/** Le manifest, avec un champ d'application remplacé — jamais un cast. */
+function withApp(manifest: Manifest, app: AppKey, field: AppField, id: string): Manifest {
+  return { ...manifest, [app]: { ...manifest[app], [field]: id } };
+}
+
+type AppKey = 'frontend' | 'mobile' | 'desktop' | 'backend';
+type AppField = 'framework' | 'language' | 'styling' | 'ui';
+
+/** Ce qu'un ajout remplace dans une application, selon son champ. */
+function replaceInApp(manifest: Manifest, field: AppField, id: string): Placement | string {
+  // Le framework va à l'application que la cible implique : sans application
+  // web, un framework web n'a nulle part où aller.
+  const target = manifest.frontend;
+  if (target === undefined) {
+    return 'Aucune application web dans ce manifest : créez-la avec un preset (pf create) plutôt que par morceaux.';
+  }
+  return {
+    manifest: withApp(manifest, 'frontend', field, id),
+    field: `frontend.${field}`,
+    replaced: target[field],
+  };
 }
 
 /**
- * Où va chaque catégorie. Un champ à valeur unique est remplacé, et la
- * modification affichée le dit ; une chaîne est un refus, qui dit pourquoi.
+ * Le placement de `pf add`, à partir de la table partagée `slotFor`.
+ *
+ * Politique propre au CLI, et différente de celle du brouillon web : ici on
+ * **remplace** la valeur unique en place et on le dit (`remplace X`), parce que
+ * c'est un ajout demandé explicitement à un manifest existant. Le brouillon, lui,
+ * assemble un manifest neuf et garde la première fiche rencontrée. Ce module ne
+ * décide plus *où* va une catégorie — c'était la seule chose que les deux copies
+ * devaient dire à l'identique.
  */
-const PLACES: Partial<Record<Category, Place>> = {
-  frontend: (manifest, id) =>
-    manifest.frontend === undefined
-      ? 'Aucune application web dans ce manifest : créez-la avec un preset (pf create) plutôt que par morceaux.'
-      : {
-          manifest: { ...manifest, frontend: { ...manifest.frontend, framework: id } },
-          field: 'frontend.framework',
-          replaced: manifest.frontend.framework,
-        },
-  styling: (manifest, id) =>
-    manifest.frontend === undefined
-      ? 'Un style s’applique à une application web, absente de ce manifest.'
-      : {
-          manifest: { ...manifest, frontend: { ...manifest.frontend, styling: id } },
-          field: 'frontend.styling',
-          replaced: manifest.frontend.styling,
-        },
-  ui: (manifest, id) =>
-    manifest.frontend === undefined
-      ? 'Une bibliothèque d’interface s’applique à une application web, absente de ce manifest.'
-      : {
-          manifest: { ...manifest, frontend: { ...manifest.frontend, ui: id } },
-          field: 'frontend.ui',
-          replaced: manifest.frontend.ui,
-        },
-  backend: (manifest, id) => ({
-    manifest: { ...manifest, backend: { ...manifest.backend, framework: id } },
-    field: 'backend.framework',
-    replaced: manifest.backend?.framework,
-  }),
-  database: (manifest, id) => ({
-    manifest: { ...manifest, database: { ...manifest.database, engine: id } },
-    field: 'database.engine',
-    replaced: manifest.database?.engine,
-  }),
-  orm: (manifest, id) =>
-    manifest.database === undefined
-      ? 'Un ORM a besoin d’une base de données : ajoutez-la d’abord (pf add postgresql).'
-      : {
-          manifest: { ...manifest, database: { ...manifest.database, orm: id } },
-          field: 'database.orm',
-          replaced: manifest.database.orm,
-        },
-  authentication: (manifest, id) => ({
-    manifest: { ...manifest, auth: { provider: id } },
-    field: 'auth.provider',
-    replaced: manifest.auth?.provider,
-  }),
-  language: () =>
-    'Le langage fait partie de l’application : il se choisit à la création (pf create).',
-  testing: list('quality'),
-  linting: list('quality'),
-  formatting: list('quality'),
-  'git-hooks': list('quality'),
-  containers: list('infra'),
-  'ci-cd': list('infra'),
-  hosting: list('infra'),
-  monorepo: list('infra'),
-  'package-manager': list('infra'),
-  'dev-environment': list('infra'),
-};
+function slotted(slot: Slot, manifest: Manifest, id: string): Placement | string {
+  if (slot.kind === 'list') {
+    return {
+      manifest: { ...manifest, [slot.field]: [...(manifest[slot.field] ?? []), id] },
+      field: slot.field,
+    };
+  }
+
+  if (slot.kind === 'single') {
+    if (slot.field === 'provider') {
+      return {
+        manifest: { ...manifest, auth: { provider: id } },
+        field: 'auth.provider',
+        replaced: manifest.auth?.provider,
+      };
+    }
+    if (slot.field === 'orm') {
+      const database = manifest.database;
+      if (database === undefined) {
+        return 'Un ORM a besoin d’une base de données : ajoutez-la d’abord (pf add postgresql).';
+      }
+      return {
+        manifest: { ...manifest, database: { ...database, orm: id } },
+        field: 'database.orm',
+        replaced: database.orm,
+      };
+    }
+    return {
+      manifest: { ...manifest, database: { ...manifest.database, engine: id } },
+      field: 'database.engine',
+      replaced: manifest.database?.engine,
+    };
+  }
+
+  if (slot.field === 'language') {
+    return 'Le langage fait partie de l’application : il se choisit à la création (pf create).';
+  }
+  if (slot.field === 'styling' && manifest.frontend === undefined) {
+    return 'Un style s’applique à une application web, absente de ce manifest.';
+  }
+  if (slot.field === 'ui' && manifest.frontend === undefined) {
+    return 'Une bibliothèque d’interface s’applique à une application web, absente de ce manifest.';
+  }
+  return replaceInApp(manifest, slot.field, id);
+}
 
 function place(manifest: Manifest, entry: RegistryEntry): Placement | string {
-  return (PLACES[entry.category] ?? list('services'))(manifest, entry.id);
+  const slot = slotFor(entry.category);
+  // Le catalogue est la source de vérité : une fiche `backend` va au framework
+  // du backend, et non à celui de l'application web que `slotted` traite par
+  // défaut.
+  if (slot.kind === 'app' && slot.field === 'framework' && entry.category === 'backend') {
+    return {
+      manifest: { ...manifest, backend: { ...manifest.backend, framework: entry.id } },
+      field: 'backend.framework',
+      replaced: manifest.backend?.framework,
+    };
+  }
+  return slotted(slot, manifest, entry.id);
 }
 
 export async function add(args: readonly string[], io: Io): Promise<ExitCode> {

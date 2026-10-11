@@ -60,6 +60,9 @@ importers:
       '@project-factory/compatibility':
         specifier: workspace:*
         version: link:../../packages/compatibility
+      '@project-factory/doctor':
+        specifier: workspace:*
+        version: link:../../packages/doctor
       '@project-factory/exec':
         specifier: workspace:*
         version: link:../../packages/exec
@@ -145,6 +148,9 @@ importers:
       '@project-factory/typescript-config':
         specifier: workspace:*
         version: link:../../tooling/typescript-config
+      '@project-factory/ui':
+        specifier: workspace:*
+        version: link:../../packages/ui
       '@project-factory/workspace':
         specifier: workspace:*
         version: link:../../packages/workspace
@@ -194,6 +200,34 @@ importers:
       '@types/semver':
         specifier: 7.8.0
         version: 7.8.0
+      '@vitest/coverage-v8':
+        specifier: 5.0.1
+        version: 5.0.1(vitest@5.0.1)
+      tsdown:
+        specifier: 0.23.0
+        version: 0.23.0(typescript@7.0.2)
+      typescript:
+        specifier: 7.0.2
+        version: 7.0.2
+      vitest:
+        specifier: 5.0.1
+        version: 5.0.1(@types/node@26.6.2)(@vitest/coverage-v8@5.0.1)(vite@8.3.0(@types/node@26.6.2)(jiti@2.7.0)(yaml@2.9.1))
+
+  packages/doctor:
+    dependencies:
+      '@project-factory/manifest':
+        specifier: workspace:*
+        version: link:../manifest
+      '@project-factory/registry':
+        specifier: workspace:*
+        version: link:../registry
+      '@project-factory/validation':
+        specifier: workspace:*
+        version: link:../validation
+    devDependencies:
+      '@project-factory/typescript-config':
+        specifier: workspace:*
+        version: link:../../tooling/typescript-config
       '@vitest/coverage-v8':
         specifier: 5.0.1
         version: 5.0.1(vitest@5.0.1)
@@ -411,6 +445,36 @@ importers:
       '@vitest/coverage-v8':
         specifier: 5.0.1
         version: 5.0.1(vitest@5.0.1)
+      tsdown:
+        specifier: 0.23.0
+        version: 0.23.0(typescript@7.0.2)
+      typescript:
+        specifier: 7.0.2
+        version: 7.0.2
+      vitest:
+        specifier: 5.0.1
+        version: 5.0.1(@types/node@26.6.2)(@vitest/coverage-v8@5.0.1)(vite@8.3.0(@types/node@26.6.2)(jiti@2.7.0)(yaml@2.9.1))
+
+  packages/ui:
+    devDependencies:
+      '@project-factory/typescript-config':
+        specifier: workspace:*
+        version: link:../../tooling/typescript-config
+      '@types/react':
+        specifier: 19.3.0
+        version: 19.3.0
+      '@types/react-dom':
+        specifier: 19.3.0
+        version: 19.3.0(@types/react@19.3.0)
+      '@vitest/coverage-v8':
+        specifier: 5.0.1
+        version: 5.0.1(vitest@5.0.1)
+      react:
+        specifier: 19.3.0
+        version: 19.3.0
+      react-dom:
+        specifier: 19.3.0
+        version: 19.3.0(react@19.3.0)
       tsdown:
         specifier: 0.23.0
         version: 0.23.0(typescript@7.0.2)
@@ -3450,7 +3514,7 @@ snapshots:
       obug: 2.2.1
       std-env: 4.2.0
       tinyrainbow: 3.1.1
-      vitest: 5.0.1(@types/node@26.6.2)(@vitest/coverage-v8@5.0.1)(vite@8.3.0(@types/node@26.6.2)(jiti@2.7.0)(yaml@2.9.1))
+      vitest: 5.0.1(@types/node@26.6.2)(@vitest/coverage-v8@5.0.1)(vite@8.3.0(@types/node@26.6.2)(jiti@2.6.1)(yaml@2.9.1))
 
   '@vitest/istanbul-lib-coverage@1.0.1': {}
 

@@ -1,5 +1,6 @@
 'use client';
 
+import { Badge, Button, Field, StatusMessage } from '@project-factory/ui';
 import type { ReactElement } from 'react';
 import { ScreenShell } from '../../components/wizard/shell';
 import type { AccessView, RepositoryStatusView, RoleView } from './sharing';
@@ -116,41 +117,33 @@ export function RepoView(props: RepoViewProps): ReactElement {
       description="L’état du dépôt GitHub du projet, sa création si besoin, et les accès : les droits sont ceux de GitHub, Project Factory n’a pas de comptes."
     >
       {message === undefined || message === '' ? null : (
-        <p className="pf-hint mb-3" role="status">
-          {message}
-        </p>
+        <StatusMessage className="mb-3">{message}</StatusMessage>
       )}
 
       <section className="pf-card pf-card-pad">
-        <label className="pf-label" htmlFor="pf-repo-directory">
-          Dossier du projet
-        </label>
-        <input
-          id="pf-repo-directory"
-          className="pf-input pf-mono"
-          autoComplete="off"
-          spellCheck={false}
-          placeholder="C:\projets\mon-projet"
-          value={directory}
-          onChange={(event) => props.onDirectory(event.target.value)}
-        />
-        <button
-          type="button"
-          className="pf-btn pf-btn-primary mt-3"
-          disabled={busy}
-          onClick={props.onInspect}
-        >
+        <Field id="pf-repo-directory" label="Dossier du projet">
+          <input
+            id="pf-repo-directory"
+            className="pf-input pf-mono"
+            autoComplete="off"
+            spellCheck={false}
+            placeholder="C:\projets\mon-projet"
+            value={directory}
+            onChange={(event) => props.onDirectory(event.target.value)}
+          />
+        </Field>
+        <Button className="mt-3" disabled={busy} onClick={props.onInspect} variant="primary">
           Lire l’état du dépôt
-        </button>
+        </Button>
       </section>
 
       {status === null ? null : (
         <section className="pf-card pf-card-pad mt-3">
           <p className="pf-eyebrow">Dépôt</p>
           {status.issues.map((issue) => (
-            <p key={issue} className="pf-error mt-1">
+            <StatusMessage key={issue} tone="error" className="mt-1">
               {issue}
-            </p>
+            </StatusMessage>
           ))}
 
           {status.ok && status.github ? (
@@ -159,34 +152,33 @@ export function RepoView(props: RepoViewProps): ReactElement {
                 <a href={status.url} target="_blank" rel="noreferrer">
                   {status.url}
                 </a>
-                <span className="pf-badge ml-2">{visibilityLabel(status.visibility)}</span>
+                <Badge className="ml-2">{visibilityLabel(status.visibility)}</Badge>
               </p>
-              <p className="pf-hint mt-1">
+              <StatusMessage className="mt-1">
                 Dépôt local : {status.origin}. Le lien est copiable et le dépôt est{' '}
                 {status.visibility === 'private' ? 'privé' : 'accessible'}.
-              </p>
+              </StatusMessage>
             </>
           ) : null}
 
           {status.ok && !status.github ? (
             <>
-              <p className="pf-hint mt-1">
+              <StatusMessage className="mt-1">
                 {status.isRepository
                   ? 'Ce dépôt Git n’a pas d’origine GitHub : le partage passe par GitHub.'
                   : 'Ce projet n’est pas encore un dépôt Git : le premier commit sera créé avant la création du dépôt.'}
-              </p>
-              <label className="pf-label mt-4" htmlFor="pf-repo-name">
-                Nom du dépôt
-              </label>
-              <input
-                id="pf-repo-name"
-                className="pf-input pf-mono"
-                autoComplete="off"
-                spellCheck={false}
-                placeholder={status.proposedName}
-                value={name}
-                onChange={(event) => props.onName(event.target.value)}
-              />
+              </StatusMessage>
+              <Field id="pf-repo-name" label="Nom du dépôt" labelClassName="mt-4">
+                <input
+                  id="pf-repo-name"
+                  className="pf-input pf-mono"
+                  autoComplete="off"
+                  spellCheck={false}
+                  placeholder={status.proposedName}
+                  value={name}
+                  onChange={(event) => props.onName(event.target.value)}
+                />
+              </Field>
 
               <fieldset className="mt-4">
                 <legend className="pf-label">Visibilité</legend>
@@ -214,31 +206,25 @@ export function RepoView(props: RepoViewProps): ReactElement {
                 </div>
               </fieldset>
 
-              <label className="pf-label mt-4" htmlFor="pf-repo-description">
-                Description (facultative)
-              </label>
-              <input
+              <Field
                 id="pf-repo-description"
-                className="pf-input"
-                autoComplete="off"
-                value={description}
-                onChange={(event) => props.onDescription(event.target.value)}
-              />
+                label="Description (facultative)"
+                labelClassName="mt-4"
+              >
+                <input
+                  id="pf-repo-description"
+                  className="pf-input"
+                  autoComplete="off"
+                  value={description}
+                  onChange={(event) => props.onDescription(event.target.value)}
+                />
+              </Field>
 
               <div className="mt-3 flex items-center gap-3">
-                <button
-                  type="button"
-                  className="pf-btn pf-btn-primary"
-                  disabled={create !== undefined}
-                  onClick={props.onCreate}
-                >
+                <Button disabled={create !== undefined} onClick={props.onCreate} variant="primary">
                   Créer le dépôt et pousser le code
-                </button>
-                {create === undefined ? null : (
-                  <span className="pf-hint" role="status">
-                    {create}
-                  </span>
-                )}
+                </Button>
+                {create === undefined ? null : <StatusMessage>{create}</StatusMessage>}
               </div>
             </>
           ) : null}
@@ -249,12 +235,10 @@ export function RepoView(props: RepoViewProps): ReactElement {
         <p className="pf-eyebrow">Partager le projet</p>
         {share === undefined ? null : (
           <div className="mt-2 flex items-center gap-3">
-            <button type="button" className="pf-btn pf-btn-primary" disabled>
+            <Button disabled variant="primary">
               Partager le projet
-            </button>
-            <span className="pf-hint" role="status">
-              {share}
-            </span>
+            </Button>
+            <StatusMessage>{share}</StatusMessage>
           </div>
         )}
 
@@ -262,73 +246,61 @@ export function RepoView(props: RepoViewProps): ReactElement {
           <>
             <div className="mt-2 flex flex-wrap items-end gap-3">
               <span>
-                <label className="pf-label" htmlFor="pf-repo-username">
-                  Nom d’utilisateur GitHub
-                </label>
-                <input
-                  id="pf-repo-username"
-                  className="pf-input"
-                  autoComplete="off"
-                  spellCheck={false}
-                  placeholder="octocat"
-                  value={username}
-                  onChange={(event) => props.onUsername(event.target.value)}
-                />
+                <Field id="pf-repo-username" label="Nom d’utilisateur GitHub">
+                  <input
+                    id="pf-repo-username"
+                    className="pf-input"
+                    autoComplete="off"
+                    spellCheck={false}
+                    placeholder="octocat"
+                    value={username}
+                    onChange={(event) => props.onUsername(event.target.value)}
+                  />
+                </Field>
               </span>
               <span>
-                <label className="pf-label" htmlFor="pf-repo-role">
-                  Rôle
-                </label>
-                <select
-                  id="pf-repo-role"
-                  className="pf-input"
-                  value={role}
-                  onChange={(event) => props.onRole(event.target.value)}
-                >
-                  {roles.map((item) => (
-                    <option key={item.role} value={item.role}>
-                      {item.label} ({item.role})
-                    </option>
-                  ))}
-                </select>
+                <Field id="pf-repo-role" label="Rôle">
+                  <select
+                    id="pf-repo-role"
+                    className="pf-input"
+                    value={role}
+                    onChange={(event) => props.onRole(event.target.value)}
+                  >
+                    {roles.map((item) => (
+                      <option key={item.role} value={item.role}>
+                        {item.label} ({item.role})
+                      </option>
+                    ))}
+                  </select>
+                </Field>
               </span>
-              <button
-                type="button"
-                className="pf-btn pf-btn-primary"
-                disabled={invite !== undefined}
-                onClick={props.onInvite}
-              >
+              <Button disabled={invite !== undefined} onClick={props.onInvite} variant="primary">
                 Partager le projet
-              </button>
-              {invite === undefined ? null : (
-                <span className="pf-hint" role="status">
-                  {invite}
-                </span>
-              )}
+              </Button>
+              {invite === undefined ? null : <StatusMessage>{invite}</StatusMessage>}
             </div>
             {selectedRole === undefined ? null : (
-              <p className="pf-hint mt-2">{selectedRole.note}</p>
+              <StatusMessage className="mt-2">{selectedRole.note}</StatusMessage>
             )}
 
             {access === null ? null : (
               <div className="mt-4">
                 <p className="pf-label">Collaborateurs</p>
                 {access.collaborators.length === 0 ? (
-                  <p className="pf-hint">Personne d’autre n’a accès à ce dépôt.</p>
+                  <StatusMessage>Personne d’autre n’a accès à ce dépôt.</StatusMessage>
                 ) : (
                   <ul className="mt-1">
                     {access.collaborators.map((person) => (
                       <li key={person.login} className="flex items-center gap-3">
                         <span className="pf-mono">{person.login}</span>
-                        <span className="pf-badge">{person.role}</span>
-                        <button
-                          type="button"
-                          className="pf-btn pf-btn-ghost"
+                        <Badge>{person.role}</Badge>
+                        <Button
                           disabled={busy}
                           onClick={() => props.onRemove(person.login)}
+                          variant="ghost"
                         >
                           Retirer
-                        </button>
+                        </Button>
                       </li>
                     ))}
                   </ul>
@@ -341,15 +313,14 @@ export function RepoView(props: RepoViewProps): ReactElement {
                       {access.invitations.map((person) => (
                         <li key={person.login} className="flex items-center gap-3">
                           <span className="pf-mono">{person.login}</span>
-                          <span className="pf-badge">{person.role}</span>
-                          <button
-                            type="button"
-                            className="pf-btn pf-btn-ghost"
+                          <Badge>{person.role}</Badge>
+                          <Button
                             disabled={busy}
                             onClick={() => props.onRemove(person.login)}
+                            variant="ghost"
                           >
                             Annuler
-                          </button>
+                          </Button>
                         </li>
                       ))}
                     </ul>
@@ -357,9 +328,9 @@ export function RepoView(props: RepoViewProps): ReactElement {
                 )}
 
                 {access.issues.map((issue) => (
-                  <p key={issue} className="pf-hint mt-2">
+                  <StatusMessage key={issue} className="mt-2">
                     {issue}
-                  </p>
+                  </StatusMessage>
                 ))}
               </div>
             )}

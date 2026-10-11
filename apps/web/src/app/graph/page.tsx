@@ -1,5 +1,6 @@
 'use client';
 
+import { Badge, buttonClassName, StatusMessage } from '@project-factory/ui';
 import Link from 'next/link';
 import { useEffect, useMemo, useState } from 'react';
 import { useDraft } from '../../components/wizard/draft-provider';
@@ -78,30 +79,24 @@ export default function GraphPage() {
       title="Graphe de dépendances"
       description="Ce qui a été choisi, ce que le moteur a ajouté, et par quoi les pièces tiennent ensemble."
       actions={
-        <Link className="pf-btn" href="/create/blueprint">
+        <Link className={buttonClassName()} href="/create/blueprint">
           Retour au Blueprint
         </Link>
       }
     >
       {graph === null ? (
-        <p className="pf-hint" role="status">
-          {error ?? 'Calcul du graphe…'}
-        </p>
+        <StatusMessage>{error ?? 'Calcul du graphe…'}</StatusMessage>
       ) : graph.nodes.length === 0 ? (
-        <p className="pf-hint">
+        <StatusMessage>
           Aucune technologie sélectionnée : le graphe est vide. Choisissez des technologies aux
           écrans précédents.
-        </p>
+        </StatusMessage>
       ) : (
         <div>
           <p className="flex flex-wrap items-center gap-2">
-            <span
-              className={
-                graph.status === 'certified' ? 'pf-badge pf-badge-ok' : 'pf-badge pf-badge-accent'
-              }
-            >
+            <Badge tone={graph.status === 'certified' ? 'ok' : 'accent'}>
               {graph.status === 'certified' ? 'Sélection certifiée' : 'Sélection expérimentale'}
-            </span>
+            </Badge>
             <span className="pf-hint">
               {graph.nodes.length} nœud{graph.nodes.length > 1 ? 's' : ''}, {graph.edges.length}{' '}
               relation{graph.edges.length > 1 ? 's' : ''}

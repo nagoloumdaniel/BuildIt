@@ -20,6 +20,8 @@
     "lint": "biome check .",
     "lint:fix": "biome check --write .",
     "lint:secrets": "secretlint --maskSecrets \"**/*\"",
+    "health": "pnpm run pf doctor .",
+    "health:json": "pnpm run pf doctor . --json",
     "ci:local": "pnpm run lint && pnpm run typecheck && pnpm run test && pnpm run build && pnpm run lint:secrets",
     "ci:full": "pnpm run ci:local && pnpm run test:smoke && pnpm run test:e2e",
     "prepare": "lefthook install"
