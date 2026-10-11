@@ -1,6 +1,6 @@
 {
-  "name": "@buildit/cli",
-  "version": "0.0.0",
+  "name": "@nagoloum/cli",
+  "version": "0.1.0",
   "type": "module",
   "license": "MIT",
   "description": "pf — le CLI de BuildIt : décrire un projet, obtenir un projet prêt à développer.",

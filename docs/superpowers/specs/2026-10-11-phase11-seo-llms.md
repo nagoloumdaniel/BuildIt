@@ -75,7 +75,7 @@ Le fichier était juste sur les chiffres (283 fiches, 37 catégories — recompt
 - **le clone annoncé ne menait pas à la documentation** : `git clone …` donne la branche `main`, où `docs/` n'existe pas. C'est désormais écrit en tête, avec la branche `feat/phase8-web-socle` ;
 - **la commande d'installation écrivait dans le dépôt** : `pnpm pf create mon-projet --preset saas` sans `--dir` écrit à la racine du dépôt cloné. Corrigé en `--dir ../mon-projet`, et le piège est expliqué ;
 - **statut d'hébergement explicite** : « Ce fichier est versionné mais **pas encore servi** » ;
-- **forme publiée annoncée, pas affirmée** : `pnpm add -g @buildit/cli` est décrit comme prévu en Phase 12 et **non disponible** ;
+- **forme publiée annoncée, pas affirmée** : `pnpm add -g @nagoloum/cli` est décrit comme prévu en Phase 12 et **non disponible** ;
 - ajout du configurateur web (`pnpm build` puis `pnpm pf web` → `http://127.0.0.1:4173`, boucle locale) et des 19 licences reconnues dans la ligne du registry.
 
 `docs/README.md` : la ligne `llms.txt` disait « à la racine de la doc publiée » — elle dit maintenant « versionné, **pas encore servi** (Phase 12) ».

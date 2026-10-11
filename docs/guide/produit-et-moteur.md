@@ -57,7 +57,7 @@ Ce que ça change pour vous :
 
 La dépendance ne va que dans un sens : les applications dépendent des paquets du
 moteur, jamais l'inverse. Aucun `package.json` de `packages/` ne référence
-`@buildit/web` ou `@buildit/cli` — c'est ce qui permet au web et
+`@buildit/web` ou `@nagoloum/cli` — c'est ce qui permet au web et
 au CLI d'être remplacés, ou d'en ajouter un troisième (une extension d'éditeur,
 un script CI), sans toucher au moteur.
 

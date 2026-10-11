@@ -48,12 +48,17 @@ Depuis la racine du dépôt cloné : `pf` est le script de la racine, qui exécu
 sources TypeScript par `jiti`.
 
 ```bash
-pnpm pf --help          # dépôt cloné — la seule forme disponible aujourd'hui
+pnpm pf --help          # dépôt cloné
 ```
 
-La forme publiée est prévue en **Phase 12** (`pnpm add -g @buildit/cli`,
-puis `pf create …`) : **elle n'existe pas encore**, ne l'utilisez pas avant que la
-roadmap ne l'annonce.
+La forme publiée existe aussi, sous le tag `next` (pré-release, pas encore `latest`) :
+
+```bash
+npm i -g @nagoloum/cli@next
+pf create voisinage --preset saas
+```
+
+Vérifié le 11/10/2026 sur une installation réelle depuis le registre public.
 
 ### Où travailler
 

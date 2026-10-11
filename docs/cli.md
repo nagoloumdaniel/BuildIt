@@ -6,7 +6,7 @@
 
 ```bash
 pnpm pf <commande>                        # depuis la racine du dépôt, sur les sources
-pnpm --filter @buildit/cli build  # puis node apps/cli/bin/pf.js <commande>
+pnpm --filter @nagoloum/cli build  # puis node apps/cli/bin/pf.js <commande>
 ```
 
 `pnpm pf` s'exécute à la racine du dépôt : un projet créé sans `--dir` y atterrit.

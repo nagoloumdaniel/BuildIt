@@ -417,7 +417,7 @@ Le CLI est une **façade au même niveau que l'UI** (§9, §21, §24), pas un bo
 - Clé API gérée localement
 
 ### Gate M4 — `verification-before-completion`
-- [ ] `npx <paquet CLI>@next create` (binaire `pf`) fonctionne depuis un dossier vide sur machine propre — **prouvé sur le paquet empaqueté** (`pnpm pack`, installé par npm dans un dossier vierge, `pf create --preset saas`) ; **la publication reste à faire** : il faut un compte npm et un jeton
+- [x] `npx <paquet CLI>@next create` (binaire `pf`) fonctionne depuis un dossier vide sur machine propre — publié sous `@nagoloum/cli@next` le 11/10/2026, prouvé par `npm i -g @nagoloum/cli@next` sur le registre public réel, `pf --version` et `pf create --preset saas` en dossier neuf
 - [x] Les commandes du §21 (hors celles de la Phase 7B) existent et ont un `--help` utile — `doctor`, `analyze`, `upgrade`, `share` et celles de 7B répondent qu'elles arrivent, et quand (code 2)
 - [x] `security-review` : la clé API n'apparaît ni en logs, ni en fichier versionné, ni en variable exportée — refusée en argument, lue sur l'entrée standard ou masquée, fichier `0600` hors du dépôt, `status` ne l'affiche jamais ; chaque point a son test
 - [x] Un projet créé au CLI et un projet créé plus tard à l'UI sont **byte-identical** à partir du même manifest — test par preset : `pf create` contre `generateProject` appelé directement, comme le fera l'UI
@@ -428,7 +428,7 @@ Livré ([spec](superpowers/specs/2026-09-28-phase7-cli-design.md), [référence]
 
 Écarts :
 - 7.3 : `pf create` part d'un preset ; le mode expert passe par le manifest (`pf template show` → `pf add` → `pf generate`). `--web --mobile` attend un preset mobile certifié (V1).
-- 7.10 : publication npm non faite (compte et jeton requis).
+- 7.10 : publication npm faite le 11/10/2026, sous `@nagoloum/cli@next` (le scope `@buildit` appartient à une autre organisation sur npm).
 
 Trouvé en chemin : le compatibility engine marquait « ajoutée » une technologie choisie dès qu'une autre, parcourue avant elle, l'exigeait (TypeScript « exigée par next » dans un manifest qui la choisit) — sortie dépendante de l'ordre de saisie. Corrigé, avec son test.
 
