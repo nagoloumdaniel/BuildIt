@@ -152,9 +152,19 @@ export default function GeneratePage() {
       </div>
 
       {fatal === null ? null : (
-        <p className="pf-error mt-3" role="status">
-          {fatal}
-        </p>
+        <div className="mt-3">
+          <p className="pf-error" role="status">
+            {fatal}
+          </p>
+          <div className="mt-3 flex flex-wrap items-center gap-3">
+            <Link className="pf-btn" href="/create/stack">
+              Modifier les technologies
+            </Link>
+            <Link className="pf-btn pf-btn-ghost" href="/">
+              Retour au tableau de bord
+            </Link>
+          </div>
+        </div>
       )}
 
       {running ? (
@@ -187,9 +197,34 @@ export default function GeneratePage() {
                 ))}
               </ul>
               <p className="pf-hint mt-2">
-                Un dossier déjà présent n’est jamais écrasé : revenez à l’écran « Créer un projet »
-                pour changer le nom.
+                Un dossier déjà présent n’est jamais écrasé : si le problème vient de là, changez le
+                nom à l’écran « Créer un projet ». Si le problème vient des technologies choisies,
+                corrigez-les ci-dessous.
               </p>
+
+              <div className="mt-3 flex flex-wrap items-center gap-3">
+                <Link className="pf-btn" href="/create/stack">
+                  Modifier les technologies
+                </Link>
+                <Link className="pf-btn pf-btn-ghost" href="/">
+                  Retour au tableau de bord
+                </Link>
+              </div>
+
+              <div className="mt-3">
+                <p className="pf-label">Technologies choisies</p>
+                {draft.technologies.length === 0 ? (
+                  <p className="pf-hint">Aucune technologie choisie.</p>
+                ) : (
+                  <p className="flex flex-wrap items-center gap-2 mt-1">
+                    {draft.technologies.map((id) => (
+                      <span key={id} className="pf-badge pf-mono">
+                        {id}
+                      </span>
+                    ))}
+                  </p>
+                )}
+              </div>
             </div>
           )}
         </div>

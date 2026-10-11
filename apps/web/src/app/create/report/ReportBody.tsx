@@ -1,9 +1,12 @@
+import Link from 'next/link';
 import type { ReactElement } from 'react';
 import { formatBytes, stepLabel } from '../generate/steps';
 import type { GenerationReport } from './result';
 
 export interface ReportBodyProps {
   readonly report: GenerationReport;
+  /** Ce que le brouillon porte encore — un refus doit permettre de le corriger. */
+  readonly technologies: readonly string[];
 }
 
 /**
@@ -14,7 +17,7 @@ export interface ReportBodyProps {
  * Un refus n'affiche pas une liste de fichiers vide comme si c'était un succès :
  * « Aucun fichier écrit » est une phrase, pas une case blanche.
  */
-export function ReportBody({ report }: ReportBodyProps): ReactElement {
+export function ReportBody({ report, technologies }: ReportBodyProps): ReactElement {
   return (
     <div>
       <p className="flex flex-wrap items-center gap-2">
@@ -62,6 +65,34 @@ export function ReportBody({ report }: ReportBodyProps): ReactElement {
               <li key={issue}>{issue}</li>
             ))}
           </ul>
+        </section>
+      )}
+
+      {report.ok ? null : (
+        <section className="mt-5">
+          <div className="flex flex-wrap items-center gap-3">
+            <Link className="pf-btn" href="/create/stack">
+              Modifier les technologies
+            </Link>
+            <Link className="pf-btn pf-btn-ghost" href="/">
+              Retour au tableau de bord
+            </Link>
+          </div>
+
+          <div className="mt-3">
+            <p className="pf-label">Technologies choisies</p>
+            {technologies.length === 0 ? (
+              <p className="pf-hint">Aucune technologie choisie.</p>
+            ) : (
+              <p className="flex flex-wrap items-center gap-2 mt-1">
+                {technologies.map((id) => (
+                  <span key={id} className="pf-badge pf-mono">
+                    {id}
+                  </span>
+                ))}
+              </p>
+            )}
+          </div>
         </section>
       )}
 

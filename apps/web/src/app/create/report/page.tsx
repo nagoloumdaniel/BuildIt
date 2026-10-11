@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
+import { useDraft } from '../../../components/wizard/draft-provider';
 import { StepShell } from '../../../components/wizard/shell';
 import { ReportBody } from './ReportBody';
 import { browserSessionStorage, type GenerationReport, loadReport } from './result';
@@ -18,6 +19,7 @@ import { browserSessionStorage, type GenerationReport, loadReport } from './resu
  * `nextStep('report')` est `null` : pas de « Continuer » après le rapport.
  */
 export default function ReportPage() {
+  const draft = useDraft();
   const [report, setReport] = useState<GenerationReport | null>(null);
   const [ready, setReady] = useState(false);
 
@@ -45,7 +47,7 @@ export default function ReportPage() {
         </div>
       ) : (
         <div>
-          <ReportBody report={report} />
+          <ReportBody report={report} technologies={draft.technologies} />
           <div className="mt-5 flex flex-wrap items-center gap-3">
             <Link className="pf-btn" href="/create/generate">
               Revenir à la génération

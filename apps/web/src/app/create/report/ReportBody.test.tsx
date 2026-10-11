@@ -26,7 +26,7 @@ const REFUSED: GenerationReport = {
 /** Le rapport (§6.14) est pur : il reçoit son rapport, il ne relit rien. */
 describe('ReportBody', () => {
   it('rend le dossier, le compte de fichiers, le poids et les étapes', () => {
-    const html = renderToStaticMarkup(ReportBody({ report: SUCCESS }));
+    const html = renderToStaticMarkup(ReportBody({ report: SUCCESS, technologies: ['next'] }));
 
     expect(html).toContain('/tmp/pf/mon-projet');
     expect(html).toContain('2');
@@ -38,7 +38,7 @@ describe('ReportBody', () => {
   });
 
   it('rend un refus avec ses raisons, sans liste de fichiers', () => {
-    const html = renderToStaticMarkup(ReportBody({ report: REFUSED }));
+    const html = renderToStaticMarkup(ReportBody({ report: REFUSED, technologies: [] }));
 
     expect(html).toContain('existe déjà');
     expect(html).toContain('Aucun fichier écrit');
@@ -46,9 +46,32 @@ describe('ReportBody', () => {
 
   it('un rapport réussi sans avertissement ne montre pas de section vide', () => {
     const html = renderToStaticMarkup(
-      ReportBody({ report: { ...SUCCESS, warnings: [], files: [] } }),
+      ReportBody({ report: { ...SUCCESS, warnings: [], files: [] }, technologies: [] }),
     );
     expect(html).not.toContain('Avertissements');
     expect(html).toContain('Aucun fichier écrit');
+  });
+
+  it('un succès ne montre ni bouton de correction ni technologies', () => {
+    const html = renderToStaticMarkup(ReportBody({ report: SUCCESS, technologies: ['next'] }));
+    expect(html).not.toContain('Modifier les technologies');
+    expect(html).not.toContain('Retour au tableau de bord');
+  });
+
+  it('un refus propose de corriger les technologies et de revenir au tableau de bord', () => {
+    const html = renderToStaticMarkup(
+      ReportBody({ report: REFUSED, technologies: ['next', 'javascript'] }),
+    );
+    expect(html).toContain('href="/create/stack"');
+    expect(html).toContain('Modifier les technologies');
+    expect(html).toContain('href="/"');
+    expect(html).toContain('Retour au tableau de bord');
+    expect(html).toContain('next');
+    expect(html).toContain('javascript');
+  });
+
+  it('un refus sans technologie choisie le dit, plutôt qu’une liste vide', () => {
+    const html = renderToStaticMarkup(ReportBody({ report: REFUSED, technologies: [] }));
+    expect(html).toContain('Aucune technologie choisie.');
   });
 });
