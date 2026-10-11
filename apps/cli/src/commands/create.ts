@@ -19,9 +19,12 @@ Options :
   --yes           Ne poser aucune question`;
 
 function nameProblem(name: string): string | undefined {
+  // La phrase doit décrire le motif **réel** (`PROJECT_NAME_PATTERN`) : il
+  // accepte les chiffres, les points et les soulignés, et n'interdit que de
+  // commencer par un point ou un souligné.
   return PROJECT_NAME_PATTERN.test(name)
     ? undefined
-    : `« ${name} » n'est pas un nom de projet valide : minuscules, chiffres et tirets, commençant par une lettre (ex. mon-projet).`;
+    : `« ${name} » n'est pas un nom de projet valide : minuscules, chiffres, points, tirets ou soulignés, sans commencer par un point ni un souligné (ex. mon-projet).`;
 }
 
 export async function create(args: readonly string[], io: Io): Promise<ExitCode> {

@@ -58,7 +58,17 @@ describe('pf create', () => {
   it('refuse un nom de projet invalide, avec la règle', async () => {
     const io = fakeIo();
     expect(await run(['create', 'Mon Projet', '--preset', 'api'], io)).toBe(2);
-    expect(io.text().err).toContain('minuscules, chiffres et tirets');
+    // La phrase décrit le motif réel (`PROJECT_NAME_PATTERN`), pas une règle
+    // inventée : il accepte les chiffres, les points et les soulignés.
+    expect(io.text().err).toContain('minuscules, chiffres, points, tirets ou soulignés');
+    expect(io.text().err).toContain('sans commencer par un point ni un souligné');
+  });
+
+  it('accepte les noms que le motif autorise vraiment', async () => {
+    const io = fakeIo();
+    // `1projet` et `mon.projet_2` passent le motif : le message d'erreur ne doit
+    // pas promettre une règle plus stricte que celle qui est appliquée.
+    expect(await run(['create', '1projet', '--preset', 'api', '--dry-run', '--yes'], io)).toBe(0);
   });
 
   it('refuse deux noms', async () => {

@@ -6,6 +6,7 @@ import { useDraft, useSession } from '../components/wizard/draft-provider';
 import { ScreenShell } from '../components/wizard/shell';
 import type { DraftState } from '../lib/draft';
 import { STEP_ORDER, type StepId } from '../lib/flow';
+import { SharedLink } from './shared-link';
 
 /**
  * Écran 1 — Dashboard (§6.1, §18bis).
@@ -128,24 +129,6 @@ function DashboardView({ draft, onReset }: DashboardViewProps): ReactElement {
         )}
       </section>
 
-      <section className="pf-card pf-card-pad mt-3">
-        <p className="pf-eyebrow">Lien partagé reçu</p>
-        <label className="pf-label mt-2" htmlFor="pf-shared-link">
-          Lien d’un projet partagé
-        </label>
-        <input
-          id="pf-shared-link"
-          className="pf-input pf-mono"
-          disabled
-          placeholder="https://…/p/…"
-          autoComplete="off"
-        />
-        <p className="pf-hint mt-1">
-          Ouvrir un lien reçu arrive en Phase 9 (§20). D’ici là, la configuration se partage en
-          lecture seule depuis le CLI : <span className="pf-mono">pf</span>.
-        </p>
-      </section>
-
       <nav className="pf-grid mt-3" aria-label="Compte et dépôt">
         <Link className="pf-choice no-underline" href="/github">
           <span className="pf-choice-name">Compte GitHub</span>
@@ -168,11 +151,18 @@ export default function Home(): ReactElement {
   const draft = useDraft();
   const session = useSession();
   return (
-    <DashboardView
-      draft={draft}
-      onReset={() => {
-        session.reset();
-      }}
-    />
+    <>
+      <DashboardView
+        draft={draft}
+        onReset={() => {
+          session.reset();
+        }}
+      />
+      {/* Hors de `DashboardView` : `SharedLink` utilise le routeur, que le
+          rendu statique des tests ne monte pas. */}
+      <div className="pf-shell pt-0">
+        <SharedLink />
+      </div>
+    </>
   );
 }

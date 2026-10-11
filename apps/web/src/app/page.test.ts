@@ -18,6 +18,11 @@ vi.mock('../components/wizard/draft-provider', () => ({
   useSession: () => ({ reset: () => undefined, update: () => undefined }),
 }));
 
+// Le champ « lien partagé reçu » navigue : le routeur n'existe pas hors de Next.
+vi.mock('next/navigation', () => ({
+  useRouter: () => ({ push: () => undefined }),
+}));
+
 import Home from './page';
 
 function render(): string {
@@ -48,12 +53,16 @@ describe('Dashboard — le menu d’accueil (§18bis)', () => {
     expect(html).not.toContain('Reprendre');
   });
 
-  it('annonce le lien partagé reçu comme à venir (Phase 9)', () => {
+  it('offre d’ouvrir un lien partagé reçu, en lecture seule', () => {
     const html = render();
+    const field = html.match(/<input[^>]*id="pf-shared-link"[^>]*>/)?.[0] ?? '';
 
     expect(html).toContain('Lien partagé reçu');
-    expect(html).toContain('Phase 9');
-    expect(html).toContain('disabled');
+    // Le champ est saisissable — la Phase 9 est livrée, il n'est plus désactivé.
+    expect(field).not.toBe('');
+    expect(field).not.toContain('disabled');
+    // Et il dit où vit la donnée : après le `#`, donc hors du serveur.
+    expect(html).toContain('ne quitte jamais votre navigateur');
   });
 
   it('mène au compte GitHub et au dépôt', () => {
