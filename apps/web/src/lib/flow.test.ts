@@ -1,6 +1,14 @@
 import { describe, expect, it } from 'vitest';
 import { freshDraft } from './draft';
-import { canAdvance, nextStep, previousStep, STEP_ORDER, type StepId, stepIndex } from './flow';
+import {
+  blockedReason,
+  canAdvance,
+  nextStep,
+  previousStep,
+  STEP_ORDER,
+  type StepId,
+  stepIndex,
+} from './flow';
 
 describe('STEP_ORDER', () => {
   it('couvre les étapes du §3 sans le menu ni le graphe', () => {
@@ -85,6 +93,27 @@ describe('canAdvance — bloquants du §6', () => {
       'report',
     ] as const) {
       expect(canAdvance({ ...freshDraft(), step })).toBe(true);
+      expect(blockedReason({ ...freshDraft(), step })).toBeUndefined();
     }
+  });
+});
+
+describe('blockedReason — la phrase que l’écran affiche', () => {
+  it('dit quoi corriger quand le nom ne convient pas', () => {
+    expect(blockedReason({ ...freshDraft(), name: 'Espace Interdit' })).toContain('nom');
+    expect(blockedReason({ ...freshDraft(), name: 'mon-projet' })).toBeUndefined();
+  });
+
+  it('réclame une plateforme, puis se taît dès qu’il y en a une', () => {
+    expect(blockedReason({ ...freshDraft(), step: 'target' })).toContain('plateforme');
+    expect(blockedReason({ ...freshDraft(), step: 'target', targets: ['web'] })).toBeUndefined();
+  });
+
+  it('porte le refus du moteur tel quel : c’est lui qui explique (§12)', () => {
+    const base = { ...freshDraft(), step: 'stack' as const };
+    expect(blockedReason(base)).toContain('compatibilité');
+    expect(
+      blockedReason({ ...base, resolution: { status: 'certified', issues: ['prisma exclut X'] } }),
+    ).toBe('prisma exclut X');
   });
 });

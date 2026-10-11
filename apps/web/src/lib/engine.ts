@@ -151,3 +151,102 @@ export async function previewPlan(
     warnings: result.value.warnings.map((warning) => warning.message),
   };
 }
+
+export interface EnvVarView {
+  /** Un **nom** seulement — le §6.8 interdit d'afficher ou de stocker une valeur. */
+  readonly name: string;
+  /** Les technologies qui la réclament, pour que l'écran dise d'où elle vient. */
+  readonly technologies: readonly string[];
+}
+
+/**
+ * Les variables d'environnement que la sélection réclame (§6.8).
+ *
+ * Elles ne sont pas inventées ici : chaque fiche du catalogue déclare les
+ * siennes (`env`), et le schéma du registry n'accepte que des noms — la valeur
+ * ne peut pas s'y trouver. La résolution est celle du moteur, additions
+ * comprises : ce que le projet exigera vraiment, pas ce que l'utilisateur a
+ * coché.
+ */
+export async function requiredEnvVars(selection: Selection): Promise<EnvVarView[]> {
+  const registry = getRegistry();
+  const result = resolve(selection, registry);
+  const ids = result.ok ? result.value.technologies : selection.technologies;
+
+  const byName = new Map<string, string[]>();
+  for (const id of ids) {
+    const entry = registry.get(id);
+    for (const name of entry?.env ?? []) {
+      byName.set(name, [...(byName.get(name) ?? []), id]);
+    }
+  }
+  return [...byName.entries()]
+    .map(([name, technologies]) => ({ name, technologies }))
+    .sort((left, right) => left.name.localeCompare(right.name, 'fr'));
+}
+
+export interface GraphNodeView {
+  readonly id: string;
+  readonly label: string;
+  readonly category: string;
+  /** `selected` : choisi ; `added` : ajouté par le moteur pour tenir une exigence. */
+  readonly state: 'selected' | 'added';
+}
+
+export interface GraphEdgeView {
+  readonly from: string;
+  readonly to: string;
+  readonly kind: 'requires' | 'compatibleWith';
+}
+
+export interface GraphView {
+  readonly nodes: readonly GraphNodeView[];
+  readonly edges: readonly GraphEdgeView[];
+  readonly status: 'certified' | 'experimental';
+}
+
+/**
+ * Le Dependency Graph (§6.11) : ce qui est choisi, ce qui a été ajouté, et par
+ * quoi les pièces tiennent ensemble.
+ *
+ * Les arêtes ne sont que les relations **déclarées par le catalogue** entre
+ * deux technologies présentes dans la résolution : le graphe ne dessine pas une
+ * intention, il montre des dépendances qui existent.
+ */
+export async function dependencyGraph(selection: Selection): Promise<GraphView> {
+  const registry = getRegistry();
+  const result = resolve(selection, registry);
+  const resolution = result.ok ? result.value : undefined;
+  const selected = new Set(selection.technologies);
+  const ids = resolution?.technologies ?? selection.technologies;
+  const added = new Set((resolution?.additions ?? []).map((addition) => addition.id));
+
+  const nodes: GraphNodeView[] = [];
+  const edges: GraphEdgeView[] = [];
+  const present = new Set(ids);
+
+  for (const id of ids) {
+    const entry = registry.get(id);
+    if (entry === undefined) {
+      continue;
+    }
+    nodes.push({
+      id: entry.id,
+      label: entry.name,
+      category: entry.category,
+      state: selected.has(entry.id) && !added.has(entry.id) ? 'selected' : 'added',
+    });
+    for (const target of entry.requires ?? []) {
+      if (present.has(target)) {
+        edges.push({ from: entry.id, to: target, kind: 'requires' });
+      }
+    }
+    for (const target of entry.compatibleWith ?? []) {
+      if (present.has(target)) {
+        edges.push({ from: entry.id, to: target, kind: 'compatibleWith' });
+      }
+    }
+  }
+
+  return { nodes, edges, status: resolution?.status ?? 'experimental' };
+}

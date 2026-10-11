@@ -52,6 +52,11 @@
       }
     }
   },
+  "css": {
+    "parser": {
+      "tailwindDirectives": true
+    }
+  },
   "overrides": [
     {
       "includes": ["**/tsconfig*.json", "tooling/typescript-config/*.json", "**/*.jsonc"],

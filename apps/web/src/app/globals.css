@@ -1,17 +1,340 @@
 @import "tailwindcss";
 
-/* Tokens provisoires — la direction 8A les fige. Clair/sombre imposés par §6. */
+/*
+ * 8A — Direction artistique.
+ *
+ * Un outil de développeur : dense, neutre, lisible, un **seul** accent. Pas de
+ * dégradé pastel, pas d'ombre portée décorative, pas de rayon de 16 px. La
+ * couleur ne sert qu'à dire un état (sélection, avertissement, refus).
+ *
+ * Deux règles, tenues par relecture et par le fait qu'il n'existe qu'ici :
+ * - aucune couleur en dur dans un composant : tout passe par ces variables,
+ *   sinon le thème sombre devient une chasse aux `.tsx` ;
+ * - tout élément interactif a un `:focus-visible` visible — c'est un outil,
+ *   on y travaille au clavier.
+ */
+
 :root {
-  --pf-background: #ffffff;
-  --pf-foreground: #111111;
+  color-scheme: light;
+
+  --pf-bg: #f6f6f4;
+  --pf-surface: #ffffff;
+  --pf-surface-2: #efefec;
+  --pf-border: #d9d9d3;
+  --pf-border-strong: #b4b4ac;
+  --pf-text: #191919;
+  --pf-muted: #5d5d56;
+  --pf-accent: #b4530a;
+  --pf-accent-soft: #fbf0e5;
+  --pf-accent-text: #ffffff;
+  --pf-ok: #1c6f47;
+  --pf-ok-soft: #e7f4ec;
+  --pf-warn: #7d5a00;
+  --pf-warn-soft: #fbf3dd;
+  --pf-danger: #ab2119;
+  --pf-danger-soft: #fbeae8;
+  --pf-focus: #1d4ed8;
+  --pf-radius: 6px;
+  --pf-shadow: 0 1px 2px rgb(0 0 0 / 6%), 0 10px 24px -16px rgb(0 0 0 / 22%);
+  --pf-mono: ui-monospace, "Cascadia Code", "Segoe UI Mono", "SFMono-Regular", monospace;
 }
 
 [data-theme="dark"] {
-  --pf-background: #111111;
-  --pf-foreground: #f5f5f5;
+  color-scheme: dark;
+
+  --pf-bg: #0e1012;
+  --pf-surface: #16181b;
+  --pf-surface-2: #1e2125;
+  --pf-border: #2b2f34;
+  --pf-border-strong: #414750;
+  --pf-text: #ecedee;
+  --pf-muted: #9ba1a9;
+  --pf-accent: #ff9a45;
+  --pf-accent-soft: #2a1c10;
+  --pf-accent-text: #1a1206;
+  --pf-ok: #55d68d;
+  --pf-ok-soft: #12261b;
+  --pf-warn: #f0bf4c;
+  --pf-warn-soft: #2a2210;
+  --pf-danger: #f2857c;
+  --pf-danger-soft: #2c1513;
+  --pf-focus: #8ab0ff;
+  --pf-shadow: 0 1px 2px rgb(0 0 0 / 55%), 0 14px 32px -18px rgb(0 0 0 / 75%);
 }
 
-body {
-  background: var(--pf-background);
-  color: var(--pf-foreground);
+/* `inline` : les utilitaires engendrés pointent sur les variables, donc le
+   thème bascule sans reconstruire le CSS. */
+@theme inline {
+  --color-bg: var(--pf-bg);
+  --color-surface: var(--pf-surface);
+  --color-surface-2: var(--pf-surface-2);
+  --color-border: var(--pf-border);
+  --color-border-strong: var(--pf-border-strong);
+  --color-text: var(--pf-text);
+  --color-muted: var(--pf-muted);
+  --color-accent: var(--pf-accent);
+  --color-accent-soft: var(--pf-accent-soft);
+  --color-accent-text: var(--pf-accent-text);
+  --color-ok: var(--pf-ok);
+  --color-ok-soft: var(--pf-ok-soft);
+  --color-warn: var(--pf-warn);
+  --color-warn-soft: var(--pf-warn-soft);
+  --color-danger: var(--pf-danger);
+  --color-danger-soft: var(--pf-danger-soft);
+  --color-focus: var(--pf-focus);
+  --font-mono: var(--pf-mono);
+  --radius-pf: var(--pf-radius);
+}
+
+@layer base {
+  * {
+    border-color: var(--pf-border);
+  }
+
+  body {
+    background: var(--pf-bg);
+    color: var(--pf-text);
+    font-size: 15px;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--pf-focus);
+    outline-offset: 2px;
+  }
+
+  /* 8E : c'est un outil de travail, pas une démonstration. */
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+}
+
+@layer components {
+  .pf-shell {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 1.25rem 1.25rem 4rem;
+  }
+
+  .pf-card {
+    background: var(--pf-surface);
+    border: 1px solid var(--pf-border);
+    border-radius: var(--pf-radius);
+  }
+
+  .pf-card-pad {
+    padding: 1rem 1.125rem;
+  }
+
+  .pf-title {
+    font-size: 1.375rem;
+    font-weight: 650;
+    letter-spacing: -0.01em;
+  }
+
+  .pf-subtitle {
+    color: var(--pf-muted);
+    font-size: 0.9375rem;
+  }
+
+  .pf-eyebrow {
+    color: var(--pf-muted);
+    font-size: 0.75rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+
+  .pf-btn {
+    align-items: center;
+    background: var(--pf-surface);
+    border: 1px solid var(--pf-border-strong);
+    border-radius: var(--pf-radius);
+    color: var(--pf-text);
+    cursor: pointer;
+    display: inline-flex;
+    font-size: 0.875rem;
+    font-weight: 550;
+    gap: 0.4rem;
+    justify-content: center;
+    min-height: 2.25rem;
+    padding: 0.35rem 0.8rem;
+    text-decoration: none;
+  }
+
+  .pf-btn:hover:not(:disabled) {
+    background: var(--pf-surface-2);
+  }
+
+  .pf-btn:disabled {
+    cursor: not-allowed;
+    opacity: 0.5;
+  }
+
+  .pf-btn-primary {
+    background: var(--pf-accent);
+    border-color: var(--pf-accent);
+    color: var(--pf-accent-text);
+  }
+
+  .pf-btn-primary:hover:not(:disabled) {
+    background: var(--pf-accent);
+    filter: brightness(1.08);
+  }
+
+  .pf-btn-ghost {
+    background: transparent;
+    border-color: transparent;
+  }
+
+  .pf-input {
+    background: var(--pf-surface);
+    border: 1px solid var(--pf-border-strong);
+    border-radius: var(--pf-radius);
+    color: var(--pf-text);
+    font: inherit;
+    min-height: 2.25rem;
+    padding: 0.35rem 0.6rem;
+    width: 100%;
+  }
+
+  .pf-label {
+    display: block;
+    font-size: 0.8125rem;
+    font-weight: 600;
+    margin-bottom: 0.3rem;
+  }
+
+  .pf-hint {
+    color: var(--pf-muted);
+    font-size: 0.8125rem;
+  }
+
+  .pf-error {
+    color: var(--pf-danger);
+    font-size: 0.8125rem;
+  }
+
+  .pf-badge {
+    background: var(--pf-surface-2);
+    border: 1px solid var(--pf-border);
+    border-radius: 999px;
+    color: var(--pf-muted);
+    font-size: 0.6875rem;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    padding: 0.1rem 0.45rem;
+    text-transform: uppercase;
+  }
+
+  .pf-badge-accent {
+    background: var(--pf-accent-soft);
+    border-color: var(--pf-accent);
+    color: var(--pf-accent);
+  }
+
+  .pf-badge-ok {
+    background: var(--pf-ok-soft);
+    border-color: var(--pf-ok);
+    color: var(--pf-ok);
+  }
+
+  .pf-badge-danger {
+    background: var(--pf-danger-soft);
+    border-color: var(--pf-danger);
+    color: var(--pf-danger);
+  }
+
+  /* Les grilles de choix : une colonne sur mobile, deux ou trois au large. */
+  .pf-grid {
+    display: grid;
+    gap: 0.6rem;
+    grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr));
+  }
+
+  .pf-choice {
+    background: var(--pf-surface);
+    border: 1px solid var(--pf-border);
+    border-radius: var(--pf-radius);
+    cursor: pointer;
+    display: block;
+    padding: 0.7rem 0.8rem;
+    text-align: left;
+    width: 100%;
+  }
+
+  .pf-choice:hover:not(:disabled) {
+    border-color: var(--pf-border-strong);
+  }
+
+  .pf-choice[aria-pressed="true"] {
+    background: var(--pf-accent-soft);
+    border-color: var(--pf-accent);
+  }
+
+  .pf-choice:disabled {
+    cursor: not-allowed;
+    opacity: 0.55;
+  }
+
+  .pf-choice-name {
+    display: block;
+    font-size: 0.9375rem;
+    font-weight: 600;
+  }
+
+  .pf-choice-note {
+    color: var(--pf-muted);
+    display: block;
+    font-size: 0.8125rem;
+    margin-top: 0.15rem;
+  }
+
+  .pf-mono {
+    font-family: var(--pf-mono);
+    font-size: 0.8125rem;
+  }
+
+  /* Le lien d'évitement ne se voit qu'au clavier (§8F) : il doit être le
+     premier élément focusable, donc présent partout, mais invisible sinon. */
+  .pf-sr-only-focusable {
+    clip: rect(0 0 0 0);
+    height: 1px;
+    overflow: hidden;
+    position: absolute;
+    white-space: nowrap;
+    width: 1px;
+  }
+
+  .pf-sr-only-focusable:focus {
+    clip: auto;
+    height: auto;
+    left: 0.5rem;
+    top: 0.5rem;
+    width: auto;
+    z-index: 50;
+  }
+
+  /* 8E : transitions courtes, jamais sur la mise en page. */
+  .pf-fade-in {
+    animation: pf-fade-in 140ms ease-out;
+  }
+
+  @keyframes pf-fade-in {
+    from {
+      opacity: 0;
+      transform: translateY(2px);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
 }

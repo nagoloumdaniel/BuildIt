@@ -1,10 +1,15 @@
 import type { Metadata } from 'next';
+import Link from 'next/link';
 import type { ReactNode } from 'react';
+import { DraftProvider } from '../components/wizard/draft-provider';
 import { ThemeToggle } from './theme-toggle';
 import { Toaster } from './toaster';
 import './globals.css';
 
-export const metadata: Metadata = { title: 'Project Factory' };
+export const metadata: Metadata = {
+  title: 'Project Factory',
+  description: 'Décrire un projet, obtenir un projet prêt à développer.',
+};
 
 /**
  * Posé avant le premier rendu : sans lui, la page s'affiche en clair puis
@@ -22,10 +27,21 @@ export default function RootLayout({ children }: { children: ReactNode }) {
         <script dangerouslySetInnerHTML={{ __html: ANTI_FLASH }} />
       </head>
       <body>
-        <header>
-          <ThemeToggle />
+        <a className="pf-btn pf-sr-only-focusable" href="#contenu">
+          Aller au contenu
+        </a>
+        <header className="border-b border-border bg-surface">
+          <div className="mx-auto flex max-w-[1100px] items-center justify-between gap-4 px-5 py-2">
+            <Link className="pf-title text-base no-underline" href="/">
+              Project Factory
+            </Link>
+            <ThemeToggle />
+          </div>
         </header>
-        {children}
+        <div id="contenu">
+          {/* Le brouillon est partagé par tous les écrans : un seul endroit (§3). */}
+          <DraftProvider>{children}</DraftProvider>
+        </div>
         <Toaster />
       </body>
     </html>

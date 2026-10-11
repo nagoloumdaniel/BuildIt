@@ -121,9 +121,18 @@ importers:
       '@project-factory/compatibility':
         specifier: workspace:*
         version: link:../../packages/compatibility
+      '@project-factory/exec':
+        specifier: workspace:*
+        version: link:../../packages/exec
       '@project-factory/generator':
         specifier: workspace:*
         version: link:../../packages/generator
+      '@project-factory/git':
+        specifier: workspace:*
+        version: link:../../packages/git
+      '@project-factory/github':
+        specifier: workspace:*
+        version: link:../../packages/github
       '@project-factory/manifest':
         specifier: workspace:*
         version: link:../../packages/manifest
@@ -136,6 +145,9 @@ importers:
       '@project-factory/typescript-config':
         specifier: workspace:*
         version: link:../../tooling/typescript-config
+      '@project-factory/workspace':
+        specifier: workspace:*
+        version: link:../../packages/workspace
       '@tailwindcss/postcss':
         specifier: 4.3.3
         version: 4.3.3
@@ -148,6 +160,9 @@ importers:
       '@vitest/coverage-v8':
         specifier: 5.0.1
         version: 5.0.1(vitest@5.0.1)
+      playwright-core:
+        specifier: 1.64.0
+        version: 1.64.0
       tailwindcss:
         specifier: 4.3.3
         version: 4.3.3
@@ -2178,6 +2193,11 @@ packages:
     resolution: {integrity: sha512-qcJu88Q2IWqJsDD529JKMdwGm/dvInW4HvQnRwiH9JtihJvzGOscDtHE3x1pBKeUOTysQ8kVmLnJ2kJu7yhcGA==}
     engines: {node: '>=12'}
 
+  playwright-core@1.64.0:
+    resolution: {integrity: sha512-T9r+MZkTECl2+oUcZ26YgZzTrYidTsIhYYkJix+6iDOymOb1FB2RLLSOxRGnZGv5DStt+aduIVbt+E8WygXYpg==}
+    engines: {node: '>=20'}
+    hasBin: true
+
   pluralize@2.0.0:
     resolution: {integrity: sha512-TqNZzQCD4S42De9IfnnBvILN7HAW7riLqsCyp8lgjXeysyPlX5HhqKAcJHHHb9XskE4/a+7VGC9zzx8Ls0jOAw==}
 
@@ -3997,6 +4017,8 @@ snapshots:
   picocolors@1.1.1: {}
 
   picomatch@4.0.7: {}
+
+  playwright-core@1.64.0: {}
 
   pluralize@2.0.0: {}
 

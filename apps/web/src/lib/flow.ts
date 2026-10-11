@@ -50,24 +50,33 @@ function at(index: number): StepId | null {
 }
 
 /**
- * Les conditions bloquantes du §6, étape par étape.
+ * **Pourquoi** on ne peut pas avancer — la phrase que l'écran affiche.
  *
- * Seules trois étapes en ont une dans le cahier des charges. Les autres
- * passent : c'est un choix écrit, pas un oubli — un écran qui n'a rien à
- * exiger ne doit pas retenir l'utilisateur.
+ * Une seule source de vérité : `canAdvance` en découle. Deux fonctions
+ * séparées finiraient par se contredire, et l'écran montrerait « Continuer »
+ * actif à côté d'un message d'erreur (§12 : un refus dit pourquoi).
  */
-export function canAdvance(draft: DraftState): boolean {
+export function blockedReason(draft: DraftState): string | undefined {
   switch (draft.step) {
     case 'create':
-      return PROJECT_NAME_PATTERN.test(draft.name);
+      return PROJECT_NAME_PATTERN.test(draft.name)
+        ? undefined
+        : 'Choisissez un nom : minuscules, chiffres, points, tirets ou soulignés.';
     case 'target':
       // §6.3 : au moins une cible.
-      return draft.targets.length > 0;
+      return draft.targets.length > 0 ? undefined : 'Choisissez au moins une plateforme.';
     case 'stack':
-      // La résolution doit avoir eu lieu **et** ne rien avoir trouvé à redire.
+      if (draft.resolution === undefined) {
+        return 'La compatibilité de la sélection n’a pas encore été vérifiée.';
+      }
       // `experimental` passe : c'est un avertissement, pas un refus (§12).
-      return draft.resolution !== undefined && draft.resolution.issues.length === 0;
+      return draft.resolution.issues.length === 0 ? undefined : draft.resolution.issues.join(' ');
     default:
-      return true;
+      // Aucun bloquant écrit dans le §6 pour ces écrans — choix, pas oubli.
+      return undefined;
   }
+}
+
+export function canAdvance(draft: DraftState): boolean {
+  return blockedReason(draft) === undefined;
 }
