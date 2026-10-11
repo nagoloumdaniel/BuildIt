@@ -286,12 +286,32 @@ async function waitFor(url: string, timeoutMs: number): Promise<void> {
 }
 
 /**
+ * Tue le groupe de processus du serveur, tuer `pnpm` seul laisserait vivre le
+ * `node` qu'il a lancé, et le projet suivant trouverait le port occupé.
+ *
+ * `process.kill(-pid, …)` (convention POSIX du PID négatif pour un groupe)
+ * n'existe pas sous Windows : Node y lève `ESRCH` même quand le processus est
+ * bien vivant, ce qui faisait échapper l'erreur du bloc `finally` avant que le
+ * port ne soit libéré — chaque test suivant trouvait alors le port occupé.
+ * `taskkill /t` (arbre de processus) est l'équivalent Windows. Le processus
+ * peut aussi être déjà sorti entre la vérification et l'appel : une erreur à
+ * ce moment ne dit rien d'un échec, on l'ignore.
+ */
+function killGroup(pid: number): void {
+  try {
+    if (process.platform === 'win32') {
+      execFileSync('taskkill', ['/pid', String(pid), '/t', '/f'], { stdio: 'ignore' });
+    } else {
+      process.kill(-pid, 'SIGTERM');
+    }
+  } catch {
+    // Déjà sorti : rien à faire.
+  }
+}
+
+/**
  * Démarre l'application construite (`pnpm start`), attend qu'elle réponde,
  * exécute `check`, puis l'arrête.
- *
- * Le serveur tourne dans son propre groupe de processus : tuer `pnpm` seul
- * laisserait vivre le `node` qu'il a lancé, et le projet suivant trouverait le
- * port occupé.
  */
 async function withRunningApp(
   target: string,
@@ -323,7 +343,7 @@ async function withRunningApp(
     // Attendre la fin réelle du groupe : le projet suivant reprend ce port.
     const exited = new Promise<void>((resolve) => server.once('exit', () => resolve()));
     if (server.pid !== undefined && server.exitCode === null) {
-      process.kill(-server.pid, 'SIGTERM');
+      killGroup(server.pid);
       await exited;
     }
     const deadline = Date.now() + 15_000;
