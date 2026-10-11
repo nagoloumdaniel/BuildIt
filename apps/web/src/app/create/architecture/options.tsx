@@ -92,6 +92,22 @@ export function recommendedArchitectures(type: string | undefined): readonly Arc
   return isProjectType(type) ? BY_TYPE[type] : FALLBACK;
 }
 
+/**
+ * La forme à préremplir quand aucune n'est encore choisie.
+ *
+ * La première de `recommendedArchitectures` — jamais une valeur à part : une
+ * seconde table dirait un jour autre chose que les badges « Recommandé » de
+ * l'écran, et personne ne saurait laquelle croire. `BY_TYPE` l'ordonne déjà de
+ * la plus courante à la plus spécialisée pour le profil ; c'est ce même ordre
+ * qui décide, ici comme à l'écran.
+ */
+export function defaultArchitecture(type: string | undefined): Architecture {
+  const [first] = recommendedArchitectures(type);
+  // `recommendedArchitectures` ne rend jamais un tableau vide (`FALLBACK` en
+  // a trois) : `first` est toujours défini, `as const` ne le dit pas à `tsc`.
+  return first as Architecture;
+}
+
 /** Le changement de brouillon d'une sélection — testable hors React. */
 export function withArchitecture(draft: DraftState, architecture: Architecture): DraftState {
   return { ...draft, architecture };

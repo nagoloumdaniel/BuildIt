@@ -7,6 +7,7 @@ import { PROJECT_TYPES } from '../type/profiles';
 import {
   ARCHITECTURE_NOTES,
   ArchitectureChoices,
+  defaultArchitecture,
   recommendedArchitectures,
   withArchitecture,
 } from './options';
@@ -89,6 +90,24 @@ describe('ArchitectureChoices', () => {
     expect(html).toMatch(/data-architecture="monorepo"[^>]*aria-pressed="true"/);
     expect(html).toContain('Choisie');
     expect(html.match(/aria-pressed="true"/g)).toHaveLength(1);
+  });
+});
+
+describe('defaultArchitecture — la forme préremplie (§6.5)', () => {
+  it('reprend la première recommandation de chaque profil, jamais une table à part', () => {
+    for (const type of PROJECT_TYPES) {
+      expect(defaultArchitecture(type)).toBe(recommendedArchitectures(type)[0]);
+    }
+  });
+
+  it('sans profil connu, retombe sur la première valeur par défaut', () => {
+    expect(defaultArchitecture(undefined)).toBe(recommendedArchitectures(undefined)[0]);
+    expect(defaultArchitecture('profil-inconnu')).toBe(recommendedArchitectures(undefined)[0]);
+  });
+
+  it('rend toujours une valeur du manifest, jamais undefined', () => {
+    expect(ARCHITECTURES).toContain(defaultArchitecture('saas'));
+    expect(ARCHITECTURES).toContain(defaultArchitecture(undefined));
   });
 });
 

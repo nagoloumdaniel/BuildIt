@@ -26,4 +26,30 @@ describe('FileTree', () => {
     expect(html).toContain('<ul');
     expect(html).not.toContain('page.tsx');
   });
+
+  it('un dossier racine connu porte sa phrase (§6.12)', () => {
+    const html = renderToStaticMarkup(
+      FileTree({ nodes: buildFileTree(['apps/web/package.json', 'packages/ui/index.ts']) }),
+    );
+    expect(html).toContain('Les applications déployables du projet');
+    expect(html).toContain('Le code partagé entre applications');
+  });
+
+  it('ne met jamais de phrase sur un dossier imbriqué, même au même nom qu’une racine connue', () => {
+    // `apps` est connu à la racine ; un dossier `apps` plus profond dans
+    // l'arbre ne doit recevoir aucune phrase — ce n'est pas la même chose.
+    const html = renderToStaticMarkup(FileTree({ nodes: buildFileTree(['src/apps/legacy.ts']) }));
+    expect(html).not.toContain('Les applications déployables du projet');
+  });
+
+  it('un dossier racine sans phrase connue reste silencieux', () => {
+    const html = renderToStaticMarkup(FileTree({ nodes: buildFileTree(['dossier-inconnu/x.ts']) }));
+    expect(html).toContain('dossier-inconnu/');
+    expect(html).not.toContain('pf-hint');
+  });
+
+  it('un fichier racine ne reçoit jamais de phrase', () => {
+    const html = renderToStaticMarkup(FileTree({ nodes: buildFileTree(['README.md']) }));
+    expect(html).not.toContain('pf-hint');
+  });
 });
