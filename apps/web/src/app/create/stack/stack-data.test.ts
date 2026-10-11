@@ -119,9 +119,13 @@ describe('chargement unique du catalogue', () => {
     expect(sentBack?.options).toEqual(frontend);
     expect(blockedHere.length).toBeGreaterThan(0);
 
-    // Le verdict de la sélection est celui du moteur, et il nomme le problème.
+    // Le verdict de la sélection est celui du moteur — et, depuis la sonde
+    // de `engine.test.ts`, de la complétude vue par l'écran : `next` sans
+    // langage choisi est un problème visible, pas un « certifié » en silence
+    // qui n'échouerait qu'au Blueprint (bug rapporté, corrigé ici).
     const resolution = await checkSelectionAction(selection);
-    expect(resolution.issues.length).toBe(0);
+    expect(resolution.issues.length).toBeGreaterThan(0);
+    expect(resolution.issues.join(' ')).toMatch(/langage/i);
     expect(['certified', 'experimental']).toContain(resolution.status);
   });
 });

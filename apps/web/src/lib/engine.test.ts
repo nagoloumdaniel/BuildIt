@@ -65,6 +65,35 @@ describe('resolveSelection', () => {
     expect(resolution.issues[0]).toMatch(/next/i);
     expect(resolution.issues[0]).not.toContain('[object');
   });
+
+  /**
+   * Bug rapporté : un framework frontend choisi seul affichait « Combinaison
+   * certifiée », aucun problème — puis le Blueprint refusait le manifest
+   * (`frontend.language` obligatoire, §10) sans que rien ne l'ait annoncé sur
+   * l'écran où le choix a été fait. Le moteur de compatibilité ignore à bon
+   * droit `language` (ce n'est pas un conflit de combinaison) ; c'est donc ici,
+   * à la frontière web, que l'écart avec le schéma du manifest doit être dit.
+   */
+  it('un framework web choisi sans langage n’est plus « certifié » en silence', async () => {
+    const resolution = await resolveSelection({ targets: ['web'], technologies: ['next'] });
+
+    expect(resolution.issues.length).toBeGreaterThan(0);
+    expect(resolution.issues.join(' ')).toMatch(/langage/i);
+  });
+
+  it('le langage choisi fait taire l’alerte — plus de faux positif une fois complet', async () => {
+    const resolution = await resolveSelection({
+      targets: ['web'],
+      technologies: ['next', 'typescript'],
+    });
+    expect(resolution.status).toBe('certified');
+    expect(resolution.issues).toEqual([]);
+  });
+
+  it('aucun framework choisi : pas d’alerte langage prématurée', async () => {
+    const resolution = await resolveSelection({ targets: ['web'], technologies: [] });
+    expect(resolution.issues.filter((issue) => /langage/i.test(issue))).toEqual([]);
+  });
 });
 
 describe('listPresets', () => {

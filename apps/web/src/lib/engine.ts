@@ -114,11 +114,85 @@ export async function stackOptions(
   }));
 }
 
+/**
+ * Les cibles dont l'application exige un langage au schéma du manifest
+ * (§10 : `ManifestFrontend.language` et `ManifestMobile.language` ne sont pas
+ * optionnels ; `ManifestBackend.language` et `ManifestDesktop`, si).
+ *
+ * Dupliqué à dessein : ce n'est pas une liste de technologies (qui vivrait au
+ * registry), c'est la forme du schéma lui-même — une frontière que
+ * `draft-to-manifest.ts` documente déjà (§10, trois frontières). La recopier
+ * ici évite de faire dépendre le moteur de compatibilité, générique par
+ * nature, d'une règle de forme qui n'est pas la sienne.
+ */
+const TARGETS_REQUIRING_LANGUAGE: ReadonlySet<Selection['targets'][number]> = new Set([
+  'web',
+  'mobile',
+]);
+
+/**
+ * Le moteur de compatibilité certifie une **combinaison** ; il ne sait rien
+ * du **schéma** du manifest (§10, trois frontières — voir `draft-to-manifest.ts`).
+ * Un framework frontend choisi seul, sans langage, ne crée donc aucun conflit
+ * à ses yeux : `resolve()` rend `certified`, `issues: []`.
+ *
+ * Le manifest, lui, refuse `frontend` sans `language` — un refus qui n'arrive
+ * qu'au Blueprint, plusieurs écrans après le Stack Builder où le choix a été
+ * fait. Un visiteur qui choisit un framework web voit « Combinaison certifiée »
+ * puis, sans lien apparent, « le champ frontend.language est obligatoire » :
+ * bug rapporté, reproduit par `engine.test.ts`.
+ *
+ * Le correctif ne touche ni le moteur ni le manifest — chacun reste juste sur
+ * son terrain — il complète la **vue** que l'écran lit : un framework présent
+ * sans langage pour la même cible devient un problème visible ici, avant que
+ * l'utilisateur n'avance.
+ */
+function missingLanguageIssues(selection: Selection, registry: Registry): string[] {
+  const chosen = new Set(selection.technologies);
+  const issues: string[] = [];
+
+  for (const target of TARGETS_REQUIRING_LANGUAGE) {
+    if (!selection.targets.includes(target)) {
+      continue;
+    }
+    const hasFramework = [...chosen].some((id) => {
+      const entry = registry.get(id);
+      // `mobile` n'est pas une catégorie du registry (§11) : un framework
+      // mobile, le jour où le catalogue en certifie un, reste catégorie
+      // `frontend` — seule sa cible change. C'est `entry.targets`, pas
+      // `entry.category`, qui distingue web et mobile ici.
+      return entry !== undefined && entry.category === 'frontend' && entry.targets.includes(target);
+    });
+    if (!hasFramework) {
+      continue;
+    }
+    const hasLanguage = [...chosen].some((id) => {
+      const entry = registry.get(id);
+      return entry !== undefined && entry.category === 'language' && entry.targets.includes(target);
+    });
+    if (!hasLanguage) {
+      issues.push(
+        `Un langage est requis pour l’application ${target} : choisissez-en un dans la catégorie « Langage ».`,
+      );
+    }
+  }
+  return issues;
+}
+
 /** La résolution d'une sélection — le verdict du §12, avec ses raisons. */
 export async function resolveSelection(selection: Selection): Promise<ResolutionView> {
-  const result = resolve(selection, getRegistry());
+  const registry = getRegistry();
+  const result = resolve(selection, registry);
+  const languageIssues = missingLanguageIssues(selection, registry);
+
   if (!result.ok) {
-    return { status: 'experimental', issues: result.issues.map((issue) => issue.message) };
+    return {
+      status: 'experimental',
+      issues: [...result.issues.map((issue) => issue.message), ...languageIssues],
+    };
+  }
+  if (languageIssues.length > 0) {
+    return { status: result.value.status, issues: languageIssues };
   }
   return { status: result.value.status, issues: [] };
 }
