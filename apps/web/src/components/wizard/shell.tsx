@@ -71,6 +71,14 @@ export interface StepShellProps {
   readonly title: string;
   readonly description: string;
   readonly children: ReactNode;
+  /**
+   * Un projet généré avec succès est terminé : rien n'y est plus modifiable
+   * (§6.14), donc aucun retour vers les écrans qui l'ont composé. Seul
+   * l'écran Report pose ce drapeau, et seulement une fois la génération
+   * réussie — un refus garde la navigation normale, revenir corriger un choix
+   * a un sens tant que rien n'a été écrit.
+   */
+  readonly hidePrevious?: boolean;
 }
 
 /**
@@ -79,7 +87,13 @@ export interface StepShellProps {
  * Le bouton « Continuer » désactivé **dit pourquoi** juste à côté (§12) : un
  * bouton grisé sans explication est un cul-de-sac.
  */
-export function StepShell({ step, title, description, children }: StepShellProps): ReactElement {
+export function StepShell({
+  step,
+  title,
+  description,
+  children,
+  hidePrevious = false,
+}: StepShellProps): ReactElement {
   const draft = useDraft();
   const session = useSession();
   const titleRef = useRef<HTMLHeadingElement>(null);
@@ -133,7 +147,7 @@ export function StepShell({ step, title, description, children }: StepShellProps
         className="mt-3 flex items-center justify-between gap-3"
         aria-label="Navigation de l’étape"
       >
-        {previous === null ? (
+        {previous === null || hidePrevious ? (
           <Link className="pf-btn" href="/">
             Accueil
           </Link>
@@ -143,7 +157,7 @@ export function StepShell({ step, title, description, children }: StepShellProps
           </Link>
         )}
 
-        {next === null ? null : (
+        {next === null || hidePrevious ? null : (
           <span className="flex items-center gap-3">
             {ready ? null : (
               <span className="pf-error" role="status">

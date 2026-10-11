@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { useDraft } from '../../../components/wizard/draft-provider';
 import { StepShell } from '../../../components/wizard/shell';
+import { downloadZip } from '../../../lib/download-zip';
 import { ReportBody } from './ReportBody';
 import { browserSessionStorage, type GenerationReport, loadReport } from './result';
 
@@ -33,6 +34,7 @@ export default function ReportPage() {
       step="report"
       title="Rapport de génération"
       description="Ce qui a été écrit, les étapes terminées, les avertissements et les erreurs éventuelles."
+      hidePrevious={report?.ok === true}
     >
       {!ready ? (
         <p className="pf-hint" role="status">
@@ -46,17 +48,21 @@ export default function ReportPage() {
           </Link>
         </div>
       ) : (
-        <div>
-          <ReportBody report={report} technologies={draft.technologies} />
-          <div className="mt-5 flex flex-wrap items-center gap-3">
-            <Link className="pf-btn" href="/create/generate">
-              Revenir à la génération
-            </Link>
-            <Link className="pf-btn" href="/create/blueprint">
-              Revoir le plan
-            </Link>
-          </div>
-        </div>
+        <ReportBody
+          report={report}
+          technologies={draft.technologies}
+          docker={draft.infra.docker}
+          envVarNames={draft.envVarNames}
+          {...(report.zipBase64 === undefined
+            ? {}
+            : {
+                onRedownload: () => {
+                  if (report.zipBase64 !== undefined) {
+                    downloadZip(report.zipBase64, draft.name);
+                  }
+                },
+              })}
+        />
       )}
     </StepShell>
   );

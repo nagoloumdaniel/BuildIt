@@ -4,29 +4,12 @@ import Link from 'next/link';
 import { useEffect, useMemo, useState } from 'react';
 import { useDraft } from '../../../components/wizard/draft-provider';
 import { StepShell } from '../../../components/wizard/shell';
+import { downloadZip } from '../../../lib/download-zip';
 import { draftToManifest } from '../../../lib/draft-to-manifest';
 import { type GenerationView, generateProjectAction, workspaceRootAction } from '../../actions';
 import { browserSessionStorage, saveReport } from '../report/result';
 import { PipelineProgress } from './PipelineProgress';
 import { formatBytes, GENERATION_STEPS, progressStates, targetDirectory } from './steps';
-
-/** Déclenche le téléchargement de l'archive (mode hébergé, Phase 12). */
-function downloadZip(zipBase64: string, projectName: string): void {
-  const binary = atob(zipBase64);
-  const bytes = new Uint8Array(binary.length);
-  for (let i = 0; i < binary.length; i += 1) {
-    bytes[i] = binary.charCodeAt(i);
-  }
-  const blob = new Blob([bytes], { type: 'application/zip' });
-  const url = URL.createObjectURL(blob);
-  const link = document.createElement('a');
-  link.href = url;
-  link.download = `${projectName}.zip`;
-  document.body.appendChild(link);
-  link.click();
-  link.remove();
-  URL.revokeObjectURL(url);
-}
 
 /**
  * Generation Progress (§6.13).

@@ -1,12 +1,17 @@
 import Link from 'next/link';
 import type { ReactElement } from 'react';
 import { formatBytes, stepLabel } from '../generate/steps';
+import { installSteps } from './install-steps';
 import type { GenerationReport } from './result';
 
 export interface ReportBodyProps {
   readonly report: GenerationReport;
   /** Ce que le brouillon porte encore — un refus doit permettre de le corriger. */
   readonly technologies: readonly string[];
+  readonly docker: boolean;
+  readonly envVarNames: readonly string[];
+  /** Absent si l'archive n'est plus en main (mode local : rien à re-télécharger). */
+  readonly onRedownload?: () => void;
 }
 
 /**
@@ -17,7 +22,13 @@ export interface ReportBodyProps {
  * Un refus n'affiche pas une liste de fichiers vide comme si c'était un succès :
  * « Aucun fichier écrit » est une phrase, pas une case blanche.
  */
-export function ReportBody({ report, technologies }: ReportBodyProps): ReactElement {
+export function ReportBody({
+  report,
+  technologies,
+  docker,
+  envVarNames,
+  onRedownload,
+}: ReportBodyProps): ReactElement {
   return (
     <div>
       <p className="flex flex-wrap items-center gap-2">
@@ -92,6 +103,41 @@ export function ReportBody({ report, technologies }: ReportBodyProps): ReactElem
                 ))}
               </p>
             )}
+          </div>
+        </section>
+      )}
+
+      {!report.ok ? null : (
+        <section className="mt-5">
+          <h3 className="pf-label">Installation</h3>
+          <p className="pf-hint">
+            Le projet est terminé : ces écrans ne le modifient plus. Pour le reprendre, suivez les
+            commandes ci-dessous.
+          </p>
+          <ol className="pf-mono mt-2 list-none space-y-1 p-0">
+            {installSteps({ directory: report.directory, docker, envVarNames }).map((step) => (
+              <li key={step.command}>
+                <span className="pf-hint not-italic">{step.label}</span>
+                <br />
+                {step.command}
+              </li>
+            ))}
+          </ol>
+
+          <div className="mt-4 flex flex-wrap items-center gap-3">
+            {report.zipBase64 === undefined || onRedownload === undefined ? null : (
+              <button type="button" className="pf-btn" onClick={onRedownload}>
+                Télécharger à nouveau
+              </button>
+            )}
+            {report.directory === '' ? null : (
+              <Link className="pf-btn" href="/repo">
+                Connecter à GitHub
+              </Link>
+            )}
+            <Link className="pf-btn pf-btn-ghost" href="/">
+              Retour au tableau de bord
+            </Link>
           </div>
         </section>
       )}

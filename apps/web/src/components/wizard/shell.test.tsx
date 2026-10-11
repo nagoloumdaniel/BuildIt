@@ -54,6 +54,18 @@ describe('StepShell', () => {
     expect(html).not.toContain('href="/create/create"');
   });
 
+  it('hidePrevious verrouille la navigation : accueil seul, jamais « Précédent » ni « Continuer »', () => {
+    const html = render(
+      <StepShell step="report" title="Rapport" description="Ce qui a été écrit." hidePrevious>
+        <p>contenu</p>
+      </StepShell>,
+    );
+
+    expect(html).toContain('Accueil');
+    expect(html).not.toContain('Précédent');
+    expect(html).not.toContain('Continuer');
+  });
+
   it('la progression ne propose aucun saut en avant : la progression est une liste, pas un menu', () => {
     const html = renderToStaticMarkup(<Progress current="stack" />);
     expect(html).not.toContain('<a ');
