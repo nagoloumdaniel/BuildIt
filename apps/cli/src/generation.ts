@@ -6,8 +6,8 @@ import {
   type PipelineOptions,
   planProject,
   type ResumableStep,
-} from '@project-factory/generator';
-import type { Manifest } from '@project-factory/manifest';
+} from '@buildit/generator';
+import type { Manifest } from '@buildit/manifest';
 import { printIssues, printWarnings, usageError } from './format.js';
 import { EXIT, type ExitCode, type Io } from './io.js';
 

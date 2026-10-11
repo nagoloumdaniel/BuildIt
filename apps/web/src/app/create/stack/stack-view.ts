@@ -1,4 +1,4 @@
-import type { Category } from '@project-factory/registry';
+import type { Category } from '@buildit/registry';
 
 /**
  * La logique du Stack Builder (§5, §6.6), hors JSX.

@@ -1,9 +1,5 @@
-import { TARGETS, type Target } from '@project-factory/manifest';
-import {
-  loadCatalogue,
-  type RegistryEntry,
-  targetsWithoutFramework,
-} from '@project-factory/registry';
+import { TARGETS, type Target } from '@buildit/manifest';
+import { loadCatalogue, type RegistryEntry, targetsWithoutFramework } from '@buildit/registry';
 
 /**
  * Les cibles que l'écran Target propose — et la raison de celles qu'il ne

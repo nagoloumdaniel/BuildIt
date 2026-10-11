@@ -1,4 +1,4 @@
-import type { Issue } from '@project-factory/validation';
+import type { Issue } from '@buildit/validation';
 import type { Io } from './io.js';
 
 /**

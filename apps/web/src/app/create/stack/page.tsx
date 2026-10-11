@@ -1,6 +1,6 @@
 'use client';
 
-import type { Category } from '@project-factory/registry';
+import type { Category } from '@buildit/registry';
 import { useEffect, useMemo, useState } from 'react';
 import { useDraft, useSession } from '../../../components/wizard/draft-provider';
 import { StepShell } from '../../../components/wizard/shell';

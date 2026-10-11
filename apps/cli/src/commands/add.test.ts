@@ -1,8 +1,8 @@
 import { mkdtemp, readFile, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { type Manifest, parseManifest, serializeManifest } from '@project-factory/manifest';
-import { getPreset } from '@project-factory/presets';
+import { type Manifest, parseManifest, serializeManifest } from '@buildit/manifest';
+import { getPreset } from '@buildit/presets';
 import { describe, expect, it } from 'vitest';
 import { run } from '../cli.js';
 import { fakeIo } from '../fake-io.js';

@@ -1,6 +1,6 @@
 import { resolve as resolvePath } from 'node:path';
 import { parseArgs } from 'node:util';
-import { type Manifest, serializeManifest } from '@project-factory/manifest';
+import { type Manifest, serializeManifest } from '@buildit/manifest';
 import { usageError } from '../format.js';
 import { EXIT, type ExitCode, type Io } from '../io.js';
 import { readManifestFile } from '../manifest-file.js';

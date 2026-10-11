@@ -1,4 +1,4 @@
-import { type Manifest, parseManifest, serializeManifest } from '@project-factory/manifest';
+import { type Manifest, parseManifest, serializeManifest } from '@buildit/manifest';
 
 /**
  * Le codec du partage en lecture seule (§20, décision 9.1).

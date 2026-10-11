@@ -1,4 +1,4 @@
-import { CATEGORIES } from '@project-factory/registry';
+import { CATEGORIES } from '@buildit/registry';
 import { describe, expect, it } from 'vitest';
 import {
   CATEGORY_LABELS,

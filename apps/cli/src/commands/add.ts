@@ -1,12 +1,12 @@
 import { writeFile } from 'node:fs/promises';
 import { resolve as resolvePath } from 'node:path';
 import { parseArgs } from 'node:util';
-import { resolve } from '@project-factory/compatibility';
-import { selectionFromManifest } from '@project-factory/generator';
-import { type Manifest, parseManifest, serializeManifest } from '@project-factory/manifest';
-import type { RegistryEntry, Slot } from '@project-factory/registry';
-import { loadCatalogue, slotFor } from '@project-factory/registry';
-import { suggest } from '@project-factory/validation';
+import { resolve } from '@buildit/compatibility';
+import { selectionFromManifest } from '@buildit/generator';
+import { type Manifest, parseManifest, serializeManifest } from '@buildit/manifest';
+import type { RegistryEntry, Slot } from '@buildit/registry';
+import { loadCatalogue, slotFor } from '@buildit/registry';
+import { suggest } from '@buildit/validation';
 import { printIssues, printWarnings, usageError } from '../format.js';
 import { EXIT, type ExitCode, type Io } from '../io.js';
 import { DEFAULT_MANIFEST_FILE, readManifestFile } from '../manifest-file.js';

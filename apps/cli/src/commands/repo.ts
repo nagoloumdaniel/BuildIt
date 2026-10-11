@@ -8,7 +8,7 @@ import {
   parseRemote,
   pushToNewOrigin,
   repositoryState,
-} from '@project-factory/git';
+} from '@buildit/git';
 import { printIssues, usageError } from '../format.js';
 import { requireGitHubProject, requireSession } from '../github-session.js';
 import { EXIT, type ExitCode, type Io } from '../io.js';

@@ -1,7 +1,7 @@
 import { basename, relative, resolve } from 'node:path';
 import { parseArgs } from 'node:util';
-import { cloneRepository, type GitRemote, parseRemote } from '@project-factory/git';
-import { GitHubClient } from '@project-factory/github';
+import { cloneRepository, type GitRemote, parseRemote } from '@buildit/git';
+import { GitHubClient } from '@buildit/github';
 import { printIssues, usageError } from '../format.js';
 import { tokenStore } from '../github-session.js';
 import { offerInstall } from '../install-flow.js';

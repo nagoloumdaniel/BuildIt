@@ -1,6 +1,6 @@
 'use server';
 
-import { CATEGORIES } from '@project-factory/registry';
+import { CATEGORIES } from '@buildit/registry';
 import { loadOptionsAction } from '../../actions';
 import type { CategoryBlock } from './stack-view';
 

@@ -1,5 +1,5 @@
 import { readFileSync } from 'node:fs';
-import { suggest } from '@project-factory/validation';
+import { suggest } from '@buildit/validation';
 import { add } from './commands/add.js';
 import { clone } from './commands/clone.js';
 import { collab } from './commands/collab.js';
@@ -47,7 +47,7 @@ export const VERSION: string = (
   }
 ).version;
 
-export const HELP: string = `pf — Project Factory : décrire un projet, obtenir un projet prêt à développer.
+export const HELP: string = `pf — BuildIt : décrire un projet, obtenir un projet prêt à développer.
 
 Usage : pf [commande] [options]
 

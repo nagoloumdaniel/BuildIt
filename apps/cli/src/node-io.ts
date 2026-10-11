@@ -1,7 +1,7 @@
 import { connect } from 'node:net';
 import { createInterface } from 'node:readline/promises';
 import { Writable } from 'node:stream';
-import { nodeCommandRunner } from '@project-factory/exec';
+import { nodeCommandRunner } from '@buildit/exec';
 import type { Choice, Io, Prompter } from './io.js';
 
 /**

@@ -1,4 +1,4 @@
-import { CATEGORIES, type Category } from '@project-factory/registry';
+import { CATEGORIES, type Category } from '@buildit/registry';
 import { describe, expect, it } from 'vitest';
 import { freshDraft } from '../../../lib/draft';
 import {

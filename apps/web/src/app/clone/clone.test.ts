@@ -1,8 +1,8 @@
 import { mkdir, mkdtemp, rm, stat, symlink, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
-import type { CommandResult, CommandRunner, RunOptions } from '@project-factory/exec';
-import { parseRemote } from '@project-factory/git';
+import type { CommandResult, CommandRunner, RunOptions } from '@buildit/exec';
+import { parseRemote } from '@buildit/git';
 import { afterEach, describe, expect, it } from 'vitest';
 import { clonePreviewAction, cloneProjectAction } from '../actions-node';
 import { cloneProject, planClone } from './clone';

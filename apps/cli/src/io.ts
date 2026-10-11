@@ -1,5 +1,5 @@
-import type { CommandRunner } from '@project-factory/exec';
-import type { Fetch } from '@project-factory/github';
+import type { CommandRunner } from '@buildit/exec';
+import type { Fetch } from '@buildit/github';
 
 /**
  * Ce que le CLI échange avec le monde, rendu injectable : les tests pilotent

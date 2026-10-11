@@ -1,7 +1,7 @@
 import { mkdtemp, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { type Manifest, serializeManifest } from '@project-factory/manifest';
+import { type Manifest, serializeManifest } from '@buildit/manifest';
 import { describe, expect, it } from 'vitest';
 import { HELP, run } from '../cli.js';
 import { fakeIo } from '../fake-io.js';

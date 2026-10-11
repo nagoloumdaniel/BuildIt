@@ -6,7 +6,7 @@ import {
   type CommandRunner,
   nodeCommandRunner,
   type RunOptions,
-} from '@project-factory/exec';
+} from '@buildit/exec';
 import { afterEach, describe, expect, it } from 'vitest';
 import { inspectProjectAction, installProjectAction } from '../actions-node';
 import {

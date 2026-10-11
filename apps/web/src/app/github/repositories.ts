@@ -1,4 +1,4 @@
-import { type Fetch, GitHubClient, type RepositorySummary } from '@project-factory/github';
+import { type Fetch, GitHubClient, type RepositorySummary } from '@buildit/github';
 import { describeIssues, type SessionDeps } from './session';
 
 /**

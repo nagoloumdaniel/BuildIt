@@ -4,7 +4,7 @@ import {
   formatCommand,
   install,
   installCommand,
-} from '@project-factory/workspace';
+} from '@buildit/workspace';
 import { printIssues } from './format.js';
 import { EXIT, type ExitCode, type Io } from './io.js';
 

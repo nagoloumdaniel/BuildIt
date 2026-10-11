@@ -1,4 +1,4 @@
-import type { Manifest } from '@project-factory/manifest';
+import type { Manifest } from '@buildit/manifest';
 import { createElement, type ReactElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
@@ -12,7 +12,7 @@ import { decodeSharePayload, encodeSharePayload } from './share/codec';
 import { SharePreview } from './share/view';
 
 /**
- * Les écrans convertis consomment `@project-factory/ui` — et rendent
+ * Les écrans convertis consomment `@buildit/ui` — et rendent
  * **exactement** les mêmes classes `pf-*` qu'avant la conversion.
  *
  * C'est la preuve du remplacement : les primitives partagées ne portent aucune

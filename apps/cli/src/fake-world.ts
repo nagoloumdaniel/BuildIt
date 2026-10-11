@@ -1,5 +1,5 @@
-import type { CommandResult, CommandRunner, RunOptions } from '@project-factory/exec';
-import type { Fetch } from '@project-factory/github';
+import type { CommandResult, CommandRunner, RunOptions } from '@buildit/exec';
+import type { Fetch } from '@buildit/github';
 
 export interface Call {
   readonly command: string;

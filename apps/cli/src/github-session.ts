@@ -1,11 +1,11 @@
-import { isGitFailure, repositoryState } from '@project-factory/git';
+import { isGitFailure, repositoryState } from '@buildit/git';
 import {
   environmentStore,
   GitHubClient,
   keychainStore,
   type Repository,
   type TokenStore,
-} from '@project-factory/github';
+} from '@buildit/github';
 import { printIssues } from './format.js';
 import type { Io } from './io.js';
 

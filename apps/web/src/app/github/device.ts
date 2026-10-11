@@ -5,7 +5,7 @@ import {
   pollAccessToken,
   requestDeviceCode,
   SCOPES,
-} from '@project-factory/github';
+} from '@buildit/github';
 import {
   describeIssues,
   disconnectedStatus,
@@ -97,7 +97,7 @@ export async function startDevice(
     return {
       ok: false,
       issues: [
-        'La connexion par code n’est pas configurée : l’application OAuth de Project Factory n’est pas enregistrée sur cette machine.',
+        'La connexion par code n’est pas configurée : l’application OAuth de BuildIt n’est pas enregistrée sur cette machine.',
         'Définissez PF_GITHUB_CLIENT_ID avec l’identifiant de l’application, puis relancez le serveur.',
       ],
     };
@@ -173,7 +173,7 @@ export async function waitDevice(
 /**
  * Le chemin complet : attendre, ranger le jeton dans le trousseau, rendre l'état.
  *
- * Si le trousseau refuse, le jeton est **abandonné** : Project Factory n'a aucun
+ * Si le trousseau refuse, le jeton est **abandonné** : BuildIt n'a aucun
  * repli en clair, et l'écran affiche le refus du trousseau.
  */
 export async function completeDeviceConnection(

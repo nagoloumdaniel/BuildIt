@@ -1,11 +1,11 @@
-import type { CommandRunner } from '@project-factory/exec';
+import type { CommandRunner } from '@buildit/exec';
 import {
   environmentStore,
   type Fetch,
   GitHubClient,
   keychainStore,
   type TokenStore,
-} from '@project-factory/github';
+} from '@buildit/github';
 
 /**
  * La session GitHub côté serveur (§20bis, §24).
@@ -86,7 +86,7 @@ export async function readAccount(fetcher: Fetch, token: string): Promise<Accoun
  * `scope` reste l'identifiant que GitHub attend.
  */
 export const DEVICE_FLOW_UNAVAILABLE: readonly string[] = [
-  'La connexion par code n’est pas configurée : l’application OAuth de Project Factory n’est pas enregistrée sur cette machine.',
+  'La connexion par code n’est pas configurée : l’application OAuth de BuildIt n’est pas enregistrée sur cette machine.',
   'Définissez PF_GITHUB_CLIENT_ID avec l’identifiant de l’application, puis relancez le serveur.',
 ];
 
@@ -142,7 +142,7 @@ export async function githubStatus(deps: SessionDeps): Promise<GithubStatusView>
 
 /**
  * Déconnexion : on retire le jeton du trousseau. Un jeton venu de
- * l'environnement n'est **pas** effacé par Project Factory — le trousseau le
+ * l'environnement n'est **pas** effacé par BuildIt — le trousseau le
  * refuse, et ce refus est affiché tel quel.
  */
 export async function githubDisconnect(deps: SessionDeps): Promise<GithubStatusView> {

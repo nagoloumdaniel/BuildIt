@@ -1,5 +1,5 @@
 import { readFile } from 'node:fs/promises';
-import { type Manifest, migrateManifest } from '@project-factory/manifest';
+import { type Manifest, migrateManifest } from '@buildit/manifest';
 import { printIssues } from './format.js';
 import type { Io } from './io.js';
 

@@ -1,9 +1,9 @@
 import { mkdtemp, readdir, readFile, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { runDoctor } from '@project-factory/doctor';
-import { type Manifest, serializeManifest } from '@project-factory/manifest';
-import { loadCatalogue } from '@project-factory/registry';
+import { runDoctor } from '@buildit/doctor';
+import { type Manifest, serializeManifest } from '@buildit/manifest';
+import { loadCatalogue } from '@buildit/registry';
 import { describe, expect, it } from 'vitest';
 import { formatReport } from './doctor.js';
 import {

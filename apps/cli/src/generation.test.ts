@@ -2,8 +2,8 @@ import { describe, expect, it, vi } from 'vitest';
 import { fakeIo } from './fake-io.js';
 import { runGeneration } from './generation.js';
 
-vi.mock('@project-factory/generator', async (importOriginal) => ({
-  ...(await importOriginal<typeof import('@project-factory/generator')>()),
+vi.mock('@buildit/generator', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@buildit/generator')>()),
   generateProject: vi.fn(async () => ({
     ok: false,
     issues: [

@@ -1,6 +1,6 @@
 'use client';
 
-import { Badge, buttonClassName, StatusMessage } from '@project-factory/ui';
+import { Badge, buttonClassName, StatusMessage } from '@buildit/ui';
 import Link from 'next/link';
 import { useEffect, useMemo, useState } from 'react';
 import { useDraft } from '../../components/wizard/draft-provider';

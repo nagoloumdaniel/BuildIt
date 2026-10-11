@@ -1,9 +1,9 @@
 import { mkdtemp, readdir, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { nodeFileSystem, selectionFromManifest } from '@project-factory/generator';
-import { parseManifest } from '@project-factory/manifest';
-import { getPreset } from '@project-factory/presets';
+import { nodeFileSystem, selectionFromManifest } from '@buildit/generator';
+import { parseManifest } from '@buildit/manifest';
+import { getPreset } from '@buildit/presets';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { listPresets, previewPlan, resolveSelection, stackOptions } from './engine';
 
@@ -141,8 +141,8 @@ describe('previewPlan', () => {
 describe('catalogue indisponible', () => {
   it('lève plutôt que de rendre une liste vide trompeuse', async () => {
     vi.resetModules();
-    vi.doMock('@project-factory/registry', async (importOriginal) => {
-      const actual = await importOriginal<typeof import('@project-factory/registry')>();
+    vi.doMock('@buildit/registry', async (importOriginal) => {
+      const actual = await importOriginal<typeof import('@buildit/registry')>();
       return {
         ...actual,
         loadCatalogue: () => ({
@@ -164,7 +164,7 @@ describe('catalogue indisponible', () => {
         engine.stackOptions('frontend', { targets: ['web'], technologies: [] }),
       ).rejects.toThrow(/n’a pas de nom/);
     } finally {
-      vi.doUnmock('@project-factory/registry');
+      vi.doUnmock('@buildit/registry');
       vi.resetModules();
     }
   });

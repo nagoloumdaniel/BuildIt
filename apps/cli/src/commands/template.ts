@@ -1,6 +1,6 @@
 import { parseArgs } from 'node:util';
-import { PROJECT_NAME_PATTERN, serializeManifest } from '@project-factory/manifest';
-import { getPreset, PRESETS } from '@project-factory/presets';
+import { PROJECT_NAME_PATTERN, serializeManifest } from '@buildit/manifest';
+import { getPreset, PRESETS } from '@buildit/presets';
 import { usageError } from '../format.js';
 import { EXIT, type ExitCode, type Io } from '../io.js';
 import { create } from './create.js';

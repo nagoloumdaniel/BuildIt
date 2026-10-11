@@ -1,5 +1,5 @@
-import type { CommandRunner } from '@project-factory/exec';
-import type { Fetch } from '@project-factory/github';
+import type { CommandRunner } from '@buildit/exec';
+import type { Fetch } from '@buildit/github';
 import type { Choice, Io, Prompter } from './io.js';
 
 /** Réponses scriptées, consommées dans l'ordre ; une question en trop échoue. */

@@ -1,9 +1,9 @@
 import 'server-only';
-import { optionsFor, resolve, type Selection } from '@project-factory/compatibility';
-import { planProject } from '@project-factory/generator';
-import type { Manifest } from '@project-factory/manifest';
-import { PRESETS, type PresetId } from '@project-factory/presets';
-import { type Category, loadCatalogue, type Registry } from '@project-factory/registry';
+import { optionsFor, resolve, type Selection } from '@buildit/compatibility';
+import { planProject } from '@buildit/generator';
+import type { Manifest } from '@buildit/manifest';
+import { PRESETS, type PresetId } from '@buildit/presets';
+import { type Category, loadCatalogue, type Registry } from '@buildit/registry';
 
 /**
  * Le seul endroit où le web parle au moteur (8B.2).

@@ -1,6 +1,6 @@
 'use client';
 
-import { badgeClassName, buttonClassName, StatusMessage } from '@project-factory/ui';
+import { badgeClassName, buttonClassName, StatusMessage } from '@buildit/ui';
 import { type ReactElement, useEffect, useMemo, useState } from 'react';
 import { ScreenShell } from '../../components/wizard/shell';
 import { loadGraphAction } from '../actions';

@@ -1,6 +1,6 @@
-import { planProject } from '@project-factory/generator';
-import { parseManifest, serializeManifest } from '@project-factory/manifest';
-import { getPreset } from '@project-factory/presets';
+import { planProject } from '@buildit/generator';
+import { parseManifest, serializeManifest } from '@buildit/manifest';
+import { getPreset } from '@buildit/presets';
 import { describe, expect, it } from 'vitest';
 import { type DraftState, freshDraft } from './draft';
 import { draftToManifest } from './draft-to-manifest';

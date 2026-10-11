@@ -1,5 +1,5 @@
-import type { CommandRunner } from '@project-factory/exec';
-import { environmentStore, type Fetch, type TokenStore } from '@project-factory/github';
+import type { CommandRunner } from '@buildit/exec';
+import { environmentStore, type Fetch, type TokenStore } from '@buildit/github';
 import { afterEach, describe, expect, it } from 'vitest';
 import {
   completeDeviceConnection,

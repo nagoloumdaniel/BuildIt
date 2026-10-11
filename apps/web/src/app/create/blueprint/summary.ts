@@ -1,4 +1,4 @@
-import type { Architecture, Manifest, Target } from '@project-factory/manifest';
+import type { Architecture, Manifest, Target } from '@buildit/manifest';
 
 /**
  * Le Project Blueprint (§6.10) : le manifest canonique, en français.

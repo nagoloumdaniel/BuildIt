@@ -4,13 +4,8 @@ import {
   type ManifestIssueCode,
   type ParseResult,
   parseManifest,
-} from '@project-factory/manifest';
-import {
-  loadCatalogue,
-  type Registry,
-  type RegistryEntry,
-  slotFor,
-} from '@project-factory/registry';
+} from '@buildit/manifest';
+import { loadCatalogue, type Registry, type RegistryEntry, slotFor } from '@buildit/registry';
 import type { DraftState } from './draft';
 import { APP_TARGET, type AppKey } from './targets';
 
@@ -63,7 +58,7 @@ type Slot =
 
 /**
  * Où va chaque catégorie : la table vit désormais dans le registry
- * (`@project-factory/registry`, module `slots.ts`), avec celle que `pf add`
+ * (`@buildit/registry`, module `slots.ts`), avec celle que `pf add`
  * lisait de son côté. Deux copies tenues ensemble par un test finissent par
  * diverger — la règle n'existe plus qu'une fois.
  *

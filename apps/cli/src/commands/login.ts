@@ -5,7 +5,7 @@ import {
   pollAccessToken,
   requestDeviceCode,
   SCOPES,
-} from '@project-factory/github';
+} from '@buildit/github';
 import { printIssues, usageError } from '../format.js';
 import { tokenStore } from '../github-session.js';
 import { EXIT, type ExitCode, type Io } from '../io.js';
@@ -13,7 +13,7 @@ import { EXIT, type ExitCode, type Io } from '../io.js';
 export const LOGIN_USAGE: string = `Usage : pf login [--with-token] [--public-only]
 
 Connexion à GitHub par code (device flow) : un code à saisir sur github.com,
-aucun mot de passe ne passe par Project Factory. Le jeton est rangé dans le
+aucun mot de passe ne passe par BuildIt. Le jeton est rangé dans le
 trousseau du système, jamais dans un fichier.
 
   --with-token   Lit un jeton existant sur l'entrée standard, ou par une saisie
@@ -25,7 +25,7 @@ export const LOGOUT_USAGE: string = `Usage : pf logout
 Retire le jeton GitHub du trousseau de cette machine.`;
 
 /**
- * Identifiant de l'application OAuth de Project Factory. Pas un secret : il
+ * Identifiant de l'application OAuth de BuildIt. Pas un secret : il
  * figure dans chaque URL d'autorisation. Vide tant que l'application n'est pas
  * enregistrée sur GitHub (action de mainteneur) — `PF_GITHUB_CLIENT_ID` le
  * fournit en attendant.
@@ -107,7 +107,7 @@ export async function login(args: readonly string[], io: Io): Promise<ExitCode> 
   const clientId = io.env['PF_GITHUB_CLIENT_ID'] ?? CLIENT_ID;
   if (clientId === '') {
     io.err(
-      '✗ La connexion par code n’est pas encore configurée : l’application OAuth de Project Factory n’est pas enregistrée.',
+      '✗ La connexion par code n’est pas encore configurée : l’application OAuth de BuildIt n’est pas enregistrée.',
     );
     io.err(
       '  → Utilisez un jeton : echo "$JETON" | pf login --with-token (ou PF_GITHUB_CLIENT_ID=<identifiant>).',

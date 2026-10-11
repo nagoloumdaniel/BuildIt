@@ -1,4 +1,4 @@
-import type { Category } from '@project-factory/registry';
+import type { Category } from '@buildit/registry';
 import type { DraftState } from '../../../lib/draft';
 import { toggle } from '../../../lib/session';
 

@@ -20,16 +20,16 @@ const config = {
   // moteur côté serveur : un composant client qui l'importerait fait échouer le
   // build (`'server-only' cannot be imported from a Client Component module`).
   transpilePackages: [
-    '@project-factory/compatibility',
-    '@project-factory/exec',
-    '@project-factory/generator',
-    '@project-factory/git',
-    '@project-factory/github',
-    '@project-factory/manifest',
-    '@project-factory/presets',
-    '@project-factory/registry',
-    '@project-factory/ui',
-    '@project-factory/workspace',
+    '@buildit/compatibility',
+    '@buildit/exec',
+    '@buildit/generator',
+    '@buildit/git',
+    '@buildit/github',
+    '@buildit/manifest',
+    '@buildit/presets',
+    '@buildit/registry',
+    '@buildit/ui',
+    '@buildit/workspace',
   ],
   eslint: {
     // Le linter du dépôt est Biome (`pnpm lint`), pas ESLint : l'étape de lint

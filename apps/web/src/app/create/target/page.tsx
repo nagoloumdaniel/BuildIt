@@ -1,6 +1,6 @@
 'use client';
 
-import { TARGETS, type Target } from '@project-factory/manifest';
+import { TARGETS, type Target } from '@buildit/manifest';
 import { useDraft, useSession } from '../../../components/wizard/draft-provider';
 import { StepShell } from '../../../components/wizard/shell';
 import { toggle } from '../../../lib/session';

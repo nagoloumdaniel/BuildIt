@@ -3,10 +3,10 @@
 import { mkdir, stat } from 'node:fs/promises';
 import { homedir } from 'node:os';
 import { join, resolve, sep } from 'node:path';
-import type { Selection } from '@project-factory/compatibility';
-import { generateProject } from '@project-factory/generator';
-import { parseManifest } from '@project-factory/manifest';
-import type { Category } from '@project-factory/registry';
+import type { Selection } from '@buildit/compatibility';
+import { generateProject } from '@buildit/generator';
+import { parseManifest } from '@buildit/manifest';
+import type { Category } from '@buildit/registry';
 import {
   dependencyGraph,
   type EnvVarView,
@@ -108,12 +108,12 @@ export interface GenerationView {
  *
  * Le chemin ne vient **jamais** du navigateur : une Server Action qui écrit là
  * où le client le demande est une écriture de fichier arbitraire. Par défaut
- * `~/project-factory`, modifiable par `PF_WEB_WORKSPACE` pour les tests.
+ * `~/buildit`, modifiable par `PF_WEB_WORKSPACE` pour les tests.
  */
 function workspaceRoot(): string {
   const configured = process.env['PF_WEB_WORKSPACE'];
   return resolve(
-    configured === undefined || configured === '' ? join(homedir(), 'project-factory') : configured,
+    configured === undefined || configured === '' ? join(homedir(), 'buildit') : configured,
   );
 }
 

@@ -1,8 +1,8 @@
 import { mkdir, readdir, readFile, stat, writeFile } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
-import type { Fix, ProjectFacts } from '@project-factory/doctor';
-import type { Manifest } from '@project-factory/manifest';
-import type { Registry } from '@project-factory/registry';
+import type { Fix, ProjectFacts } from '@buildit/doctor';
+import type { Manifest } from '@buildit/manifest';
+import type { Registry } from '@buildit/registry';
 
 /**
  * Le CLI est le seul endroit qui lit le disque ; le paquet `doctor` ne juge que
@@ -214,7 +214,7 @@ async function sourceFiles(source: FileSource): Promise<string[]> {
 }
 
 /** Les fichiers qui parlent de la pile, sans être du code. */
-const MANIFEST_FILES = ['.project-factory/manifest.json', 'pf.manifest.json', 'manifest.json'];
+const MANIFEST_FILES = ['.buildit/manifest.json', 'pf.manifest.json', 'manifest.json'];
 const ENV_EXAMPLE_FILES = ['.env.example', '.env.sample', '.env.template', '.env.dist'];
 const DOCKER_FILES = ['Dockerfile', 'docker-compose.yml', 'compose.yaml', 'compose.yml'];
 

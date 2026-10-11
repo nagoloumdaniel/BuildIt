@@ -1,4 +1,4 @@
-import { TARGETS } from '@project-factory/manifest';
+import { TARGETS } from '@buildit/manifest';
 import { describe, expect, it } from 'vitest';
 import { APP_TARGET, offeredTargets, refusedTargets } from './targets';
 

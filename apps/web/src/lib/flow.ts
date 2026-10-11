@@ -1,4 +1,4 @@
-import { PROJECT_NAME_PATTERN } from '@project-factory/manifest';
+import { PROJECT_NAME_PATTERN } from '@buildit/manifest';
 import type { DraftState } from './draft';
 import { offeredTargets, refusedTargets } from './targets';
 

@@ -1,6 +1,6 @@
 import { resolve } from 'node:path';
 import { parseArgs } from 'node:util';
-import { ROLES, type Role } from '@project-factory/github';
+import { ROLES, type Role } from '@buildit/github';
 import { printIssues, usageError } from '../format.js';
 import { requireGitHubProject, requireSession } from '../github-session.js';
 import { EXIT, type ExitCode, type Io } from '../io.js';

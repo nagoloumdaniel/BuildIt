@@ -21,12 +21,12 @@ export function configDir(env: Io['env'], platform: NodeJS.Platform = process.pl
     return env['PF_CONFIG_DIR'];
   }
   if (platform === 'win32' && env['APPDATA'] !== undefined) {
-    return join(env['APPDATA'], 'project-factory');
+    return join(env['APPDATA'], 'buildit');
   }
   if (env['XDG_CONFIG_HOME'] !== undefined && env['XDG_CONFIG_HOME'] !== '') {
-    return join(env['XDG_CONFIG_HOME'], 'project-factory');
+    return join(env['XDG_CONFIG_HOME'], 'buildit');
   }
-  return join(env['HOME'] ?? env['USERPROFILE'] ?? '.', '.config', 'project-factory');
+  return join(env['HOME'] ?? env['USERPROFILE'] ?? '.', '.config', 'buildit');
 }
 
 interface Credentials {

@@ -1,6 +1,6 @@
 'use client';
 
-import { ARCHITECTURES, type Architecture } from '@project-factory/manifest';
+import { ARCHITECTURES, type Architecture } from '@buildit/manifest';
 import { type ReactElement, useState } from 'react';
 import type { DraftState } from '../../../lib/draft';
 import { isProjectType, type ProjectType, TYPE_NOTES } from '../type/profiles';

@@ -73,8 +73,8 @@ describe('targetDirectory — le dossier montré AVANT d’écrire', () => {
   });
 
   it('compose un chemin Windows sans doubler le séparateur', () => {
-    expect(targetDirectory('C:\\Users\\moi\\project-factory\\', 'mon-projet')).toBe(
-      'C:\\Users\\moi\\project-factory\\mon-projet',
+    expect(targetDirectory('C:\\Users\\moi\\buildit\\', 'mon-projet')).toBe(
+      'C:\\Users\\moi\\buildit\\mon-projet',
     );
   });
 

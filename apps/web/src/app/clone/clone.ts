@@ -1,5 +1,5 @@
-import type { CommandRunner } from '@project-factory/exec';
-import { cloneRepository, type GitRemote, parseRemote } from '@project-factory/git';
+import type { CommandRunner } from '@buildit/exec';
+import { cloneRepository, type GitRemote, parseRemote } from '@buildit/git';
 import { describeIssues } from '../github/session';
 import { inspectProject, installProject, type ProjectSummaryView } from '../open/project';
 import {

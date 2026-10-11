@@ -1,8 +1,8 @@
 import { basename, resolve as resolvePath } from 'node:path';
 import { parseArgs } from 'node:util';
-import { type Report, runDoctor } from '@project-factory/doctor';
-import { type Manifest, parseManifest } from '@project-factory/manifest';
-import { loadCatalogue, type Registry } from '@project-factory/registry';
+import { type Report, runDoctor } from '@buildit/doctor';
+import { type Manifest, parseManifest } from '@buildit/manifest';
+import { loadCatalogue, type Registry } from '@buildit/registry';
 import { printIssues, usageError } from '../format.js';
 import { EXIT, type ExitCode, type Io } from '../io.js';
 import { applyFixes, fileSourceAt, findManifestFile, readFacts } from './doctor-model.js';

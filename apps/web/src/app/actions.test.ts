@@ -1,7 +1,7 @@
 import { mkdtemp, readFile, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { getPreset } from '@project-factory/presets';
+import { getPreset } from '@buildit/presets';
 import { afterEach, describe, expect, it } from 'vitest';
 import {
   generateProjectAction,

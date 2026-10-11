@@ -15,24 +15,24 @@ import './globals.css';
  * est la Phase 12, et le jour venu une variable d'environnement suffira.
  *
  * Le titre passe par un gabarit : un écran qui déclare son propre titre n'a plus
- * à répéter « Project Factory » (`/share` le faisait).
+ * à répéter « BuildIt » (`/share` le faisait).
  */
 export const metadata: Metadata = {
   metadataBase: new URL(process.env['PF_SITE_URL'] ?? 'http://127.0.0.1:4173'),
   title: {
-    default: 'Project Factory',
-    template: '%s · Project Factory',
+    default: 'BuildIt',
+    template: '%s · BuildIt',
   },
   description: 'Décrire un projet, obtenir un projet prêt à développer.',
-  applicationName: 'Project Factory',
+  applicationName: 'BuildIt',
   openGraph: {
     type: 'website',
-    siteName: 'Project Factory',
+    siteName: 'BuildIt',
     locale: 'fr_FR',
     url: '/',
     // `title` et `description` sont volontairement absents : Next les reprend du
     // titre résolu de **chaque** page. Les fixer ici les figerait pour tout le
-    // site — `/share` afficherait « Project Factory » au lieu de son propre
+    // site — `/share` afficherait « BuildIt » au lieu de son propre
     // titre dans les aperçus de lien.
   },
   twitter: { card: 'summary' },
@@ -60,7 +60,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
         <header className="border-b border-border bg-surface">
           <div className="mx-auto flex max-w-[1100px] items-center justify-between gap-4 px-5 py-2">
             <Link className="pf-title text-base no-underline" href="/">
-              Project Factory
+              BuildIt
             </Link>
             <ThemeToggle />
           </div>

@@ -1,6 +1,6 @@
 'use server';
 
-import { type CommandRunner, nodeCommandRunner } from '@project-factory/exec';
+import { type CommandRunner, nodeCommandRunner } from '@buildit/exec';
 import {
   type ClonePreviewView,
   type CloneResultView,

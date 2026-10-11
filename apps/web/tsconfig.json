@@ -1,5 +1,5 @@
 {
-  "extends": "@project-factory/typescript-config/base.json",
+  "extends": "@buildit/typescript-config/base.json",
   "compilerOptions": {
     "lib": ["ES2023", "DOM", "DOM.Iterable"],
     "jsx": "preserve",

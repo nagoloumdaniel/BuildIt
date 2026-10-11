@@ -114,19 +114,13 @@ describe('configDir', () => {
   });
 
   it('APPDATA sous Windows', () => {
-    expect(configDir({ APPDATA: 'C:/AppData' }, 'win32')).toBe(
-      join('C:/AppData', 'project-factory'),
-    );
+    expect(configDir({ APPDATA: 'C:/AppData' }, 'win32')).toBe(join('C:/AppData', 'buildit'));
   });
 
   it('XDG_CONFIG_HOME, puis ~/.config', () => {
-    expect(configDir({ XDG_CONFIG_HOME: '/xdg' }, 'linux')).toBe(join('/xdg', 'project-factory'));
-    expect(configDir({ HOME: '/home/u' }, 'darwin')).toBe(
-      join('/home/u', '.config', 'project-factory'),
-    );
-    expect(configDir({ USERPROFILE: '/p' }, 'linux')).toBe(
-      join('/p', '.config', 'project-factory'),
-    );
-    expect(configDir({}, 'linux')).toBe(join('.', '.config', 'project-factory'));
+    expect(configDir({ XDG_CONFIG_HOME: '/xdg' }, 'linux')).toBe(join('/xdg', 'buildit'));
+    expect(configDir({ HOME: '/home/u' }, 'darwin')).toBe(join('/home/u', '.config', 'buildit'));
+    expect(configDir({ USERPROFILE: '/p' }, 'linux')).toBe(join('/p', '.config', 'buildit'));
+    expect(configDir({}, 'linux')).toBe(join('.', '.config', 'buildit'));
   });
 });

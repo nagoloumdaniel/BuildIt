@@ -1,6 +1,6 @@
-import { type Manifest, parseManifest, TARGETS } from '@project-factory/manifest';
-import { getPreset } from '@project-factory/presets';
-import { loadCatalogue, type Registry } from '@project-factory/registry';
+import { type Manifest, parseManifest, TARGETS } from '@buildit/manifest';
+import { getPreset } from '@buildit/presets';
+import { loadCatalogue, type Registry } from '@buildit/registry';
 import { describe, expect, it } from 'vitest';
 import {
   ARCHITECTURE_LABELS,

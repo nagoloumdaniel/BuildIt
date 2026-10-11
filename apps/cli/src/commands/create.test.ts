@@ -1,8 +1,8 @@
 import { mkdtemp, readdir, readFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join, relative } from 'node:path';
-import { generateProject } from '@project-factory/generator';
-import { PRESET_IDS, PRESETS } from '@project-factory/presets';
+import { generateProject } from '@buildit/generator';
+import { PRESET_IDS, PRESETS } from '@buildit/presets';
 import { describe, expect, it } from 'vitest';
 import { run } from '../cli.js';
 import { fakeIo } from '../fake-io.js';

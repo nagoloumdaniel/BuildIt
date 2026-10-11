@@ -86,7 +86,7 @@ interface DashboardViewProps {
 function DashboardView({ draft, onReset }: DashboardViewProps): ReactElement {
   return (
     <ScreenShell
-      title="Project Factory"
+      title="BuildIt"
       description="Décrivez un projet, obtenez un projet prêt à développer. Trois façons de commencer."
     >
       <nav className="pf-grid" aria-label="Menu d'accueil">

@@ -26,7 +26,7 @@ export function middleware(request: NextRequest): NextResponse {
     return NextResponse.next();
   }
   return new NextResponse(
-    'Hôte non autorisé : le configurateur de Project Factory ne répond qu’en local (127.0.0.1).',
+    'Hôte non autorisé : le configurateur de BuildIt ne répond qu’en local (127.0.0.1).',
     { status: 403, headers: { 'content-type': 'text/plain; charset=utf-8' } },
   );
 }

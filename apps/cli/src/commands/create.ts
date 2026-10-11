@@ -1,8 +1,8 @@
 import { resolve } from 'node:path';
 import { parseArgs } from 'node:util';
-import { PROJECT_NAME_PATTERN } from '@project-factory/manifest';
-import { getPreset, PRESET_IDS, PRESETS, type PresetId } from '@project-factory/presets';
-import { suggest } from '@project-factory/validation';
+import { PROJECT_NAME_PATTERN } from '@buildit/manifest';
+import { getPreset, PRESET_IDS, PRESETS, type PresetId } from '@buildit/presets';
+import { suggest } from '@buildit/validation';
 import { usageError } from '../format.js';
 import { GENERATION_OPTIONS, generationFlags, runGeneration } from '../generation.js';
 import { EXIT, type ExitCode, type Io } from '../io.js';

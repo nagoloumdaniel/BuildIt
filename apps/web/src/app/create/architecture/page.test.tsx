@@ -1,4 +1,4 @@
-import { ARCHITECTURES } from '@project-factory/manifest';
+import { ARCHITECTURES } from '@buildit/manifest';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
 import { DraftProvider } from '../../../components/wizard/draft-provider';

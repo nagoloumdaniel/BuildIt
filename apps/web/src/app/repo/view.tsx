@@ -1,6 +1,6 @@
 'use client';
 
-import { Badge, Button, Field, StatusMessage } from '@project-factory/ui';
+import { Badge, Button, Field, StatusMessage } from '@buildit/ui';
 import type { ReactElement } from 'react';
 import { ScreenShell } from '../../components/wizard/shell';
 import type { AccessView, RepositoryStatusView, RoleView } from './sharing';
@@ -114,7 +114,7 @@ export function RepoView(props: RepoViewProps): ReactElement {
   return (
     <ScreenShell
       title="Dépôt & partage"
-      description="L’état du dépôt GitHub du projet, sa création si besoin, et les accès : les droits sont ceux de GitHub, Project Factory n’a pas de comptes."
+      description="L’état du dépôt GitHub du projet, sa création si besoin, et les accès : les droits sont ceux de GitHub, BuildIt n’a pas de comptes."
     >
       {message === undefined || message === '' ? null : (
         <StatusMessage className="mb-3">{message}</StatusMessage>

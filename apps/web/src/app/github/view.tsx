@@ -1,6 +1,6 @@
 'use client';
 
-import { Badge, Button, StatusMessage } from '@project-factory/ui';
+import { Badge, Button, StatusMessage } from '@buildit/ui';
 import type { ReactElement } from 'react';
 import { ScreenShell } from '../../components/wizard/shell';
 import type { DeviceStartView, PermissionView } from './device';
@@ -40,7 +40,7 @@ export function GithubView({
   return (
     <ScreenShell
       title="Compte GitHub"
-      description="La connexion se fait par un code à saisir sur github.com : aucun mot de passe ne transite par Project Factory, et le jeton reste dans le trousseau de cette machine."
+      description="La connexion se fait par un code à saisir sur github.com : aucun mot de passe ne transite par BuildIt, et le jeton reste dans le trousseau de cette machine."
     >
       {message === undefined || message === '' ? null : (
         <StatusMessage className="mb-3">{message}</StatusMessage>

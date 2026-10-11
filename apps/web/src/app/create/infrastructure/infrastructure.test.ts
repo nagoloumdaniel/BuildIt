@@ -1,4 +1,4 @@
-import { parseManifest } from '@project-factory/manifest';
+import { parseManifest } from '@buildit/manifest';
 import { describe, expect, it } from 'vitest';
 import { type DraftState, freshDraft } from '../../../lib/draft';
 import { draftToManifest } from '../../../lib/draft-to-manifest';

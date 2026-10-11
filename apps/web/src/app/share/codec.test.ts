@@ -1,4 +1,4 @@
-import { type Manifest, serializeManifest } from '@project-factory/manifest';
+import { type Manifest, serializeManifest } from '@buildit/manifest';
 import { describe, expect, it } from 'vitest';
 import {
   decodeShareHash,

@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
-import { CATEGORIES, type Category } from '@project-factory/registry';
+import { CATEGORIES, type Category } from '@buildit/registry';
 import { beforeAll, describe, expect, it } from 'vitest';
 import { checkSelectionAction, loadOptionsAction } from '../../actions';
 import { loadStackBlocksAction } from './actions';
@@ -156,8 +156,8 @@ describe('garde-fou du 8B.2', () => {
       expect(imports(source, 'lib/engine')).toBe(false);
       expect(imports(source, 'server-only')).toBe(false);
       // Le seul chemin vers le moteur reste `actions.ts`.
-      expect(imports(source, '@project-factory/compatibility')).toBe(false);
-      expect(imports(source, '@project-factory/generator')).toBe(false);
+      expect(imports(source, '@buildit/compatibility')).toBe(false);
+      expect(imports(source, '@buildit/generator')).toBe(false);
     }
   });
 

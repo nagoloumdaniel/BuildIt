@@ -1,13 +1,13 @@
 import { stat } from 'node:fs/promises';
 import { isAbsolute, normalize } from 'node:path';
-import type { CommandRunner } from '@project-factory/exec';
+import type { CommandRunner } from '@buildit/exec';
 import {
   type Detection,
   detectProject,
   formatCommand,
   install,
   installCommand,
-} from '@project-factory/workspace';
+} from '@buildit/workspace';
 import { describeIssues } from '../github/session';
 
 /**

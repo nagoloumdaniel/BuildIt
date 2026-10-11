@@ -1,8 +1,8 @@
 import { mkdtemp, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { basename, join } from 'node:path';
-import type { CommandResult, CommandRunner } from '@project-factory/exec';
-import { environmentStore, type Fetch, ROLES, type TokenStore } from '@project-factory/github';
+import type { CommandResult, CommandRunner } from '@buildit/exec';
+import { environmentStore, type Fetch, ROLES, type TokenStore } from '@buildit/github';
 import { afterEach, describe, expect, it } from 'vitest';
 import { repositoryRolesAction, repositoryStatusAction } from '../actions-node';
 import {

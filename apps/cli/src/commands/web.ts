@@ -1,7 +1,7 @@
 import { stat } from 'node:fs/promises';
 import { join, resolve } from 'node:path';
 import { parseArgs } from 'node:util';
-import { type CommandResult, outputTail } from '@project-factory/exec';
+import { type CommandResult, outputTail } from '@buildit/exec';
 import { usageError } from '../format.js';
 import { EXIT, type ExitCode, type Io } from '../io.js';
 
@@ -106,7 +106,7 @@ function reason(error: unknown): string {
 /**
  * Le navigateur de la plateforme : `explorer` sous Windows, `open` sous macOS,
  * `xdg-open` ailleurs. Le nom est passé tel quel à l'exécuteur, qui résout
- * l'exécutable **sans shell** (`resolveCommand` de `@project-factory/exec`) :
+ * l'exécutable **sans shell** (`resolveCommand` de `@buildit/exec`) :
  * l'URL reste un argument, elle n'est jamais relue par un interpréteur.
  */
 function browserCommand(platform: NodeJS.Platform): string {

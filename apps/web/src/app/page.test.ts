@@ -37,7 +37,7 @@ describe('Dashboard — le menu d’accueil (§18bis)', () => {
   it('annonce le produit et les trois chemins', () => {
     const html = render();
 
-    expect(html).toContain('Project Factory');
+    expect(html).toContain('BuildIt');
     expect(html).toContain('Créer un projet');
     expect(html).toContain('Cloner un projet');
     expect(html).toContain('Ouvrir un projet local');

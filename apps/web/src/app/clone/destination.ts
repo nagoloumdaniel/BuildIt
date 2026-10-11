@@ -1,7 +1,7 @@
 import { readdir, stat } from 'node:fs/promises';
 import { homedir } from 'node:os';
 import { basename, isAbsolute, join, resolve, sep } from 'node:path';
-import type { GitRemote } from '@project-factory/git';
+import type { GitRemote } from '@buildit/git';
 
 /**
  * Où le web clone (§6.22, §18bis).
@@ -18,7 +18,7 @@ export function webWorkspaceRoot(
 ): string {
   const configured = env['PF_WEB_WORKSPACE'];
   return resolve(
-    configured === undefined || configured === '' ? join(homedir(), 'project-factory') : configured,
+    configured === undefined || configured === '' ? join(homedir(), 'buildit') : configured,
   );
 }
 

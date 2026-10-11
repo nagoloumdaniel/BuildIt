@@ -1,10 +1,10 @@
 import { resolve as resolvePath } from 'node:path';
 import { parseArgs } from 'node:util';
-import { resolve } from '@project-factory/compatibility';
-import { selectionFromManifest } from '@project-factory/generator';
-import type { Manifest } from '@project-factory/manifest';
-import { getPreset } from '@project-factory/presets';
-import { loadCatalogue } from '@project-factory/registry';
+import { resolve } from '@buildit/compatibility';
+import { selectionFromManifest } from '@buildit/generator';
+import type { Manifest } from '@buildit/manifest';
+import { getPreset } from '@buildit/presets';
+import { loadCatalogue } from '@buildit/registry';
 import { printIssues, printWarnings, usageError } from '../format.js';
 import { EXIT, type ExitCode, type Io } from '../io.js';
 import { DEFAULT_MANIFEST_FILE, readManifestFile } from '../manifest-file.js';

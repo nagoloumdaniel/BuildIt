@@ -1,5 +1,5 @@
 import { basename } from 'node:path';
-import type { CommandRunner } from '@project-factory/exec';
+import type { CommandRunner } from '@buildit/exec';
 import {
   ensureInitialCommit,
   githubUrl,
@@ -8,8 +8,8 @@ import {
   pushToNewOrigin,
   type RepositoryState,
   repositoryState,
-} from '@project-factory/git';
-import { GitHubClient, ROLES, type Role } from '@project-factory/github';
+} from '@buildit/git';
+import { GitHubClient, ROLES, type Role } from '@buildit/github';
 import { repositoryVisibility, type Visibility } from '../github/repositories';
 import { describeIssues, type SessionDeps } from '../github/session';
 import { refuseMissingDirectory } from '../open/project';
