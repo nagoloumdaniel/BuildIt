@@ -1,0 +1,54 @@
+import { renderToStaticMarkup } from 'react-dom/server';
+import { describe, expect, it } from 'vitest';
+import { ReportBody } from './ReportBody';
+import type { GenerationReport } from './result';
+
+const SUCCESS: GenerationReport = {
+  ok: true,
+  directory: '/tmp/pf/mon-projet',
+  files: ['package.json', 'src/app/page.tsx'],
+  bytes: 2048,
+  warnings: ['un avertissement du plan'],
+  steps: ['plan', 'write'],
+  issues: [],
+};
+
+const REFUSED: GenerationReport = {
+  ok: false,
+  directory: '',
+  files: [],
+  bytes: 0,
+  warnings: [],
+  steps: [],
+  issues: ['Le dossier existe déjà : /tmp/pf/mon-projet.'],
+};
+
+/** Le rapport (§6.14) est pur : il reçoit son rapport, il ne relit rien. */
+describe('ReportBody', () => {
+  it('rend le dossier, le compte de fichiers, le poids et les étapes', () => {
+    const html = renderToStaticMarkup(ReportBody({ report: SUCCESS }));
+
+    expect(html).toContain('/tmp/pf/mon-projet');
+    expect(html).toContain('2');
+    expect(html).toContain('2,0 ko');
+    expect(html).toContain('Planification');
+    expect(html).toContain('Écriture des fichiers');
+    expect(html).toContain('package.json');
+    expect(html).toContain('un avertissement du plan');
+  });
+
+  it('rend un refus avec ses raisons, sans liste de fichiers', () => {
+    const html = renderToStaticMarkup(ReportBody({ report: REFUSED }));
+
+    expect(html).toContain('existe déjà');
+    expect(html).toContain('Aucun fichier écrit');
+  });
+
+  it('un rapport réussi sans avertissement ne montre pas de section vide', () => {
+    const html = renderToStaticMarkup(
+      ReportBody({ report: { ...SUCCESS, warnings: [], files: [] } }),
+    );
+    expect(html).not.toContain('Avertissements');
+    expect(html).toContain('Aucun fichier écrit');
+  });
+});
