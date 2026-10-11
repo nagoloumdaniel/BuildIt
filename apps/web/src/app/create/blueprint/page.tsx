@@ -6,6 +6,8 @@ import { useDraft } from '../../../components/wizard/draft-provider';
 import { StepShell } from '../../../components/wizard/shell';
 import { draftToManifest } from '../../../lib/draft-to-manifest';
 import { loadGraphAction } from '../../actions';
+import { shareLinkBaseAction } from '../../actions-share';
+import { encodeShareLink, shareOrigin } from '../../share/codec';
 import { BlueprintSummary } from './BlueprintSummary';
 import { blueprintView, manifestTechnologyIds } from './summary';
 
@@ -27,6 +29,8 @@ export default function BlueprintPage() {
   const [labels, setLabels] = useState<ReadonlyMap<string, string>>(() => new Map());
   const [status, setStatus] = useState<'certified' | 'experimental' | null>(null);
   const [catalogueIssue, setCatalogueIssue] = useState<string | null>(null);
+  const [shareLink, setShareLink] = useState<string | null>(null);
+  const [shareNote, setShareNote] = useState<string | null>(null);
 
   const technologyIds = useMemo(
     () => (manifest.ok ? [...manifestTechnologyIds(manifest.value)] : []),
@@ -65,6 +69,27 @@ export default function BlueprintPage() {
     () => (manifest.ok ? blueprintView(manifest.value, labels) : null),
     [manifest, labels],
   );
+
+  /**
+   * Le lien de partage (§20) : la configuration est encodée dans le fragment,
+   * donc rien n'est envoyé au serveur — le serveur ne fournit que l'origine
+   * publique, quand elle est configurée (Phase 12). Un presse-papiers
+   * inaccessible n'empêche pas le lien d'exister : il reste affiché.
+   */
+  async function createShareLink(): Promise<void> {
+    if (!manifest.ok) {
+      return;
+    }
+    const base = await shareLinkBaseAction().catch(() => '');
+    const link = encodeShareLink(manifest.value, shareOrigin(base, window.location.origin));
+    setShareLink(link);
+    try {
+      await navigator.clipboard.writeText(link);
+      setShareNote('Lien copié dans le presse-papiers. Il est aussi affiché ci-dessous.');
+    } catch {
+      setShareNote('Presse-papiers indisponible ici : copiez le lien ci-dessous.');
+    }
+  }
 
   if (!manifest.ok || view === null) {
     return (
@@ -115,14 +140,40 @@ export default function BlueprintPage() {
         <Link className="pf-btn" href="/create/preview">
           Aperçu des fichiers
         </Link>
-        <button type="button" className="pf-btn" disabled aria-describedby="pf-share-note">
+        <button
+          type="button"
+          className="pf-btn"
+          onClick={() => void createShareLink()}
+          {...(shareLink === null ? { 'aria-describedby': 'pf-share-note' } : {})}
+        >
           Créer un lien de partage
         </button>
       </div>
-      <p id="pf-share-note" className="pf-hint mt-2">
-        Le partage en lecture seule (§20) n’est pas encore branché : aucun lien n’est émis pour
-        l’instant.
-      </p>
+
+      {shareLink === null ? (
+        <p id="pf-share-note" className="pf-hint mt-2">
+          Le lien de partage en lecture seule (§20) porte la configuration dans son fragment d’URL :
+          elle ne part vers aucun serveur, et il fonctionne partout où <code>pf web</code> tourne.
+        </p>
+      ) : (
+        <div className="mt-3">
+          <label className="pf-label" htmlFor="pf-share-link">
+            Lien de partage (lecture seule)
+          </label>
+          <input
+            id="pf-share-link"
+            className="pf-input pf-mono"
+            readOnly
+            value={shareLink}
+            onFocus={(event) => event.currentTarget.select()}
+          />
+          {shareNote === null ? null : (
+            <p className="pf-hint mt-1" role="status">
+              {shareNote}
+            </p>
+          )}
+        </div>
+      )}
     </StepShell>
   );
 }

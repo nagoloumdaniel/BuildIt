@@ -9,7 +9,6 @@ export const PENDING: Readonly<Record<string, string>> = {
   doctor: 'V1 — diagnostic d’un projet existant',
   analyze: 'V1 — analyse d’un projet existant',
   upgrade: 'V2 — mise à niveau d’un projet généré',
-  share: 'Phase 9 — partage d’un projet par lien',
 };
 
 export function pending(command: string, io: Io): ExitCode {

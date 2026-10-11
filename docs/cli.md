@@ -44,7 +44,7 @@ pf create mon-api --preset api --no-git --dir services/api
 pf create demo --preset fullstack --dry-run
 ```
 
-Le nom : minuscules, chiffres et tirets, commençant par une lettre.
+Le nom : minuscules, chiffres, points, tirets ou soulignés — sans commencer par un point ni un souligné (`PROJECT_NAME_PATTERN` du manifest, qui fait foi).
 
 ## `pf template`
 
@@ -133,7 +133,7 @@ La commande exacte est affichée **avant** d'être lancée. Sans terminal, rien 
 | `pf collab list` | Collaborateurs et invitations |
 | `pf collab remove <utilisateur> [--yes]` | Annule l'invitation en attente, sinon retire l'accès ; confirmation, ou `--yes` |
 
-**Partager un projet exige un dépôt GitHub.** Sans lui, `pf repo share` et `pf collab` refusent et disent quoi faire (`pf repo create`) ; le lien de configuration en lecture seule arrivera en Phase 9. Les droits sont ceux de GitHub : il faut être administrateur du dépôt.
+**Partager un projet exige un dépôt GitHub.** Sans lui, `pf repo share` et `pf collab` refusent et disent quoi faire (`pf repo create`). Le lien de configuration en lecture seule, lui, ne dépend pas de GitHub : `pf share <manifest.json>` (voir plus bas). Les droits sont ceux de GitHub : il faut être administrateur du dépôt.
 
 ## Configurateur web (§8)
 
@@ -158,12 +158,34 @@ pnpm pf web --port 5000 --no-open
 - Le navigateur est ouvert par `explorer` (Windows), `open` (macOS), `xdg-open` (Linux), **sans shell** : l'URL est un argument. Un navigateur absent n'empêche pas le serveur de tourner — `pf` dit alors quelle adresse ouvrir vous-même.
 - Le serveur qui s'arrête en erreur fait rendre le code `1` à `pf`, avec sa sortie — de quoi comprendre.
 
+## Partage en lecture seule (§20)
+
+### `pf share <manifest.json> [--url <base>]`
+
+Imprime **une seule ligne** : un lien vers `/share` du configurateur, dont le **fragment** porte le Project Manifest en `base64url(serializeManifest(manifest))`. Rien n'est envoyé au serveur — un fragment d'URL ne quitte jamais le navigateur —, donc rien ne peut fuiter dans un journal, une requête ou un cookie, et il n'y a aucun identifiant à énumérer. Le lien est auto-porteur : il fonctionne partout où `pf web` tourne.
+
+| Option | |
+|---|---|
+| `--url <base>` | Origine du configurateur ; par défaut `http://127.0.0.1:4173` (celle de `pf web`) |
+
+```bash
+pf share pf.manifest.json
+# http://127.0.0.1:4173/share#ewogICJtYW5pZmVzdFZlcnNpb24iOiAxLAo…
+
+pf share pf.manifest.json --url http://127.0.0.1:5000
+```
+
+- **Le lien est la donnée.** Qui l'a peut lire la configuration : il n'est pas chiffré, et il n'y a pas d'expiration possible — il n'y a pas de serveur qui la porte. Ne le partagez qu'avec qui vous voulez voir la configuration.
+- La page `/share` est en **lecture seule** : elle affiche le Blueprint, ne modifie rien et ne génère rien. Elle est posée en `noindex, nofollow`.
+- Le manifest est relu par `parseManifest` à l'ouverture : un fragment tronqué, un base64 invalide ou un manifest fabriqué à la main s'affichent comme un refus lisible, jamais comme une page blanche ni une pile.
+- **Ce n'est pas le partage d'un projet** : partager le code passe par GitHub (`pf repo create`, puis `pf repo share` et `pf collab`).
+- Un `--url` invalide (sans schéma, avec un chemin, une requête ou un fragment) est refusé : un lien mort vaut moins qu'une erreur d'usage.
+
 ## À venir
 
 Ces commandes existent, répondent qu'elles ne sont pas encore disponibles et quand elles le seront (code `2`) :
 
 | Commande | Quand |
 |---|---|
-| `share` | Phase 9 — lien de configuration en lecture seule |
 | `doctor`, `analyze` | V1 |
 | `upgrade` | V2 |

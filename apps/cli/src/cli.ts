@@ -12,6 +12,7 @@ import { menu } from './commands/menu.js';
 import { installCommand, open } from './commands/open.js';
 import { PENDING, pending } from './commands/pending.js';
 import { repo } from './commands/repo.js';
+import { share } from './commands/share.js';
 import { template } from './commands/template.js';
 import { web } from './commands/web.js';
 import { usageError } from './format.js';
@@ -34,6 +35,7 @@ const COMMANDS: Readonly<Record<string, Command>> = {
   repo,
   collab,
   web,
+  share,
 };
 
 /** Lu depuis `package.json` : `src/` et `dist/` en sont tous deux voisins. */
@@ -66,6 +68,9 @@ Projets existants et GitHub :
 
 Configurateur web :
   web [--port <n>] [--no-open]   Sert le configurateur construit, sur 127.0.0.1
+
+Partage en lecture seule (§20) :
+  share <manifest.json>         Imprime un lien dont le fragment porte le manifest
 
 À venir : ${Object.keys(PENDING).join(', ')}.
 
