@@ -1,13 +1,13 @@
 import { readFile, stat } from 'node:fs/promises';
 import { join } from 'node:path';
-import { type CommandRunner, isTransientFailure, outputTail } from '@project-factory/exec';
+import { type CommandRunner, isTransientFailure, outputTail } from '@buildit/exec';
 import {
   createMessageFormatter,
   fail,
   type Issue,
   ok,
   type ParseResult,
-} from '@project-factory/validation';
+} from '@buildit/validation';
 
 /**
  * Un projet déjà sur la machine (§18bis) : de quoi il est fait, avec quoi on

@@ -1,4 +1,4 @@
-import type { RegistryEntry } from '@project-factory/registry';
+import type { RegistryEntry } from '@buildit/registry';
 import { describe, expect, it } from 'vitest';
 import { buildInfrastructure } from './infrastructure.js';
 

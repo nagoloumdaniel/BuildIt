@@ -1,7 +1,7 @@
 /**
- * GitHub pour Project Factory (§20bis) : connexion par code, dépôts,
+ * GitHub pour BuildIt (§20bis) : connexion par code, dépôts,
  * collaborateurs, et le jeton dans le trousseau du système. Aucun compte
- * Project Factory : tout est délégué à GitHub.
+ * BuildIt : tout est délégué à GitHub.
  */
 
 export type {

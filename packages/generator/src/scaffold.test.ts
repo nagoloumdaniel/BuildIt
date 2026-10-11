@@ -1,6 +1,6 @@
-import type { Manifest } from '@project-factory/manifest';
-import type { Recipe } from '@project-factory/recipes';
-import type { RegistryEntry } from '@project-factory/registry';
+import type { Manifest } from '@buildit/manifest';
+import type { Recipe } from '@buildit/recipes';
+import type { RegistryEntry } from '@buildit/registry';
 import { describe, expect, it } from 'vitest';
 import { buildScaffold } from './scaffold.js';
 
@@ -255,7 +255,7 @@ describe('README.md', () => {
 
   it('énonce le principe de non-dépendance — §1', () => {
     const readme = fileNamed(scaffoldFiles(MANIFEST, []), 'README.md');
-    expect(readme).toContain('Project Factory');
+    expect(readme).toContain('BuildIt');
     expect(readme.toLowerCase()).toContain('autonome');
   });
 

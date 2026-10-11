@@ -1,4 +1,4 @@
-import type { Manifest } from '@project-factory/manifest';
+import type { Manifest } from '@buildit/manifest';
 
 /**
  * Les presets certifiés du §8 : un manifest et des recettes, rien d'autre.

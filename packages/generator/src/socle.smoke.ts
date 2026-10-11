@@ -3,7 +3,7 @@ import { randomBytes } from 'node:crypto';
 import { copyFile, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import type { Manifest } from '@project-factory/manifest';
+import type { Manifest } from '@buildit/manifest';
 import { afterAll, describe, expect, it } from 'vitest';
 import { resolveCommand } from './command-path.js';
 import { CI_SCRIPTS } from './infrastructure.js';
@@ -184,7 +184,7 @@ const composed: string[] = [];
  * `spawn('pnpm', …)` et `execFileSync('pnpm', …)` échouaient en `ENOENT` sous
  * Windows : `pnpm` y est un `pnpm.cmd`, et Node refuse de lancer un `.cmd` sans
  * shell (CVE-2024-27980). C'est la résolution synchrone du produit
- * (`@project-factory/generator`, `command-path.ts`) qui est utilisée ici et
+ * (`@buildit/generator`, `command-path.ts`) qui est utilisée ici et
  * **tenue par un test** (`command-path.test.ts`) : c'est la sonde qui manquait
  * quand ce fichier échouait sur cette plateforme sans que rien ne le dise.
  */

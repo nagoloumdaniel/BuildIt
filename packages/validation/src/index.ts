@@ -1,7 +1,7 @@
 /**
  * Modèle d'erreur et outillage de validation partagés par tout le moteur.
  *
- * Extrait de `@project-factory/manifest` quand le registry a eu besoin des
+ * Extrait de `@buildit/manifest` quand le registry a eu besoin des
  * mêmes briques : un code stable, un chemin, un message, un indice. Deux copies
  * auraient fini par diverger — l'une corrigée, l'autre pas.
  */

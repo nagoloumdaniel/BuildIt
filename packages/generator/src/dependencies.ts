@@ -1,11 +1,11 @@
-import type { RegistryEntry } from '@project-factory/registry';
+import type { RegistryEntry } from '@buildit/registry';
 import {
   createMessageFormatter,
   fail,
   type Issue,
   ok,
   type ParseResult,
-} from '@project-factory/validation';
+} from '@buildit/validation';
 import semver from 'semver';
 
 /**

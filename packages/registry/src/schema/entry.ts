@@ -1,4 +1,4 @@
-import { TARGETS, type Target } from '@project-factory/manifest';
+import { TARGETS, type Target } from '@buildit/manifest';
 import { z } from 'zod';
 
 /**

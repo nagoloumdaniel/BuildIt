@@ -4,7 +4,7 @@ import { mkdtemp, rm } from 'node:fs/promises';
 import { createRequire } from 'node:module';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
-import type { Manifest } from '@project-factory/manifest';
+import type { Manifest } from '@buildit/manifest';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { generateProject, planProject } from './pipeline.js';
 

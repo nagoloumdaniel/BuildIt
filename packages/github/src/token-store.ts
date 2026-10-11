@@ -1,4 +1,4 @@
-import type { CommandRunner } from '@project-factory/exec';
+import type { CommandRunner } from '@buildit/exec';
 import { type GitHubIssue, githubIssue } from './errors.js';
 
 /**
@@ -19,7 +19,7 @@ export interface TokenStore {
   delete(): Promise<GitHubIssue | undefined>;
 }
 
-const SERVICE = 'project-factory';
+const SERVICE = 'buildit';
 const ACCOUNT = 'github';
 
 /**
@@ -68,7 +68,7 @@ const BACKENDS: Partial<Record<NodeJS.Platform, Backend>> = {
       'secret-tool',
       // ASCII seulement : sous une locale non UTF-8 (C, POSIX — serveurs, CI),
       // secret-tool refuse un tiret cadratin dans l'étiquette.
-      ['store', '--label=Project Factory - GitHub', 'service', SERVICE, 'account', ACCOUNT],
+      ['store', '--label=BuildIt - GitHub', 'service', SERVICE, 'account', ACCOUNT],
       token,
     ],
     delete: ['secret-tool', ['clear', 'service', SERVICE, 'account', ACCOUNT], undefined],
@@ -158,7 +158,7 @@ export function keychainStore(
 
 /**
  * Jeton fourni par l'environnement (`PF_GITHUB_TOKEN`), pour la CI : lu,
- * jamais écrit ni effacé par Project Factory.
+ * jamais écrit ni effacé par BuildIt.
  */
 export function environmentStore(token: string): TokenStore {
   const refusal = githubIssue(

@@ -6,7 +6,7 @@ import {
   type Issue,
   ok,
   type ParseResult,
-} from '@project-factory/validation';
+} from '@buildit/validation';
 import type { FilePlan } from './plan.js';
 
 /**

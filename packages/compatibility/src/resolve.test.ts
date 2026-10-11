@@ -1,4 +1,4 @@
-import { loadRegistry, type Registry, type RegistryEntry } from '@project-factory/registry';
+import { loadRegistry, type Registry, type RegistryEntry } from '@buildit/registry';
 import { describe, expect, it } from 'vitest';
 import { optionsFor, resolve } from './resolve.js';
 

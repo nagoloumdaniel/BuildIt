@@ -1,13 +1,13 @@
-import { type Manifest, PROJECT_NAME_PATTERN } from '@project-factory/manifest';
-import type { Recipe } from '@project-factory/recipes';
-import type { RegistryEntry } from '@project-factory/registry';
+import { type Manifest, PROJECT_NAME_PATTERN } from '@buildit/manifest';
+import type { Recipe } from '@buildit/recipes';
+import type { RegistryEntry } from '@buildit/registry';
 import {
   createMessageFormatter,
   fail,
   type Issue,
   ok,
   type ParseResult,
-} from '@project-factory/validation';
+} from '@buildit/validation';
 import { type DependencySource, resolveDependencies } from './dependencies.js';
 import { buildInfrastructure, canRunInContainer } from './infrastructure.js';
 import { INTEGRATIONS, type Integration } from './integrations.data.js';
@@ -333,8 +333,8 @@ function readme(
     '',
     '---',
     '',
-    'Ce projet a été généré par Project Factory. Il est **autonome** : aucune',
-    'dépendance à Project Factory ne subsiste. Vous pouvez désinstaller l’outil,',
+    'Ce projet a été généré par BuildIt. Il est **autonome** : aucune',
+    'dépendance à BuildIt ne subsiste. Vous pouvez désinstaller l’outil,',
     'rien ne cassera.',
     '',
   ];

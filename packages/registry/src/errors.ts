@@ -1,10 +1,10 @@
-import { createMessageFormatter, type Issue, type PathSegment } from '@project-factory/validation';
+import { createMessageFormatter, type Issue, type PathSegment } from '@buildit/validation';
 
 /**
  * Codes et messages de validation du registry.
  *
  * Même modèle que le manifest : un code stable, un chemin, un message français,
- * un indice. Le modèle lui-même vit dans `@project-factory/validation` ; ce
+ * un indice. Le modèle lui-même vit dans `@buildit/validation` ; ce
  * fichier ne porte que ce qui est propre au registry.
  */
 

@@ -1,4 +1,4 @@
-import { suggest } from '@project-factory/manifest';
+import { suggest } from '@buildit/manifest';
 import type { RegistryEntry } from './schema/entry.js';
 
 /**
@@ -90,7 +90,7 @@ export function checkIntegrity(entries: readonly RegistryEntry[]): IntegrityIssu
 
         const referenced = byId.get(reference);
         if (referenced === undefined) {
-          // `suggest` vient de @project-factory/manifest : chercher la faute de
+          // `suggest` vient de @buildit/manifest : chercher la faute de
           // frappe la plus proche est le même problème ici et là, et deux
           // implémentations finiraient par diverger — l'une corrigée, l'autre pas.
           const hint = suggest(reference, knownIds);

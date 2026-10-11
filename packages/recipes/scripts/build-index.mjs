@@ -63,7 +63,7 @@ if (isCheck) {
   if (current !== content) {
     console.error(
       "L'index des recettes a dérivé de data/.\n" +
-        'Relancez : pnpm --filter @project-factory/recipes run build:index',
+        'Relancez : pnpm --filter @buildit/recipes run build:index',
     );
     process.exit(1);
   }

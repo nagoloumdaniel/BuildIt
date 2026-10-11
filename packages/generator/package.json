@@ -1,5 +1,5 @@
 {
-  "name": "@project-factory/generator",
+  "name": "@buildit/generator",
   "version": "0.0.0",
   "private": true,
   "type": "module",
@@ -30,16 +30,16 @@
     "test:smoke": "vitest run --config vitest.smoke.config.ts"
   },
   "dependencies": {
-    "@project-factory/compatibility": "workspace:*",
-    "@project-factory/exec": "workspace:*",
-    "@project-factory/manifest": "workspace:*",
-    "@project-factory/recipes": "workspace:*",
-    "@project-factory/registry": "workspace:*",
-    "@project-factory/validation": "workspace:*",
+    "@buildit/compatibility": "workspace:*",
+    "@buildit/exec": "workspace:*",
+    "@buildit/manifest": "workspace:*",
+    "@buildit/recipes": "workspace:*",
+    "@buildit/registry": "workspace:*",
+    "@buildit/validation": "workspace:*",
     "semver": "7.8.5"
   },
   "devDependencies": {
-    "@project-factory/typescript-config": "workspace:*",
+    "@buildit/typescript-config": "workspace:*",
     "@vitest/coverage-v8": "5.0.1",
     "tsdown": "0.23.0",
     "typescript": "7.0.2",

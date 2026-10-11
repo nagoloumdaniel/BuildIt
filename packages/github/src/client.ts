@@ -1,4 +1,4 @@
-import { fail, ok, type ParseResult } from '@project-factory/validation';
+import { fail, ok, type ParseResult } from '@buildit/validation';
 import { type GitHubCode, githubIssue } from './errors.js';
 
 /**
@@ -101,7 +101,7 @@ export class GitHubClient {
           Accept: 'application/vnd.github+json',
           Authorization: `Bearer ${this.#token}`,
           'X-GitHub-Api-Version': '2022-11-28',
-          'User-Agent': 'project-factory',
+          'User-Agent': 'buildit',
           ...(body === undefined ? {} : { 'Content-Type': 'application/json' }),
         },
         ...(body === undefined ? {} : { body: JSON.stringify(body) }),

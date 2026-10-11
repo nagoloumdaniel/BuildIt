@@ -1,10 +1,10 @@
-import { fail, ok } from '@project-factory/validation';
+import { fail, ok } from '@buildit/validation';
 import type { Fetch, Result } from './client.js';
 import { githubIssue } from './errors.js';
 
 /**
  * Connexion par code (OAuth device flow) : l'utilisateur saisit un code court
- * sur github.com ; aucun mot de passe ne transite par Project Factory.
+ * sur github.com ; aucun mot de passe ne transite par BuildIt.
  */
 
 /** Permissions demandées, annoncées avant la connexion (§20bis). */
@@ -45,7 +45,7 @@ async function post(
       headers: {
         Accept: 'application/json',
         'Content-Type': 'application/x-www-form-urlencoded',
-        'User-Agent': 'project-factory',
+        'User-Agent': 'buildit',
       },
       body: new URLSearchParams(form).toString(),
     });
@@ -62,7 +62,7 @@ async function post(
 }
 
 const DISABLED_HINT =
-  'L’application OAuth de Project Factory doit avoir le device flow activé. En attendant : pf login --with-token.';
+  'L’application OAuth de BuildIt doit avoir le device flow activé. En attendant : pf login --with-token.';
 
 export async function requestDeviceCode(
   fetcher: Fetch,

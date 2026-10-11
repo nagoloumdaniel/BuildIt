@@ -1,4 +1,4 @@
-import type { Category } from '@project-factory/registry';
+import type { Category } from '@buildit/registry';
 
 /**
  * Arité des catégories : combien de technologies peuvent coexister.

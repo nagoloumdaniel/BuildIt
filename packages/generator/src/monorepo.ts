@@ -1,13 +1,13 @@
-import type { Manifest } from '@project-factory/manifest';
-import type { Recipe } from '@project-factory/recipes';
-import type { RegistryEntry } from '@project-factory/registry';
+import type { Manifest } from '@buildit/manifest';
+import type { Recipe } from '@buildit/recipes';
+import type { RegistryEntry } from '@buildit/registry';
 import {
   createMessageFormatter,
   fail,
   type Issue,
   ok,
   type ParseResult,
-} from '@project-factory/validation';
+} from '@buildit/validation';
 import {
   buildInfrastructure,
   canRunInContainer,

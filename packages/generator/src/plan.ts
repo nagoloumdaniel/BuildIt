@@ -4,7 +4,7 @@ import {
   type Issue,
   ok,
   type ParseResult,
-} from '@project-factory/validation';
+} from '@buildit/validation';
 
 /**
  * Le plan de fichiers (§22).

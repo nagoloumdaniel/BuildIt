@@ -1,5 +1,5 @@
-import { loadRecipes, type RecipeCatalogue } from '@project-factory/recipes';
-import type { RegistryEntry } from '@project-factory/registry';
+import { loadRecipes, type RecipeCatalogue } from '@buildit/recipes';
+import type { RegistryEntry } from '@buildit/registry';
 import { describe, expect, it } from 'vitest';
 import { recipeAsDependencySource, resolveRecipes } from './recipes.js';
 

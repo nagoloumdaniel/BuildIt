@@ -1,5 +1,5 @@
-import type { Recipe, RecipeCatalogue } from '@project-factory/recipes';
-import type { RegistryEntry } from '@project-factory/registry';
+import type { Recipe, RecipeCatalogue } from '@buildit/recipes';
+import type { RegistryEntry } from '@buildit/registry';
 import {
   createMessageFormatter,
   fail,
@@ -7,7 +7,7 @@ import {
   ok,
   type ParseResult,
   suggest,
-} from '@project-factory/validation';
+} from '@buildit/validation';
 import type { DependencySource } from './dependencies.js';
 
 /**

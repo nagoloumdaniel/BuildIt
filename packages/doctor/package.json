@@ -1,5 +1,5 @@
 {
-  "name": "@project-factory/doctor",
+  "name": "@buildit/doctor",
   "version": "0.0.0",
   "private": true,
   "type": "module",
@@ -20,12 +20,12 @@
     "test": "vitest run --coverage"
   },
   "dependencies": {
-    "@project-factory/manifest": "workspace:*",
-    "@project-factory/registry": "workspace:*",
-    "@project-factory/validation": "workspace:*"
+    "@buildit/manifest": "workspace:*",
+    "@buildit/registry": "workspace:*",
+    "@buildit/validation": "workspace:*"
   },
   "devDependencies": {
-    "@project-factory/typescript-config": "workspace:*",
+    "@buildit/typescript-config": "workspace:*",
     "@vitest/coverage-v8": "5.0.1",
     "tsdown": "0.23.0",
     "typescript": "7.0.2",

@@ -1,5 +1,5 @@
 {
-  "name": "@project-factory/presets",
+  "name": "@buildit/presets",
   "version": "0.0.0",
   "private": true,
   "type": "module",
@@ -20,11 +20,11 @@
     "test": "vitest run --coverage"
   },
   "dependencies": {
-    "@project-factory/manifest": "workspace:*"
+    "@buildit/manifest": "workspace:*"
   },
   "devDependencies": {
-    "@project-factory/generator": "workspace:*",
-    "@project-factory/typescript-config": "workspace:*",
+    "@buildit/generator": "workspace:*",
+    "@buildit/typescript-config": "workspace:*",
     "@vitest/coverage-v8": "5.0.1",
     "tsdown": "0.23.0",
     "typescript": "7.0.2",

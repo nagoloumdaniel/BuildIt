@@ -1,4 +1,4 @@
-import type { Target } from '@project-factory/manifest';
+import type { Target } from '@buildit/manifest';
 import {
   describeValue,
   fail,
@@ -9,7 +9,7 @@ import {
   type ParseResult,
   quoteValue,
   suggest,
-} from '@project-factory/validation';
+} from '@buildit/validation';
 import { messageFor, type RegistryIssue, type RegistryIssueCode } from './errors.js';
 import { checkIntegrity, type IntegrityIssue } from './integrity.js';
 import {

@@ -5,16 +5,16 @@ import {
   type CommandRunner,
   isTransientFailure,
   outputTail as tail,
-} from '@project-factory/exec';
-import { createMessageFormatter, type Issue } from '@project-factory/validation';
+} from '@buildit/exec';
+import { createMessageFormatter, type Issue } from '@buildit/validation';
 import { CI_SCRIPTS } from './infrastructure.js';
 
-export type { CommandResult, CommandRunner, RunOptions } from '@project-factory/exec';
+export type { CommandResult, CommandRunner, RunOptions } from '@buildit/exec';
 export {
   isTransientFailure,
   nodeCommandRunner,
   resolveWindowsCommand,
-} from '@project-factory/exec';
+} from '@buildit/exec';
 
 /**
  * Post Install et Validation (§22) : ce qui se passe une fois les fichiers

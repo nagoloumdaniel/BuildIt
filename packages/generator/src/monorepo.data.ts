@@ -1,4 +1,4 @@
-import type { Category } from '@project-factory/registry';
+import type { Category } from '@buildit/registry';
 
 /**
  * Où va chaque technologie dans un monorepo (spec 2026-09-28).

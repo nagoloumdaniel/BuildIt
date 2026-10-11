@@ -5,13 +5,13 @@ import {
   ok,
   type ParseResult,
   suggest,
-} from '@project-factory/validation';
+} from '@buildit/validation';
 
 /**
  * Rendu de template — substitution, et rien d'autre.
  *
  * Un moteur de template classique (Handlebars, EJS, Nunjucks) évalue du code
- * contenu dans les données. Comme les templates de Project Factory viendront un
+ * contenu dans les données. Comme les templates de BuildIt viendront un
  * jour d'un registry communautaire (§19), cela reviendrait à exécuter du code
  * tiers sur la machine de l'utilisateur au moment où il génère un projet.
  *

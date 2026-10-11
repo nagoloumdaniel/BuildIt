@@ -1,4 +1,4 @@
-import type { CommandRunner, RunOptions } from '@project-factory/exec';
+import type { CommandRunner, RunOptions } from '@buildit/exec';
 import { describe, expect, it } from 'vitest';
 import { environmentStore, isTokenShaped, keychainStore } from './token-store.js';
 

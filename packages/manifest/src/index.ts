@@ -7,7 +7,7 @@
  * du compatibility engine.
  */
 
-export type { ParseResult } from '@project-factory/validation';
+export type { ParseResult } from '@buildit/validation';
 export type { ManifestIssue, ManifestIssueCode, ManifestPathSegment } from './errors.js';
 export { MANIFEST_ISSUE_CODES, suggest } from './errors.js';
 export type { Migration } from './migrate.js';

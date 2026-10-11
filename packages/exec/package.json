@@ -1,5 +1,5 @@
 {
-  "name": "@project-factory/exec",
+  "name": "@buildit/exec",
   "version": "0.0.0",
   "private": true,
   "type": "module",
@@ -21,7 +21,7 @@
   },
   "dependencies": {},
   "devDependencies": {
-    "@project-factory/typescript-config": "workspace:*",
+    "@buildit/typescript-config": "workspace:*",
     "@vitest/coverage-v8": "5.0.1",
     "tsdown": "0.23.0",
     "typescript": "7.0.2",

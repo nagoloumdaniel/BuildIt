@@ -1,7 +1,7 @@
 import { mkdtemp, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import type { CommandRunner } from '@project-factory/exec';
+import type { CommandRunner } from '@buildit/exec';
 import { describe, expect, it } from 'vitest';
 import { type Detection, detectProject, formatCommand, install, installCommand } from './index.js';
 

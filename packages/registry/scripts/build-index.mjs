@@ -73,7 +73,7 @@ if (isCheck) {
   if (current !== content) {
     console.error(
       "L'index du registry a dérivé de data/.\n" +
-        'Relancez : pnpm --filter @project-factory/registry run build:index',
+        'Relancez : pnpm --filter @buildit/registry run build:index',
     );
     process.exit(1);
   }

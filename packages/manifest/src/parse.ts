@@ -7,7 +7,7 @@ import {
   ok,
   type ParseResult,
   quoteValue,
-} from '@project-factory/validation';
+} from '@buildit/validation';
 import { type ManifestIssue, type ManifestIssueCode, messageFor, suggest } from './errors.js';
 import { type Manifest, manifestSchema } from './schema/manifest.js';
 import { canonicalizeManifest } from './serialize.js';

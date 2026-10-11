@@ -1,4 +1,4 @@
-import type { RegistryEntry } from '@project-factory/registry';
+import type { RegistryEntry } from '@buildit/registry';
 import { type DockerService, INTEGRATIONS } from './integrations.data.js';
 import type { PlannedFile } from './plan.js';
 

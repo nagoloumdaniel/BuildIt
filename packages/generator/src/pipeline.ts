@@ -1,15 +1,9 @@
 import { fileURLToPath } from 'node:url';
-import { resolve, type Selection } from '@project-factory/compatibility';
-import type { Manifest } from '@project-factory/manifest';
-import { loadRecipeCatalogue, type Recipe, type RecipeCatalogue } from '@project-factory/recipes';
-import { loadCatalogue, type Registry, type RegistryEntry } from '@project-factory/registry';
-import {
-  fail,
-  type Issue,
-  ok,
-  type ParseFailure,
-  type ParseResult,
-} from '@project-factory/validation';
+import { resolve, type Selection } from '@buildit/compatibility';
+import type { Manifest } from '@buildit/manifest';
+import { loadRecipeCatalogue, type Recipe, type RecipeCatalogue } from '@buildit/recipes';
+import { loadCatalogue, type Registry, type RegistryEntry } from '@buildit/registry';
+import { fail, type Issue, ok, type ParseFailure, type ParseResult } from '@buildit/validation';
 import { type GeneratedFiles, planMonorepo } from './monorepo.js';
 import { type FilePlan, planFiles } from './plan.js';
 import {

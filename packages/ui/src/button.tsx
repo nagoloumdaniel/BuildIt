@@ -15,7 +15,7 @@ const BUTTON_VARIANT_CLASS: Record<ButtonVariant, string> = {
 /**
  * La classe d'un bouton, sans rendre de `<button>`.
  *
- * Next interdit à `@project-factory/ui` de connaître `next/link` : le lien stylé
+ * Next interdit à `@buildit/ui` de connaître `next/link` : le lien stylé
  * en bouton (`<Link className=...>`) prend donc la classe ici, et le composant
  * reste sans dépendance de framework.
  */

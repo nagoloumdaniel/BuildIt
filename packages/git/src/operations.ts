@@ -1,7 +1,7 @@
 import { mkdir, readdir, rm, stat } from 'node:fs/promises';
 import { dirname, join, resolve } from 'node:path';
-import { type CommandRunner, isTransientFailure, outputTail } from '@project-factory/exec';
-import { createMessageFormatter, type Issue } from '@project-factory/validation';
+import { type CommandRunner, isTransientFailure, outputTail } from '@buildit/exec';
+import { createMessageFormatter, type Issue } from '@buildit/validation';
 import { type GitHubRepository, type GitRemote, parseRemote } from './remote.js';
 
 export const GIT_CODES = [

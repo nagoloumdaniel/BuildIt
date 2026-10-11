@@ -1,5 +1,5 @@
-import type { Manifest } from '@project-factory/manifest';
-import { loadRecipes } from '@project-factory/recipes';
+import type { Manifest } from '@buildit/manifest';
+import { loadRecipes } from '@buildit/recipes';
 import { describe, expect, it } from 'vitest';
 import { planProject } from './pipeline.js';
 

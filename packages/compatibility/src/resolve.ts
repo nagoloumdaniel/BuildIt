@@ -1,6 +1,6 @@
-import type { Target } from '@project-factory/manifest';
-import type { Category, Registry, RegistryEntry } from '@project-factory/registry';
-import { fail, ok, type ParseResult } from '@project-factory/validation';
+import type { Target } from '@buildit/manifest';
+import type { Category, Registry, RegistryEntry } from '@buildit/registry';
+import { fail, ok, type ParseResult } from '@buildit/validation';
 import { type CompatibilityCode, type CompatibilityIssue, messageFor } from './errors.js';
 import {
   checkDeclaredConflicts,

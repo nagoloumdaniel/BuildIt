@@ -1,4 +1,4 @@
-import { createMessageFormatter, type Issue, type Severity } from '@project-factory/validation';
+import { createMessageFormatter, type Issue, type Severity } from '@buildit/validation';
 
 /**
  * Codes et messages du compatibility engine.

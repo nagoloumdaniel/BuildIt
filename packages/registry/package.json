@@ -1,5 +1,5 @@
 {
-  "name": "@project-factory/registry",
+  "name": "@buildit/registry",
   "version": "0.0.0",
   "private": true,
   "type": "module",
@@ -22,12 +22,12 @@
     "build:index": "node scripts/build-index.mjs"
   },
   "dependencies": {
-    "@project-factory/manifest": "workspace:*",
-    "@project-factory/validation": "workspace:*",
+    "@buildit/manifest": "workspace:*",
+    "@buildit/validation": "workspace:*",
     "zod": "4.6.5"
   },
   "devDependencies": {
-    "@project-factory/typescript-config": "workspace:*",
+    "@buildit/typescript-config": "workspace:*",
     "@vitest/coverage-v8": "5.0.1",
     "tsdown": "0.23.0",
     "typescript": "7.0.2",

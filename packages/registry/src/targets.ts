@@ -19,7 +19,7 @@
  * celui des fiches dont la **catégorie** occupe le champ `framework` d'une
  * application — `frontend` et `backend`, d'après `SLOTS`.
  */
-import { TARGETS, type Target } from '@project-factory/manifest';
+import { TARGETS, type Target } from '@buildit/manifest';
 import type { Category, RegistryEntry } from './schema/entry.js';
 import { SLOTS } from './slots.js';
 

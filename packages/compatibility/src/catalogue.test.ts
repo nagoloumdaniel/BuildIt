@@ -1,4 +1,4 @@
-import { loadCatalogue, type Registry } from '@project-factory/registry';
+import { loadCatalogue, type Registry } from '@buildit/registry';
 import { describe, expect, it } from 'vitest';
 import { optionsFor, resolve } from './resolve.js';
 

@@ -1,6 +1,6 @@
 # Ajouter une technologie au registry
 
-Le registry est la base de connaissances de Project Factory : ce que le produit sait des technologies. Il n'est jamais codé en dur dans un écran. Ajouter une technologie, c'est ajouter **un fichier JSON**, pas modifier du code.
+Le registry est la base de connaissances de BuildIt : ce que le produit sait des technologies. Il n'est jamais codé en dur dans un écran. Ajouter une technologie, c'est ajouter **un fichier JSON**, pas modifier du code.
 
 ---
 
@@ -11,7 +11,7 @@ Le registry est la base de connaissances de Project Factory : ce que le produit 
 $EDITOR packages/registry/data/<catégorie>/<id>.entry.json
 
 # 2. régénérer l'index
-pnpm --filter @project-factory/registry run build:index
+pnpm --filter @buildit/registry run build:index
 
 # 3. vérifier
 pnpm ci:local
@@ -198,7 +198,7 @@ Il est **versionné**, et un test vérifie qu'il correspond à `data/`. Si vous 
 
 ```
 L'index du registry a dérivé de data/.
-Relancez : pnpm --filter @project-factory/registry run build:index
+Relancez : pnpm --filter @buildit/registry run build:index
 ```
 
 Ne modifiez jamais ce fichier à la main. Il est exclu du formateur pour cette raison.

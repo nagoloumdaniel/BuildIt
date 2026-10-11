@@ -1,7 +1,7 @@
 import { mkdir, mkdtemp, readdir, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { type CommandRunner, nodeCommandRunner, type RunOptions } from '@project-factory/exec';
+import { type CommandRunner, nodeCommandRunner, type RunOptions } from '@buildit/exec';
 import { describe, expect, it } from 'vitest';
 import {
   cloneRepository,

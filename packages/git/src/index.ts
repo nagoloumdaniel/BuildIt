@@ -1,5 +1,5 @@
 /**
- * Git pour Project Factory (§18bis, §20bis) : valider un lien, cloner sans
+ * Git pour BuildIt (§18bis, §20bis) : valider un lien, cloner sans
  * rien laisser derrière soi, créer le premier commit, pousser vers un dépôt
  * neuf. Toujours par le `CommandRunner` — jamais de shell —, jamais de jeton
  * dans une URL ni dans un argument.

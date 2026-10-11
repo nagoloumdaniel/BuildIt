@@ -1,5 +1,5 @@
 {
-  "name": "@project-factory/manifest",
+  "name": "@buildit/manifest",
   "version": "0.0.0",
   "private": true,
   "type": "module",
@@ -20,14 +20,14 @@
     "test": "vitest run --coverage"
   },
   "devDependencies": {
-    "@project-factory/typescript-config": "workspace:*",
+    "@buildit/typescript-config": "workspace:*",
     "@vitest/coverage-v8": "5.0.1",
     "tsdown": "0.23.0",
     "typescript": "7.0.2",
     "vitest": "5.0.1"
   },
   "dependencies": {
-    "@project-factory/validation": "workspace:*",
+    "@buildit/validation": "workspace:*",
     "zod": "4.6.5"
   },
   "publishConfig": {

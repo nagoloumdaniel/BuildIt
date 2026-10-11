@@ -1,5 +1,5 @@
-import type { Target } from '@project-factory/manifest';
-import type { RegistryEntry } from '@project-factory/registry';
+import type { Target } from '@buildit/manifest';
+import type { RegistryEntry } from '@buildit/registry';
 import semver from 'semver';
 import { isExclusive } from './arity.js';
 import { type CompatibilityIssue, messageFor, RESTRICTIVE_LICENSES } from './errors.js';

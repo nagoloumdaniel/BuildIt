@@ -4,7 +4,7 @@ import {
   type Issue,
   ok,
   type ParseResult,
-} from '@project-factory/validation';
+} from '@buildit/validation';
 
 /**
  * Un lien de dépôt saisi par l'utilisateur, validé **avant** qu'aucune

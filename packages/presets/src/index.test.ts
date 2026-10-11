@@ -1,5 +1,5 @@
-import { planProject } from '@project-factory/generator';
-import { parseManifest, serializeManifest } from '@project-factory/manifest';
+import { planProject } from '@buildit/generator';
+import { parseManifest, serializeManifest } from '@buildit/manifest';
 import { describe, expect, it } from 'vitest';
 import { getPreset, PRESET_IDS, PRESETS } from './index.js';
 

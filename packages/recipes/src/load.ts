@@ -9,7 +9,7 @@ import {
   ok,
   type ParseResult,
   quoteValue,
-} from '@project-factory/validation';
+} from '@buildit/validation';
 import { RAW_RECIPES } from './generated/recipes.js';
 import { type Recipe, recipeSchema } from './schema.js';
 

@@ -1,4 +1,4 @@
-import { createMessageFormatter, type Issue } from '@project-factory/validation';
+import { createMessageFormatter, type Issue } from '@buildit/validation';
 
 export const GITHUB_CODES = [
   'GITHUB_NETWORK',
@@ -41,7 +41,7 @@ const MESSAGES: Readonly<Record<GitHubCode, string>> = {
     'Le trousseau du système est indisponible ({value}) : le jeton n’est jamais stocké en clair, il n’a donc pas été enregistré.',
   GITHUB_KEYCHAIN_FAILED: 'Le trousseau du système a refusé l’opération ({value}).',
   GITHUB_TOKEN_FROM_ENV:
-    'Le jeton vient de la variable PF_GITHUB_TOKEN : Project Factory ne la modifie pas.',
+    'Le jeton vient de la variable PF_GITHUB_TOKEN : BuildIt ne la modifie pas.',
 };
 
 const messageFor = createMessageFormatter(MESSAGES);

@@ -1,13 +1,13 @@
 import { lstatSync, readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { isSafeRelativePath } from '@project-factory/recipes';
+import { isSafeRelativePath } from '@buildit/recipes';
 import {
   createMessageFormatter,
   fail,
   type Issue,
   ok,
   type ParseResult,
-} from '@project-factory/validation';
+} from '@buildit/validation';
 import type { PlannedFile } from './plan.js';
 import { renderTemplate, type TemplateContext, type TemplateIssueCode } from './template.js';
 

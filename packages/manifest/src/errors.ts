@@ -1,10 +1,10 @@
-import { createMessageFormatter, type Issue, type PathSegment } from '@project-factory/validation';
+import { createMessageFormatter, type Issue, type PathSegment } from '@buildit/validation';
 
 /**
  * Codes et messages de validation du Project Manifest.
  *
  * Le modèle d'erreur lui-même (code stable, chemin, indice) vit dans
- * `@project-factory/validation` : il est partagé avec le registry. Ce fichier
+ * `@buildit/validation` : il est partagé avec le registry. Ce fichier
  * ne porte plus que ce qui est propre au manifest — sa liste de codes et son
  * catalogue de phrases.
  */
@@ -38,9 +38,9 @@ export type ManifestIssue = Issue<ManifestIssueCode>;
 const MESSAGES: Readonly<Record<ManifestIssueCode, string>> = {
   MANIFEST_NOT_AN_OBJECT: 'Le manifest doit être un objet JSON, pas {actual}.',
   MANIFEST_VERSION_MISSING:
-    "Le champ « manifestVersion » est absent. Ce manifest n'a pas été produit par Project Factory.",
+    "Le champ « manifestVersion » est absent. Ce manifest n'a pas été produit par BuildIt.",
   MANIFEST_VERSION_UNSUPPORTED:
-    'Version de manifest non prise en charge : {value}. Cette version de Project Factory lit la version {supported}.',
+    'Version de manifest non prise en charge : {value}. Cette version de BuildIt lit la version {supported}.',
   MANIFEST_FIELD_REQUIRED: 'Le champ « {field} » est obligatoire.',
   MANIFEST_UNKNOWN_FIELD:
     "Le champ « {field} » n'existe pas dans un manifest. Vérifiez l'orthographe.",
@@ -60,4 +60,4 @@ export const messageFor: (
   params: Readonly<Record<string, string>>,
 ) => string = createMessageFormatter(MESSAGES);
 
-export { suggest } from '@project-factory/validation';
+export { suggest } from '@buildit/validation';

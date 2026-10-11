@@ -1,9 +1,9 @@
 import { mkdir, mkdtemp, readdir, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import type { Manifest } from '@project-factory/manifest';
-import { loadRecipeCatalogue } from '@project-factory/recipes';
-import { loadCatalogue, loadRegistry, type Registry } from '@project-factory/registry';
+import type { Manifest } from '@buildit/manifest';
+import { loadRecipeCatalogue } from '@buildit/recipes';
+import { loadCatalogue, loadRegistry, type Registry } from '@buildit/registry';
 import { afterEach, describe, expect, it } from 'vitest';
 import { generateProject, planProject, selectionFromManifest } from './pipeline.js';
 import { describePlan } from './plan.js';
@@ -258,8 +258,8 @@ describe('generateProject — le projet sur le disque', () => {
   });
 });
 
-describe('le projet généré ne dépend pas de Project Factory — §1', () => {
-  it('aucun fichier ne référence un paquet @project-factory', async () => {
+describe('le projet généré ne dépend pas de BuildIt — §1', () => {
+  it('aucun fichier ne référence un paquet @buildit', async () => {
     const target = join(await tempDir(), 'quai3');
     await generateProject(SAAS, target);
 
@@ -277,7 +277,7 @@ describe('le projet généré ne dépend pas de Project Factory — §1', () => 
 
     for (const path of await walk(target)) {
       const contents = await readFile(path, 'utf8');
-      expect(contents, `dépendance résiduelle dans ${path}`).not.toContain('@project-factory/');
+      expect(contents, `dépendance résiduelle dans ${path}`).not.toContain('@buildit/');
     }
   });
 
@@ -291,7 +291,7 @@ describe('le projet généré ne dépend pas de Project Factory — §1', () => 
     };
     const all = { ...json.dependencies, ...json.devDependencies };
     for (const name of Object.keys(all)) {
-      expect(name.startsWith('@project-factory/')).toBe(false);
+      expect(name.startsWith('@buildit/')).toBe(false);
     }
   });
 });
