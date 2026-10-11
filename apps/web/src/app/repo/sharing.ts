@@ -6,6 +6,7 @@ import {
   isGitFailure,
   parseRemote,
   pushToNewOrigin,
+  type RepositoryState,
   repositoryState,
 } from '@project-factory/git';
 import { GitHubClient, ROLES, type Role } from '@project-factory/github';
@@ -28,6 +29,48 @@ import { refuseMissingDirectory } from '../open/project';
 export interface RepositoryRef {
   readonly owner: string;
   readonly name: string;
+}
+
+/**
+ * L'`origin` tel qu'il peut être affiché : les identifiants de l'URL partent.
+ *
+ * `.git/config` accepte `https://x-access-token:ghp_…@github.com/…`. Ce champ
+ * est rendu au navigateur (écran 24) et recopié dans des phrases d'erreur : le
+ * laisser tel quel publierait un jeton dans le HTML, dans l'historique du
+ * navigateur et dans toute capture d'écran (§24).
+ */
+export function redactOrigin(origin: string): string {
+  try {
+    const url = new URL(origin);
+    if (url.username === '' && url.password === '') {
+      return origin;
+    }
+    url.username = '';
+    url.password = '';
+    return url.toString();
+  } catch {
+    // Forme `git@hôte:chemin` : elle ne porte pas de mot de passe, rien à retirer.
+    return origin;
+  }
+}
+
+/**
+ * Le dépôt GitHub d'un `origin`.
+ *
+ * On relit l'URL **après** nettoyage : un jeton dans l'URL fait refuser le lien
+ * par `parseRemote`, mais le dépôt reste bien sur GitHub — l'écran ne doit pas
+ * dire le contraire.
+ */
+function githubRef(state: RepositoryState): RepositoryRef | undefined {
+  if (state.github !== undefined) {
+    return { owner: state.github.owner, name: state.github.repo };
+  }
+  if (state.origin === undefined) {
+    return undefined;
+  }
+  const parsed = parseRemote(redactOrigin(state.origin));
+  const github = parsed.ok ? parsed.value.github : undefined;
+  return github === undefined ? undefined : { owner: github.owner, name: github.repo };
 }
 
 export interface RepositoryStatusView {
@@ -83,8 +126,9 @@ export async function repositoryStatus(
     return refusedRepositoryStatus(directory, describeIssues(state.issues));
   }
   const proposedName = basename(directory);
-  const origin = state.origin === undefined ? {} : { origin: state.origin };
-  if (state.github === undefined) {
+  const origin = state.origin === undefined ? {} : { origin: redactOrigin(state.origin) };
+  const github = githubRef(state);
+  if (github === undefined) {
     return {
       ok: true,
       directory,
@@ -97,10 +141,9 @@ export async function repositoryStatus(
       issues: [],
     };
   }
-  const repository: RepositoryRef = { owner: state.github.owner, name: state.github.repo };
   const token = deps === undefined ? undefined : await deps.store.get();
   const visibility =
-    deps === undefined ? 'unknown' : await repositoryVisibility(deps.fetch, token, repository);
+    deps === undefined ? 'unknown' : await repositoryVisibility(deps.fetch, token, github);
   return {
     ok: true,
     directory,
@@ -108,9 +151,9 @@ export async function repositoryStatus(
     hasCommit: state.hasCommit,
     ...origin,
     github: true,
-    owner: repository.owner,
-    name: repository.name,
-    url: githubUrl({ owner: repository.owner, repo: repository.name }),
+    owner: github.owner,
+    name: github.name,
+    url: githubUrl({ owner: github.owner, repo: github.name }),
     visibility,
     proposedName,
     issues: [],
@@ -134,18 +177,20 @@ export async function requireGitHubRepository(
   if (isGitFailure(state)) {
     return { ok: false, issues: describeIssues(state.issues) };
   }
-  if (state.github === undefined) {
+  const github = githubRef(state);
+  if (github === undefined) {
+    const origin = state.origin === undefined ? undefined : redactOrigin(state.origin);
     return {
       ok: false,
       issues: [
-        state.origin === undefined
+        origin === undefined
           ? 'Ce projet n’utilise pas de dépôt GitHub : partager un projet passe par son dépôt.'
-          : `Le dépôt de ce projet n’est pas sur GitHub (${state.origin}) : le partage passe par GitHub.`,
+          : `Le dépôt de ce projet n’est pas sur GitHub (${origin}) : le partage passe par GitHub.`,
         'Créez-le depuis cet écran. En attendant, seul le lien de configuration en lecture seule sera possible (Phase 9).',
       ],
     };
   }
-  return { ok: true, value: { owner: state.github.owner, name: state.github.repo } };
+  return { ok: true, value: github };
 }
 
 /** Un nom de dépôt GitHub, tel que `pf repo create` l'accepte. */
@@ -194,7 +239,9 @@ export async function createRepository(
   if (state.origin !== undefined) {
     return {
       ok: false,
-      issues: [`Ce projet a déjà un dépôt distant : ${state.origin}. Rien n’a été créé.`],
+      issues: [
+        `Ce projet a déjà un dépôt distant : ${redactOrigin(state.origin)}. Rien n’a été créé.`,
+      ],
     };
   }
   const token = await options.deps.store.get();

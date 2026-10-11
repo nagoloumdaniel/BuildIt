@@ -1,4 +1,4 @@
-import { mkdir, mkdtemp, rm, stat, writeFile } from 'node:fs/promises';
+import { mkdir, mkdtemp, rm, stat, symlink, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import type { CommandResult, CommandRunner, RunOptions } from '@project-factory/exec';
@@ -78,6 +78,39 @@ describe('resolveDestination — un dossier relatif, et rien d’autre', () => {
     expect(resolveDestination('a\u0000b', root).ok).toBe(false);
     expect(resolveDestination(42, root).ok).toBe(false);
   });
+
+  it('refuse les contournements qui ne dépendent pas de la plateforme', async () => {
+    const root = await tempRoot();
+    // Une remontée déguisée reste une remontée, quel que soit le séparateur.
+    expect(resolveDestination('a\\..\\..\\evade', root).ok).toBe(false);
+    expect(resolveDestination('..\\..\\evade', root).ok).toBe(false);
+    expect(resolveDestination('a/./../../evade', root).ok).toBe(false);
+    // Pas de décodage d'URL : un segment percent-encodé n'est pas un nom valide.
+    expect(resolveDestination('%2e%2e/evade', root).ok).toBe(false);
+    // `~` n'est pas développé par Node : le refuser vaut mieux que de deviner.
+    expect(resolveDestination('~/.ssh', root).ok).toBe(false);
+    // Caractère de contrôle refusé avant toute résolution.
+    expect(resolveDestination('a\u007fb', root).ok).toBe(false);
+  });
+
+  it.skipIf(process.platform !== 'win32')(
+    'refuse UNC, lecteur, chemin étendu et unité relative (Windows)',
+    async () => {
+      const root = await tempRoot();
+      const tentatives = [
+        '\\\\serveur\\partage\\projet',
+        '//serveur/partage/projet',
+        '\\\\?\\C:\\Windows\\Temp\\evade',
+        'C:\\Windows\\Temp\\evade',
+        'C:..\\..\\evade',
+        'C:/Windows/Temp/evade',
+      ];
+      for (const tentative of tentatives) {
+        const resolved = resolveDestination(tentative, root);
+        expect(resolved.ok, `« ${tentative} » doit être refusé`).toBe(false);
+      }
+    },
+  );
 });
 
 describe('destinationState — sans rien écrire', () => {
@@ -95,6 +128,22 @@ describe('destinationState — sans rien écrire', () => {
     expect(await destinationState(plein)).toBe('taken');
     expect(await destinationState(join(plein, 'fichier.txt'))).toBe('taken');
   });
+
+  it.skipIf(process.platform !== 'win32')(
+    'suit un lien posé dans la racine — constat M2 du rapport, non corrigé',
+    async () => {
+      // `stat` suit les liens : une jonction vers un dossier vide **hors** de la
+      // racine de travail passe pour une destination libre. Ce test fige le
+      // comportement constaté ; le correctif (comparer `realpath` à la racine,
+      // dans `destination.ts` **et** `packages/git`) est décrit au rapport.
+      const root = await tempRoot();
+      const dehors = await tempRoot();
+      const lien = join(root, 'lien');
+      await symlink(dehors, lien, 'junction');
+
+      expect(await destinationState(lien)).toBe('empty');
+    },
+  );
 });
 
 describe('defaultFolder', () => {

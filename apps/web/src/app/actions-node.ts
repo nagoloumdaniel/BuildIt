@@ -1,6 +1,6 @@
 'use server';
 
-import { nodeCommandRunner } from '@project-factory/exec';
+import { type CommandRunner, nodeCommandRunner } from '@project-factory/exec';
 import {
   type ClonePreviewView,
   type CloneResultView,
@@ -30,6 +30,7 @@ import {
   installProject,
   type ProjectInspectionView,
   resolveLocalDirectory,
+  withoutServerSecrets,
 } from './open/project';
 import {
   type AccessMutationView,
@@ -78,6 +79,17 @@ function sessionDeps(): SessionDeps {
     store: tokenStoreFor(process.env, nodeCommandRunner),
     clientId: process.env['PF_GITHUB_CLIENT_ID'] ?? '',
   };
+}
+
+/**
+ * L'exécuteur des commandes de projet : `git` et les installations. Le jeton
+ * d'environnement du serveur (`PF_GITHUB_TOKEN`) n'atteint jamais ces processus
+ * — un dépôt cloné n'est pas du code de confiance (§18bis, §24), et `git commit`
+ * peut lancer un hook. `PF_GIT_TOKEN`, lui, reste posé par `packages/git` pour
+ * la seule commande qui en a besoin.
+ */
+function projectRunner(): CommandRunner {
+  return withoutServerSecrets(nodeCommandRunner);
 }
 
 // --- Écran 21 — GitHub Connection -----------------------------------------
@@ -142,7 +154,7 @@ export async function cloneProjectAction(input: unknown): Promise<CloneResultVie
     install: record['install'] === true,
     ignoreScripts: record['ignoreScripts'] === true,
     root,
-    runner: nodeCommandRunner,
+    runner: projectRunner(),
     ...(token === undefined ? {} : { token }),
   });
 }
@@ -163,7 +175,7 @@ export async function installProjectAction(input: unknown): Promise<InstallResul
   if (!resolved.ok) {
     return { ok: false, directory: '', command: '', issues: resolved.issues, retryable: false };
   }
-  return installProject(resolved.value, record['ignoreScripts'] === true, nodeCommandRunner);
+  return installProject(resolved.value, record['ignoreScripts'] === true, projectRunner());
 }
 
 // --- Écran 24 — Repository & Sharing --------------------------------------
@@ -173,7 +185,7 @@ export async function repositoryStatusAction(directory: unknown): Promise<Reposi
   if (!resolved.ok) {
     return refusedRepositoryStatus('', resolved.issues);
   }
-  return repositoryStatus(resolved.value, nodeCommandRunner, sessionDeps());
+  return repositoryStatus(resolved.value, projectRunner(), sessionDeps());
 }
 
 export async function repositoryRolesAction(): Promise<readonly RoleView[]> {
@@ -194,7 +206,7 @@ export async function createRepositoryAction(input: unknown): Promise<CreateRepo
     ...(typeof record['description'] === 'string' && record['description'] !== ''
       ? { description: record['description'] }
       : {}),
-    runner: nodeCommandRunner,
+    runner: projectRunner(),
     deps: sessionDeps(),
   });
 }
@@ -204,7 +216,7 @@ export async function accessListAction(directory: unknown): Promise<AccessView> 
   if (!resolved.ok) {
     return { ok: false, collaborators: [], invitations: [], issues: resolved.issues };
   }
-  return listAccess(sessionDeps(), resolved.value, nodeCommandRunner);
+  return listAccess(sessionDeps(), resolved.value, projectRunner());
 }
 
 export async function inviteCollaboratorAction(input: unknown): Promise<AccessMutationView> {
@@ -217,7 +229,7 @@ export async function inviteCollaboratorAction(input: unknown): Promise<AccessMu
     directory: resolved.value,
     username: record['username'],
     role: record['role'],
-    runner: nodeCommandRunner,
+    runner: projectRunner(),
     deps: sessionDeps(),
   });
 }
@@ -231,7 +243,7 @@ export async function removeCollaboratorAction(input: unknown): Promise<AccessMu
   return removeCollaborator({
     directory: resolved.value,
     username: record['username'],
-    runner: nodeCommandRunner,
+    runner: projectRunner(),
     deps: sessionDeps(),
   });
 }

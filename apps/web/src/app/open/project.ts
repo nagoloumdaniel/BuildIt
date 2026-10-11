@@ -147,9 +147,43 @@ export interface InstallResultView {
 }
 
 /**
+ * Les variables d'environnement du serveur qu'un projet n'a pas à voir.
+ *
+ * `packages/exec` laisse volontairement la commande hériter de `process.env` ;
+ * or l'installation lance le `postinstall` d'un projet qu'on n'a pas écrit
+ * (§18bis : « un dépôt cloné n'est pas du code de confiance »). Un `postinstall`
+ * qui lit `process.env.PF_GITHUB_TOKEN` exfiltrerait le jeton du serveur.
+ *
+ * `PF_GIT_TOKEN` n'est **pas** ici : c'est la variable du helper d'authentification
+ * Git, posée explicitement par `packages/git` pour la seule commande qui en a
+ * besoin, et neutralisée par ce garde-fou si on l'y ajoutait.
+ */
+const SERVER_SECRETS = ['PF_GITHUB_TOKEN'] as const;
+
+/**
+ * Un exécuteur dont les commandes **enfants** ne reçoivent aucun secret du
+ * serveur. Le nom de la variable reste présent, vidé : `packages/exec` empile
+ * `process.env` puis `options.env`, on ne peut donc pas la retirer — mais le
+ * code du projet y lit une chaîne vide.
+ */
+export function withoutServerSecrets(runner: CommandRunner): CommandRunner {
+  const scrubbed: Readonly<Record<string, string>> = Object.fromEntries(
+    SERVER_SECRETS.map((name) => [name, '']),
+  );
+  return {
+    run: (command, args, cwd, options) =>
+      runner.run(command, args, cwd, { ...options, env: { ...options?.env, ...scrubbed } }),
+  };
+}
+
+/**
  * Lance l'installation. À n'appeler qu'après confirmation : c'est le seul
  * endroit qui exécute un script du projet, et `packages/workspace` porte la
  * politique (`--ignore-scripts`, erreurs passagères).
+ *
+ * Le garde-fou d'environnement est ici, et pas chez l'appelant : il vaut pour
+ * l'écran « ouvrir un projet local » comme pour le clone, sans qu'aucun des
+ * deux puisse l'oublier.
  */
 export async function installProject(
   directory: string,
@@ -170,7 +204,7 @@ export async function installProject(
   const options = ignoreScripts ? { ignoreScripts: true } : {};
   const command = installCommand(detection, options);
   const shown = command === undefined ? (detection.manualCommand ?? '') : formatCommand(command);
-  const failure = await install(detection, directory, runner, options);
+  const failure = await install(detection, directory, withoutServerSecrets(runner), options);
   if (failure !== undefined) {
     return {
       ok: false,

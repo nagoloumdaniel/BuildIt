@@ -171,6 +171,35 @@ describe('repositoryStatus — l’état du dépôt, sans rien modifier', () => 
   });
 });
 
+describe('un origin qui porte des identifiants n’est jamais renvoyé tel quel (§24)', () => {
+  // `.git/config` peut porter un jeton dans l'URL (`https://x-access-token:…@`).
+  // Ces valeurs finiraient dans le HTML, dans les journaux du navigateur et
+  // dans toute capture d'écran de l'écran 24.
+  const AVEC_IDENTIFIANTS = `https://x-access-token:${TOKEN}@github.com/octocat/mon-app.git`;
+
+  it('retire les identifiants de `origin` dans l’état du dépôt', async () => {
+    const dir = await tempDir();
+
+    const status = await repositoryStatus(dir, repoRunner(dir, AVEC_IDENTIFIANTS).runner);
+
+    expect(JSON.stringify(status)).not.toContain(TOKEN);
+    expect(status.origin).not.toContain(TOKEN);
+    expect(status.origin).toContain('github.com');
+    // Le dépôt reste reconnu comme GitHub : seul l'affichage est nettoyé.
+    expect(status.github).toBe(true);
+    expect(status.url).toBe('https://github.com/octocat/mon-app');
+  });
+
+  it('ne recopie pas l’identifiant dans la phrase de refus du partage', async () => {
+    const dir = await tempDir();
+
+    const result = await requireGitHubRepository(dir, repoRunner(dir, AVEC_IDENTIFIANTS).runner);
+
+    const texte = result.ok ? JSON.stringify(result.value) : result.issues.join(' ');
+    expect(texte).not.toContain(TOKEN);
+  });
+});
+
 describe('requireGitHubRepository — la règle du §20bis', () => {
   it('refuse de partager un projet sans dépôt GitHub, et dit comment en obtenir un', async () => {
     const dir = await tempDir();

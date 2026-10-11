@@ -1,7 +1,12 @@
 import { mkdtemp, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
-import type { CommandResult, CommandRunner } from '@project-factory/exec';
+import {
+  type CommandResult,
+  type CommandRunner,
+  nodeCommandRunner,
+  type RunOptions,
+} from '@project-factory/exec';
 import { afterEach, describe, expect, it } from 'vitest';
 import { inspectProjectAction, installProjectAction } from '../actions-node';
 import {
@@ -9,6 +14,7 @@ import {
   installProject,
   refuseMissingDirectory,
   resolveLocalDirectory,
+  withoutServerSecrets,
 } from './project';
 
 /**
@@ -20,6 +26,7 @@ interface Call {
   readonly command: string;
   readonly args: readonly string[];
   readonly cwd: string;
+  readonly options?: RunOptions;
 }
 
 function fakeRunner(result: CommandResult = { exitCode: 0, output: '' }): {
@@ -30,8 +37,10 @@ function fakeRunner(result: CommandResult = { exitCode: 0, output: '' }): {
   return {
     calls,
     runner: {
-      async run(command, args, cwd) {
-        calls.push({ command, args, cwd });
+      async run(command, args, cwd, options) {
+        calls.push(
+          options === undefined ? { command, args, cwd } : { command, args, cwd, options },
+        );
         return result;
       },
     },
@@ -78,6 +87,20 @@ describe('resolveLocalDirectory — un chemin validé avant tout accès disque',
     }
     expect(resolveLocalDirectory(`${dir}${join('/')}`).ok).toBe(true);
   });
+
+  it.skipIf(process.platform !== 'win32')(
+    'accepte un chemin UNC — constat M3 du rapport, non corrigé',
+    () => {
+      // Sonde de comportement, pas d'approbation : `\\serveur\partage` est
+      // `isAbsolute` sous Windows, donc accepté, et `stat`/`detectProject`
+      // feront sortir une authentification SMB. Décision : le serveur n'écoute
+      // que sur 127.0.0.1 (8B.6) et un partage réseau est un usage légitime
+      // (persona « entreprise ») ; le refus est écrit au rapport de sécurité
+      // (docs/superpowers/specs/2026-10-11-phase8-security-review.md). Ce test
+      // fige le comportement pour qu'il ne change pas par accident.
+      expect(resolveLocalDirectory('\\\\serveur\\partage\\projet').ok).toBe(true);
+    },
+  );
 });
 
 describe('refuseMissingDirectory', () => {
@@ -197,7 +220,15 @@ describe('installProject — seulement ce qui a été confirmé', () => {
 
     expect(result.ok).toBe(true);
     expect(result.command).toBe('pnpm install');
-    expect(fake.calls).toEqual([{ command: 'pnpm', args: ['install'], cwd: dir }]);
+    expect(fake.calls).toEqual([
+      {
+        command: 'pnpm',
+        args: ['install'],
+        cwd: dir,
+        // Le jeton du serveur est vidé pour le code du projet (§24).
+        options: { env: { PF_GITHUB_TOKEN: '' } },
+      },
+    ]);
   });
 
   it('ajoute --ignore-scripts quand on l’a demandé', async () => {
@@ -241,6 +272,67 @@ describe('installProject — seulement ce qui a été confirmé', () => {
     expect(result.ok).toBe(false);
     expect(result.issues.join(' ')).toContain('arrive en V1');
     expect(fake.calls).toHaveLength(0);
+  });
+});
+
+describe('installProject — le jeton du serveur n’atteint pas le code du projet (§24)', () => {
+  const SECRET = 'ghp_serveur_0123456789abcdefghij';
+
+  it('neutralise PF_GITHUB_TOKEN dans l’environnement de la commande lancée', async () => {
+    const dir = await nodeProject({
+      'package.json': JSON.stringify({ name: 'mon-app' }),
+      'pnpm-lock.yaml': '',
+    });
+    const fake = fakeRunner();
+    const saved = process.env['PF_GITHUB_TOKEN'];
+    process.env['PF_GITHUB_TOKEN'] = SECRET;
+    try {
+      await installProject(dir, true, fake.runner);
+    } finally {
+      if (saved === undefined) {
+        delete process.env['PF_GITHUB_TOKEN'];
+      } else {
+        process.env['PF_GITHUB_TOKEN'] = saved;
+      }
+    }
+
+    // La variable est présente mais vidée : le `postinstall` du projet lit une
+    // chaîne vide, pas le jeton du serveur.
+    expect(fake.calls[0]?.options?.env?.['PF_GITHUB_TOKEN']).toBe('');
+  });
+
+  it('sonde le risque réel : sans le garde-fou, le processus hérite du jeton', async () => {
+    // Sonde réaliste : un vrai processus Node, qui lit l'environnement comme le
+    // ferait un `postinstall`. Elle prouve le risque ET la fermeture.
+    const read = ['-e', 'process.stdout.write(process.env.PF_GITHUB_TOKEN ?? "<absent>")'];
+    const saved = process.env['PF_GITHUB_TOKEN'];
+    process.env['PF_GITHUB_TOKEN'] = SECRET;
+    try {
+      const brut = await nodeCommandRunner.run(process.execPath, read, process.cwd());
+      expect(brut.output).toBe(SECRET);
+
+      const ferme = await withoutServerSecrets(nodeCommandRunner).run(
+        process.execPath,
+        read,
+        process.cwd(),
+      );
+      expect(ferme.output).toBe('');
+    } finally {
+      if (saved === undefined) {
+        delete process.env['PF_GITHUB_TOKEN'];
+      } else {
+        process.env['PF_GITHUB_TOKEN'] = saved;
+      }
+    }
+  });
+
+  it('ne touche pas aux variables ajoutées par l’appelant (PF_GIT_TOKEN)', async () => {
+    const fake = fakeRunner();
+    await withoutServerSecrets(fake.runner).run('git', ['push'], process.cwd(), {
+      env: { PF_GIT_TOKEN: 'jeton-du-helper' },
+    });
+
+    expect(fake.calls[0]?.options?.env?.['PF_GIT_TOKEN']).toBe('jeton-du-helper');
   });
 });
 
