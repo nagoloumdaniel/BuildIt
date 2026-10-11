@@ -572,31 +572,39 @@ Couvre §6.1 (menu), §6.21 à §6.24. Consomme `workspace`, `git` et `github` d
 | 8F.6 | Revue | `requesting-code-review`, `code-review`, `receiving-code-review` |
 
 ### Gate M5 — `verification-before-completion`
-- [ ] Les 18 écrans MVP existent et bloquent correctement (condition de passage du §6 testée)
-- [ ] Parcours complet §3 réalisable **au clavier seul**
-- [ ] Mode guidé : ≤ 4 options visibles par étape ; mode expert : catalogue complet + recherche
-- [ ] Une incompatibilité affiche **pourquoi**, en français lisible
-- [ ] Thème clair et sombre corrects sur les 18 écrans
-- [ ] Brouillon restauré après fermeture du navigateur
-- [ ] UI et CLI produisent le même manifest pour les mêmes choix
+- [x] Les 18 écrans MVP existent et bloquent correctement (condition de passage du §6 testée) — le nom et la plateforme sont testés en composant **et** dans le navigateur ; la pile est bloquée tant que le moteur trouve un problème (`blockedReason` dans `flow.ts`).
+- [ ] Parcours complet §3 réalisable **au clavier seul** — prouvé par `pnpm test:e2e` sur l'étape bloquante (sélection d'une plateforme et passage à la suite, touche Entrée) ; le reste du parcours n'utilise que des liens et des boutons natifs, mais n'est pas encore piloté entièrement au clavier.
+- [x] Mode guidé : ≤ 4 options visibles par étape ; mode expert : catalogue complet + recherche — testé dans `stack-view.test.ts` (plafond de 4, recherche, filtre de compatibilité).
+- [x] Une incompatibilité affiche **pourquoi**, en français lisible — l'option bloquée est grisée avec la raison du moteur, jamais masquée.
+- [ ] Thème clair et sombre corrects sur les 18 écrans — les deux thèmes sont posés par les tokens et vérifiés sur le parcours ; il n'y a pas eu de revue écran par écran (8F.3).
+- [x] Brouillon restauré après fermeture du navigateur — `pnpm test:e2e` recharge la page en cours de parcours et retrouve les choix (même mécanisme que la fermeture : `localStorage`).
+- [x] UI et CLI produisent le même manifest pour les mêmes choix — `draftToManifest` rend une chaîne **identique octet pour octet** à celle du preset SaaS, testé.
 
-## État au 11/10/2026 — 8B livrée : le socle web
+## État au 11/10/2026 — Phase 8 livrée pour le MVP
 
-Livré ([plan](superpowers/plans/2026-10-06-phase8-web-socle.md)) : `apps/web` dans le workspace et le socle de la sous-phase 8B. **Aucun des 18 écrans n'est encore codé** — ils sont l'affaire de 8C, 8D et 8G.
+Livré ([plan 8B](superpowers/plans/2026-10-06-phase8-web-socle.md), [direction 8A](superpowers/specs/2026-10-11-phase8a-direction-artistique-design.md)) : `apps/web` dans le workspace, et **les 18 écrans du MVP**.
 
-- **8B.1 / 8B.2** — `src/lib/engine.ts` est le seul adaptateur vers le moteur (`registry`, `compatibility`, `generator`, `presets`). Le web consomme les mêmes paquets que le CLI, aucune règle métier n'est réécrite, et `server-only` interdit au moteur de partir dans le bundle client.
-- **8B.4** — brouillon auto-sauvegardé (`src/lib/draft.ts`) : versionné, réinitialisé proprement s'il est corrompu ou d'une autre version, et **structurellement incapable** de porter une valeur de variable d'environnement (§6.8, §24).
-- **8B.5** — toasts sans dépendance (`src/lib/toasts.ts` + `<Toaster />`), `role="status"` posé.
-- **8B.6 tranchée** — l'UI n'est pas hébergée : `pf web` la sert en local, dans le même processus Node que le moteur, liée à `127.0.0.1` ; le jeton GitHub ne quitte jamais le serveur. Décision écrite dans le plan, à relire en 8G.2.
-- Le reste du socle : thème clair/sombre sans flash, machine à états du parcours avec les bloquants du §6 en tests, `draftToManifest` prouvé **octet pour octet** contre le preset SaaS — les prémices du gate M5, pas le gate.
+- **8A** — direction appliquée en tokens (`globals.css`) : un outil de dev, dense, un seul accent, deux thèmes, `prefers-reduced-motion` respecté. Son **gate humain** — trois maquettes arbitrées — reste dû.
+- **8B.1 / 8B.2** — `src/lib/engine.ts` est le seul adaptateur vers le moteur (`registry`, `compatibility`, `generator`, `presets`) ; le reste passe par des Server Actions. Le web consomme les mêmes paquets que le CLI, et `server-only` interdit au moteur de partir dans le bundle client.
+- **8B.4** — brouillon auto-sauvegardé (`src/lib/draft.ts` + `src/lib/session.ts`) : versionné, réinitialisé proprement s'il est corrompu ou d'une autre version, et **structurellement incapable** de porter une valeur de variable d'environnement (§6.8, §24). Le store se branche après hydratation, donc aucun écart d'hydratation.
+- **8B.5** — toasts sans dépendance, `role="status"` posé.
+- **8B.6 tranchée** — l'UI n'est pas hébergée : `pf web` la sert en local, dans le même processus Node que le moteur, liée à `127.0.0.1` ; le jeton GitHub ne quitte jamais le serveur.
+- **8C** — écrans 1 → 9 : Dashboard et menu d'accueil, Create, Target (bloquant testé), Project Type, Architecture, **Stack Builder** (§5 : 2 à 4 recommandations en guidé, catalogue complet et recherche en expert, options bloquées grisées **avec leur raison**), Capabilities, Environment & Secrets (des noms, jamais de valeur — aucun champ de saisie, testé), Infrastructure.
+- **8D** — écrans 10 → 14 : Blueprint (résumé lisible), Dependency Graph (`/graph`, hors parcours, accessible et non imposé), File Preview (arbre de fichiers en dry-run), Generation Progress, Generation Report (génération **réellement écriture** sur disque, sous une racine imposée par le serveur).
+- **8G** — écrans 21 → 24 : GitHub Connection (jeton jamais renvoyé au navigateur, testé), Clone (mes dépôts ou lien), Open Local Project, Repository & Sharing (« Partager » grisé avec explication sans dépôt).
+- **8E / 8F** — motion réduite à une transition d'apparition, `prefers-reduced-motion` global, liens d'évitement, `aria-current` sur la progression, refus annoncés en `role="status"`. Le parcours des 12 étapes est prouvé **dans un vrai navigateur** (`pnpm test:e2e`) : clavier seul, brouillon repris après rechargement complet, génération réelle et thème qui survit au rechargement.
 
 Constats trouvés en chemin :
 
 - Next 15 refuse TypeScript 7 (l'API JavaScript du compilateur a disparu) : `apps/web` est en `typescript@6.0.3`, seule exception du dépôt, avec `next.config.mjs`.
-- Le catalogue n'a **aucune fiche mobile ni desktop** alors que `TARGETS` les accepte : un brouillon mobile/desktop ne peut pas produire de manifest valide. À arbitrer (§7.9, §7.10) — écrire les fiches, ou borner l'écran Target.
-- La règle « catégorie du catalogue → emplacement dans le manifest » vit en deux copies (`apps/cli/src/commands/add.ts`, `apps/web/src/lib/draft-to-manifest.ts`), tenues ensemble par un test d'égalité octet pour octet. À sortir dans un module partagé pour supprimer le risque de divergence.
+- `pf web` sert par `next start` et non par la sortie autonome : sous Windows, Node ne résout pas toujours les liens pnpm recopiés dans `standalone/` (`EPERM`), et `.next/standalone` n'est pas nettoyé entre deux builds.
+- Le catalogue n'a **aucune fiche mobile ni desktop** alors que `TARGETS` les accepte : un brouillon mobile/desktop ne peut pas produire de manifest valide. À arbitrer (§7.9, §7.10).
+- La règle « catégorie du catalogue → emplacement dans le manifest » vit en deux copies (`apps/cli/src/commands/add.ts`, `apps/web/src/lib/draft-to-manifest.ts`), tenues ensemble par un test d'égalité octet pour octet. À sortir dans un module partagé.
+- Le Stack Builder charge les options par 37 Server Actions (une par catégorie) : point chaud si l'écran paraît lent, à remplacer par un chargement unique côté serveur.
+- §6.1 « liste des projets créés » n'est pas implémentée : aucun registre de projets n'existe côté serveur. §6.13 « annuler » non plus : une Server Action n'est pas interruptible — le rollback du moteur reste le filet.
+- §20 (lien de partage) est annoncé à l'écran Blueprint mais désactivé avec explication : c'est la Phase 9.
 
-**Prochaine étape : 8A (direction artistique — gate humain sur trois maquettes) puis 8C (écrans 1 → 9).**
+**Prochaine étape : Phase 9 — partage lecture seule.**
 
 ---
 

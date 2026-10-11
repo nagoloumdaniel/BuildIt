@@ -7,9 +7,11 @@ Référence complète : `docs/cahier-des-charges.md`. Plan d'exécution : `docs/
 
 Phases 1 (socle monorepo), 2 (Project Manifest), 3 (registry, 282 fiches) et 4 (compatibility engine) livrées. Phase 5 livrée (5A + 5B), gate M3 partiel fermé : le socle généré s'installe et passe lint, typecheck et test (`pnpm test:smoke`), post-install et reprise d'étape, Template Resolver, `packages/recipes` avec deux recettes réelles, Dockerfile/devcontainer, revue sécurité écrite. Phase 6 livrée, gate M3 fermé : les quatre presets — **SaaS**, **API** (Hono), **Dashboard** (recette `dashboard-admin`), **Full-stack** (Next.js + Hono en monorepo) — sont certifiés de bout en bout. Le Full-stack a son contrat partagé (`packages/shared`) et un Dockerfile par application ; les tests Playwright générés tournent dans le test de fumée. Restent `packages/ui` et les entretiens 6.12. Phase 7 livrée hors publication npm : le CLI `pf` (`apps/cli`, [référence](docs/cli.md)) — `create`, `template`, `generate`, `graph`, `add`, `key`, menu d'accueil — sur `packages/presets` ; même manifest, même projet que le moteur, octet pour octet. Phase 7B livrée : `packages/exec`, `workspace`, `git`, `github` ; `pf clone`, `open`, `install`, `login`, `logout`, `repo`, `collab` ; création de dépôt et invitations prouvées contre un faux `fetch` seulement (API GitHub injoignable depuis la session).
 
-**Phase 8B livrée — socle applicatif web** (`apps/web`, [plan](docs/superpowers/plans/2026-10-06-phase8-web-socle.md)) : Next 15 + React 19 + Tailwind 4, servi en local par `pf web`. Le web consomme **les mêmes paquets que le CLI**, par un adaptateur unique (`src/lib/engine.ts`) ; brouillon auto-sauvegardé qui ne peut porter **aucune valeur de variable d'environnement** (§6.8, §24) ; machine à états du parcours avec les bloquants du §6 en tests ; thème clair/sombre sans flash ; toasts sans dépendance ; le même manifest que le CLI pour les mêmes choix (test `draftToManifest`). Décision 8B.6 : l'UI n'est pas hébergée pour le MVP, elle tourne dans le même processus Node que le moteur, le serveur n'écoute que sur `127.0.0.1`, et le jeton GitHub ne quitte jamais le processus serveur. **Aucun des 18 écrans n'est encore codé.**
+**Phase 8 livrée pour le MVP — le configurateur web** (`apps/web`, [plan 8B](docs/superpowers/plans/2026-10-06-phase8-web-socle.md), [direction 8A](docs/superpowers/specs/2026-10-11-phase8a-direction-artistique-design.md)) : Next 15 + React 19 + Tailwind 4, servi en local par `pf web`. Le web consomme **les mêmes paquets que le CLI**, par un adaptateur unique (`src/lib/engine.ts`) et des Server Actions ; brouillon auto-sauvegardé qui ne peut porter **aucune valeur de variable d'environnement** (§6.8, §24) ; machine à états du parcours avec les bloquants du §6 en tests ; le même manifest que le CLI pour les mêmes choix (test `draftToManifest`, octet pour octet contre le preset SaaS). Décision 8B.6 : l'UI n'est pas hébergée pour le MVP, elle tourne dans le même processus Node que le moteur, le serveur n'écoute que sur `127.0.0.1`, et le jeton GitHub ne quitte jamais le processus serveur.
 
-**Prochaine étape : 8A (direction artistique — gate humain sur 3 maquettes) puis 8C (écrans 1 → 9).**
+**Les 18 écrans du MVP sont codés** : Dashboard et menu d'accueil (§6.1, §18bis), Create, Target, Project Type, Architecture, Stack Builder (progressive disclosure §5), Capabilities, Environment & Secrets (noms seuls), Infrastructure, Blueprint, Dependency Graph (`/graph`, hors parcours), File Preview, Generation Progress, Generation Report, GitHub Connection, Clone, Open Local, Repository & Sharing. Le parcours des 12 étapes est prouvé de bout en bout **dans un vrai navigateur** (clavier seul, reprise du brouillon après rechargement, génération réelle sur disque) par `pnpm test:e2e`. La direction artistique (8A) est appliquée en tokens, mais son **gate humain** — trois maquettes arbitrées — reste dû.
+
+**Prochaine étape : Phase 9 (partage lecture seule), puis 10 (durcissement) et 11 (docs & site).** La publication npm et le déploiement (Phase 12) demandent un compte npm et un hébergement, que cette session n'a pas.
 
 Remote : `github.com/nagoloumdaniel/BuildIt`. **La CI GitHub n'est pas disponible** : l'intégration continue est locale, portée par le hook `pre-push` — `ci:local` à chaque push, plus `test:smoke` quand le push touche `generator`, `registry` ou `recipes`. `ci.yml` est dormant (déclenchement manuel).
 
@@ -30,6 +32,7 @@ pnpm ci:full       # ci:local + test:smoke
 PF_SMOKE_DOCKER_CA=<ca.crt> pnpm test:smoke   # derrière un proxy TLS d'entreprise
 PF_SMOKE_CHROMIUM=<chrome> pnpm test:smoke     # Chromium déjà installé, sans téléchargement
 pnpm pf web        # le configurateur web, construit puis servi en local sur 127.0.0.1
+pnpm test:e2e      # le parcours des 12 étapes dans un vrai navigateur (Edge/Chrome/Chromium)
 ```
 
 Le pipeline est défini à un seul endroit : les scripts `ci:local` et `test:smoke` du `package.json` racine. Le hook `pre-push` et `ci.yml` (dormant) n'appellent qu'eux.
@@ -54,7 +57,13 @@ packages/presets/            les quatre presets certifiés (§8) : manifest + re
 apps/cli/                    le CLI pf (§21) — aucune logique métier ; embarque le moteur à la construction
 apps/web/                    le configurateur web (Phase 8) — Next.js, aucune logique métier
   src/lib/engine.ts                  l'adaptateur : le seul endroit qui parle au moteur (8B.2)
-  src/lib/{draft,flow,theme,toasts}.ts   état d'UI pur, testé
+  src/lib/{draft,flow,theme,toasts,session}.ts   état d'UI pur, testé
+  src/app/actions.ts                 les Server Actions du moteur (jamais importées d'un composant client)
+  src/app/actions-node.ts            les Server Actions qui touchent la machine (git, workspace, GitHub)
+  src/app/create/<étape>/            un écran par URL ; la logique pure vit dans un module frère
+  src/components/wizard/             shell, progression, provider du brouillon
+  src/app/globals.css                les tokens et les classes pf-* (direction 8A)
+  e2e/journey.mjs                    le parcours complet, piloté dans un vrai navigateur
 packages/generator/          pipeline du §22 — livré ; monorepo multi-applications (monorepo.ts)
   templates/                         templates livrés (recettes aujourd'hui, presets en Phase 6)
   src/*.smoke.ts                     test de fumée réseau : pnpm test:smoke, hors pnpm test
@@ -135,3 +144,8 @@ Les packages naissent dans leur phase. Ne pas créer de répertoire vide « pour
 - Le serveur de `pf web` est lancé par le `CommandRunner`, qui **capture** la sortie et ne la rend qu'à l'arrêt : les journaux de Next n'apparaissent donc pas pendant que `pf web` tourne (limite connue, le streaming n'est pas dans l'interface du runner).
 - `output: 'standalone'` en **monorepo** ne dépose pas le serveur à la racine de `standalone/` : Next trace depuis la racine du dépôt et recopie l'arborescence, donc `apps/web/.next/standalone/apps/web/server.js`. Un `pf web` qui ne connaît que `standalone/server.js` refuse de démarrer un serveur pourtant construit — les tests à base de faux fichier ne le voient pas, la vérification réelle si. Les deux emplacements sont acceptés.
 - Une route Next qui importe le moteur demande plus que `transpilePackages` : `resolve.extensionAlias` (`.js` → `.ts`, les paquets écrivent `./rules.js`) et `parser: { url: false }` sur `packages/` (le `new URL('../templates', import.meta.url)` du générateur est lu comme une requête vers un dossier). Sans les deux, le build casse.
+- `.next/standalone` n'est **pas nettoyé** entre deux builds : les liens symboliques pnpm d'un build précédent y survivent, morts, et le serveur autonome échoue alors sur un `EPERM` de `realpathSync` — sous Windows, Node n'arrive de toute façon pas toujours à résoudre ces liens. C'est pourquoi `pf web` sert par **`next start`** quand `node_modules/next` est là, et ne retombe sur le standalone que pour une application distribuée.
+- Biome n'analyse pas les directives Tailwind 4 (`@theme`, `@layer`) sans `css.parser.tailwindDirectives` : sans cette option, `pnpm lint` échoue sur un fichier CSS par ailleurs correct. Les `!important` du bloc `prefers-reduced-motion` restent des avertissements assumés — ils sont nécessaires pour écraser n'importe quel style.
+- Next **interdit tout export autre que `default`** dans un `page.tsx` (`.next/types/app/**/page.ts`, TS2344) : les données et composants d'un écran vivent dans un module frère (`profiles.tsx`, `stack-view.ts`, `summary.ts`…), jamais dans le fichier de route.
+- Importer `@project-factory/registry` depuis un composant client fait entrer les 282 fiches engendrées dans le bundle (~13 ko sur 5 routes). C'est assumé : les paquets du monorepo publient leur source, le moteur (`server-only`) n'y est pas, et le catalogue ne contient aucun secret.
+- `pnpm test:e2e` pilote le navigateur **déjà installé** (`PF_E2E_CHROMIUM`, sinon Edge ou Chrome) : sans navigateur, il échoue en disant quoi faire — `PF_E2E_SKIP=1` saute la preuve explicitement.

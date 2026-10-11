@@ -2,7 +2,7 @@
 
 > **Development Environment Factory** — décrire un projet, choisir ses plateformes et ses technologies, obtenir un projet prêt à développer : cohérent, documenté et diagnostiqué.
 
-**Statut : pré-alpha.** Le moteur (manifest, registry, compatibility, generator) existe et est testé ; quatre presets (SaaS, API, Dashboard, Full-stack en monorepo) sont certifiés : générés, installés, construits et démarrés par le test de fumée. Le CLI `pf` existe ([référence](docs/cli.md)) mais n'est pas encore publié sur npm : rien n'est utilisable par un tiers sans cloner le dépôt. Il sait aussi cloner un dépôt, ouvrir un projet local et gérer le dépôt GitHub d'un projet (Phase 7B). Prochaine étape : le configurateur web (Phase 8). Voir la [roadmap](docs/roadmap.md).
+**Statut : pré-alpha.** Le moteur (manifest, registry, compatibility, generator) existe et est testé ; quatre presets (SaaS, API, Dashboard, Full-stack en monorepo) sont certifiés : générés, installés, construits et démarrés par le test de fumée. Le CLI `pf` existe ([référence](docs/cli.md)) mais n'est pas encore publié sur npm : rien n'est utilisable par un tiers sans cloner le dépôt. Il sait aussi cloner un dépôt, ouvrir un projet local et gérer le dépôt GitHub d'un projet (Phase 7B). Le **configurateur web** (`pnpm pf web`) porte les 18 écrans du MVP : parcours guidé ou expert, Stack Builder avec progressive disclosure, Blueprint, Dependency Graph, aperçu des fichiers, génération réelle — et le même manifest que le CLI pour les mêmes choix. Voir la [roadmap](docs/roadmap.md).
 
 ---
 
@@ -49,6 +49,8 @@ Commandes individuelles :
 | `pnpm build` | tsdown, via Turborepo |
 | `pnpm lint:secrets` | secretlint |
 | `pnpm pf <commande>` | Le CLI, sur les sources — [référence](docs/cli.md) |
+| `pnpm pf web` | Le configurateur web, servi en local sur `127.0.0.1` |
+| `pnpm test:e2e` | Le parcours des 12 étapes dans un vrai navigateur (Edge/Chrome/Chromium) |
 
 ### Intégration continue
 
