@@ -1,0 +1,42 @@
+# Project Factory
+
+> Project Factory (moteur **Forge**, binaire **`pf`**) transforme une description de projet en projet prêt à développer : plateformes et technologies choisies, code généré, cohérent, documenté, diagnostiqué. Le code généré est **autonome** : aucune dépendance runtime à l'outil, et l'analyse tourne **en local**.
+
+Statut : pré-alpha, dans le dépôt `github.com/nagoloumdaniel/BuildIt`. Le CLI n'est pas encore publié sur npm : il se lance depuis les sources (`pnpm pf <commande>`). Le site et l'hébergement sont la Phase 12 de la roadmap ; les liens ci-dessous sont donc relatifs à ce dossier de documentation.
+
+## Installation
+
+```bash
+git clone https://github.com/nagoloumdaniel/BuildIt.git
+cd BuildIt
+pnpm install
+pnpm pf create mon-projet --preset saas      # écrit, installe, git init + premier commit
+pnpm pf --help                               # les commandes
+```
+
+Prérequis : Node ≥ 20.11, pnpm ≥ 11. Quatre presets certifiés : `saas`, `dashboard`, `api`, `fullstack`.
+
+## Démarrage
+
+- [Démarrage rapide](guide/quickstart.md) : de zéro à un projet généré, commandes réelles et sorties recopiées
+- [Commandes](guide/commandes.md) : chaque commande du CLI, son état, ses options
+- [Référence du CLI](cli.md) : la référence détaillée des commandes
+
+## Concepts
+
+- [Concepts](guide/concepts.md) : manifest, registry, compatibility engine, presets, recettes, générateur — et la frontière forme / identité / combinaison
+- [Project Factory et Forge](guide/produit-et-moteur.md) : le produit, le moteur, le binaire `pf`, et pourquoi l'UI et le CLI sont deux façades du même moteur
+- [Référence du manifest](guide/reference-manifest.md) : les champs du Project Manifest, la forme canonique, les codes de refus
+- [Référence du registry](guide/reference-registry.md) : 283 fiches, 37 catégories, la forme d'une fiche, ce que le chargement vérifie
+
+## Garanties
+
+- [No-lock-in](guide/no-lock-in.md) : le code généré est autonome — et le test qui le prouve
+- [Confidentialité, local-first](guide/confidentialite.md) : ce qui reste sur la machine, ce qui sort, et quand
+
+## Cadrage et contribution
+
+- [Cahier des charges](cahier-des-charges.md) : cadrage produit et technique
+- [Roadmap](roadmap.md) : phases 0 → beta publique
+- [Contribuer](../CONTRIBUTING.md) : installation, commits, hook `pre-push`
+- [Ajouter une technologie au registry](../packages/registry/CONTRIBUTING.md)

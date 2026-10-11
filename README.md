@@ -77,9 +77,14 @@ docs/       cahier des charges, roadmap, specs, plans
 
 ## Documentation
 
+- [Guide](docs/README.md) — le produit tel qu'il est :
+  - [Démarrage rapide](docs/guide/quickstart.md) · [Concepts](docs/guide/concepts.md) · [Project Factory et Forge](docs/guide/produit-et-moteur.md)
+  - [No-lock-in](docs/guide/no-lock-in.md) · [Confidentialité](docs/guide/confidentialite.md)
+  - [Référence du manifest](docs/guide/reference-manifest.md) · [Référence du registry](docs/guide/reference-registry.md) · [Commandes](docs/guide/commandes.md)
 - [Cahier des charges](docs/cahier-des-charges.md) — cadrage produit et technique complet
 - [Roadmap](docs/roadmap.md) — 0 → beta publique, phase par phase
 - [CLI `pf`](docs/cli.md) — référence des commandes
+- [`llms.txt`](docs/llms.txt) — index court et factuel pour les moteurs
 - [Contribuer](CONTRIBUTING.md)
 
 ## Licence
