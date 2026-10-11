@@ -1,6 +1,6 @@
 import type { Category } from '@buildit/registry';
 import type { DraftState } from '../../../lib/draft';
-import { toggle } from '../../../lib/session';
+import { toggleExclusive } from '../../../lib/session';
 
 /**
  * L'écran Capabilities (§6.7) — « ce que le projet sait faire ».
@@ -149,7 +149,24 @@ export function engineSelection(draft: DraftState): EngineSelection {
   };
 }
 
-/** Ajoute ou retire une capacité, sans muter le brouillon reçu. */
-export function toggleCapability(draft: DraftState, id: string): DraftState {
-  return { ...draft, capabilities: toggle(draft.capabilities, id) };
+/**
+ * Ajoute, retire ou remplace une capacité, sans muter le brouillon reçu.
+ *
+ * `email`, `payments`, `cms`, `ecommerce` et `build` sont des catégories
+ * exclusives (§12) au même titre que `language` ou `orm` au Stack Builder :
+ * choisir un second moyen de paiement sans retirer le premier produisait
+ * une sélection que le moteur refusait au Blueprint, pas ici (même bug que
+ * `toggleExclusive`, cf. `lib/session.ts`).
+ *
+ * `categoryOf` vient des options déjà chargées pour la famille affichée — les
+ * seules dont le retrait silencieux a un sens : une capacité d'une autre
+ * famille, non chargée ici, n'est jamais retirée par erreur.
+ */
+export function toggleCapability(
+  draft: DraftState,
+  id: string,
+  category: Category,
+  categoryOf: ReadonlyMap<string, Category>,
+): DraftState {
+  return { ...draft, capabilities: toggleExclusive(draft.capabilities, id, category, categoryOf) };
 }

@@ -112,15 +112,27 @@ describe('sélection envoyée au moteur', () => {
 });
 
 describe('bascule d’une capacité', () => {
+  const categoryOf = new Map<string, Category>([
+    ['stripe', 'payments'],
+    ['paddle', 'payments'],
+  ]);
+
   it('ajoute puis retire un identifiant sans muter le brouillon reçu', () => {
     const draft = freshDraft();
-    const added = toggleCapability(draft, 'stripe');
+    const added = toggleCapability(draft, 'stripe', 'payments', categoryOf);
 
     expect(added.capabilities).toEqual(['stripe']);
     expect(draft.capabilities).toEqual([]);
 
-    const removed = toggleCapability(added, 'stripe');
+    const removed = toggleCapability(added, 'stripe', 'payments', categoryOf);
     expect(removed.capabilities).toEqual([]);
     expect(added.capabilities).toEqual(['stripe']);
+  });
+
+  it('un second moyen de paiement remplace le premier (§12) — bug rapporté, même famille', () => {
+    const draft = freshDraft();
+    const withStripe = toggleCapability(draft, 'stripe', 'payments', categoryOf);
+    const withPaddle = toggleCapability(withStripe, 'paddle', 'payments', categoryOf);
+    expect(withPaddle.capabilities).toEqual(['paddle']);
   });
 });

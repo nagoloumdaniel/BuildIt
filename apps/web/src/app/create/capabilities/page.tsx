@@ -1,7 +1,7 @@
 'use client';
 
 import type { Category } from '@buildit/registry';
-import { type ReactElement, useEffect, useState } from 'react';
+import { type ReactElement, useEffect, useMemo, useState } from 'react';
 import { useDraft, useSession } from '../../../components/wizard/draft-provider';
 import { StepShell } from '../../../components/wizard/shell';
 import type { OptionView } from '../../../lib/engine';
@@ -69,6 +69,15 @@ export default function CapabilitiesPage(): ReactElement {
   }, [family, draft]);
 
   const familyInfo = CAPABILITY_FAMILIES.find((candidate) => candidate.category === family);
+  // Qui appartient à `family` — la seule catégorie dont `toggleCapability`
+  // peut, à cet instant, retirer un choix concurrent sans se tromper.
+  const categoryOf = useMemo(() => {
+    const byId = new Map<string, Category>();
+    for (const option of options) {
+      byId.set(option.id, family);
+    }
+    return byId;
+  }, [options, family]);
 
   return (
     <StepShell
@@ -104,7 +113,7 @@ export default function CapabilitiesPage(): ReactElement {
           <CapabilityOptions
             options={options}
             onToggle={(id) => {
-              session.update((current) => toggleCapability(current, id));
+              session.update((current) => toggleCapability(current, id, family, categoryOf));
             }}
           />
         )}
@@ -123,7 +132,7 @@ export default function CapabilitiesPage(): ReactElement {
                 className="pf-badge pf-badge-accent"
                 aria-label={`Retirer ${id}`}
                 onClick={() => {
-                  session.update((current) => toggleCapability(current, id));
+                  session.update((current) => toggleCapability(current, id, family, categoryOf));
                 }}
               >
                 {id} ✕

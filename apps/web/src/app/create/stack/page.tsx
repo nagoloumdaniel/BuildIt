@@ -4,7 +4,7 @@ import type { Category } from '@buildit/registry';
 import { useEffect, useMemo, useState } from 'react';
 import { useDraft, useSession } from '../../../components/wizard/draft-provider';
 import { StepShell } from '../../../components/wizard/shell';
-import { toggle } from '../../../lib/session';
+import { toggle, toggleExclusive } from '../../../lib/session';
 import { checkSelectionAction } from '../../actions';
 import { loadStackBlocksAction } from './actions';
 import { CategoryNav, ExpertToolbar, OptionButton } from './stack-options';
@@ -111,10 +111,23 @@ export default function StackPage() {
     };
   }, [selection, session]);
 
-  function toggleTechnology(id: string): void {
+  // Qui appartient à quelle catégorie, pour `toggleExclusive` (§12) — reconstruit
+  // à chaque rendu depuis les blocs déjà chargés, jamais depuis un second
+  // aller-retour.
+  const categoryOf = useMemo(() => {
+    const map = new Map<string, Category>();
+    for (const block of blocks) {
+      for (const option of block.options) {
+        map.set(option.id, block.category);
+      }
+    }
+    return map;
+  }, [blocks]);
+
+  function toggleTechnology(id: string, category: Category): void {
     session.update((currentDraft) => ({
       ...currentDraft,
-      technologies: toggle(currentDraft.technologies, id),
+      technologies: toggleExclusive(currentDraft.technologies, id, category, categoryOf),
     }));
   }
 
@@ -231,7 +244,7 @@ export default function StackPage() {
                     key={option.id}
                     option={option}
                     chosenLocally={draft.technologies.includes(option.id)}
-                    onToggle={toggleTechnology}
+                    onToggle={(id) => toggleTechnology(id, block.category)}
                   />
                 ))}
               </div>
@@ -282,7 +295,7 @@ export default function StackPage() {
                       option.state === 'available' &&
                       recommended.has(option.id)
                     }
-                    onToggle={toggleTechnology}
+                    onToggle={(id) => toggleTechnology(id, activeBlock.category)}
                   />
                 ))}
               </div>

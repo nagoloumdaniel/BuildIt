@@ -1,6 +1,7 @@
+import type { Category } from '@buildit/registry';
 import { describe, expect, it } from 'vitest';
 import { freshDraft } from './draft';
-import { createSessionStore, toggle } from './session';
+import { createSessionStore, toggle, toggleExclusive } from './session';
 
 /** Un `Storage` en mémoire : le navigateur n'est pas disponible sous Vitest. */
 function fakeStorage(values: Record<string, string> = {}) {
@@ -192,5 +193,54 @@ describe('toggle', () => {
     expect(toggle(initial, 'mobile')).toEqual(['web', 'mobile']);
     expect(toggle(initial, 'web')).toEqual([]);
     expect(initial).toEqual(['web']);
+  });
+});
+
+describe('toggleExclusive — une catégorie exclusive remplace, jamais ne cumule', () => {
+  /**
+   * Bug rapporté : choisir TypeScript puis JavaScript (ou l'inverse) pouvait
+   * laisser les deux dans la sélection — le moteur ne refusait la paire qu'au
+   * Blueprint, écrans plus loin. `toggleExclusive` décide dans `current` seul,
+   * sans dépendre d'un aller-retour serveur qui aurait grisé l'un des deux.
+   */
+  const categoryOf = new Map<string, Category>([
+    ['typescript', 'language'],
+    ['javascript', 'language'],
+    ['next', 'frontend'],
+    ['react', 'frontend'],
+    ['vitest', 'testing'],
+    ['playwright', 'testing'],
+  ]);
+
+  it('choisir un second langage retire le premier', () => {
+    expect(toggleExclusive(['typescript'], 'javascript', 'language', categoryOf)).toEqual([
+      'javascript',
+    ]);
+  });
+
+  it('choisir un second framework frontend retire le premier', () => {
+    expect(toggleExclusive(['react'], 'next', 'frontend', categoryOf)).toEqual(['next']);
+  });
+
+  it('une catégorie cumulative (testing) ajoute sans rien retirer', () => {
+    expect(toggleExclusive(['vitest'], 'playwright', 'testing', categoryOf)).toEqual([
+      'vitest',
+      'playwright',
+    ]);
+  });
+
+  it('recliquer l’option déjà choisie la retire, catégorie exclusive ou non', () => {
+    expect(toggleExclusive(['typescript'], 'typescript', 'language', categoryOf)).toEqual([]);
+    expect(toggleExclusive(['vitest'], 'vitest', 'testing', categoryOf)).toEqual([]);
+  });
+
+  it('ne touche jamais une sélection d’une autre catégorie', () => {
+    expect(toggleExclusive(['typescript', 'vitest'], 'javascript', 'language', categoryOf)).toEqual(
+      ['vitest', 'javascript'],
+    );
+  });
+
+  it('première sélection d’une catégorie exclusive : rien à remplacer', () => {
+    expect(toggleExclusive([], 'typescript', 'language', categoryOf)).toEqual(['typescript']);
   });
 });
