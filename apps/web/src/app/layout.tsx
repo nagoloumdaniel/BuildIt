@@ -34,8 +34,9 @@ export const metadata: Metadata = {
     // titre résolu de **chaque** page. Les fixer ici les figerait pour tout le
     // site — `/share` afficherait « BuildIt » au lieu de son propre
     // titre dans les aperçus de lien.
+    images: [{ url: '/og-image.png', width: 1200, height: 630, alt: 'BuildIt' }],
   },
-  twitter: { card: 'summary' },
+  twitter: { card: 'summary_large_image', images: ['/og-image.png'] },
 };
 
 /**

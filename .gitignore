@@ -25,3 +25,5 @@ Thumbs.db
 
 # Templates recopiés dans le binaire du CLI à la construction
 apps/cli/templates/
+
+.vercel
