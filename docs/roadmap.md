@@ -624,10 +624,20 @@ Lien anonyme, sans compte, vers Manifest + Blueprint en lecture seule (§20, MVP
 | 9.6 | Revue + merge | `caveman-review`, `finishing-a-development-branch` |
 
 ### Gate — `verification-before-completion`
-- [ ] Un lien partagé ouvert en navigation privée affiche le Blueprint, rien d'autre
-- [ ] Aucun secret, chemin local, ou nom d'utilisateur dans le payload partagé
-- [ ] Identifiant non devinable (test d'énumération)
-- [ ] `noindex` sur les pages de partage
+- [x] Un lien partagé ouvert en navigation privée affiche le Blueprint, rien d'autre — prouvé dans un vrai navigateur sur le lien réellement produit par `pf share` : 0 bouton dans le contenu, 0 champ éditable, `HTTP 200`.
+- [x] Aucun secret, chemin local, ou nom d'utilisateur dans le payload partagé — le schéma du manifest n'a qu'un champ libre (`name`, contraint) ; sondes négatives : `env.DATABASE_URL`, `token: ghp_…`, `path`, `user`, `C:\Users\…`, `../evade`, `~/projet` sont tous refusés, **sans citer la valeur** dans le message.
+- [x] Identifiant non devinable (test d'énumération) — il n'y a **pas d'identifiant** : le lien *est* la donnée, rien n'est stocké côté serveur, donc rien à énumérer.
+- [x] `noindex` sur les pages de partage — `noindex, nofollow` vérifié dans le HTML servi et dans les métadonnées de la page.
+
+## État au 11/10/2026 — Phase 9 livrée
+
+Livré : `/share` (page publique en lecture seule), `pf share`, et le bouton « Créer un lien de partage » du Blueprint, qui fonctionne désormais au lieu d'être grisé.
+
+**Décision 9.1 : le manifest est encodé dans le fragment d'URL** (`/share#<base64url>`), pas stocké. Le fragment ne quitte jamais le navigateur — mesuré : **0 requête sur 13** porte le fragment. Aucun identifiant, aucun stockage serveur, aucune journalisation possible : c'est la seule forme compatible avec la décision 8B.6 (UI locale), et elle rend la revue de sécurité triviale à prouver.
+
+Deux limites assumées, écrites à l'écran : un lien auto-porteur est long (le destinataire le recopie d'un bloc), et **la publication sur un domaine public relève de la Phase 12** — aujourd'hui le lien n'est ouvrable que là où `pf web` tourne. Le décodage de toute charge hostile (243 troncatures possibles testées, base64 invalide, UTF-8 invalide, JSON corrompu, manifest refusé) répond par une phrase, jamais par une pile.
+
+Un suivi est resté ouvert côté Dashboard, corrigé depuis : l'écran annonçait encore « Ouvrir un lien reçu arrive en Phase 9 » avec un champ désactivé ; il ouvre maintenant le lien collé.
 
 ---
 
@@ -648,11 +658,22 @@ Passer en revue le §24 point par point. Rien de neuf n'est codé ici — on fer
 | 10.7 | **Auto-application du Project Doctor** : faire tourner les checks §16 sur le repo Project Factory lui-même | `verification-before-completion` |
 | 10.8 | Checklist §24 ligne par ligne | `verify-and-stop` |
 
+## État au 11/10/2026 — Phase 10 : revue faite, deux défauts fermés
+
+Revue de sécurité écrite : [revue Phase 8-9](superpowers/specs/2026-10-11-phase8-security-review.md), §24 point par point, constats classés avec leurs sondes.
+
+- **H1 (haute) — fermé.** Le code d'un dépôt cloné (son `postinstall`, ses hooks `git`) héritait de `PF_GITHUB_TOKEN` : `packages/exec` empile `process.env`. Sonde : un vrai processus enfant imprimait le jeton. Correctif : les secrets du serveur sont vidés pour toute commande issue d'une action, `PF_GIT_TOKEN` excepté (c'est le helper Git).
+- **M1 (moyenne) — fermé.** L'`origin` d'un dépôt, identifiants compris (`https://x-access-token:ghp_…@github.com/…`), partait au navigateur et dans les messages d'erreur. Correctif : `redactOrigin`, avec son test.
+- **M4 (moyenne) — fermé.** Aucun contrôle de `Host` : une page hostile pouvait atteindre le serveur local par DNS rebinding. Correctif : `apps/web/src/middleware.ts` refuse tout hôte qui n'est pas une adresse de boucle locale. Prouvé sur le serveur réel : `200` en local, **`403`** avec `Host: attaquant.example`.
+- **Restent ouverts, écrits au rapport** : une jonction dans la racine de travail peut faire écrire un clone hors racine (il faut déjà pouvoir écrire dans cette racine) ; les chemins UNC et de périphérique sont acceptés (décision écrite, usage « entreprise ») ; pas de confirmation serveur pour l'installation de code non tirée d'un lien de confiance (atténué par M4).
+
 ### Gate M6 — `verify-and-stop`
-- [ ] 0 finding `high` de `security-review`
-- [ ] Chaque point du §24 coché avec une preuve (test, lien, commit)
-- [ ] No-lock-in vérifié par un test automatisé, pas par relecture
-- [ ] Couverture globale ≥ 80 %, ≥ 90 % sur `compatibility` et `generator`
+- [x] 0 finding `high` de `security-review` — H1 fermé, avec sa sonde rouge d'origine et son test de non-régression.
+- [ ] Chaque point du §24 coché avec une preuve (test, lien, commit) — la revue le fait point par point, mais la clé API LLM et l'import de templates n'existent pas encore (Phases 15) : ces points sont sans objet, pas prouvés.
+- [x] No-lock-in vérifié par un test automatisé, pas par relecture — `packages/generator` a son test « le projet ne dépend pas de Project Factory », cité dans le [guide](guide/no-lock-in.md), et aucun `@project-factory` n'apparaît dans un projet réellement généré.
+- [x] Couverture globale ≥ 80 %, ≥ 90 % sur `compatibility` et `generator` — `compatibility` 98,5 %, `generator` 98,9 %, `apps/web` 98,7 %.
+
+**Manque pour fermer la phase** : la revue de code complète du diff cumulé (10.2), la simplification (10.3) et l'auto-application du Project Doctor (10.7) — ce dernier demande un `pf doctor` qui n'existe pas encore.
 
 ---
 
@@ -676,6 +697,19 @@ Passer en revue le §24 point par point. Rien de neuf n'est codé ici — on fer
 - [ ] Quickstart suivi de zéro par une personne extérieure → projet généré en < 10 min
 - [ ] Chaque commande du §21 documentée
 - [ ] `seo-audit` sans erreur bloquante, `llms.txt` publié
+
+## État au 11/10/2026 — Phase 11 : le contenu est écrit, le site attend un hébergement
+
+Livré : [guide produit](guide/README.md) — [quickstart](guide/quickstart.md) (les commandes réelles, lancées, avec leurs sorties), [concepts](guide/concepts.md), [produit et moteur](guide/produit-et-moteur.md), [no-lock-in](guide/no-lock-in.md), [confidentialité](guide/confidentialite.md), [référence du manifest](guide/reference-manifest.md), [référence du registry](guide/reference-registry.md), [commandes](guide/commandes.md) — plus [docs/llms.txt](llms.txt) et un index [docs/README.md](README.md).
+
+Tout ce que le guide affirme est vérifiable : chaque commande du quickstart a été lancée et sa sortie recopiée, les 118 liens relatifs pointent vers des fichiers existants, et les chiffres (283 fiches, 37 catégories, 19 licences) sont comptés.
+
+Le guide a trouvé trois dérives dans la documentation existante, corrigées : « 282 fiches » (il y en a **283**), « commençant par une lettre » dans `pf create` (le motif accepte les chiffres, les points et les soulignés), et `pf share` encore annoncé « à venir » alors que la Phase 9 l'a livré.
+
+### Gate M6 — `verification-before-completion`
+- [ ] Quickstart suivi de zéro par une personne extérieure → projet généré en < 10 min — le quickstart est écrit et chaque commande a été jouée, mais **personne d'extérieur ne l'a encore suivi** : le gate demande une personne, pas une relecture.
+- [x] Chaque commande du §21 documentée — `guide/commandes.md`, y compris celles qui répondent « à venir ».
+- [ ] `seo-audit` sans erreur bloquante, `llms.txt` publié — `llms.txt` est écrit et versionné, mais **pas publié** : il n'y a pas encore de site (Phase 12).
 
 ---
 
