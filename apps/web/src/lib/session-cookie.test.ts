@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { cookieTokenStore, sealToken, unsealToken } from './session-cookie';
+import { cookieTokenStore, sealJson, sealToken, unsealJson, unsealToken } from './session-cookie';
 
 /**
  * Jeton GitHub par visiteur, en mode hébergé (Phase 12).
@@ -115,5 +115,29 @@ describe('cookieTokenStore', () => {
     const refusal = await store.set(TOKEN);
     expect(refusal?.code).toBe('GITHUB_SESSION_SECRET_MISSING');
     expect(await store.get()).toBeUndefined();
+  });
+});
+
+describe('sealJson / unsealJson — le même coffre, pour un état qui n’est pas un jeton', () => {
+  it('scelle puis descelle la même valeur', () => {
+    const value = { deviceCode: 'abc', expiresAt: 1700000000000 };
+    const sealed = sealJson(value, SECRET);
+    expect(unsealJson(sealed, SECRET)).toEqual(value);
+  });
+
+  it('le scellé ne contient rien du JSON en clair', () => {
+    const sealed = sealJson({ deviceCode: 'secret-identifiable' }, SECRET);
+    expect(sealed).not.toContain('secret-identifiable');
+  });
+
+  it('un secret différent ne descelle rien', () => {
+    const sealed = sealJson({ a: 1 }, SECRET);
+    expect(unsealJson(sealed, 'un-autre-secret-tout-aussi-long-que-le-premier')).toBeUndefined();
+  });
+
+  it('une entrée altérée ou non scellée rend undefined, jamais une exception', () => {
+    expect(unsealJson('pas-un-scelle', SECRET)).toBeUndefined();
+    const sealed = sealJson({ a: 1 }, SECRET);
+    expect(unsealJson(`${sealed}x`, SECRET)).toBeUndefined();
   });
 });

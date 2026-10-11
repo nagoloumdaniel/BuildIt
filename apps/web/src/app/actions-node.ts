@@ -12,12 +12,15 @@ import {
 import { webWorkspaceRoot } from './clone/destination';
 import {
   completeDeviceConnection,
+  type DevicePendingStore,
   type DeviceStartResult,
+  memoryDevicePendingStore,
   PERMISSIONS,
   type PermissionView,
   REQUESTED_SCOPES,
   startDevice,
 } from './github/device';
+import { cookieDevicePendingStore } from './github/device-pending-cookie';
 import { type RepositoryListView, repositoriesFor } from './github/repositories';
 import {
   type GithubStatusView,
@@ -96,6 +99,19 @@ function sessionDeps(): SessionDeps {
 }
 
 /**
+ * Où vit le `device_code` en attente entre `startDevice` et `waitDevice` —
+ * deux Server Actions, donc deux requêtes. En hébergé, rien ne garantit
+ * qu'elles atteignent la même instance serverless : une mémoire de module y
+ * est invisible d'une requête à l'autre, et la connexion échouait en silence.
+ * Même bascule que `sessionDeps` : cookie scellé en hébergé, mémoire en local.
+ */
+function devicePendingStore(): DevicePendingStore {
+  return isHostedEnvironment()
+    ? cookieDevicePendingStore(process.env['SESSION_SECRET'] ?? '')
+    : memoryDevicePendingStore;
+}
+
+/**
  * L'exécuteur des commandes de projet : `git` et les installations. Le jeton
  * d'environnement du serveur (`PF_GITHUB_TOKEN`) n'atteint jamais ces processus
  * — un dépôt cloné n'est pas du code de confiance (§18bis, §24), et `git commit`
@@ -118,11 +134,11 @@ export async function githubPermissionsAction(): Promise<readonly PermissionView
 
 export async function githubStartDeviceAction(): Promise<DeviceStartResult> {
   const deps = sessionDeps();
-  return startDevice(deps.fetch, deps.clientId, REQUESTED_SCOPES);
+  return startDevice(deps.fetch, deps.clientId, REQUESTED_SCOPES, Date.now(), devicePendingStore());
 }
 
 export async function githubWaitDeviceAction(id: unknown): Promise<GithubStatusView> {
-  return completeDeviceConnection(sessionDeps(), id);
+  return completeDeviceConnection(sessionDeps(), id, {}, devicePendingStore());
 }
 
 export async function githubDisconnectAction(): Promise<GithubStatusView> {

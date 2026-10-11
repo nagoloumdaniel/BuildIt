@@ -30,12 +30,17 @@ function deriveKey(secret: string): Buffer {
   return createHash('sha256').update(secret, 'utf8').digest();
 }
 
-/** Chiffre et authentifie le jeton. Le résultat est sûr à poser dans un cookie. */
-export function sealToken(token: string, secret: string): string {
+/**
+ * Chiffre et authentifie une chaîne. Le résultat est sûr à poser dans un
+ * cookie. Brique commune à `sealToken` (le jeton GitHub) et `sealJson` (tout
+ * autre petit état par visiteur, ex. le code en attente du device flow) :
+ * un seul scellé, jamais deux implémentations à maintenir d'accord.
+ */
+function sealRaw(plaintext: string, secret: string): string {
   const key = deriveKey(secret);
   const iv = randomBytes(IV_LENGTH);
   const cipher = createCipheriv(ALGORITHM, key, iv);
-  const encrypted = Buffer.concat([cipher.update(token, 'utf8'), cipher.final()]);
+  const encrypted = Buffer.concat([cipher.update(plaintext, 'utf8'), cipher.final()]);
   const tag = cipher.getAuthTag();
   return Buffer.concat([iv, tag, encrypted]).toString('base64url');
 }
@@ -43,11 +48,10 @@ export function sealToken(token: string, secret: string): string {
 /**
  * Descelle un cookie. Rend `undefined` pour toute entrée qui n'est pas un
  * scellé valide pour ce secret — forme invalide, authentification GCM
- * échouée (valeur altérée ou secret différent), ou jeton qui, une fois
- * déchiffré, n'a pas la forme d'un jeton GitHub. Jamais d'exception : un
+ * échouée (valeur altérée ou secret différent). Jamais d'exception : un
  * cookie de visiteur est une entrée non fiable comme une autre.
  */
-export function unsealToken(sealed: string, secret: string): string | undefined {
+function unsealRaw(sealed: string, secret: string): string | undefined {
   try {
     const raw = Buffer.from(sealed, 'base64url');
     if (raw.length <= IV_LENGTH + TAG_LENGTH) {
@@ -59,10 +63,49 @@ export function unsealToken(sealed: string, secret: string): string | undefined 
     const encrypted = raw.subarray(IV_LENGTH + TAG_LENGTH);
     const decipher = createDecipheriv(ALGORITHM, key, iv);
     decipher.setAuthTag(tag);
-    const decrypted = Buffer.concat([decipher.update(encrypted), decipher.final()]).toString(
-      'utf8',
-    );
-    return isTokenShaped(decrypted) ? decrypted : undefined;
+    return Buffer.concat([decipher.update(encrypted), decipher.final()]).toString('utf8');
+  } catch {
+    return undefined;
+  }
+}
+
+/** Chiffre et authentifie le jeton. Le résultat est sûr à poser dans un cookie. */
+export function sealToken(token: string, secret: string): string {
+  return sealRaw(token, secret);
+}
+
+/**
+ * Descelle un cookie de jeton. `undefined` pour toute entrée invalide — forme,
+ * authentification GCM, ou jeton qui, une fois déchiffré, n'a pas la forme
+ * d'un jeton GitHub.
+ */
+export function unsealToken(sealed: string, secret: string): string | undefined {
+  const decrypted = unsealRaw(sealed, secret);
+  return decrypted !== undefined && isTokenShaped(decrypted) ? decrypted : undefined;
+}
+
+/**
+ * Scelle une valeur JSON quelconque — le même coffre que `sealToken`, pour un
+ * état qui n'est pas un jeton (ex. le `device_code` en attente, Phase 12 bis).
+ */
+export function sealJson<T>(value: T, secret: string): string {
+  return sealRaw(JSON.stringify(value), secret);
+}
+
+/**
+ * Descelle une valeur JSON. `undefined` pour toute entrée invalide — forme,
+ * authentification GCM, ou contenu qui n'est pas du JSON valide. Le typage de
+ * `T` n'est pas revérifié au-delà de « c'est du JSON » : l'appelant reste
+ * responsable de la forme attendue, comme pour tout JSON lu d'une source non
+ * fiable.
+ */
+export function unsealJson<T>(sealed: string, secret: string): T | undefined {
+  const decrypted = unsealRaw(sealed, secret);
+  if (decrypted === undefined) {
+    return undefined;
+  }
+  try {
+    return JSON.parse(decrypted) as T;
   } catch {
     return undefined;
   }
@@ -75,7 +118,8 @@ export interface CookieJar {
   delete(name: string): void;
 }
 
-function defaultCookieJar(): CookieJar {
+/** Le magasin de cookies réel de la requête en cours — importé où ce module a besoin d'un défaut. */
+export function defaultCookieJar(): CookieJar {
   // `cookies()` n'est valide que dans une portée de requête (Server Action,
   // Route Handler, composant serveur) : importé ici, appelé seulement au
   // moment de `get`/`set`/`delete`, jamais à la construction du magasin.

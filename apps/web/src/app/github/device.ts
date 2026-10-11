@@ -48,12 +48,44 @@ interface Pending {
 }
 
 /**
- * Les codes en attente de saisie, côté serveur : la clé est un identifiant
- * opaque, jamais le `device_code`. Le serveur est un processus unique (§0,
- * local-first) et cette carte ne contient aucun jeton — seulement un secret
- * temporaire qui expire avec le code.
+ * Où vivent les codes en attente de saisie entre le démarrage de la connexion
+ * (`startDevice`) et son attente (`waitDevice`) — deux Server Actions, donc
+ * deux requêtes séparées.
+ *
+ * En local (§0), c'est un processus unique : une `Map` en mémoire suffit,
+ * `memoryDevicePendingStore` ci-dessous. En hébergé (Phase 12), rien ne
+ * garantit que les deux requêtes atteignent la même instance serverless — une
+ * `Map` de module y est invisible d'une requête à l'autre, et la connexion
+ * échouait en silence (« Aucune connexion en cours ») alors que l'utilisateur
+ * venait de saisir le code. Un visiteur hébergé a donc besoin d'un magasin qui
+ * ne dépend d'aucune mémoire de processus — un cookie scellé, comme le jeton
+ * lui-même (`lib/session-cookie.ts`).
+ */
+export interface DevicePendingStore {
+  save(id: string, entry: Pending): void | Promise<void>;
+  load(id: string): (Pending | undefined) | Promise<Pending | undefined>;
+  clear(id: string): void | Promise<void>;
+}
+
+/**
+ * Les codes en attente de saisie, en mémoire : la clé est un identifiant
+ * opaque, jamais le `device_code`. Valable tant qu'une seule instance de
+ * processus répond aux deux requêtes du flux — vrai en local (§0), faux en
+ * hébergé (voir `DevicePendingStore`).
  */
 const pending = new Map<string, Pending>();
+
+export const memoryDevicePendingStore: DevicePendingStore = {
+  save(id, entry) {
+    pending.set(id, entry);
+  },
+  load(id) {
+    return pending.get(id);
+  },
+  clear(id) {
+    pending.delete(id);
+  },
+};
 
 /** Oublie les codes en attente — appelé par les tests, et utile après un redémarrage. */
 export function forgetPendingDevices(): void {
@@ -92,6 +124,7 @@ export async function startDevice(
   clientId: string,
   scopes: readonly string[],
   now: number = Date.now(),
+  store: DevicePendingStore = memoryDevicePendingStore,
 ): Promise<DeviceStartResult> {
   if (clientId === '') {
     return {
@@ -108,7 +141,7 @@ export async function startDevice(
     return { ok: false, issues: describeIssues(result.issues) };
   }
   const id = randomUUID();
-  pending.set(id, { code: result.value, expiresAt: now + result.value.expiresIn * 1000 });
+  await store.save(id, { code: result.value, expiresAt: now + result.value.expiresIn * 1000 });
   return {
     ok: true,
     value: {
@@ -144,17 +177,18 @@ export async function waitDevice(
   clientId: string,
   id: unknown,
   options: DeviceWaitOptions = {},
+  store: DevicePendingStore = memoryDevicePendingStore,
 ): Promise<DeviceWaitResult> {
   if (typeof id !== 'string') {
     return { ok: false, issues: NO_PENDING };
   }
-  const entry = pending.get(id);
+  const entry = await store.load(id);
   if (entry === undefined) {
     return { ok: false, issues: NO_PENDING };
   }
   const now = options.now ?? Date.now;
   if (now() >= entry.expiresAt) {
-    pending.delete(id);
+    await store.clear(id);
     return { ok: false, issues: ['Le code a expiré avant d’être saisi : relancez la connexion.'] };
   }
   const result = await pollAccessToken(
@@ -163,7 +197,7 @@ export async function waitDevice(
     entry.code,
     options.sleep === undefined ? {} : { sleep: options.sleep },
   );
-  pending.delete(id);
+  await store.clear(id);
   if (!result.ok) {
     return { ok: false, issues: describeIssues(result.issues) };
   }
@@ -180,8 +214,9 @@ export async function completeDeviceConnection(
   deps: SessionDeps,
   id: unknown,
   options: DeviceWaitOptions = {},
+  store: DevicePendingStore = memoryDevicePendingStore,
 ): Promise<GithubStatusView> {
-  const result = await waitDevice(deps.fetch, deps.clientId, id, options);
+  const result = await waitDevice(deps.fetch, deps.clientId, id, options, store);
   if (!result.ok) {
     return disconnectedStatus(deps, result.issues);
   }
