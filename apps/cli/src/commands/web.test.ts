@@ -12,11 +12,25 @@ const ok = () => ({ exitCode: 0, output: '' });
 const MONOREPO_SERVER = join('apps', 'web', '.next', 'standalone', 'apps', 'web', 'server.js');
 // L'autre forme : l'application seule comme racine de traçage.
 const FLAT_SERVER = join('apps', 'web', '.next', 'standalone', 'server.js');
+// Le dossier de l'application bâtie : `next start` lit `.next` depuis là.
+const WEB_DIR = join('apps', 'web');
+const BUILD_ID = join(WEB_DIR, '.next', 'BUILD_ID');
+const NEXT_BIN = join(WEB_DIR, 'node_modules', 'next', 'dist', 'bin', 'next');
 
 async function builtWebApp(): Promise<string> {
   const root = await mkdtemp(join(tmpdir(), 'pf-web-'));
   await mkdir(join(root, 'apps/web/.next/standalone/apps/web'), { recursive: true });
   await writeFile(join(root, MONOREPO_SERVER), '// serveur factice');
+  return root;
+}
+
+/** Une application bâtie « normalement » : `next` installé et un BUILD_ID. */
+async function nextStartApp(): Promise<string> {
+  const root = await mkdtemp(join(tmpdir(), 'pf-web-next-'));
+  await mkdir(join(root, 'apps/web/node_modules/next/dist/bin'), { recursive: true });
+  await mkdir(join(root, 'apps/web/.next'), { recursive: true });
+  await writeFile(join(root, NEXT_BIN), '// binaire factice');
+  await writeFile(join(root, BUILD_ID), 'build-factice');
   return root;
 }
 
@@ -147,9 +161,41 @@ describe('pf web', () => {
       },
     });
     expect(await run(['web'], io)).toBe(1);
-    expect(io.text().out).toContain(MONOREPO_SERVER);
+    expect(io.text().out).toContain(BUILD_ID);
     expect(probes).toEqual([]);
     expect(world.calls).toEqual([]);
+  });
+
+  it('préfère `next start` à la sortie autonome, et sert depuis le dossier de l’app', async () => {
+    // La sortie autonome recopie les liens pnpm : sous Windows, Node ne les
+    // résout pas toujours (EPERM), et `.next/standalone` n'est pas nettoyé
+    // entre deux builds. Sur une machine de développement, `next start` est le
+    // mode qui marche — le standalone reste le repli.
+    const world = fakeWorld({ node: ok });
+    const root = await nextStartApp();
+    const io = fakeIo({ cwd: root, runner: world, portProbe: async () => false });
+
+    expect(await run(['web', '--no-open', '--port', '4300'], io)).toBe(0);
+    const call = serverCall(world);
+    expect(call?.args[0]?.endsWith(NEXT_BIN)).toBe(true);
+    expect(call?.args.slice(1)).toEqual(['start', '-H', '127.0.0.1', '-p', '4300']);
+    expect(call?.cwd).toBe(join(root, WEB_DIR));
+    expect(call?.options?.env).toEqual({ HOSTNAME: '127.0.0.1', PORT: '4300' });
+  });
+
+  it('sans `next` installé, retombe sur la sortie autonome', async () => {
+    const world = fakeWorld({ node: ok });
+    // Une application **distribuée** : la sortie autonome et son BUILD_ID,
+    // sans `node_modules/next` — c'est là que le standalone est le bon mode.
+    const root = await mkdtemp(join(tmpdir(), 'pf-web-dist-'));
+    await mkdir(join(root, 'apps/web/.next/standalone/apps/web'), { recursive: true });
+    await writeFile(join(root, BUILD_ID), 'build-factice');
+    await writeFile(join(root, MONOREPO_SERVER), '// serveur factice');
+    const io = fakeIo({ cwd: root, runner: world, portProbe: async () => false });
+
+    expect(await run(['web', '--no-open'], io)).toBe(0);
+    expect(serverCall(world)?.args[0]?.endsWith(MONOREPO_SERVER)).toBe(true);
+    expect(serverCall(world)?.cwd).toBe(root);
   });
 
   it('un port déjà servi n’ouvre pas non plus le navigateur', async () => {

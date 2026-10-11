@@ -30,18 +30,42 @@ const FLAT_SERVER = join('apps', 'web', '.next', 'standalone', 'server.js');
 
 const SERVERS: readonly string[] = [MONOREPO_SERVER, FLAT_SERVER];
 
+/** Le dossier de l'application, et les deux fichiers qui prouvent qu'elle est bâtie. */
+const WEB_DIR = join('apps', 'web');
+const WEB_BUILD_ID = join(WEB_DIR, '.next', 'BUILD_ID');
+const NEXT_BIN = join(WEB_DIR, 'node_modules', 'next', 'dist', 'bin', 'next');
+
+/** Une façon de servir le configurateur construit. */
+interface ServeTarget {
+  /** Les arguments de `node` : le script à lancer, puis ses options. */
+  readonly args: readonly string[];
+  /** Le dossier de lancement — `next start` lit `.next` depuis là. */
+  readonly cwd: string;
+}
+
 /**
- * Le premier emplacement qui contient vraiment un serveur.
+ * Le premier mode de service disponible, ou `undefined`.
  *
- * Vérifié le 11/10/2026 sur ce dépôt : `next build` y produit le chemin
- * monorepo, et un `pf web` qui ne connaissait que l'autre refusait de démarrer
- * un serveur pourtant construit.
+ * **`next start` d'abord**, et ce n'est pas un détail : c'est le seul mode qui
+ * marche sur une machine de développement. La sortie autonome recopie les liens
+ * symboliques pnpm de `node_modules` ; sous Windows, Node n'arrive pas toujours
+ * à les résoudre (`EPERM` sur `realpathSync`), et `.next/standalone` n'est pas
+ * nettoyé entre deux builds — un lien mort d'un build précédent y survit. Le
+ * standalone reste le bon mode pour ce qu'on **distribue**, d'où le repli.
  */
-async function findServer(root: string): Promise<string | undefined> {
+async function findServeTarget(root: string, port: number): Promise<ServeTarget | undefined> {
+  const nextBin = resolve(root, NEXT_BIN);
+  if ((await isFile(nextBin)) && (await isFile(resolve(root, WEB_BUILD_ID)))) {
+    return {
+      args: [nextBin, 'start', '-H', HOST, '-p', String(port)],
+      cwd: resolve(root, WEB_DIR),
+    };
+  }
+
   for (const relative of SERVERS) {
-    const candidate = resolve(root, relative);
-    if (await isFile(candidate)) {
-      return candidate;
+    const server = resolve(root, relative);
+    if (await isFile(server)) {
+      return { args: [server, '--hostname', HOST, '--port', String(port)], cwd: root };
     }
   }
   return undefined;
@@ -110,18 +134,15 @@ async function openBrowser(io: Io, url: string): Promise<void> {
  * Lance le serveur et attend sa fin — c'est lui qui tient le premier plan.
  *
  * L'hôte et le port passent par l'environnement de **cette commande seule** :
- * c'est ce que lit le serveur standalone de Next (`process.env.HOSTNAME`,
- * `process.env.PORT`). Les mêmes valeurs sont répétées en arguments pour que
- * l'intention reste lisible, y compris dans `ps`.
+ * c'est ce que lisent le serveur autonome de Next (`process.env.HOSTNAME`,
+ * `process.env.PORT`) et `next start`. Les mêmes valeurs sont répétées en
+ * arguments pour que l'intention reste lisible, y compris dans `ps`.
  */
-async function serve(io: Io, server: string, port: number): Promise<CommandResult> {
+async function serve(io: Io, target: ServeTarget, port: number): Promise<CommandResult> {
   try {
-    return await io.runner.run(
-      'node',
-      [server, '--hostname', HOST, '--port', String(port)],
-      io.cwd,
-      { env: { HOSTNAME: HOST, PORT: String(port) } },
-    );
+    return await io.runner.run('node', [...target.args], target.cwd, {
+      env: { HOSTNAME: HOST, PORT: String(port) },
+    });
   } catch (error) {
     // Node introuvable, par exemple : le dire vaut mieux qu'une pile.
     return { exitCode: 1, output: reason(error) };
@@ -151,9 +172,9 @@ export async function web(args: readonly string[], io: Io): Promise<ExitCode> {
   }
   const port = raw === undefined ? DEFAULT_PORT : Number(raw);
 
-  const server = await findServer(io.cwd);
-  if (server === undefined) {
-    io.out(`✗ Le configurateur n’est pas construit : ${MONOREPO_SERVER} est absent.`);
+  const target = await findServeTarget(io.cwd, port);
+  if (target === undefined) {
+    io.out(`✗ Le configurateur n’est pas construit : ${WEB_BUILD_ID} est absent.`);
     io.out('  → Lancez « pnpm build » depuis la racine du dépôt, puis relancez pf web.');
     return EXIT.failure;
   }
@@ -166,7 +187,7 @@ export async function web(args: readonly string[], io: Io): Promise<ExitCode> {
 
   const url = `http://${HOST}:${port}`;
   io.out(`Configurateur : ${url} — local uniquement, Ctrl-C pour arrêter.`);
-  const serving = serve(io, server, port);
+  const serving = serve(io, target, port);
   if (!values['no-open']) {
     await openBrowser(io, url);
   }

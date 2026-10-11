@@ -139,7 +139,7 @@ La commande exacte est affichée **avant** d'être lancée. Sans terminal, rien 
 
 ### `pf web [--port <n>] [--no-open]`
 
-Sert le configurateur web — le même manifest, le même projet que le CLI — depuis le serveur Next déjà construit (`apps/web/.next/standalone/apps/web/server.js`, sous le dossier courant), ouvre le navigateur, et **reste au premier plan : Ctrl-C arrête le serveur**.
+Sert le configurateur web — le même manifest, le même projet que le CLI — depuis l'application déjà construite (`pnpm build`), ouvre le navigateur, et **reste au premier plan : Ctrl-C arrête le serveur**.
 
 | Option | |
 |---|---|
@@ -152,7 +152,7 @@ pnpm pf web         # http://127.0.0.1:4173
 pnpm pf web --port 5000 --no-open
 ```
 
-- **Prérequis : le web doit être construit** (`pnpm build`, c'est-à-dire `next build`). Sans `apps/web/.next/standalone/apps/web/server.js`, `pf web` refuse et le dit (code 1) — rien n'est lancé à moitié. En monorepo, Next dépose le serveur sous `standalone/apps/web/` (il trace depuis la racine du dépôt) ; construit seul, il le met sous `standalone/`. Les deux emplacements sont acceptés.
+- **Prérequis : le web doit être construit** (`pnpm build`, c'est-à-dire `next build`). Sans `apps/web/.next/BUILD_ID`, `pf web` refuse et le dit (code 1) — rien n'est lancé à moitié. Deux modes de service, dans cet ordre : `next start` quand `apps/web/node_modules/next` est là (le cas d'un dépôt cloné — c'est le seul mode fiable sous Windows, où la sortie autonome recopie des liens pnpm que Node ne résout pas toujours), sinon la sortie autonome `apps/web/.next/standalone/apps/web/server.js` (le cas d'une application distribuée), et `standalone/server.js` si l'application a été bâtie seule.
 - **Local uniquement** : le serveur écoute sur `127.0.0.1`, jamais `0.0.0.0`. Le configurateur n'est pas joignable depuis le réseau.
 - **Un port qui répond déjà est refusé** (code 1) : `pf` n'ajoute pas un second serveur à côté d'un autre — le premier resterait, et le port serait tenu par un processus qu'on ne voit plus. Arrêtez-le, ou changez de port.
 - Le navigateur est ouvert par `explorer` (Windows), `open` (macOS), `xdg-open` (Linux), **sans shell** : l'URL est un argument. Un navigateur absent n'empêche pas le serveur de tourner — `pf` dit alors quelle adresse ouvrir vous-même.
