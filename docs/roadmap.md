@@ -1,4 +1,4 @@
-# Project Factory — Roadmap 0 → Beta publique (v1)
+# BuildIt — Roadmap 0 → Beta publique (v1)
 
 > **Source :** `Project_Factory_Cahier_des_charges_v2.md` — chaque phase référence les sections (§) qu'elle implémente.
 > **Cible de cette roadmap :** livrer le **MVP gratuit (§23)** en beta publique, moteur Forge + CLI `pf` + configurateur web + partage lecture seule + intégration GitHub (§18bis, §20bis). V1/V2/V3 sont cadrés en horizon (Phase 15) mais hors périmètre d'exécution.
@@ -66,7 +66,7 @@ Transformer le cahier des charges en décisions exécutables et vérifier que le
 | 0.2 | Valider les 4 personas (§2) par entretiens réels — 5 devs minimum, dont 2 freelances | `customer-research`, `design:user-research` |
 | 0.3 | Synthétiser les entretiens en décisions de priorisation catalogue/presets | `design:research-synthesis` |
 | 0.4 | Profiler les concurrents : create-t3-app, Nx generators, Yeoman, Cookiecutter, Vercel Templates, shadcn CLI, Bulletproof React, Railway/Supabase starters | `competitor-profiling` |
-| 0.5 | Positionner Project Factory contre eux — l'axe est Registry + Compatibility Engine + Manifest (§25), pas la vitesse de scaffold | `product-marketing` |
+| 0.5 | Positionner BuildIt contre eux — l'axe est Registry + Compatibility Engine + Manifest (§25), pas la vitesse de scaffold | `product-marketing` |
 | 0.6 | Pré-cadrer le modèle freemium V2 (§0) — décidé maintenant, **appliqué en V2** : savoir dès aujourd'hui quelle feature sera payante évite de la coder gratuite par erreur | `pricing`, `offers` |
 | 0.7 | Écrire le plan d'exécution maître (celui-ci) et le plan détaillé Phase 1–4 | `writing-plans` |
 | 0.8 | Créer le repo + `CLAUDE.md` du projet (conventions, commandes, structure §9) | `init`, `update-config` |
@@ -94,7 +94,7 @@ Le cahier des charges liste ~250 technologies (§7). **Le MVP n'en implémente q
 **Semaine 2 · Milestone M0 · Couvre §9**
 
 ### Objectif
-Le monorepo de Project Factory est lui-même une démonstration de ce que l'outil génère. Il doit être exemplaire.
+Le monorepo de BuildIt est lui-même une démonstration de ce que l'outil génère. Il doit être exemplaire.
 
 ### Étapes et skills
 
@@ -311,7 +311,7 @@ Le rollback est la fonctionnalité la plus facile à « croire faite ». Elle ex
 | 6.3 | Architecture des composants générés (pas de boolean-prop soup dès la génération) | `composition-patterns` |
 | 6.4 | Choix de la lib UI embarquée dans les presets (shadcn/ui par défaut, §8) | `pick-ui-library` |
 | 6.5 | Toasts/feedback dans les templates web | `ask-sonner` |
-| 6.6 | Direction visuelle du code généré — un projet Project Factory ne doit pas ressembler à un template IA générique | `frontend-design`, `taste-skill` |
+| 6.6 | Direction visuelle du code généré — un projet BuildIt ne doit pas ressembler à un template IA générique | `frontend-design`, `taste-skill` |
 | 6.7a | **Preset SaaS certifié de bout en bout d'abord** — c'est lui qui fixe les templates partagés | `test-driven-development` |
 | 6.7b | Les 3 autres presets, en réutilisant les templates du SaaS (worktrees séparés) | `dispatching-parallel-agents`, `using-git-worktrees` |
 | 6.8 | **Tests de génération en CI** pour chaque preset : générer → installer → builder → typecheck (§24) | `test-driven-development`, `update-config` |
@@ -327,7 +327,7 @@ Le rollback est la fonctionnalité la plus facile à « croire faite ». Elle ex
 
 ### Gate M3 — `verification-before-completion`
 - [ ] Les 4 presets génèrent, installent, buildent et typechecken en CI
-- [ ] Aucun preset ne référence Project Factory au runtime — **no-lock-in vérifié** (§1, §24) : grep des imports dans le projet généré
+- [ ] Aucun preset ne référence BuildIt au runtime — **no-lock-in vérifié** (§1, §24) : grep des imports dans le projet généré
 - [ ] Un projet généré tourne réellement (`run`) et s'affiche dans un navigateur
 - [ ] Temps de génération < 90 s hors `npm install`
 
@@ -440,7 +440,7 @@ Trouvé en chemin : le compatibility engine marquait « ajoutée » une technolo
 **Semaines 10–11 · Milestone M4 · Couvre §0 (Dépôts & GitHub), §18bis, §20bis, §21, §24**
 
 ### Objectif
-Project Factory ne sert pas qu'à créer. Menu d'accueil à trois chemins (créer / cloner / ouvrir un projet local), installation des dépendances, connexion GitHub, création du dépôt d'un projet généré, partage et collaborateurs. CLI d'abord — l'UI reprend les mêmes paquets en Phase 8.
+BuildIt ne sert pas qu'à créer. Menu d'accueil à trois chemins (créer / cloner / ouvrir un projet local), installation des dépendances, connexion GitHub, création du dépôt d'un projet généré, partage et collaborateurs. CLI d'abord — l'UI reprend les mêmes paquets en Phase 8.
 
 ### Étapes et skills
 
@@ -478,7 +478,7 @@ Vérifié en réel dans cette session : clone d'un dépôt public, clone refusé
 
 Trouvé en vérifiant pour de vrai : sous une locale non UTF-8, `secret-tool` refusait l'étiquette (tiret cadratin) — corrigé. Trouvé en écrivant les tests : GitHub met « le nom est pris » dans `errors[]`, pas dans `message` — le client l'aurait présenté comme un refus générique ; corrigé.
 
-**Pas vérifiable ici** : l'API GitHub est bloquée par le réseau de la session et aucun compte de test n'est disponible — création de dépôt, clone privé, invitation de collaborateur (7B.9) sont prouvés contre un faux `fetch` qui rejoue les réponses documentées, **et restent à vérifier sur un vrai compte**. La connexion par code attend l'enregistrement de l'application OAuth de Project Factory (action de mainteneur) ; `pf login --with-token` fonctionne sans elle.
+**Pas vérifiable ici** : l'API GitHub est bloquée par le réseau de la session et aucun compte de test n'est disponible — création de dépôt, clone privé, invitation de collaborateur (7B.9) sont prouvés contre un faux `fetch` qui rejoue les réponses documentées, **et restent à vérifier sur un vrai compte**. La connexion par code attend l'enregistrement de l'application OAuth de BuildIt (action de mainteneur) ; `pf login --with-token` fonctionne sans elle.
 
 **Prochaine étape : Phase 8 — configurateur web.**
 
@@ -573,7 +573,7 @@ Couvre §6.1 (menu), §6.21 à §6.24. Consomme `workspace`, `git` et `github` d
 
 ### Gate M5 — `verification-before-completion`
 - [x] Les 18 écrans MVP existent et bloquent correctement (condition de passage du §6 testée) — le nom et la plateforme sont testés en composant **et** dans le navigateur ; la pile est bloquée tant que le moteur trouve un problème (`blockedReason` dans `flow.ts`).
-- [x] Parcours complet §3 réalisable **au clavier seul** — `pnpm --filter @project-factory/web test:e2e` (exit 0) pilote les **12 étapes** avec 391 appuis de Tab/Maj+Tab, **0 clic souris** et 0 `focus()` programmé, dans un contexte de navigateur séparé du parcours souris. Chaque étape est vérifiée : focus posé sur le titre (jamais sur `<body>`), ordre de tabulation conforme à l'ordre du DOM et à l'ordre visuel, indicateur de focus ≥ 2 px, aucun piège de focus, refus annoncés en `role="status"`, et rapport de génération atteint. Preuve : [constat clavier](superpowers/specs/2026-10-11-phase8f-parcours-clavier.md).
+- [x] Parcours complet §3 réalisable **au clavier seul** — `pnpm --filter @buildit/web test:e2e` (exit 0) pilote les **12 étapes** avec 391 appuis de Tab/Maj+Tab, **0 clic souris** et 0 `focus()` programmé, dans un contexte de navigateur séparé du parcours souris. Chaque étape est vérifiée : focus posé sur le titre (jamais sur `<body>`), ordre de tabulation conforme à l'ordre du DOM et à l'ordre visuel, indicateur de focus ≥ 2 px, aucun piège de focus, refus annoncés en `role="status"`, et rapport de génération atteint. Preuve : [constat clavier](superpowers/specs/2026-10-11-phase8f-parcours-clavier.md).
 - [x] Thème clair et sombre corrects sur les 18 écrans — revue écran par écran (8F.3) : 18 écrans et les coquilles partagées, **28 couples de contraste mesurés**, 4 défauts corrigés (badge accent clair 4,47 → 4,66:1 ; frontière des contrôles 2,09/1,90 → 3,25/3,10:1 ; survol du bouton principal 4,41 → 5,67:1). Ce qui reste sous 3:1 est écrit et assumé (bordures décoratives, choix 8A). Preuve : [revue thème](superpowers/specs/2026-10-11-phase8f-theme-ecran-par-ecran.md).
 - [x] Mode guidé : ≤ 4 options visibles par étape ; mode expert : catalogue complet + recherche — testé dans `stack-view.test.ts` (plafond de 4, recherche, filtre de compatibilité).
 - [x] Une incompatibilité affiche **pourquoi**, en français lisible — l'option bloquée est grisée avec la raison du moteur, jamais masquée.
@@ -612,7 +612,7 @@ Constats trouvés en chemin :
 
 Les trois reliquats de la Phase 8 sont traités, et le quatrième est un gate qui demande un humain.
 
-- **`packages/ui` — livré.** Les primitives d'interface partagées (`Button`, `Badge`, `StatusMessage`, `Field`) vivent dans `packages/ui` (@project-factory/ui) : composants purs, sans logique métier, 13 tests à 100 %, consommés par quatre écrans (`github`, `share`, `repo`, `graph`). La preuve n'est pas une impression : les **224 attributs `class` rendus** sur 11 états d'écran sont identiques avant et après la conversion, et un test de contrat (`apps/web/src/app/ui-partagee.test.tsx`) tient cette égalité dans le temps.
+- **`packages/ui` — livré.** Les primitives d'interface partagées (`Button`, `Badge`, `StatusMessage`, `Field`) vivent dans `packages/ui` (@buildit/ui) : composants purs, sans logique métier, 13 tests à 100 %, consommés par quatre écrans (`github`, `share`, `repo`, `graph`). La preuve n'est pas une impression : les **224 attributs `class` rendus** sur 11 états d'écran sont identiques avant et après la conversion, et un test de contrat (`apps/web/src/app/ui-partagee.test.tsx`) tient cette égalité dans le temps.
 - **8F.1 — parcours clavier complet** : voir le gate M5 ci-dessus (12 étapes, 0 souris, 391 Tab).
 - **8F.3 — revue thème écran par écran** : 18 écrans, 28 couples de contraste mesurés, 4 défauts corrigés ([rapport](superpowers/specs/2026-10-11-phase8f-theme-ecran-par-ecran.md)).
 - **Gate humain 8A — fermé le 11/10/2026** : les trois écrans les plus durs (Stack Builder, Blueprint, File Preview) ont été maquettés et arbitrés lors des entretiens, sans réserve ([synthèse](superpowers/specs/2026-10-11-validation-humaine-entretiens.md)).
@@ -669,7 +669,7 @@ Passer en revue le §24 point par point. Rien de neuf n'est codé ici — on fer
 | 10.4 | Bugs restants, un par un | `investigate-first`, `systematic-debugging`, `surgical-patch` |
 | 10.5 | Revue déléguée en parallèle sur les 3 packages les plus denses | `cavecrew`, `dispatching-parallel-agents` |
 | 10.6 | Intégrer les retours de revue | `receiving-code-review` |
-| 10.7 | **Auto-application du Project Doctor** : faire tourner les checks §16 sur le repo Project Factory lui-même | `verification-before-completion` |
+| 10.7 | **Auto-application du Project Doctor** : faire tourner les checks §16 sur le repo BuildIt lui-même | `verification-before-completion` |
 | 10.8 | Checklist §24 ligne par ligne | `verify-and-stop` |
 
 ## État au 11/10/2026 — Phase 10 : revue faite, deux défauts fermés
@@ -684,7 +684,7 @@ Revue de sécurité écrite : [revue Phase 8-9](superpowers/specs/2026-10-11-pha
 ### Gate M6 — `verify-and-stop`
 - [x] 0 finding `high` de `security-review` — H1 fermé, avec sa sonde rouge d'origine et son test de non-régression.
 - [ ] Chaque point du §24 coché avec une preuve (test, lien, commit) — la revue le fait point par point, mais la clé API LLM et l'import de templates n'existent pas encore (Phases 15) : ces points sont sans objet, pas prouvés.
-- [x] No-lock-in vérifié par un test automatisé, pas par relecture — `packages/generator` a son test « le projet ne dépend pas de Project Factory », cité dans le [guide](guide/no-lock-in.md), et aucun `@project-factory` n'apparaît dans un projet réellement généré.
+- [x] No-lock-in vérifié par un test automatisé, pas par relecture — `packages/generator` a son test « le projet ne dépend pas de BuildIt », cité dans le [guide](guide/no-lock-in.md), et aucun `@buildit` n'apparaît dans un projet réellement généré.
 - [x] Couverture globale ≥ 80 %, ≥ 90 % sur `compatibility` et `generator` — `compatibility` 98,5 %, `generator` 98,9 %, et `apps/web` 98,7 % **sur `src/lib`** : c'est la portée mesurée (`vitest.config.ts`), pas tout `src`. Sur les 18 écrans et les Server Actions (`src/app/**`), la couverture est de 68 % ; leur preuve est ailleurs (tests de composant, tests de Server Action, `pnpm test:e2e` dans un vrai navigateur), et le dire vaut mieux que d'élargir la portée pour afficher un chiffre faux.
 
 ### Vérification finale — 11/10/2026
@@ -692,7 +692,7 @@ Revue de sécurité écrite : [revue Phase 8-9](superpowers/specs/2026-10-11-pha
 | Preuve | Commande | Résultat |
 |---|---|---|
 | Pipeline local complet | `pnpm ci:local` | **exit 0** — 28/28 tâches turbo (lint, typecheck, tests, build, secretlint) |
-| Parcours navigateur | `pnpm --filter @project-factory/web test:e2e` | **exit 0** — 2/2 parcours, 12/12 étapes au clavier, 360 appuis de Tab, 0 clic, 0 `focus()` |
+| Parcours navigateur | `pnpm --filter @buildit/web test:e2e` | **exit 0** — 2/2 parcours, 12/12 étapes au clavier, 360 appuis de Tab, 0 clic, 0 `focus()` |
 | Doctor appliqué au dépôt | `pnpm run health` | **89/100** — 0 constat en échec |
 | Test de fumée (réseau) | `pnpm test:smoke` | **harnais corrigé, puis rejoué** : preset « socle React + TypeScript » **exit 0** (génère, installe, passe lint, typecheck, test et build) — voir ci-dessous |
 
@@ -710,7 +710,7 @@ Les trois manques sont traités.
   - la portée de couverture d'`apps/web` était annoncée plus large qu'elle n'est : corrigé ci-dessus, dans le gate M6.
   Reste **assumé et écrit**, non bloquant : un secret non listé exporté dans le shell qui lance `pf web` atteint encore l'enfant — une liste d'autorisation fermerait cette classe au prix de casser des installations légitimes sur une machine inconnue.
 - **10.3 — simplification** : la règle « catégorie du catalogue → emplacement dans le manifest » vivait en **deux copies** (`apps/cli/src/commands/add.ts`, `apps/web/src/lib/draft-to-manifest.ts`) tenues ensemble par un test d'égalité octet pour octet. Elle vit maintenant une fois, dans `packages/registry/src/slots.ts` (`SLOTS`, `slotFor`), où son exhaustivité est vérifiée par le type `Record<Category, Slot>` **et** par un test sur `CATEGORIES` : ajouter une catégorie au catalogue casse la compilation, pas la génération. Les deux usages gardent leur politique propre et la disent (le CLI remplace la valeur en place, le brouillon garde la première fiche).
-- **10.7 — Project Doctor, auto-appliqué** : `pf doctor` existe (`packages/doctor` pour les constats, `apps/cli/src/commands/doctor.ts` pour la lecture disque), et `pnpm health` le fait tourner **sur ce dépôt**: `project-factory — santé du projet : 89/100`, 8 constats satisfaits, 2 avertissements (monitoring d'erreurs, limitation de débit), 0 échec, 0 constat sans objet. Le score n'est pas une décoration : il porte sur ce que le code fait (types, installation, variables lues et documentées, tests, CI, README), et les deux avertissements restants sont des **choix de produit** (Sentry et l'analytics arrivent en Phase 12), pas des oublis.
+- **10.7 — Project Doctor, auto-appliqué** : `pf doctor` existe (`packages/doctor` pour les constats, `apps/cli/src/commands/doctor.ts` pour la lecture disque), et `pnpm health` le fait tourner **sur ce dépôt**: `buildit — santé du projet : 89/100`, 8 constats satisfaits, 2 avertissements (monitoring d'erreurs, limitation de débit), 0 échec, 0 constat sans objet. Le score n'est pas une décoration : il porte sur ce que le code fait (types, installation, variables lues et documentées, tests, CI, README), et les deux avertissements restants sont des **choix de produit** (Sentry et l'analytics arrivent en Phase 12), pas des oublis.
   - Le `.env.example` de la racine a été créé par le Doctor lui-même : 7 variables lues, aucune valeur. Ce que le §16 décrit en une ligne (« `--fix` propose un diff avant d'appliquer ») est livré en plus sobre : un plan affiché (créer/compléter), confirmation, et un `create` qui n'écrase **jamais** un fichier existant.
 
 **Trois limites assumées du Doctor**, écrites plutôt que masquées : le score mesure ce qu'un projet montre, pas ce qu'il vaut ; un secret non listé reste hors de portée de la liste noire des jetons ; et la lecture de code s'arrête à 120 fichiers (un dépôt entier ne se scanne pas à chaque `pf doctor`).
@@ -729,7 +729,7 @@ Les trois manques sont traités.
 | 11.1 | Architecture de la doc et du site | `site-architecture`, `content-strategy` |
 | 11.2 | Documentation produit (`apps/docs`) : quickstart, concepts, presets, CLI | `anthropic-skills:docs-writer`, `anthropic-skills:technical-writer` |
 | 11.3 | Référence API du registry et du manifest | `anthropic-skills:write-api-reference` |
-| 11.4 | **Page « Project Factory vs Forge »** — lever la confusion produit/moteur (§9) | `anthropic-skills:docs-writer` |
+| 11.4 | **Page « BuildIt vs Forge »** — lever la confusion produit/moteur (§9) | `anthropic-skills:docs-writer` |
 | 11.5 | **Page no-lock-in explicite** (§1, §24) | `copywriting`, `product-marketing` |
 | 11.6 | Page confidentialité / local-first (§0) — argument de vente autant que légal | `copywriting`, `product-marketing` |
 | 11.7 | Landing page | `frontend-design`, `copywriting`, `cro` |
@@ -801,7 +801,7 @@ Le guide a trouvé trois dérives dans la documentation existante, corrigées : 
 - [ ] ≥ 15 testeurs actifs, ≥ 5 projets réels
 - [ ] Taux de génération réussie ≥ 90 %
 - [ ] Aucun bug bloquant ouvert
-- [ ] Quai3 démarré avec Project Factory (validation du persona 1)
+- [ ] Quai3 démarré avec BuildIt (validation du persona 1)
 
 ---
 

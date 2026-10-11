@@ -1,4 +1,4 @@
-# Project Factory — Cahier des charges (v2)
+# BuildIt — Cahier des charges (v2)
 
 Document de cadrage produit et technique. Fusionne le document source (septembre 2026), les améliorations proposées et les décisions produit validées. Prêt à servir de base de développement.
 
@@ -12,8 +12,8 @@ Ces choix conditionnent toute la suite du document — ils remplacent les zones 
 |---|---|
 | Modèle économique | Gratuit au départ (MVP + V1), monétisation introduite à partir de la V2 : freemium (fonctions avancées, templates premium, génération cloud, gestion d'équipe payantes ; le cœur — CLI, moteur, registry, presets standards — reste gratuit). |
 | Public cible | Daniel en premier utilisateur (optimiser son propre workflow, y compris pour Quai3 et ses autres projets), puis ouverture à tout développeur, freelance, agence ou entreprise voulant industrialiser son démarrage de projet. Pas de niche fermée : le produit doit rester utile en solo comme en équipe. |
-| Exécution / confidentialité | **Local-first** : le moteur, l'analyse de projet importé et l'AI Stack Advisor tournent en local via le CLI, avec la clé API LLM fournie par l'utilisateur (OpenAI/Anthropic/autre). Aucun code ni prompt ne transite par un serveur Project Factory par défaut. Le **cloud hébergé** (génération sans installation locale, exécution du LLM géré par Project Factory) devient une **option payante** en V2, pas une obligation. |
-| Dépôts & GitHub | **Ajouté le 26/09/2026.** Project Factory ne sert pas qu'à créer : il sait aussi **cloner** un dépôt (GitHub ou lien Git) et **ouvrir un projet local** pour en installer les dépendances. Le compte GitHub de l'utilisateur est le seul compte que le produit utilise : connexion GitHub, création du dépôt, partage et ajout de collaborateurs passent par **l'API GitHub**, pas par des comptes Project Factory. Le partage d'un **projet** (le code) n'existe que si ce projet est adossé à un dépôt GitHub ; sans dépôt, seul le lien de configuration en lecture seule (§20) est disponible. Détail en §18bis et §20bis. |
+| Exécution / confidentialité | **Local-first** : le moteur, l'analyse de projet importé et l'AI Stack Advisor tournent en local via le CLI, avec la clé API LLM fournie par l'utilisateur (OpenAI/Anthropic/autre). Aucun code ni prompt ne transite par un serveur BuildIt par défaut. Le **cloud hébergé** (génération sans installation locale, exécution du LLM géré par BuildIt) devient une **option payante** en V2, pas une obligation. |
+| Dépôts & GitHub | **Ajouté le 26/09/2026.** BuildIt ne sert pas qu'à créer : il sait aussi **cloner** un dépôt (GitHub ou lien Git) et **ouvrir un projet local** pour en installer les dépendances. Le compte GitHub de l'utilisateur est le seul compte que le produit utilise : connexion GitHub, création du dépôt, partage et ajout de collaborateurs passent par **l'API GitHub**, pas par des comptes BuildIt. Le partage d'un **projet** (le code) n'existe que si ce projet est adossé à un dépôt GitHub ; sans dépôt, seul le lien de configuration en lecture seule (§20) est disponible. Détail en §18bis et §20bis. |
 | Collaboration | Partage léger dès le MVP : un lien en lecture seule vers une configuration (Project Manifest + Blueprint), sans compte ni authentification, pour faire valider un choix de stack à un collègue. La gestion d'équipe complète (comptes, permissions, organisations, édition collaborative) arrive en V2, une fois le modèle payant en place. |
 
 Argumentaire résumé (pour mémoire) :
@@ -24,7 +24,7 @@ Argumentaire résumé (pour mémoire) :
 
 ## 1. Vision du produit
 
-Project Factory transforme un simple scaffolder en véritable **Development Environment Factory** : décrire un projet, choisir ses plateformes et technologies, obtenir un projet prêt à développer — cohérent, documenté et diagnostiqué.
+BuildIt transforme un simple scaffolder en véritable **Development Environment Factory** : décrire un projet, choisir ses plateformes et technologies, obtenir un projet prêt à développer — cohérent, documenté et diagnostiqué.
 
 Fonctions cœur :
 - Choix initial de la cible : Web, Mobile, Desktop, ou combinaison.
@@ -40,7 +40,7 @@ Fonctions cœur :
 - **Trois points d'entrée** — créer un projet, cloner un dépôt, ouvrir un projet déjà présent sur la machine — choisis dans un menu d'accueil unique (§18bis).
 - **Intégration GitHub** : connexion, clonage d'un dépôt personnel ou de n'importe quel lien, création du dépôt d'un projet généré, partage et ajout de collaborateurs (§20bis).
 
-**Principe de non-dépendance (no-lock-in)** — à afficher explicitement dans le produit et la documentation : le code généré est autonome, sans dépendance runtime à Project Factory. Quitter l'outil après génération ne casse rien.
+**Principe de non-dépendance (no-lock-in)** — à afficher explicitement dans le produit et la documentation : le code généré est autonome, sans dépendance runtime à BuildIt. Quitter l'outil après génération ne casse rien.
 
 ---
 
@@ -239,10 +239,10 @@ Monolith, Modular Monolith, Monorepo, Microservices, Serverless, Event-driven, C
 
 ---
 
-## 9. Architecture interne de Project Factory
+## 9. Architecture interne de BuildIt
 
 ```
-project-factory/
+buildit/
 ├── apps/
 │   ├── web/            # interface du configurateur
 │   ├── cli/            # CLI `pf` — même moteur que le web
@@ -269,7 +269,7 @@ project-factory/
 
 Le moteur est indépendant de l'interface. **UI et CLI produisent tous deux un Project Manifest** en entrée du même pipeline (corrige l'incohérence du document source, où le CLI apparaissait sans lien explicite avec le schéma d'architecture — cf. §19bis).
 
-**Nommage** (tranché le 26/09/2026) : « Project Factory » est le nom du produit ; « Forge » est le nom du **moteur** ; le binaire du CLI s'appelle **`pf`**. UI et CLI sont deux façades du moteur Forge. À expliciter dans la documentation utilisateur pour éviter la confusion entre les trois noms.
+**Nommage** (tranché le 26/09/2026) : « BuildIt » est le nom du produit ; « Forge » est le nom du **moteur** ; le binaire du CLI s'appelle **`pf`**. UI et CLI sont deux façades du moteur Forge. À expliciter dans la documentation utilisateur pour éviter la confusion entre les trois noms.
 
 ---
 
@@ -435,7 +435,7 @@ L'utilisateur décrit le produit en langage naturel (« Je veux une marketplace 
 - Proposition de plateformes, d'architecture, de technologies, avec justification de chaque choix.
 - Détection des conflits, estimation de la complexité.
 - Génération du Blueprint, modifiable avant génération.
-- **Exécution locale par défaut, clé API personnelle de l'utilisateur** (cf. §0) — aucune donnée envoyée à un serveur Project Factory. Le prompt et son contexte ne sont ni stockés ni réutilisés par le produit.
+- **Exécution locale par défaut, clé API personnelle de l'utilisateur** (cf. §0) — aucune donnée envoyée à un serveur BuildIt. Le prompt et son contexte ne sont ni stockés ni réutilisés par le produit.
 - Option cloud managé (V2, payant) pour qui ne veut pas gérer sa propre clé API.
 
 ---
@@ -499,7 +499,7 @@ Le menu d'accueil propose trois chemins, au même niveau dans l'UI et dans le CL
 ## 20bis. GitHub : connexion, dépôt, partage et collaborateurs (nouveau)
 
 **Connexion** :
-- CLI : *device flow* OAuth de GitHub (un code à saisir sur github.com) — aucun mot de passe ne transite par Project Factory.
+- CLI : *device flow* OAuth de GitHub (un code à saisir sur github.com) — aucun mot de passe ne transite par BuildIt.
 - Jeton stocké dans le **trousseau du système** (Keychain, Credential Manager, libsecret) ; jamais dans un fichier du projet, jamais dans le manifest, jamais dans les logs. Déconnexion = révocation locale du jeton.
 - Permissions demandées **au minimum** et annoncées avant la connexion : lecture des dépôts pour cloner, création de dépôt et gestion des collaborateurs seulement quand l'utilisateur s'en sert.
 - Local-first (§0) : le jeton ne quitte pas la machine ; les appels partent directement vers l'API GitHub.
@@ -512,7 +512,7 @@ Le menu d'accueil propose trois chemins, au même niveau dans l'UI et dans le CL
 - **Règle** : le partage d'un projet n'est disponible **que si le projet utilise un dépôt GitHub**. Sans dépôt, l'écran propose de le créer d'abord, et seul le lien de configuration en lecture seule (§20) reste possible.
 - Partager = inviter un collaborateur GitHub (nom d'utilisateur) avec un rôle — `read`, `triage`, `write`, `maintain`, `admin` —, lister les collaborateurs et invitations en attente, retirer un accès. Le lien du dépôt est copiable.
 - Les droits sont ceux de GitHub : l'invitation échoue proprement, avec la raison, si le compte connecté n'est pas administrateur du dépôt.
-- Aucun compte Project Factory n'est créé : la gestion d'équipe du §20 (V2, payante) reste distincte. Celle-ci délègue tout à GitHub et ne coûte donc rien à opérer.
+- Aucun compte BuildIt n'est créé : la gestion d'équipe du §20 (V2, payante) reste distincte. Celle-ci délègue tout à GitHub et ne coûte donc rien à opérer.
 
 **Hors GitHub** : GitLab et Bitbucket sont hors MVP. Un lien Git quelconque se clone ; seules les actions de compte (création, collaborateurs) exigent GitHub.
 
@@ -666,4 +666,4 @@ En cas d'échec à n'importe quelle étape après le début de l'écriture des f
 
 Le produit est pensé comme une plateforme de composition de projets, pas comme un clone de `create-next-app`. La première décision est la cible — Web, Mobile, Desktop ou combinaison — puis le moteur filtre intelligemment les technologies possibles. Le point différenciant majeur reste la combinaison Registry + Compatibility Engine + Project Manifest + Recipes + Generator + AI Stack Advisor + Project Doctor, complétée ici par un cadrage produit explicite : gratuit puis payant, local-first par défaut, partage léger dès le MVP, ouvert à Daniel comme premier utilisateur puis à tout développeur ou équipe voulant industrialiser son démarrage de projet.
 
-Le résultat attendu est un projet cohérent, reproductible et documenté, avec une architecture visible avant génération, un rapport de santé après génération, et aucune dépendance cachée envers Project Factory une fois le code livré.
+Le résultat attendu est un projet cohérent, reproductible et documenté, avec une architecture visible avant génération, un rapport de santé après génération, et aucune dépendance cachée envers BuildIt une fois le code livré.

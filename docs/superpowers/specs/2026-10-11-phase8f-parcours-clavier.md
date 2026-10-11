@@ -168,12 +168,12 @@ Limites explicites de la preuve :
 
 | Commande | Résultat |
 |---|---|
-| `pnpm --filter @project-factory/web test:e2e` | **exit 0** — parcours souris (référence §3) **et** parcours clavier seul : 12/12 étapes, 376 Tab/Maj+Tab, 0 clic souris, 0 `focus()`, sonde du lien d'évitement comprise |
-| `pnpm --filter @project-factory/web test` | **exit 0** — 49 fichiers, **492 tests passés** (couverture comprise), aucune régression |
-| `pnpm --filter @project-factory/web build` | **exit 0** |
+| `pnpm --filter @buildit/web test:e2e` | **exit 0** — parcours souris (référence §3) **et** parcours clavier seul : 12/12 étapes, 376 Tab/Maj+Tab, 0 clic souris, 0 `focus()`, sonde du lien d'évitement comprise |
+| `pnpm --filter @buildit/web test` | **exit 0** — 49 fichiers, **492 tests passés** (couverture comprise), aucune régression |
+| `pnpm --filter @buildit/web build` | **exit 0** |
 | `pnpm exec biome check apps/web/e2e apps/web/src/components/wizard/shell.tsx` | **exit 0** — 0 erreur, 7 infos préexistantes (`useLiteralKeys` sur `process.env['…']`, style du dépôt) |
 
-Extrait de la sortie de `pnpm --filter @project-factory/web test:e2e` (preuve du gate — les 12
+Extrait de la sortie de `pnpm --filter @buildit/web test:e2e` (preuve du gate — les 12
 étapes, telles que l'application les annonce elle-même, « Étape N sur 12 ») :
 
 ```

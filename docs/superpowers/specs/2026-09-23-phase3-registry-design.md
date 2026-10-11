@@ -77,7 +77,7 @@ registry.query({ category?, target?, generation?, status? }): RegistryEntry[]
 registry.entries(): RegistryEntry[]
 ```
 
-Même contrat d'erreur que `@project-factory/manifest` : code stable, chemin, message français, indice. Les codes du registry sont préfixés `REGISTRY_`.
+Même contrat d'erreur que `@buildit/manifest` : code stable, chemin, message français, indice. Les codes du registry sont préfixés `REGISTRY_`.
 
 `loadRegistry` valide chaque fiche **puis** l'intégrité de l'ensemble : une fiche invalide n'empêche pas de signaler les autres problèmes, l'utilisateur voit tout d'un coup.
 

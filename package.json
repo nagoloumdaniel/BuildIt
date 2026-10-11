@@ -1,5 +1,5 @@
 {
-  "name": "project-factory",
+  "name": "buildit",
   "version": "0.0.0",
   "private": true,
   "type": "module",
@@ -14,8 +14,8 @@
     "build": "turbo run build",
     "pf": "jiti apps/cli/src/main.ts",
     "test": "turbo run test",
-    "test:smoke": "pnpm --filter @project-factory/generator test:smoke",
-    "test:e2e": "pnpm --filter @project-factory/web test:e2e",
+    "test:smoke": "pnpm --filter @buildit/generator test:smoke",
+    "test:e2e": "pnpm --filter @buildit/web test:e2e",
     "typecheck": "turbo run typecheck",
     "lint": "biome check .",
     "lint:fix": "biome check --write .",

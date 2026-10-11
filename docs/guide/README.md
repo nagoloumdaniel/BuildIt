@@ -1,6 +1,6 @@
-# Guide Project Factory
+# Guide BuildIt
 
-Project Factory décrit un projet, choisit ses plateformes et ses technologies, et
+BuildIt décrit un projet, choisit ses plateformes et ses technologies, et
 rend un projet prêt à développer : cohérent, documenté, diagnostiqué. Ce guide
 explique le produit tel qu'il est dans le dépôt — pas tel qu'il est prévu.
 
@@ -16,7 +16,7 @@ depuis les sources. Voir la [roadmap](../roadmap.md).
 |---|---|
 | [Démarrage rapide](quickstart.md) | De zéro à un projet généré, commandes réelles et sorties recopiées |
 | [Concepts](concepts.md) | Manifest, registry, compatibility, presets, recettes, générateur |
-| [Project Factory et Forge](produit-et-moteur.md) | Le produit, le moteur, le binaire `pf` — et pourquoi deux façades |
+| [BuildIt et Forge](produit-et-moteur.md) | Le produit, le moteur, le binaire `pf` — et pourquoi deux façades |
 | [Le code généré ne dépend pas de nous](no-lock-in.md) | La promesse du §1 et le test qui la prouve |
 | [Confidentialité, local-first](confidentialite.md) | Ce qui reste sur la machine, ce qui sort, et quand |
 | [Référence du manifest](reference-manifest.md) | Les champs, ce qui est validé, ce que le manifest ne porte pas |

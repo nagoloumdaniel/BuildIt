@@ -1,16 +1,16 @@
-# Project Factory et Forge
+# BuildIt et Forge
 
 Trois noms circulent, et ils désignent trois choses différentes. Le cahier des
 charges a tranché le 26/09/2026, §9 :
 
-> « Project Factory » est le nom du produit ; « Forge » est le nom du **moteur** ;
+> « BuildIt » est le nom du produit ; « Forge » est le nom du **moteur** ;
 > le binaire du CLI s'appelle **`pf`**. UI et CLI sont deux façades du moteur
 > Forge. À expliciter dans la documentation utilisateur pour éviter la confusion
 > entre les trois noms.
 
 | Nom | Nature | Ce que c'est |
 |---|---|---|
-| **Project Factory** | Le produit | Ce que vous installez et utilisez : les écrans, le CLI, la documentation, les presets |
+| **BuildIt** | Le produit | Ce que vous installez et utilisez : les écrans, le CLI, la documentation, les presets |
 | **Forge** | Le moteur | Les paquets qui décident : manifest, registry, compatibility, générateur |
 | **`pf`** | Le binaire | La commande que vous tapez : `pf create`, `pf graph`, `pf add` |
 
@@ -57,7 +57,7 @@ Ce que ça change pour vous :
 
 La dépendance ne va que dans un sens : les applications dépendent des paquets du
 moteur, jamais l'inverse. Aucun `package.json` de `packages/` ne référence
-`@project-factory/web` ou `@project-factory/cli` — c'est ce qui permet au web et
+`@buildit/web` ou `@buildit/cli` — c'est ce qui permet au web et
 au CLI d'être remplacés, ou d'en ajouter un troisième (une extension d'éditeur,
 un script CI), sans toucher au moteur.
 
@@ -65,7 +65,7 @@ un script CI), sans toucher au moteur.
 
 ```text
 $ pnpm pf --help
-pf — Project Factory : décrire un projet, obtenir un projet prêt à développer.
+pf — BuildIt : décrire un projet, obtenir un projet prêt à développer.
 ```
 
 Le binaire s'annonce par ce qu'il fait. Le moteur, lui, ne s'annonce pas : il

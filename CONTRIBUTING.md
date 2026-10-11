@@ -1,4 +1,4 @@
-# Contribuer à Project Factory
+# Contribuer à BuildIt
 
 Le projet est en pré-alpha (Phase 1 de la [roadmap](docs/roadmap.md)). Les contributions externes ne sont pas encore ouvertes — ce document fixe les conventions pour qu'elles le soient proprement le jour venu.
 

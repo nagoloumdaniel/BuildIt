@@ -17,7 +17,7 @@ Couvre §15 (infrastructure), §23 (release). Gate M7 : `npm i -g` depuis le reg
 | Sentry + analytics | **bloqué** | aucun DSN, aucun compte |
 | Procédure de rollback | écrite ci-dessous, **non testée** | un rollback non testé n'est pas un rollback (gate M7) |
 
-En revanche, les 13 paquets de `packages/` portent `"private": true` : une publication accidentelle y est **refusée** par pnpm, et c'est cette garde-là qui protège, pas `publishConfig` (qu'ils déclarent aussi, pour le jour où ils deviendront publics). Seul `@project-factory/cli` est publiable — et il embarque le moteur dans son bundle à la construction.
+En revanche, les 13 paquets de `packages/` portent `"private": true` : une publication accidentelle y est **refusée** par pnpm, et c'est cette garde-là qui protège, pas `publishConfig` (qu'ils déclarent aussi, pour le jour où ils deviendront publics). Seul `@buildit/cli` est publiable — et il embarque le moteur dans son bundle à la construction.
 
 ## 2. Publier le CLI (`12.1`)
 
@@ -27,24 +27,24 @@ En revanche, les 13 paquets de `packages/` portent `"private": true` : une publi
 export NPM_TOKEN=npm_…
 
 # 2. Une entrée de version : le CLI change, les paquets internes suivent.
-pnpm changeset                      # interactif : choisir @project-factory/cli, minor/major
+pnpm changeset                      # interactif : choisir @buildit/cli, minor/major
 git add .changeset && git commit -m "chore: version du CLI"
 
 # 3. La pré-release : tag `next`, jamais `latest` avant la preuve d'installation.
 pnpm changeset version
 pnpm build
-pnpm -r --filter @project-factory/cli publish --access public --tag next --no-git-checks
+pnpm -r --filter @buildit/cli publish --access public --tag next --no-git-checks
 ```
 
 **Vérification obligatoire sur une machine vierge** (le gate le demande, pas un `npm view`) :
 
 ```bash
-npm i -g @project-factory/cli@next
+npm i -g @buildit/cli@next
 pf --version
 mkdir /tmp/essai && cd /tmp/essai && pf create voisinage --preset saas
 ```
 
-Puis passer `latest` : `npm dist-tag add @project-factory/cli@<version> latest`. Tant que cette installation n'a pas été faite ailleurs que sur la machine de développement, la version reste en `next` — c'est la règle qui évite de publier une casse en `latest`.
+Puis passer `latest` : `npm dist-tag add @buildit/cli@<version> latest`. Tant que cette installation n'a pas été faite ailleurs que sur la machine de développement, la version reste en `next` — c'est la règle qui évite de publier une casse en `latest`.
 
 **Ce qui peut casser, et a déjà cassé ailleurs** : `apps/cli/templates/` n'est pas dans `files` par hasard (`bin`, `dist`, `templates`) — un paquet publié sans ses templates démarre et échoue à la première génération. Le script `build` copie ces templates (`scripts/copy-templates.mjs`) ; publier sans `pnpm build` d'abord envoie un paquet vide.
 
@@ -99,7 +99,7 @@ Le contrôle de `Host` (`apps/web/src/middleware.ts`) protège un serveur **loca
 
 ## 6. Rollback (`12.7`) — écrit, non testé
 
-**CLI** : `npm dist-tag add @project-factory/cli@<version-précédente> latest`. Le paquet fautif reste installable, mais plus personne ne l'obtient par défaut. Un `npm unpublish` dans les 72 h est possible ; après, il est interdit par npm et la seule sortie est une version de correction.
+**CLI** : `npm dist-tag add @buildit/cli@<version-précédente> latest`. Le paquet fautif reste installable, mais plus personne ne l'obtient par défaut. Un `npm unpublish` dans les 72 h est possible ; après, il est interdit par npm et la seule sortie est une version de correction.
 
 **Web** : `vercel rollback` (ou l'onglet Deployments → « Promote to Production » sur le déploiement précédent). La variable d'environnement n'est pas concernée par un rollback : c'est une raison de plus de ne pas y mettre de valeur fonctionnelle.
 

@@ -179,12 +179,12 @@ L3 (révéler « ce chemin existe / n'existe pas ») relève du même raisonneme
 ## Vérifications (sorties brutes)
 
 ```
-pnpm --filter @project-factory/web test
+pnpm --filter @buildit/web test
   Test Files  47 passed (47)
   Tests       465 passed (465)
   Statements 98.72% | Branches 95.09% | Functions 98.41% | Lines 98.66%   (seuils 90)
 
-pnpm --filter @project-factory/web typecheck
+pnpm --filter @buildit/web typecheck
   → aucune sortie d'erreur, code de sortie 0
 
 pnpm exec biome check apps/web/src/app/actions.ts apps/web/src/app/actions-node.ts \

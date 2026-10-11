@@ -56,7 +56,7 @@ Deux tests **existaient déjà** et prouvaient le refus, sans que rien ne relie 
 l'utilisateur :
 
 ```console
-$ pnpm --filter @project-factory/web exec vitest run src/lib/draft-to-manifest.test.ts -t "cible mobile|cible desktop"
+$ pnpm --filter @buildit/web exec vitest run src/lib/draft-to-manifest.test.ts -t "cible mobile|cible desktop"
  Test Files  1 passed (1)
       Tests  2 passed | 18 skipped (20)
 [exit 0]
@@ -145,12 +145,12 @@ fixtures), `apps/web/src/lib/targets.test.ts` (offre et refus), `apps/web/src/li
 ## 5. Preuves
 
 ```console
-$ pnpm --filter @project-factory/registry test
+$ pnpm --filter @buildit/registry test
  Test Files  7 passed (7)
       Tests  195 passed (195)
 [exit 0]
 
-$ pnpm --filter @project-factory/compatibility test
+$ pnpm --filter @buildit/compatibility test
  Test Files  4 passed (4)
       Tests  85 passed (85)
 [exit 0]
@@ -159,7 +159,7 @@ $ pnpm typecheck
  Tasks:    28 successful, 28 total
 [exit 0]
 
-$ pnpm --filter @project-factory/web test
+$ pnpm --filter @buildit/web test
  Test Files  50 passed (50)
       Tests  505 passed (505)
  Statements : 98.05% ( 252/257 ) · Branches : 93.71% ( 164/175 )

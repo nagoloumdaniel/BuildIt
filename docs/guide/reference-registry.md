@@ -1,6 +1,6 @@
 # Référence du registry
 
-Le **registry** est la base de connaissances du produit : ce que Project Factory
+Le **registry** est la base de connaissances du produit : ce que BuildIt
 sait des technologies. Il ne raisonne pas — il **déclare**. Décider si deux
 technologies vont ensemble est le travail du compatibility engine
 ([§12](../cahier-des-charges.md), et [Concepts](concepts.md)).

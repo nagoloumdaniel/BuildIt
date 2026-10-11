@@ -133,7 +133,7 @@ Les sorties recopiées dans le guide ont été **comparées ligne à ligne** au 
 Deux réserves, écrites pour qu'on ne s'appuie pas sur ce chiffre au-delà de ce qu'il prouve :
 
 1. **store pnpm chaud.** Les 28,7 s et les 67,9 s ne contiennent aucun téléchargement. À froid, ils dépendent entièrement du réseau. Le seuil reste néanmoins atteignable à froid : 10 min pour cloner ~1 Mo et installer deux fois, c'est du ressort d'une connexion normale, pas d'une performance produit.
-2. **Le seuil porte sur la machine du lecteur, pas sur le produit.** La part réellement attribuable à Project Factory — le clone, `pnpm install`, puis `pf create` — est de quelques secondes hors réseau ; c'est l'écosystème JavaScript qui coûte le reste.
+2. **Le seuil porte sur la machine du lecteur, pas sur le produit.** La part réellement attribuable à BuildIt — le clone, `pnpm install`, puis `pf create` — est de quelques secondes hors réseau ; c'est l'écosystème JavaScript qui coûte le reste.
 
 ## 5. Corrections apportées au guide
 

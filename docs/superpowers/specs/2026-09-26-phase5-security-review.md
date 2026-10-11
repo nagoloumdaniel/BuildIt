@@ -33,7 +33,7 @@
 | Git : aucune identité inventée, pas de dépôt imbriqué ni de commit dans le dépôt d'un autre | `postinstall.ts` | `postinstall.test.ts` |
 | `allowBuilds` minimal : seuls les paquets dont une technologie choisie a besoin | `integrations.data.ts` | `scaffold.test.ts` — « n'approuve rien qui ne soit demandé » |
 | Conteneur : utilisateur non root, `.env` exclu du contexte de construction | `infrastructure.ts` | `infrastructure.test.ts` + construction réelle |
-| Le projet généré ne dépend pas de Project Factory | pipeline | `pipeline.test.ts` — grep des imports |
+| Le projet généré ne dépend pas de BuildIt | pipeline | `pipeline.test.ts` — grep des imports |
 
 ## Risques résiduels acceptés
 

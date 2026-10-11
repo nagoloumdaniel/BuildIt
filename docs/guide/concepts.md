@@ -1,6 +1,6 @@
 # Concepts
 
-Project Factory tient en une phrase : **décrire un projet, choisir ses
+BuildIt tient en une phrase : **décrire un projet, choisir ses
 plateformes et ses technologies, obtenir un projet prêt à développer**. Ce qui
 suit explique comment, et surtout *qui décide quoi* — c'est la partie qu'on ne
 peut pas deviner en lisant une sortie de commande.

@@ -1,6 +1,6 @@
 # Assets de marque
 
-Sources de la marque Project Factory. Rien ici n'est encore utilisé par du code : la direction artistique se décide en Phase 8A de la [roadmap](../../docs/roadmap.md).
+Sources de la marque BuildIt. Rien ici n'est encore utilisé par du code : la direction artistique se décide en Phase 8A de la [roadmap](../../docs/roadmap.md).
 
 ## Nommage
 

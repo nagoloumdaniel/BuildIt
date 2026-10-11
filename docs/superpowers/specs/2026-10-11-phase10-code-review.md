@@ -29,7 +29,7 @@ Deux écarts au plan, assumés et écrits ici :
 
 2. **La revue déléguée par paquet n'a pas pu être faite.** Le harnais refuse la création de sous-agents depuis un coéquipier : les six délégations `cavecrew-reviewer` ont échoué avec `Error: subagent depth 2 exceeds maxDepth 1`. La revue a donc été faite en ligne, en ciblant les ~5 500 lignes de source non-test du diff et en traitant le reste par lectures ciblées et `grep`. Conséquence : la couverture n'est pas exhaustive, et la section « ce qui n'a pas été couvert » dit exactement où.
 
-3. **L'arbre de travail a été modifié par d'autres coéquipiers pendant la revue.** `git status --short` relevait `M apps/cli/src/commands/add.ts`, `M apps/web/next.config.mjs`, `M apps/web/package.json`, `M apps/web/src/lib/draft-to-manifest.ts`, `M packages/registry/src/index.ts`, `?? packages/registry/src/slots.ts(.test.ts)`, `?? packages/ui/`. Tout ce qui suit décrit `HEAD` (`dab27d4`) : `next.config.mjs` à `HEAD` ne contient pas `@project-factory/ui`, et le `draft-to-manifest.ts` lu est celui de `HEAD` (`git show HEAD:...`). Une revue du diff final devra être refaite après stabilisation des écritures concurrentes.
+3. **L'arbre de travail a été modifié par d'autres coéquipiers pendant la revue.** `git status --short` relevait `M apps/cli/src/commands/add.ts`, `M apps/web/next.config.mjs`, `M apps/web/package.json`, `M apps/web/src/lib/draft-to-manifest.ts`, `M packages/registry/src/index.ts`, `?? packages/registry/src/slots.ts(.test.ts)`, `?? packages/ui/`. Tout ce qui suit décrit `HEAD` (`dab27d4`) : `next.config.mjs` à `HEAD` ne contient pas `@buildit/ui`, et le `draft-to-manifest.ts` lu est celui de `HEAD` (`git show HEAD:...`). Une revue du diff final devra être refaite après stabilisation des écritures concurrentes.
 
 Aucun fichier de code n'a été modifié, aucun commit, aucun push. La seule écriture est ce rapport.
 
@@ -51,7 +51,7 @@ run: (command, args, cwd, options) =>
 
 ```powershell
 cd D:\Projets\BuildIt\apps\web
-node -e "const j=require('D:/Projets/BuildIt/node_modules/jiti');const c=j.createJiti(process.cwd()+'/package.json');(async()=>{process.env.PF_GIT_TOKEN='ghp_probe';process.env.AUTRE_SECRET='secret-probe';process.env.PF_GITHUB_TOKEN='ghp_github';const m=await c.import('./src/app/open/project.ts');const e=await c.import('@project-factory/exec');const r=await m.withoutServerSecrets(e.nodeCommandRunner).run(process.execPath,['-p','JSON.stringify({PF_GIT_TOKEN:process.env.PF_GIT_TOKEN,AUTRE_SECRET:process.env.AUTRE_SECRET,PF_GITHUB_TOKEN:process.env.PF_GITHUB_TOKEN})'],process.cwd());console.log('PROBE '+r.output)})()"
+node -e "const j=require('D:/Projets/BuildIt/node_modules/jiti');const c=j.createJiti(process.cwd()+'/package.json');(async()=>{process.env.PF_GIT_TOKEN='ghp_probe';process.env.AUTRE_SECRET='secret-probe';process.env.PF_GITHUB_TOKEN='ghp_github';const m=await c.import('./src/app/open/project.ts');const e=await c.import('@buildit/exec');const r=await m.withoutServerSecrets(e.nodeCommandRunner).run(process.execPath,['-p','JSON.stringify({PF_GIT_TOKEN:process.env.PF_GIT_TOKEN,AUTRE_SECRET:process.env.AUTRE_SECRET,PF_GITHUB_TOKEN:process.env.PF_GITHUB_TOKEN})'],process.cwd());console.log('PROBE '+r.output)})()"
 ```
 
 ```text
@@ -159,7 +159,7 @@ Deux Server Actions concurrentes (deux onglets, rejeu du POST par le navigateur)
 
 | Fichier | Fonction | Valeur par défaut |
 |---|---|---|
-| `actions.ts:113-118` | `workspaceRoot()` (privée) | `join(homedir(), 'project-factory')`, surcharge `PF_WEB_WORKSPACE` |
+| `actions.ts:113-118` | `workspaceRoot()` (privée) | `join(homedir(), 'buildit')`, surcharge `PF_WEB_WORKSPACE` |
 | `clone/destination.ts:16-23` | `webWorkspaceRoot()` (exportée) | idem, à l'identique |
 
 Le commentaire de `destination.ts:11-13` l'assume : « recopiée ici parce que `actions.ts` est réservé au moteur et n'exporte pas la sienne ».
@@ -193,7 +193,7 @@ apps/cli/src/commands/collab.ts:21:const USERNAME = /^[A-Za-z0-9](?:[A-Za-z0-9-]
 apps/web/src/app/repo/sharing.ts:362:const USERNAME = /^[A-Za-z0-9](?:[A-Za-z0-9-]{0,38})$/;
 ```
 
-Les rôles, eux, viennent bien du paquet (`ROLES` de `@project-factory/github`, `sharing.ts:496`) — le modèle est donc déjà là.
+Les rôles, eux, viennent bien du paquet (`ROLES` de `@buildit/github`, `sharing.ts:496`) — le modèle est donc déjà là.
 
 **Correctif proposé.** Déplacer ces deux expressions dans `packages/github` (à côté de `ROLES`) et les importer des deux applications.
 
@@ -238,7 +238,7 @@ Faute de preuve, ces points ne sont pas des findings.
 - **A2 — `pnpm ci:local` et `pnpm test:e2e` n'ont pas été relancés.** Les exécuter maintenant testerait un arbre modifié par trois autres coéquipiers, pas le diff examiné. Sonde : `pnpm ci:local` puis `pnpm test:e2e` **après** l'arrêt des écritures concurrentes. L'état « vert aujourd'hui » est repris tel quel du `PROJECT_CONTEXT.md`.
 - **A3 — `PF_SHARE_BASE_URL` franchit la frontière client.** `apps/web/src/app/actions-share.ts:44-45` rend cette variable d'environnement serveur au navigateur via une Server Action. La valeur n'est pas secrète par nature (une origine publique) et la Server Action est de toute façon joignable par toute page servie par cette origine, mais c'est la seule variable d'environnement qui sort du serveur. Sonde : décider explicitement — la garder, ou rendre une constante vide et faire calculer l'origine par `window.location.origin` (que `codec.ts:79-82` sait déjà faire).
 - **A4 — les affirmations des nouveaux guides ne sont pas exécutées.** `docs/guide/confidentialite.md:44` (fichier `0600`, dossier `0700`), `docs/cli.md`, `docs/README.md`, `docs/llms.txt`, les 9 fichiers de `docs/guide/` : lus par endroits, pas vérifiés ligne par ligne contre le comportement. Sonde : `pnpm pf key status` avec un `PF_CONFIG_DIR` temporaire, puis contrôle des permissions du fichier engendré.
-- **A5 — le décompte « 243 troncatures » (`docs/roadmap.md:638`)** n'a pas été recompté. Sonde : `pnpm --filter @project-factory/web exec vitest run src/app/share/codec.test.ts` et lire le nombre de cas du `it.each`.
+- **A5 — le décompte « 243 troncatures » (`docs/roadmap.md:638`)** n'a pas été recompté. Sonde : `pnpm --filter @buildit/web exec vitest run src/app/share/codec.test.ts` et lire le nombre de cas du `it.each`.
 - **A6 — `apps/web/e2e/journey.mjs` (324 lignes) n'a pas été lu ligne à ligne.** La couverture « 12 étapes, clavier seul, reprise du brouillon » n'est donc pas re-prouvée ici. Sonde : `pnpm test:e2e`.
 - **A7 — `pf web --port` sans valeur.** `commands/web.ts:83-87` déclare `port: { type: 'string' }` et `parseArgs` lève `ERR_PARSE_ARGS_INVALID_OPTION_VALUE` sur une option à valeur manquante ; `web()` n'entoure pas l'appel d'un `try`. Je n'ai pas lu `apps/cli/src/cli.ts`, donc je ne sais pas si l'exception est rattrapée en amont pour rendre une erreur d'usage plutôt qu'une pile. Sonde : `pnpm pf web --port` et lire la sortie (même question pour `pf share --url`).
 

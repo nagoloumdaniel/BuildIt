@@ -57,40 +57,40 @@ importers:
         specifier: 4.6.5
         version: 4.6.5
     devDependencies:
-      '@project-factory/compatibility':
+      '@buildit/compatibility':
         specifier: workspace:*
         version: link:../../packages/compatibility
-      '@project-factory/doctor':
+      '@buildit/doctor':
         specifier: workspace:*
         version: link:../../packages/doctor
-      '@project-factory/exec':
+      '@buildit/exec':
         specifier: workspace:*
         version: link:../../packages/exec
-      '@project-factory/generator':
+      '@buildit/generator':
         specifier: workspace:*
         version: link:../../packages/generator
-      '@project-factory/git':
+      '@buildit/git':
         specifier: workspace:*
         version: link:../../packages/git
-      '@project-factory/github':
+      '@buildit/github':
         specifier: workspace:*
         version: link:../../packages/github
-      '@project-factory/manifest':
+      '@buildit/manifest':
         specifier: workspace:*
         version: link:../../packages/manifest
-      '@project-factory/presets':
+      '@buildit/presets':
         specifier: workspace:*
         version: link:../../packages/presets
-      '@project-factory/registry':
+      '@buildit/registry':
         specifier: workspace:*
         version: link:../../packages/registry
-      '@project-factory/typescript-config':
+      '@buildit/typescript-config':
         specifier: workspace:*
         version: link:../../tooling/typescript-config
-      '@project-factory/validation':
+      '@buildit/validation':
         specifier: workspace:*
         version: link:../../packages/validation
-      '@project-factory/workspace':
+      '@buildit/workspace':
         specifier: workspace:*
         version: link:../../packages/workspace
       '@vitest/coverage-v8':
@@ -121,37 +121,37 @@ importers:
         specifier: 0.0.1
         version: 0.0.1
     devDependencies:
-      '@project-factory/compatibility':
+      '@buildit/compatibility':
         specifier: workspace:*
         version: link:../../packages/compatibility
-      '@project-factory/exec':
+      '@buildit/exec':
         specifier: workspace:*
         version: link:../../packages/exec
-      '@project-factory/generator':
+      '@buildit/generator':
         specifier: workspace:*
         version: link:../../packages/generator
-      '@project-factory/git':
+      '@buildit/git':
         specifier: workspace:*
         version: link:../../packages/git
-      '@project-factory/github':
+      '@buildit/github':
         specifier: workspace:*
         version: link:../../packages/github
-      '@project-factory/manifest':
+      '@buildit/manifest':
         specifier: workspace:*
         version: link:../../packages/manifest
-      '@project-factory/presets':
+      '@buildit/presets':
         specifier: workspace:*
         version: link:../../packages/presets
-      '@project-factory/registry':
+      '@buildit/registry':
         specifier: workspace:*
         version: link:../../packages/registry
-      '@project-factory/typescript-config':
+      '@buildit/typescript-config':
         specifier: workspace:*
         version: link:../../tooling/typescript-config
-      '@project-factory/ui':
+      '@buildit/ui':
         specifier: workspace:*
         version: link:../../packages/ui
-      '@project-factory/workspace':
+      '@buildit/workspace':
         specifier: workspace:*
         version: link:../../packages/workspace
       '@tailwindcss/postcss':
@@ -181,20 +181,20 @@ importers:
 
   packages/compatibility:
     dependencies:
-      '@project-factory/manifest':
+      '@buildit/manifest':
         specifier: workspace:*
         version: link:../manifest
-      '@project-factory/registry':
+      '@buildit/registry':
         specifier: workspace:*
         version: link:../registry
-      '@project-factory/validation':
+      '@buildit/validation':
         specifier: workspace:*
         version: link:../validation
       semver:
         specifier: 7.8.5
         version: 7.8.5
     devDependencies:
-      '@project-factory/typescript-config':
+      '@buildit/typescript-config':
         specifier: workspace:*
         version: link:../../tooling/typescript-config
       '@types/semver':
@@ -215,17 +215,17 @@ importers:
 
   packages/doctor:
     dependencies:
-      '@project-factory/manifest':
+      '@buildit/manifest':
         specifier: workspace:*
         version: link:../manifest
-      '@project-factory/registry':
+      '@buildit/registry':
         specifier: workspace:*
         version: link:../registry
-      '@project-factory/validation':
+      '@buildit/validation':
         specifier: workspace:*
         version: link:../validation
     devDependencies:
-      '@project-factory/typescript-config':
+      '@buildit/typescript-config':
         specifier: workspace:*
         version: link:../../tooling/typescript-config
       '@vitest/coverage-v8':
@@ -243,7 +243,7 @@ importers:
 
   packages/exec:
     devDependencies:
-      '@project-factory/typescript-config':
+      '@buildit/typescript-config':
         specifier: workspace:*
         version: link:../../tooling/typescript-config
       '@vitest/coverage-v8':
@@ -261,29 +261,29 @@ importers:
 
   packages/generator:
     dependencies:
-      '@project-factory/compatibility':
+      '@buildit/compatibility':
         specifier: workspace:*
         version: link:../compatibility
-      '@project-factory/exec':
+      '@buildit/exec':
         specifier: workspace:*
         version: link:../exec
-      '@project-factory/manifest':
+      '@buildit/manifest':
         specifier: workspace:*
         version: link:../manifest
-      '@project-factory/recipes':
+      '@buildit/recipes':
         specifier: workspace:*
         version: link:../recipes
-      '@project-factory/registry':
+      '@buildit/registry':
         specifier: workspace:*
         version: link:../registry
-      '@project-factory/validation':
+      '@buildit/validation':
         specifier: workspace:*
         version: link:../validation
       semver:
         specifier: 7.8.5
         version: 7.8.5
     devDependencies:
-      '@project-factory/typescript-config':
+      '@buildit/typescript-config':
         specifier: workspace:*
         version: link:../../tooling/typescript-config
       '@types/semver':
@@ -304,14 +304,14 @@ importers:
 
   packages/git:
     dependencies:
-      '@project-factory/exec':
+      '@buildit/exec':
         specifier: workspace:*
         version: link:../exec
-      '@project-factory/validation':
+      '@buildit/validation':
         specifier: workspace:*
         version: link:../validation
     devDependencies:
-      '@project-factory/typescript-config':
+      '@buildit/typescript-config':
         specifier: workspace:*
         version: link:../../tooling/typescript-config
       '@vitest/coverage-v8':
@@ -329,14 +329,14 @@ importers:
 
   packages/github:
     dependencies:
-      '@project-factory/exec':
+      '@buildit/exec':
         specifier: workspace:*
         version: link:../exec
-      '@project-factory/validation':
+      '@buildit/validation':
         specifier: workspace:*
         version: link:../validation
     devDependencies:
-      '@project-factory/typescript-config':
+      '@buildit/typescript-config':
         specifier: workspace:*
         version: link:../../tooling/typescript-config
       '@vitest/coverage-v8':
@@ -354,14 +354,14 @@ importers:
 
   packages/manifest:
     dependencies:
-      '@project-factory/validation':
+      '@buildit/validation':
         specifier: workspace:*
         version: link:../validation
       zod:
         specifier: 4.6.5
         version: 4.6.5
     devDependencies:
-      '@project-factory/typescript-config':
+      '@buildit/typescript-config':
         specifier: workspace:*
         version: link:../../tooling/typescript-config
       '@vitest/coverage-v8':
@@ -379,14 +379,14 @@ importers:
 
   packages/presets:
     dependencies:
-      '@project-factory/manifest':
+      '@buildit/manifest':
         specifier: workspace:*
         version: link:../manifest
     devDependencies:
-      '@project-factory/generator':
+      '@buildit/generator':
         specifier: workspace:*
         version: link:../generator
-      '@project-factory/typescript-config':
+      '@buildit/typescript-config':
         specifier: workspace:*
         version: link:../../tooling/typescript-config
       '@vitest/coverage-v8':
@@ -404,14 +404,14 @@ importers:
 
   packages/recipes:
     dependencies:
-      '@project-factory/validation':
+      '@buildit/validation':
         specifier: workspace:*
         version: link:../validation
       zod:
         specifier: 4.6.5
         version: 4.6.5
     devDependencies:
-      '@project-factory/typescript-config':
+      '@buildit/typescript-config':
         specifier: workspace:*
         version: link:../../tooling/typescript-config
       '@vitest/coverage-v8':
@@ -429,17 +429,17 @@ importers:
 
   packages/registry:
     dependencies:
-      '@project-factory/manifest':
+      '@buildit/manifest':
         specifier: workspace:*
         version: link:../manifest
-      '@project-factory/validation':
+      '@buildit/validation':
         specifier: workspace:*
         version: link:../validation
       zod:
         specifier: 4.6.5
         version: 4.6.5
     devDependencies:
-      '@project-factory/typescript-config':
+      '@buildit/typescript-config':
         specifier: workspace:*
         version: link:../../tooling/typescript-config
       '@vitest/coverage-v8':
@@ -457,7 +457,7 @@ importers:
 
   packages/ui:
     devDependencies:
-      '@project-factory/typescript-config':
+      '@buildit/typescript-config':
         specifier: workspace:*
         version: link:../../tooling/typescript-config
       '@types/react':
@@ -491,7 +491,7 @@ importers:
         specifier: 4.6.5
         version: 4.6.5
     devDependencies:
-      '@project-factory/typescript-config':
+      '@buildit/typescript-config':
         specifier: workspace:*
         version: link:../../tooling/typescript-config
       '@vitest/coverage-v8':
@@ -509,14 +509,14 @@ importers:
 
   packages/workspace:
     dependencies:
-      '@project-factory/exec':
+      '@buildit/exec':
         specifier: workspace:*
         version: link:../exec
-      '@project-factory/validation':
+      '@buildit/validation':
         specifier: workspace:*
         version: link:../validation
     devDependencies:
-      '@project-factory/typescript-config':
+      '@buildit/typescript-config':
         specifier: workspace:*
         version: link:../../tooling/typescript-config
       '@vitest/coverage-v8':

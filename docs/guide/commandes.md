@@ -12,7 +12,7 @@ La référence détaillée — chaque option, chaque comportement — est dans
 
 ```bash
 pnpm pf <commande>                        # depuis la racine du dépôt, sur les sources
-pnpm --filter @project-factory/cli build  # puis node apps/cli/bin/pf.js <commande>
+pnpm --filter @buildit/cli build  # puis node apps/cli/bin/pf.js <commande>
 ```
 
 `pnpm pf` s'exécute **à la racine du dépôt** : un manifest sans `--manifest`, ou
@@ -161,7 +161,7 @@ courant.
 
 ```text
 $ pnpm pf doctor
-project-factory — santé du projet : 89/100
+buildit — santé du projet : 89/100
 
 ✓ TypeScript — Le projet est vérifié par TypeScript (tsconfig.json ou dépendance `typescript`).
 ✓ Dépendances — 13 dépendances déclarées et installées.

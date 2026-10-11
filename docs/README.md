@@ -5,7 +5,7 @@
 | **[Guide](guide/README.md)** | Le produit tel qu'il est : parcours, concepts, garanties |
 | [Démarrage rapide](guide/quickstart.md) | De zéro à un projet généré, avec les sorties réelles des commandes |
 | [Concepts](guide/concepts.md) | Manifest, registry, compatibility, presets, recettes, générateur |
-| [Project Factory et Forge](guide/produit-et-moteur.md) | Le produit, le moteur, le binaire `pf` |
+| [BuildIt et Forge](guide/produit-et-moteur.md) | Le produit, le moteur, le binaire `pf` |
 | [No-lock-in](guide/no-lock-in.md) | Le code généré est autonome — et le test qui le prouve |
 | [Confidentialité, local-first](guide/confidentialite.md) | Ce qui reste sur la machine, ce qui sort, et quand |
 | [Référence du manifest](guide/reference-manifest.md) | Les champs du Project Manifest, la forme canonique, les codes de refus |

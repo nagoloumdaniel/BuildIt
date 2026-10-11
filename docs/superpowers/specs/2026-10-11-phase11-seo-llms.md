@@ -27,9 +27,9 @@ Recompté, pas recopié : **19 routes** (`page.tsx` sous `apps/web/src/app`), do
 |---|---|---|---|---|
 | F1 | haute | **Aucun `robots.txt` ni `sitemap.xml`** : ni route, ni fichier statique. Un moteur ne reçoit ni directive ni carte du site. | `apps/web/public/` absent ; aucun `app/robots.ts`/`app/sitemap.ts` | **corrigé** |
 | F2 | haute | **Pas de `metadataBase`** : Next ne peut pas produire d'URL absolue (canonique, Open Graph) — les aperçus de lien n'ont pas d'adresse. | aucune occurrence de `metadataBase` dans `apps/web/src` | **corrigé** |
-| F3 | haute | **17 routes sur 19 partagent le même `<title>` et la même description** (« Project Factory »), donc des titres dupliqués à l'échelle du site. | 2 exports `metadata` pour 19 `page.tsx` | **partiellement corrigé** : gabarit de titre posé ; les titres par écran restent à écrire (voir §6) |
+| F3 | haute | **17 routes sur 19 partagent le même `<title>` et la même description** (« BuildIt »), donc des titres dupliqués à l'échelle du site. | 2 exports `metadata` pour 19 `page.tsx` | **partiellement corrigé** : gabarit de titre posé ; les titres par écran restent à écrire (voir §6) |
 | F4 | moyenne | **Aucun Open Graph ni Twitter Card** : un lien partagé s'affiche nu. | aucune balise `og:`/`twitter:` dans le HTML construit initial | **corrigé** (sans image, voir F6) |
-| F5 | moyenne | **`og:title` figé au niveau du layout** — défaut que j'ai introduit dans ma première version et que la vérification du build a révélé : `/share` annonçait « Project Factory » dans ses aperçus au lieu de son propre titre. | HTML construit : `share.html` → `og:title=Project Factory` | **corrigé** (vérifié après correction) |
+| F5 | moyenne | **`og:title` figé au niveau du layout** — défaut que j'ai introduit dans ma première version et que la vérification du build a révélé : `/share` annonçait « BuildIt » dans ses aperçus au lieu de son propre titre. | HTML construit : `share.html` → `og:title=BuildIt` | **corrigé** (vérifié après correction) |
 | F6 | moyenne | **Aucune icône ni image de partage** : pas de `favicon.ico`, pas d'`icon.*`, pas d'`apple-icon.*`, pas d'`opengraph-image.*`. La requête `/favicon.ico` n'a rien à servir. | recompté : `public/` absent, 0 fichier d'icône sous `apps/web` (hors artefact `coverage/favicon.png`, qui n'est pas servi) | **non corrigé — hors périmètre** (direction artistique ; `assets/brand/` est explicitement provisoire) |
 | F7 | moyenne | **`llms.txt` n'est pas servi** : le fichier est dans `docs/`, or l'application servie est `apps/web`. Aucune route ne répond à `/llms.txt`. | aucune occurrence de `llms` sous `apps/web/src` | **signalé** (voir §5) |
 | F8 | faible | **Aucune donnée structurée** (`application/ld+json`). | 0 occurrence dans `layout.tsx` | **à faire avec la landing** (étape 11.8, skill `schema`) |
@@ -41,9 +41,9 @@ Recompté, pas recopié : **19 routes** (`page.tsx` sous `apps/web/src/app`), do
 
 **`apps/web/src/app/sitemap.ts`** (nouveau) — `/sitemap.xml` engendré : une URL, la racine. Les écrans du parcours ne sont pas du contenu et `/share` est en `noindex`.
 
-**`apps/web/src/app/layout.tsx`** (métadonnée seule) — `metadataBase`, gabarit de titre (`%s · Project Factory`), `applicationName`, Open Graph (`type`, `siteName`, `locale`, `url`), Twitter Card `summary`. `title`/`description` sont **volontairement absents** de `openGraph` pour que chaque page garde les siens — c'est le correctif de F5, commenté dans le code.
+**`apps/web/src/app/layout.tsx`** (métadonnée seule) — `metadataBase`, gabarit de titre (`%s · BuildIt`), `applicationName`, Open Graph (`type`, `siteName`, `locale`, `url`), Twitter Card `summary`. `title`/`description` sont **volontairement absents** de `openGraph` pour que chaque page garde les siens — c'est le correctif de F5, commenté dans le code.
 
-**`apps/web/src/app/share/page.tsx`** (métadonnée seule) — titre ramené à `Configuration partagée`, le gabarit ajoutant « · Project Factory ». Avant, le titre complet aurait donné « … — Project Factory · Project Factory ».
+**`apps/web/src/app/share/page.tsx`** (métadonnée seule) — titre ramené à `Configuration partagée`, le gabarit ajoutant « · BuildIt ». Avant, le titre complet aurait donné « … — BuildIt · BuildIt ».
 
 ### Pourquoi `app/robots.ts` et non `apps/web/public/robots.txt`
 
@@ -64,7 +64,7 @@ Sitemap: <PF_SITE_URL>/sitemap.xml
 | Format | `pnpm exec biome check` sur les 4 fichiers TS touchés | **exit 0** — seulement des `useLiteralKeys` (info) sur `process.env['…']`, **conflit d'outils assumé par le dépôt** : Biome propose l'accès par point, `noPropertyAccessFromIndexSignature` l'interdit (TS4111). La convention retenue est celle du dépôt (`actions.ts:114`, `packages/exec/src/index.ts:66`), et ces infos préexistent ailleurs (`2026-10-11-phase8f-parcours-clavier.md:168`) |
 | Construction | `pnpm build` | **exit 0**, 79 s — Next liste `○ /robots.txt 127 B` et `○ /sitemap.xml 127 B`, tous deux **prérendus en statique** |
 | Servi | `next start -p 4199` puis requêtes HTTP | `GET /robots.txt` → **200**, `content-type: text/plain` ; `GET /sitemap.xml` → **200**, `content-type: application/xml` ; `GET /` → **200** |
-| Métadonnées | HTML construit | `/` → `title=Project Factory` ; `/share` → `title=Configuration partagée · Project Factory`, `og:title` **identique au titre de la page**, `og:description` propre à la page, `robots=noindex, nofollow` |
+| Métadonnées | HTML construit | `/` → `title=BuildIt` ; `/share` → `title=Configuration partagée · BuildIt`, `og:title` **identique au titre de la page**, `og:description` propre à la page, `robots=noindex, nofollow` |
 
 Le serveur de vérification a été arrêté et le port 4199 libéré (vérifié).
 
@@ -75,7 +75,7 @@ Le fichier était juste sur les chiffres (283 fiches, 37 catégories — recompt
 - **le clone annoncé ne menait pas à la documentation** : `git clone …` donne la branche `main`, où `docs/` n'existe pas. C'est désormais écrit en tête, avec la branche `feat/phase8-web-socle` ;
 - **la commande d'installation écrivait dans le dépôt** : `pnpm pf create mon-projet --preset saas` sans `--dir` écrit à la racine du dépôt cloné. Corrigé en `--dir ../mon-projet`, et le piège est expliqué ;
 - **statut d'hébergement explicite** : « Ce fichier est versionné mais **pas encore servi** » ;
-- **forme publiée annoncée, pas affirmée** : `pnpm add -g @project-factory/cli` est décrit comme prévu en Phase 12 et **non disponible** ;
+- **forme publiée annoncée, pas affirmée** : `pnpm add -g @buildit/cli` est décrit comme prévu en Phase 12 et **non disponible** ;
 - ajout du configurateur web (`pnpm build` puis `pnpm pf web` → `http://127.0.0.1:4173`, boucle locale) et des 19 licences reconnues dans la ligne du registry.
 
 `docs/README.md` : la ligne `llms.txt` disait « à la racine de la doc publiée » — elle dit maintenant « versionné, **pas encore servi** (Phase 12) ».

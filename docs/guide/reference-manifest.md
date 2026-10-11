@@ -114,7 +114,7 @@ et un message :
 | Code | Ce qu'il dit |
 |---|---|
 | `MANIFEST_NOT_AN_OBJECT` | Ce n'est pas un objet JSON |
-| `MANIFEST_VERSION_MISSING` | Pas de `manifestVersion` : le manifest ne vient pas de Project Factory |
+| `MANIFEST_VERSION_MISSING` | Pas de `manifestVersion` : le manifest ne vient pas de BuildIt |
 | `MANIFEST_VERSION_UNSUPPORTED` | Version non prise en charge |
 | `MANIFEST_FIELD_REQUIRED` | Un champ obligatoire manque |
 | `MANIFEST_UNKNOWN_FIELD` | Un champ n'existe pas au §10 |

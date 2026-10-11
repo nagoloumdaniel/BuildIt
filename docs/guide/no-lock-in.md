@@ -1,11 +1,11 @@
-# Le code généré ne dépend pas de Project Factory
+# Le code généré ne dépend pas de BuildIt
 
 C'est le principe fondateur du produit (§1), et il est vérifié par un test
 automatisé — pas seulement affirmé.
 
 > **Principe de non-dépendance (no-lock-in)** — à afficher explicitement dans le
 > produit et la documentation : le code généré est autonome, sans dépendance
-> runtime à Project Factory. Quitter l'outil après génération ne casse rien.
+> runtime à BuildIt. Quitter l'outil après génération ne casse rien.
 > — [Cahier des charges, §1](../cahier-des-charges.md)
 
 ## Ce que le projet généré contient
@@ -14,7 +14,7 @@ Un projet SaaS généré (`pnpm pf create mon-projet --preset saas`) : 34 fichie
 dont un `package.json` qui ne dépend que de paquets publics.
 
 ```text
-$ grep -r "@project-factory" mon-projet
+$ grep -r "@buildit" mon-projet
 (aucune occurrence)
 ```
 
@@ -37,21 +37,21 @@ $ grep -r "@project-factory" mon-projet
 dépendances de production et 9 de développement, toutes upstream.)*
 
 Aucun paquet propriétaire, aucun fichier de configuration qui pointerait vers
-nous, aucun appel réseau vers un service Project Factory : le catalogue est
+nous, aucun appel réseau vers un service BuildIt : le catalogue est
 embarqué dans l'outil, le projet généré n'en a pas besoin.
 
 ## Le test qui le prouve
 
 `packages/generator/src/pipeline.test.ts`, groupe
-« **le projet généré ne dépend pas de Project Factory — §1** », deux tests :
+« **le projet généré ne dépend pas de BuildIt — §1** », deux tests :
 
 | Test | Ce qu'il fait |
 |---|---|
-| `aucun fichier ne référence un paquet @project-factory` | Génère un vrai projet dans un dossier temporaire, parcourt **tous** ses fichiers récursivement, et échoue si l'un d'eux contient `@project-factory/` |
-| `le package.json ne contient aucune dépendance vers l'outil` | Vérifie que ni `dependencies` ni `devDependencies` ne contient un nom commençant par `@project-factory/` |
+| `aucun fichier ne référence un paquet @buildit` | Génère un vrai projet dans un dossier temporaire, parcourt **tous** ses fichiers récursivement, et échoue si l'un d'eux contient `@buildit/` |
+| `le package.json ne contient aucune dépendance vers l'outil` | Vérifie que ni `dependencies` ni `devDependencies` ne contient un nom commençant par `@buildit/` |
 
 ```text
-$ pnpm --filter @project-factory/generator exec vitest run src/pipeline.test.ts -t "ne dépend pas de Project Factory"
+$ pnpm --filter @buildit/generator exec vitest run src/pipeline.test.ts -t "ne dépend pas de BuildIt"
 
  RUN  v5.0.1 D:/Projets/BuildIt/packages/generator
 
@@ -70,8 +70,8 @@ pas par relecture »).
 
 Le `README.md` du projet généré se termine par :
 
-> Ce projet a été généré par Project Factory. Il est **autonome** : aucune
-> dépendance à Project Factory ne subsiste. Vous pouvez désinstaller l'outil,
+> Ce projet a été généré par BuildIt. Il est **autonome** : aucune
+> dépendance à BuildIt ne subsiste. Vous pouvez désinstaller l'outil,
 > rien ne cassera.
 
 ## Ce dont vous dépendez quand même — honnêtement
@@ -94,8 +94,8 @@ fichiers, et le projet est du code.
 
 ```bash
 pnpm pf create mon-projet --preset saas --dir /tmp/mon-projet --no-install --no-git --yes
-grep -r "@project-factory" /tmp/mon-projet        # rien
-grep -c "project-factory" /tmp/mon-projet/package.json   # 0
+grep -r "@buildit" /tmp/mon-projet        # rien
+grep -c "buildit" /tmp/mon-projet/package.json   # 0
 ```
 
 Ces deux commandes refont à la main ce que fait le test ci-dessus — c'est

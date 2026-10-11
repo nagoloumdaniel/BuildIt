@@ -1,4 +1,4 @@
-# Project Factory
+# BuildIt
 
 > **Development Environment Factory** — décrire un projet, choisir ses plateformes et ses technologies, obtenir un projet prêt à développer : cohérent, documenté et diagnostiqué.
 
@@ -6,23 +6,23 @@
 
 ---
 
-## Le code généré ne dépend pas de Project Factory
+## Le code généré ne dépend pas de BuildIt
 
 C'est le principe fondateur du produit, et il est vérifié par un test automatisé, pas seulement affirmé ici.
 
-Le projet que vous générez est autonome : aucune dépendance runtime, aucun paquet propriétaire, aucun appel réseau vers nous. Vous pouvez supprimer Project Factory de votre machine juste après la génération — rien ne casse. Ce que vous obtenez est le code que vous auriez écrit vous-même si vous aviez pris le temps de câbler correctement Docker, la CI, le lint, les tests et les variables d'environnement.
+Le projet que vous générez est autonome : aucune dépendance runtime, aucun paquet propriétaire, aucun appel réseau vers nous. Vous pouvez supprimer BuildIt de votre machine juste après la génération — rien ne casse. Ce que vous obtenez est le code que vous auriez écrit vous-même si vous aviez pris le temps de câbler correctement Docker, la CI, le lint, les tests et les variables d'environnement.
 
 ## Confidentialité : local-first par défaut
 
-L'analyse de projet et l'assistant d'architecture tournent **en local**, avec votre propre clé API. Aucun code, aucun prompt ne transite par un serveur Project Factory. L'exécution hébergée existera un jour comme option payante, jamais comme obligation.
+L'analyse de projet et l'assistant d'architecture tournent **en local**, avec votre propre clé API. Aucun code, aucun prompt ne transite par un serveur BuildIt. L'exécution hébergée existera un jour comme option payante, jamais comme obligation.
 
 ---
 
-## Project Factory et Forge
+## BuildIt et Forge
 
 Deux noms, une seule chose :
 
-- **Project Factory** est le produit.
+- **BuildIt** est le produit.
 - **Forge** est le moteur qui l'alimente.
 - **`pf`** est le nom de la commande du CLI.
 - L'interface web et le CLI `pf` sont deux façades du même moteur, au même niveau. Tout ce qui est faisable dans l'une l'est dans l'autre, parce que les deux produisent le même *Project Manifest* et le passent au même pipeline.
@@ -78,7 +78,7 @@ docs/       cahier des charges, roadmap, specs, plans
 ## Documentation
 
 - [Guide](docs/README.md) — le produit tel qu'il est :
-  - [Démarrage rapide](docs/guide/quickstart.md) · [Concepts](docs/guide/concepts.md) · [Project Factory et Forge](docs/guide/produit-et-moteur.md)
+  - [Démarrage rapide](docs/guide/quickstart.md) · [Concepts](docs/guide/concepts.md) · [BuildIt et Forge](docs/guide/produit-et-moteur.md)
   - [No-lock-in](docs/guide/no-lock-in.md) · [Confidentialité](docs/guide/confidentialite.md)
   - [Référence du manifest](docs/guide/reference-manifest.md) · [Référence du registry](docs/guide/reference-registry.md) · [Commandes](docs/guide/commandes.md)
 - [Cahier des charges](docs/cahier-des-charges.md) — cadrage produit et technique complet

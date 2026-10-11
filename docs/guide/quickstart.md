@@ -51,7 +51,7 @@ sources TypeScript par `jiti`.
 pnpm pf --help          # dépôt cloné — la seule forme disponible aujourd'hui
 ```
 
-La forme publiée est prévue en **Phase 12** (`pnpm add -g @project-factory/cli`,
+La forme publiée est prévue en **Phase 12** (`pnpm add -g @buildit/cli`,
 puis `pf create …`) : **elle n'existe pas encore**, ne l'utilisez pas avant que la
 roadmap ne l'annonce.
 
@@ -106,7 +106,7 @@ pnpm pf --help
 ```
 
 ```text
-pf — Project Factory : décrire un projet, obtenir un projet prêt à développer.
+pf — BuildIt : décrire un projet, obtenir un projet prêt à développer.
 
 Usage : pf [commande] [options]
 

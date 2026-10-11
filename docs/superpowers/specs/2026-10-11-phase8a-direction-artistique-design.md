@@ -8,7 +8,7 @@
 
 ## La direction
 
-Project Factory est un **outil de développeur**, pas un SaaS marketing. Ce que ça change concrètement :
+BuildIt est un **outil de développeur**, pas un SaaS marketing. Ce que ça change concrètement :
 
 - **Dense plutôt qu'aéré.** 15 px de base, pas 18. Des blocs rapprochés, des listes longues lisibles. L'utilisateur est devant un écran de configuration, pas devant une page de vente.
 - **Un seul accent.** Une braise (`#b4530a` en clair, `#ff9a45` en sombre) réservée à la sélection et à l'action principale. Le reste est neutre : la couleur ne sert qu'à porter un état (choisi, ajouté, bloqué, en erreur), jamais à décorer.

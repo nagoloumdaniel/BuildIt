@@ -6,7 +6,7 @@
 
 ```bash
 pnpm pf <commande>                        # depuis la racine du dépôt, sur les sources
-pnpm --filter @project-factory/cli build  # puis node apps/cli/bin/pf.js <commande>
+pnpm --filter @buildit/cli build  # puis node apps/cli/bin/pf.js <commande>
 ```
 
 `pnpm pf` s'exécute à la racine du dépôt : un projet créé sans `--dir` y atterrit.
@@ -110,7 +110,7 @@ Corrections proposées :
 La clé API LLM locale (§0, §17), pour les fonctions d'analyse à venir.
 
 - `set` lit la clé sur l'entrée standard (`echo "$CLE" | pf key set`) ou par une saisie masquée dans un terminal. **Jamais en argument** : elle resterait dans l'historique du shell et dans `ps` — `pf` refuse.
-- Stockée dans `credentials.json` du répertoire de configuration, fichier en `0600`, dossier en `0700`. Répertoire : `$PF_CONFIG_DIR`, sinon `%APPDATA%\project-factory` (Windows), `$XDG_CONFIG_HOME/project-factory`, `~/.config/project-factory`.
+- Stockée dans `credentials.json` du répertoire de configuration, fichier en `0600`, dossier en `0700`. Répertoire : `$PF_CONFIG_DIR`, sinon `%APPDATA%\buildit` (Windows), `$XDG_CONFIG_HOME/buildit`, `~/.config/buildit`.
 - `status` dit si une clé est définie, **jamais sa valeur, pas même en partie**.
 - `clear` la supprime.
 
@@ -139,7 +139,7 @@ La commande exacte est affichée **avant** d'être lancée. Sans terminal, rien 
 
 ### `pf login` · `pf logout`
 
-- `pf login` : connexion par code (device flow). Les permissions sont annoncées avant : `repo` (dépôts privés, création, collaborateurs), ou `public_repo` avec `--public-only`. **L'application OAuth de Project Factory n'est pas encore enregistrée** : en attendant, `PF_GITHUB_CLIENT_ID=<identifiant>` ou un jeton existant.
+- `pf login` : connexion par code (device flow). Les permissions sont annoncées avant : `repo` (dépôts privés, création, collaborateurs), ou `public_repo` avec `--public-only`. **L'application OAuth de BuildIt n'est pas encore enregistrée** : en attendant, `PF_GITHUB_CLIENT_ID=<identifiant>` ou un jeton existant.
 - `pf login --with-token` : lit un jeton sur l'entrée standard (`echo "$JETON" | pf login --with-token`) ou par saisie masquée. **Jamais en argument.**
 - Le jeton va dans le trousseau du système — Trousseau macOS, Secret Service (Linux, `secret-tool`), Gestionnaire d'identification Windows —, toujours par l'entrée standard de l'outil. **Trousseau absent : refus, aucun repli en clair.** Pour la CI, `PF_GITHUB_TOKEN` est lu (jamais écrit).
 - `pf logout` retire le jeton de la machine ; pour le révoquer côté GitHub : https://github.com/settings/applications.

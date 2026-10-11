@@ -131,8 +131,8 @@ toujours les 37 catégories).
 
 **Garde-fou du 8B.2, prouvé par un test négatif** : `stack-data.test.ts` lit
 `page.tsx` et `stack-options.tsx` et refuse tout import de `lib/engine`, de
-`server-only`, de `@project-factory/compatibility` ou de
-`@project-factory/generator`, sous les **deux** formes (`import … from 'x'` et
+`server-only`, de `@buildit/compatibility` ou de
+`@buildit/generator`, sous les **deux** formes (`import … from 'x'` et
 l'import à effet de bord `import 'x'`). Le premier jet de ce test ne voyait que
 la première forme : en injectant `import '../../../lib/engine';` dans
 `page.tsx`, il passait — corrigé, il échoue (vérifié, puis import retiré).
@@ -161,8 +161,8 @@ d'écriture de la tâche.
 ## Commandes de vérification
 
 ```powershell
-pnpm --filter @project-factory/web test     # exit 0
-pnpm --filter @project-factory/web build    # exit 0
+pnpm --filter @buildit/web test     # exit 0
+pnpm --filter @buildit/web build    # exit 0
 pnpm typecheck                              # exit 0
 pnpm lint                                   # exit 0 (0 erreur)
 ```
@@ -326,8 +326,8 @@ restauration après rechargement complet n'est donc pas sacrifiée au gain de re
 ## Commandes de vérification (suite task-7)
 
 ```powershell
-pnpm --filter @project-factory/web test     # exit 0 — session+draft : 25 → 41 tests
-pnpm --filter @project-factory/web build     # exit 0
+pnpm --filter @buildit/web test     # exit 0 — session+draft : 25 → 41 tests
+pnpm --filter @buildit/web build     # exit 0
 pnpm typecheck                               # exit 0 — 28 tâches
 pnpm lint                                    # exit 0 — 0 erreur
 ```

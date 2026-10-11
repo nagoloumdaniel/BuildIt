@@ -74,7 +74,7 @@ Les cinq façons les plus probables de se mordre avec ce socle, et le test qui l
 
 **Interfaces:**
 - Consumes: rien (première brique).
-- Produces: le paquet `@project-factory/web` avec `pnpm build` (Next), `pnpm test` (Vitest), `pnpm typecheck` (tsc) branchés sur Turborepo — toutes les tâches suivantes s'y ajoutent.
+- Produces: le paquet `@buildit/web` avec `pnpm build` (Next), `pnpm test` (Vitest), `pnpm typecheck` (tsc) branchés sur Turborepo — toutes les tâches suivantes s'y ajoutent.
 
 - [ ] **Step 1 : écrire le test qui prouve que la page racine rend**
 
@@ -88,7 +88,7 @@ import Home from './page.js';
 describe('page racine', () => {
   it('annonce le produit et les trois chemins du menu', () => {
     const html = renderToStaticMarkup(Home());
-    expect(html).toContain('Project Factory');
+    expect(html).toContain('BuildIt');
     expect(html).toContain('Créer un projet');
     expect(html).toContain('Cloner un projet');
     expect(html).toContain('Ouvrir un projet local');
@@ -98,7 +98,7 @@ describe('page racine', () => {
 
 - [ ] **Step 2 : vérifier qu'il échoue**
 
-Run: `pnpm --filter @project-factory/web test` (échouera d'abord car le paquet n'existe pas encore — l'échec attendu est « no such package » jusqu'au Step 3 ; le test doit ensuite échouer sur contenu manquant avant que `page.tsx` ne soit écrit).
+Run: `pnpm --filter @buildit/web test` (échouera d'abord car le paquet n'existe pas encore — l'échec attendu est « no such package » jusqu'au Step 3 ; le test doit ensuite échouer sur contenu manquant avant que `page.tsx` ne soit écrit).
 Expected: FAIL (paquet absent, puis contenu absent).
 
 - [ ] **Step 3 : scaffold minimal**
@@ -107,7 +107,7 @@ Expected: FAIL (paquet absent, puis contenu absent).
 
 ```json
 {
-  "name": "@project-factory/web",
+  "name": "@buildit/web",
   "version": "0.0.0",
   "private": true,
   "type": "module",
@@ -126,7 +126,7 @@ Expected: FAIL (paquet absent, puis contenu absent).
     "react-dom": "19.x.y"
   },
   "devDependencies": {
-    "@project-factory/typescript-config": "workspace:*",
+    "@buildit/typescript-config": "workspace:*",
     "@tailwindcss/postcss": "4.x.y",
     "@types/react": "19.x.y",
     "@types/react-dom": "19.x.y",
@@ -145,7 +145,7 @@ Expected: FAIL (paquet absent, puis contenu absent).
 
 ```jsonc
 {
-  "extends": "@project-factory/typescript-config/base.json",
+  "extends": "@buildit/typescript-config/base.json",
   "compilerOptions": {
     "lib": ["ES2023", "DOM", "DOM.Iterable"],
     "jsx": "preserve",
@@ -240,7 +240,7 @@ body {
 import type { ReactNode } from 'react';
 import './globals.css';
 
-export const metadata = { title: 'Project Factory' };
+export const metadata = { title: 'BuildIt' };
 
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
@@ -263,7 +263,7 @@ const PATHS = [
 export default function Home() {
   return (
     <main>
-      <h1>Project Factory</h1>
+      <h1>BuildIt</h1>
       <nav aria-label="Menu d'accueil">
         <ul>
           {PATHS.map((path) => (
@@ -282,7 +282,7 @@ Ajouter `.next/` à la section racine de `.gitignore` (à côté de `dist/`).
 
 - [ ] **Step 4 : vérifier que tout est vert**
 
-Run: `pnpm install` puis `pnpm --filter @project-factory/web test && pnpm --filter @project-factory/web typecheck && pnpm --filter @project-factory/web build`
+Run: `pnpm install` puis `pnpm --filter @buildit/web test && pnpm --filter @buildit/web typecheck && pnpm --filter @buildit/web build`
 Expected: test PASS (la page rend les trois chemins), typecheck PASS, `next build` PASS.
 
 Pièges : si pnpm refuse un script de build (protobuf de Next/Tailwind), ajouter l'entrée `allowBuilds` correspondante dans `pnpm-workspace.yaml` — jamais en silence, en commentant pourquoi. Si `minimumReleaseAge` retient les versions trop récentes de next/react, épingler une version assez âgée plutôt qu'exclure, sauf raison écrite.
@@ -358,7 +358,7 @@ describe('readPreference', () => {
 
 - [ ] **Step 2 : vérifier l'échec**
 
-Run: `pnpm --filter @project-factory/web test`
+Run: `pnpm --filter @buildit/web test`
 Expected: FAIL — `./theme.js` introuvable.
 
 - [ ] **Step 3 : implémenter**
@@ -400,7 +400,7 @@ Dans `layout.tsx`, ajouter le script anti-flash (avant `<body>`, dans `<head>`) 
 
 - [ ] **Step 4 : vérifier le vert**
 
-Run: `pnpm --filter @project-factory/web test && pnpm --filter @project-factory/web typecheck`
+Run: `pnpm --filter @buildit/web test && pnpm --filter @buildit/web typecheck`
 Expected: PASS.
 
 - [ ] **Step 5 : Commit**
@@ -419,7 +419,7 @@ git commit -m "feat(web): theme clair/sombre sans flash, logique pure testee"
 - Test: `apps/web/src/lib/draft.test.ts`
 
 **Interfaces:**
-- Consumes: `PROJECT_NAME_PATTERN` de `@project-factory/manifest` (validation du nom côté client, la validation finale reste `parseManifest` côté serveur).
+- Consumes: `PROJECT_NAME_PATTERN` de `@buildit/manifest` (validation du nom côté client, la validation finale reste `parseManifest` côté serveur).
 - Produces:
   - `interface DraftState { version: number; step: StepId; mode: 'guided' | 'expert'; name: string; targets: string[]; type?: string; architecture?: string; technologies: string[]; capabilities: string[]; envVarNames: string[]; infra: { docker: boolean; ci: boolean }; resolution?: { status: 'certified' | 'experimental'; issues: readonly string[] } }` (le type `StepId` vient de la Task 4 ; le champ `resolution` est **transitoire**, jamais persisté — voir `toPersisted`).
   - `DRAFT_VERSION: 1` ; `freshDraft(): DraftState` ; `loadDraft(storage: Storage | null): DraftState` ; `saveDraft(storage: Storage | null, draft: DraftState): void` ; `clearDraft(storage: Storage | null): void`.
@@ -505,7 +505,7 @@ describe('clearDraft', () => {
 
 - [ ] **Step 2 : vérifier l'échec**
 
-Run: `pnpm --filter @project-factory/web test -- draft`
+Run: `pnpm --filter @buildit/web test -- draft`
 Expected: FAIL — `./draft.js` introuvable.
 
 - [ ] **Step 3 : implémenter**
@@ -589,7 +589,7 @@ Note : `noPropertyAccessFromIndexSignature` (base tsconfig) impose `candidate['v
 
 - [ ] **Step 4 : vérifier le vert**
 
-Run: `pnpm --filter @project-factory/web test -- draft`
+Run: `pnpm --filter @buildit/web test -- draft`
 Expected: PASS (24 assertions au total).
 
 - [ ] **Step 5 : Commit**
@@ -683,7 +683,7 @@ describe('canAdvance — bloquants du §6', () => {
 
 - [ ] **Step 2 : vérifier l'échec**
 
-Run: `pnpm --filter @project-factory/web test -- flow`
+Run: `pnpm --filter @buildit/web test -- flow`
 Expected: FAIL — les fonctions n'existent pas (ou `flow.ts` ne contient que `STEP_ORDER`).
 
 - [ ] **Step 3 : implémenter**
@@ -691,7 +691,7 @@ Expected: FAIL — les fonctions n'existent pas (ou `flow.ts` ne contient que `S
 `apps/web/src/lib/flow.ts` :
 
 ```ts
-import { PROJECT_NAME_PATTERN } from '@project-factory/manifest';
+import { PROJECT_NAME_PATTERN } from '@buildit/manifest';
 import type { DraftState } from './draft.js';
 
 export const STEP_ORDER = [
@@ -730,7 +730,7 @@ Adapter `draft.ts` : il importait `STEP_ORDER` de `flow.ts` — l'import reste, 
 
 - [ ] **Step 4 : vérifier le vert**
 
-Run: `pnpm --filter @project-factory/web test && pnpm --filter @project-factory/web typecheck`
+Run: `pnpm --filter @buildit/web test && pnpm --filter @buildit/web typecheck`
 Expected: PASS — tous les tests draft + flow.
 
 - [ ] **Step 5 : Commit**
@@ -747,12 +747,12 @@ git commit -m "feat(web): machine a etats du parcours, bloquants du 6 en tests"
 **Files:**
 - Create: `apps/web/src/lib/engine.ts`
 - Test: `apps/web/src/lib/engine.test.ts`
-- Modify: `apps/web/package.json` (dépendances workspace : `@project-factory/registry`, `@project-factory/compatibility`, `@project-factory/generator`, `@project-factory/manifest`, `@project-factory/presets`)
+- Modify: `apps/web/package.json` (dépendances workspace : `@buildit/registry`, `@buildit/compatibility`, `@buildit/generator`, `@buildit/manifest`, `@buildit/presets`)
 - Create: `apps/web/src/lib/server-only.ts` (garde `server-only`)
 
 **Interfaces:**
 - Consumes (signatures exactes, vérifiées le 06/10/2026) :
-  - `loadRegistry(): Promise<Registry>` et `registry.query(criteria: RegistryQuery): RegistryEntry[]` — `packages/registry/src/load.ts` ; `type Category` est ré-exporté par `@project-factory/registry` ;
+  - `loadRegistry(): Promise<Registry>` et `registry.query(criteria: RegistryQuery): RegistryEntry[]` — `packages/registry/src/load.ts` ; `type Category` est ré-exporté par `@buildit/registry` ;
   - `optionsFor(category: Category, selection: Selection, registry: Registry): Option[]` avec `Option = { entry: RegistryEntry; state: 'selected' | 'available' | 'blocked'; reason?: string }` — `packages/compatibility/src/resolve.ts` ;
   - `resolve(selection: Selection, registry: Registry): ParseResult<Resolution, CompatibilityCode>` avec `Resolution = { technologies, additions, status: 'certified' | 'experimental', warnings }` ;
   - `selectionFromManifest(manifest: Manifest): Selection` — `packages/generator/src/pipeline.ts` ;
@@ -771,8 +771,8 @@ git commit -m "feat(web): machine a etats du parcours, bloquants du 6 en tests"
 
 ```ts
 import { describe, expect, it } from 'vitest';
-import { selectionFromManifest } from '@project-factory/generator';
-import { getPreset } from '@project-factory/presets';
+import { selectionFromManifest } from '@buildit/generator';
+import { getPreset } from '@buildit/presets';
 import { listPresets, resolveSelection, stackOptions } from './engine.js';
 
 describe('stackOptions', () => {
@@ -813,22 +813,22 @@ describe('listPresets', () => {
 
 - [ ] **Step 2 : vérifier l'échec**
 
-Run: `pnpm --filter @project-factory/web test -- engine`
+Run: `pnpm --filter @buildit/web test -- engine`
 Expected: FAIL — `./engine.js` introuvable.
 
 - [ ] **Step 3 : implémenter**
 
-Ajouter aux `devDependencies` de `apps/web/package.json` (versions workspace, comme `apps/cli`) : `@project-factory/registry`, `@project-factory/compatibility`, `@project-factory/generator`, `@project-factory/manifest`, `@project-factory/presets`, et la dépendance `server-only` (épinglée).
+Ajouter aux `devDependencies` de `apps/web/package.json` (versions workspace, comme `apps/cli`) : `@buildit/registry`, `@buildit/compatibility`, `@buildit/generator`, `@buildit/manifest`, `@buildit/presets`, et la dépendance `server-only` (épinglée).
 
 `apps/web/src/lib/engine.ts` :
 
 ```ts
 import 'server-only';
-import { optionsFor, resolve, type Selection } from '@project-factory/compatibility';
-import { planProject } from '@project-factory/generator';
-import type { Manifest } from '@project-factory/manifest';
-import { PRESETS, type PresetId } from '@project-factory/presets';
-import { loadRegistry, type Category } from '@project-factory/registry';
+import { optionsFor, resolve, type Selection } from '@buildit/compatibility';
+import { planProject } from '@buildit/generator';
+import type { Manifest } from '@buildit/manifest';
+import { PRESETS, type PresetId } from '@buildit/presets';
+import { loadRegistry, type Category } from '@buildit/registry';
 
 export interface OptionView {
   id: string;
@@ -906,7 +906,7 @@ export async function previewPlan(
 
 - [ ] **Step 4 : vérifier le vert**
 
-Run: `pnpm install && pnpm --filter @project-factory/web test -- engine && pnpm --filter @project-factory/web typecheck`
+Run: `pnpm install && pnpm --filter @buildit/web test -- engine && pnpm --filter @buildit/web typecheck`
 Expected: PASS — les options du vrai catalogue arrivent avec leurs états ; au moins une option bloquée porte une raison.
 
 - [ ] **Step 5 : Commit**
@@ -925,7 +925,7 @@ git commit -m "feat(web): adaptateur moteur - le web consomme les memes paquets 
 - Test: `apps/web/src/lib/draft-to-manifest.test.ts`
 
 **Interfaces:**
-- Consumes: `parseManifest`, `serializeManifest`, `MANIFEST_KEY_ORDER` de `@project-factory/manifest`.
+- Consumes: `parseManifest`, `serializeManifest`, `MANIFEST_KEY_ORDER` de `@buildit/manifest`.
 - Produces: `draftToManifest(draft: DraftState): ParseResult<Manifest, ManifestIssueCode>` — **la règle byte-identical du gate M5 commence ici** : les mêmes choix en CLI et en UI passent par `parseManifest`, qui rend la forme canonique ; un test compare la sérialisation du manifest issu du draft avec celle du manifest construit à la main.
 
 - [ ] **Step 1 : test qui échoue — le même choix doit donner le même manifest octet pour octet**
@@ -934,7 +934,7 @@ git commit -m "feat(web): adaptateur moteur - le web consomme les memes paquets 
 
 ```ts
 import { describe, expect, it } from 'vitest';
-import { serializeManifest } from '@project-factory/manifest';
+import { serializeManifest } from '@buildit/manifest';
 import { freshDraft } from './draft.js';
 import { draftToManifest } from './draft-to-manifest.js';
 
@@ -967,7 +967,7 @@ describe('draftToManifest', () => {
 
 - [ ] **Step 2 : vérifier l'échec**
 
-Run: `pnpm --filter @project-factory/web test -- draft-to-manifest`
+Run: `pnpm --filter @buildit/web test -- draft-to-manifest`
 Expected: FAIL — module absent.
 
 - [ ] **Step 3 : implémenter**
@@ -975,7 +975,7 @@ Expected: FAIL — module absent.
 `apps/web/src/lib/draft-to-manifest.ts` — assembler l'objet manifest **dans les champs du §10**, puis passer par `parseManifest` (jamais de cast). La forme réelle du manifest est visible dans le preset SaaS (`packages/presets/src/index.ts`) : `targets`, `architecture`, `frontend: { framework, language, styling, ui }`, `database: { engine, orm }`, `auth: { provider }`, `services`, `quality`. Le champ `type` du brouillon (écran Project Type : SaaS, marketplace…) **n'est pas un champ du manifest** — c'est une donnée d'UI qui guide les recommandations ; le confirmer à `packages/manifest/src/schema/manifest.ts` et ne l'inventer pas :
 
 ```ts
-import { parseManifest } from '@project-factory/manifest';
+import { parseManifest } from '@buildit/manifest';
 import type { DraftState } from './draft.js';
 
 /** La techno d'une catégorie choisie dans le brouillon — vide sinon. */
@@ -1013,7 +1013,7 @@ export function draftToManifest(draft: DraftState): ReturnType<typeof parseManif
 
 - [ ] **Step 4 : vérifier le vert**
 
-Run: `pnpm --filter @project-factory/web test -- draft-to-manifest && pnpm --filter @project-factory/web typecheck`
+Run: `pnpm --filter @buildit/web test -- draft-to-manifest && pnpm --filter @buildit/web typecheck`
 Expected: PASS.
 
 - [ ] **Step 5 : Commit**
@@ -1073,7 +1073,7 @@ describe('toast', () => {
 
 - [ ] **Step 2 : vérifier l'échec**
 
-Run: `pnpm --filter @project-factory/web test -- toasts`
+Run: `pnpm --filter @buildit/web test -- toasts`
 Expected: FAIL — module absent.
 
 - [ ] **Step 3 : implémenter**
@@ -1121,7 +1121,7 @@ export function subscribeToasts(listener: (toasts: readonly ActiveToast[]) => vo
 
 - [ ] **Step 4 : vérifier le vert**
 
-Run: `pnpm --filter @project-factory/web test && pnpm --filter @project-factory/web typecheck && pnpm --filter @project-factory/web lint`
+Run: `pnpm --filter @buildit/web test && pnpm --filter @buildit/web typecheck && pnpm --filter @buildit/web lint`
 Expected: PASS.
 
 - [ ] **Step 5 : Commit**
@@ -1143,7 +1143,7 @@ git commit -m "feat(web): toasts sans dependance, store pur teste"
 - Modify: `apps/cli/src/commands/menu.ts` (le menu d'accueil propose « Configurateur web » si le serveur est construit — optionnel, garder simple : ne pas toucher le menu dans cette tâche, décision à 8G.1)
 
 **Interfaces:**
-- Consumes: `nodeCommandRunner`, `resolveCommand` de `@project-factory/exec` (résolution Windows sans shell — le piège du `.cmd` est déjà résolu là) ; le harnais de test existant d'apps/cli : `run` (`src/cli.js`), `fakeIo` (`src/fake-io.ts` — options `cwd`, `runner`, `platform`), `fakeWorld` (`src/fake-world.ts` — commandes scriptées, `world.calls`).
+- Consumes: `nodeCommandRunner`, `resolveCommand` de `@buildit/exec` (résolution Windows sans shell — le piège du `.cmd` est déjà résolu là) ; le harnais de test existant d'apps/cli : `run` (`src/cli.js`), `fakeIo` (`src/fake-io.ts` — options `cwd`, `runner`, `platform`), `fakeWorld` (`src/fake-world.ts` — commandes scriptées, `world.calls`).
 - Produces: `pf web [--port <n>] [--no-open]` — démarre le serveur Next construit (`apps/web/.next/standalone/server.js` après `next build`, résolu sous le `cwd` courant — la racine du monorepo en dev), sur `127.0.0.1:<port>` (défaut 4173), ouvre le navigateur sauf `--no-open`, reste au premier plan (Ctrl-C arrête). Erreurs actionnables : serveur non construit → « lancez pnpm build » ; port occupé → « un serveur répond déjà sur ce port » et arrêt (le piège de l'orphelin, PROJECT_CONTEXT §115).
 
 Nouveau sur `Io` : `portProbe(host: string, port: number): Promise<boolean>` — même logique que `fetch` et `runner`, déjà injectables sur `Io` : la sonde réseau est une dépendance de l'Io, pas un global. `node-io.ts` fournit la vraie (TCP `node:net.connect`), `fake-io.ts` accepte `portProbe` en option.
@@ -1219,7 +1219,7 @@ describe('pf web', () => {
 
 - [ ] **Step 2 : vérifier l'échec**
 
-Run: `pnpm --filter @project-factory/cli test -- web`
+Run: `pnpm --filter @buildit/cli test -- web`
 Expected: FAIL — `web` inconnu du CLI (la commande n'est pas encore enregistrée).
 
 - [ ] **Step 3 : implémenter**
@@ -1232,7 +1232,7 @@ Erreurs selon la convention des autres commandes : message qui dit quoi faire, c
 
 - [ ] **Step 4 : vérifier le vert**
 
-Run: `pnpm --filter @project-factory/cli test -- web && pnpm --filter @project-factory/cli typecheck && pnpm --filter @project-factory/cli lint`
+Run: `pnpm --filter @buildit/cli test -- web && pnpm --filter @buildit/cli typecheck && pnpm --filter @buildit/cli lint`
 Expected: PASS.
 
 - [ ] **Step 5 : vérifier en réel** (`run`)
@@ -1291,7 +1291,7 @@ git commit -m "docs: 8B livree - socle web, decision 8B.6 serveur local"
 ## Gate de la sous-phase 8B — `verification-before-completion`
 
 - [ ] `pnpm ci:local` vert avec `apps/web` dedans (lint, typecheck, test, build, secretlint)
-- [ ] Le web n'appelle le moteur que via `src/lib/engine.ts` + Server Actions — grep : aucun import de `@project-factory/*` hors de `src/lib/` (test ou vérification mécanique)
+- [ ] Le web n'appelle le moteur que via `src/lib/engine.ts` + Server Actions — grep : aucun import de `@buildit/*` hors de `src/lib/` (test ou vérification mécanique)
 - [ ] Aucune valeur de variable d'environnement ne peut être persistée (test Task 3)
 - [ ] Un brouillon corrompu/ancien rend un brouillon frais (tests Task 3)
 - [ ] `pf web` écoute sur `127.0.0.1` et refuse un port déjà servi (tests Task 8 + vérification réelle)

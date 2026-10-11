@@ -4,7 +4,7 @@ La décision produit est écrite au §0 du cahier des charges :
 
 > **Local-first** : le moteur, l'analyse de projet importé et l'AI Stack Advisor
 > tournent en local via le CLI, avec la clé API LLM fournie par l'utilisateur.
-> Aucun code ni prompt ne transite par un serveur Project Factory par défaut. Le
+> Aucun code ni prompt ne transite par un serveur BuildIt par défaut. Le
 > **cloud hébergé** devient une **option payante** en V2, pas une obligation.
 
 Cette page dit ce que cela signifie concrètement, et ce qui sort quand même.
@@ -12,7 +12,7 @@ Cette page dit ce que cela signifie concrètement, et ce qui sort quand même.
 ## Ce qui ne quitte pas la machine
 
 - **Le moteur tourne en local.** Le dépôt contient deux applications —
-  `apps/cli` et `apps/web` — et **aucun serveur Project Factory** : il n'y a rien
+  `apps/cli` et `apps/web` — et **aucun serveur BuildIt** : il n'y a rien
   à qui parler, même si on le voulait.
 - **Le catalogue est embarqué.** Les 283 fiches sont dans un index engendré
   (`packages/registry/src/generated/entries.ts`), chargé depuis le disque.
@@ -42,8 +42,8 @@ Clé API : non définie. pf key set pour l’enregistrer.
 - **Jamais en argument** : la commande refuse (`pf key set <clé>`), parce qu'une
   clé en argument reste dans l'historique du shell et dans `ps` ;
 - stockée dans `credentials.json`, fichier en `0600`, dossier en `0700`
-  (`$PF_CONFIG_DIR`, sinon `%APPDATA%\project-factory` sous Windows,
-  `$XDG_CONFIG_HOME/project-factory`, sinon `~/.config/project-factory`) ;
+  (`$PF_CONFIG_DIR`, sinon `%APPDATA%\buildit` sous Windows,
+  `$XDG_CONFIG_HOME/buildit`, sinon `~/.config/buildit`) ;
 - `pf key status` n'affiche **jamais** la valeur, pas même en partie ;
 - `pf key clear` la supprime.
 
@@ -118,6 +118,6 @@ porter (voir plus haut). Le lien s'ouvre là où tourne le configurateur
 | Votre remote Git | quand vous poussez | votre code, vers votre dépôt |
 | Un registre d'images | `docker build` / `compose pull` du projet généré | construire l'image |
 
-Rien d'autre : pas de serveur Project Factory, pas de télémétrie, pas de compte
+Rien d'autre : pas de serveur BuildIt, pas de télémétrie, pas de compte
 à créer. Le jour où l'exécution hébergée existera (V2), ce sera une **option**
 explicite.

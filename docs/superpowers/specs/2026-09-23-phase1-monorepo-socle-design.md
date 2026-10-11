@@ -8,13 +8,13 @@
 
 ## Objectif
 
-Le monorepo de Project Factory est la première démonstration de ce que l'outil génère. Il doit être exemplaire : un dev qui clone doit pouvoir builder, tester et linter en une commande, et la CI doit rejeter tout ce qui ne respecte pas les conventions.
+Le monorepo de BuildIt est la première démonstration de ce que l'outil génère. Il doit être exemplaire : un dev qui clone doit pouvoir builder, tester et linter en une commande, et la CI doit rejeter tout ce qui ne respecte pas les conventions.
 
 ## Décisions produit prises hors cahier des charges
 
 | Sujet | Décision | Raison |
 |---|---|---|
-| Nom npm publié | `@project-factory/cli` | `forge` et `project-factory` sont pris sur npm |
+| Nom npm publié | `@buildit/cli` | `forge` et `buildit` sont pris sur npm |
 | Binaire CLI | `pf` | `forge` entre en collision avec Foundry (Ethereum), très répandu chez les devs cibles |
 | Nom du moteur | « Forge » reste le nom interne du moteur (§9) | Cohérence avec le cahier des charges ; `pf` est seulement ce qu'on tape |
 | Licence | MIT | Adoption maximale, cohérent avec le no-lock-in (§1) ; le payant V2 repose sur le cloud/marketplace/équipe (§0), pas sur la licence du cœur |
@@ -23,14 +23,14 @@ Le monorepo de Project Factory est la première démonstration de ce que l'outil
 | Scan de secrets | `secretlint` (npm) plutôt que Gitleaks | Gitleaks est un binaire externe absent de la machine ; `secretlint` s'installe via pnpm et tourne dans le hook comme en CI. |
 | Plancher Node | `>=20.11.0` | Node 20 LTS reste majoritaire en entreprise (persona 4, §2) ; Node 18 est EOL |
 | Cible TS | `ES2023`, ESM strict | Aligné sur le plancher Node |
-| Dépôt | `nagoloumdaniel/project-factory` | — |
+| Dépôt | `nagoloumdaniel/buildit` | — |
 
 ## Architecture
 
 ### Arborescence cible de la Phase 1
 
 ```
-project-factory/
+buildit/
 ├── .github/
 │   ├── workflows/ci.yml
 │   ├── dependabot.yml

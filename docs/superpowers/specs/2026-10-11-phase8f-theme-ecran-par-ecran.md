@@ -58,7 +58,7 @@ Les classes rendues ne changent pas : la correction est entièrement dans les va
 
 « Vérifié » = les primitives de cet écran ont été passées au calcul de contraste, dans les deux
 thèmes, et son balisage a été relu pour la règle « la couleur ne porte jamais seule
-l'information ». Les écrans 15 à 17 et 18 consomment désormais `@project-factory/ui` : leurs
+l'information ». Les écrans 15 à 17 et 18 consomment désormais `@buildit/ui` : leurs
 `pf-btn` / `pf-badge` / `pf-hint` / `pf-error` viennent du paquet, les classes rendues sont
 identiques (preuve par diff de classes, cf. `apps/web/src/app/ui-partagee.test.tsx`).
 
@@ -148,15 +148,15 @@ bornée à `globals.css` et aux valeurs de tokens ci-dessus.
 
 | Commande | Résultat |
 |---|---|
-| `pnpm --filter @project-factory/ui test` | 13 tests passés, couverture 100 % (13/13 instructions, 16/16 branches) |
-| `pnpm --filter @project-factory/ui typecheck` | exit 0 |
+| `pnpm --filter @buildit/ui test` | 13 tests passés, couverture 100 % (13/13 instructions, 16/16 branches) |
+| `pnpm --filter @buildit/ui typecheck` | exit 0 |
 | `pnpm exec biome check` (fichiers touchés) | **0 erreur**, 4 avertissements assumés (`!important` du bloc `prefers-reduced-motion`) |
-| `pnpm --filter @project-factory/web build` | **exit 0** — 20 routes engendrées, `@project-factory/ui` transpilé depuis sa source |
+| `pnpm --filter @buildit/web build` | **exit 0** — 20 routes engendrées, `@buildit/ui` transpilé depuis sa source |
 | `pnpm build` (turbo) | 15/15 tâches |
 | `vitest run` sur les écrans convertis + coquilles partagées | 54 tests passés (7 fichiers) — dont `ui-partagee.test.tsx`, qui vérifie les classes `pf-*` rendues |
 
 État du dépôt au moment de la revue : `pnpm typecheck` et `pnpm lint` à l'échelle du dépôt étaient
-rouges sur des fichiers d'autres travaux en cours (`apps/cli` → `@project-factory/doctor`,
+rouges sur des fichiers d'autres travaux en cours (`apps/cli` → `@buildit/doctor`,
 `PF_SITE_URL` en TS4111 dans `layout.tsx`/`robots.ts`/`sitemap.ts`, dépréciation `biome.json`) —
 **aucun** fichier de cette revue n'y figure. Les vérifications ci-dessus sont donc bornées aux
 fichiers touchés, et le sont toutes au vert.
