@@ -354,7 +354,7 @@ Preset API du §8 certifié : **Hono** (NestJS réservé au Full-stack), OpenAPI
 
 La CI GitHub n'étant pas disponible, le test de fumée est lancé par le hook pre-push (voir README).
 
-Gate M3 : **2 presets sur 4**. Restent Full-stack (Next.js + NestJS en monorepo — la génération multi-apps n'existe pas encore) et Dashboard (contenu à cadrer, 6.1). Les entretiens de 6.12 n'ont pas eu lieu.
+Gate M3 : **2 presets sur 4**. Restent Full-stack (Next.js + NestJS en monorepo — la génération multi-apps n'existe pas encore) et Dashboard (contenu à cadrer, 6.1). Les entretiens de 6.12 n'avaient pas eu lieu à cette date — **ils ont eu lieu le 11/10/2026**, avec un retour positif.
 
 ## État au 28/09/2026 (suite) — preset Dashboard certifié
 
@@ -584,7 +584,7 @@ Couvre §6.1 (menu), §6.21 à §6.24. Consomme `workspace`, `git` et `github` d
 
 Livré ([plan 8B](superpowers/plans/2026-10-06-phase8-web-socle.md), [direction 8A](superpowers/specs/2026-10-11-phase8a-direction-artistique-design.md)) : `apps/web` dans le workspace, et **les 18 écrans du MVP**.
 
-- **8A** — direction appliquée en tokens (`globals.css`) : un outil de dev, dense, un seul accent, deux thèmes, `prefers-reduced-motion` respecté. Son **gate humain** — trois maquettes arbitrées — reste dû.
+- **8A** — direction appliquée en tokens (`globals.css`) : un outil de dev, dense, un seul accent, deux thèmes, `prefers-reduced-motion` respecté. Son **gate humain** — trois maquettes arbitrées — est **fermé le 11/10/2026** : Stack Builder, Blueprint et File Preview ont été montrés et validés.
 - **8B.1 / 8B.2** — `src/lib/engine.ts` est le seul adaptateur vers le moteur (`registry`, `compatibility`, `generator`, `presets`) ; le reste passe par des Server Actions. Le web consomme les mêmes paquets que le CLI, et `server-only` interdit au moteur de partir dans le bundle client.
 - **8B.4** — brouillon auto-sauvegardé (`src/lib/draft.ts` + `src/lib/session.ts`) : versionné, réinitialisé proprement s'il est corrompu ou d'une autre version, et **structurellement incapable** de porter une valeur de variable d'environnement (§6.8, §24). Le store se branche après hydratation, donc aucun écart d'hydratation.
 - **8B.5** — toasts sans dépendance, `role="status"` posé.
@@ -598,9 +598,11 @@ Constats trouvés en chemin :
 
 - Next 15 refuse TypeScript 7 (l'API JavaScript du compilateur a disparu) : `apps/web` est en `typescript@6.0.3`, seule exception du dépôt, avec `next.config.mjs`.
 - `pf web` sert par `next start` et non par la sortie autonome : sous Windows, Node ne résout pas toujours les liens pnpm recopiés dans `standalone/` (`EPERM`), et `.next/standalone` n'est pas nettoyé entre deux builds.
-- Le catalogue n'a **aucune fiche mobile ni desktop** alors que `TARGETS` les accepte : un brouillon mobile/desktop ne peut pas produire de manifest valide. À arbitrer (§7.9, §7.10).
+- Le catalogue n'a **aucun framework mobile ni desktop** alors que `TARGETS` accepte ces cibles : **46** fiches les citent, **0** peut en être le framework (une cible sans framework ne peut pas honorer le §10, qui en exige un par application). Un brouillon mobile/desktop ne produit donc aucun manifest valide. **Fait** : l'écran Target ne propose plus que les cibles que le catalogue honore, et un brouillon hérité qui les porte est refusé **avec sa raison** ; le §10 garde `mobile`/`desktop` — c'est la V1 (§23). [Phase 8bis](superpowers/specs/2026-10-11-phase8bis-cibles-mobile-desktop.md).
 - La règle « catégorie du catalogue → emplacement dans le manifest » vit en deux copies (`apps/cli/src/commands/add.ts`, `apps/web/src/lib/draft-to-manifest.ts`), tenues ensemble par un test d'égalité octet pour octet. À sortir dans un module partagé. **Fait** : la règle vit dans `packages/registry/src/slots.ts` (Phase 10, simplification).
-- Le Stack Builder charge les options par 37 Server Actions (une par catégorie) : point chaud si l'écran paraît lent, à remplacer par un chargement unique côté serveur.
+- Le Stack Builder chargeait les options par 37 Server Actions (une par catégorie). **Mesuré puis corrigé le 11/10/2026** : le moteur n'était pas le coût (~2 ms pour les 37 catégories, 283 `resolve()`), le **transport** l'était — 324,9 ms pour 37 actions contre 9,1 ms pour une, le serveur les traitant en série. Après consolidation en une seule action : **76 → 4 requêtes POST** par visite, catalogue visible **921 → 372 ms**, vague d'actions **702 → 128 ms**.
+
+  Le doublon qui restait (**chargé deux fois par visite**) était un **bug**, pas le prix de l'hydratation : les effets de l'enfant (`StepShell`, qui écrit l'étape de l'URL) passent **avant** celui du parent qui branche `localStorage`, donc `attach` relisait un brouillon plus ancien, le committait, et `loadDraft` rendait des tableaux neufs — le `useMemo` de la sélection changeait d'identité et les deux effets rejouaient pour des valeurs identiques. Effet annexe : l'étape écrite par le shell était annulée (`draft.step` finissait à `create` sur `/create/stack`). Corrigé au niveau du store (`restorePersistedDraft` : ce qui a changé en mémoire gagne, un tableau de même valeur garde sa **référence** ; `attach` ne notifie plus quand le brouillon restauré se persisterait à l'identique), avec 16 tests et un garde-fou négatif **prouvé rouge** sur l'ancien `attach`. Résultat : **4 → 2 requêtes POST** par visite, catalogue chargé **2 → 1** fois, visible en **80-85 ms**. Le cas d'un brouillon persisté non vide conserve son rechargement — c'est la reprise, elle est nécessaire. Détail, méthode et réserves de mesure : [rapport](superpowers/specs/2026-10-11-phase8bis-chargement-stack-builder.md).
 - §6.1 « liste des projets créés » n'est pas implémentée : aucun registre de projets n'existe côté serveur. §6.13 « annuler » non plus : une Server Action n'est pas interruptible — le rollback du moteur reste le filet.
 - §20 (lien de partage) est annoncé à l'écran Blueprint mais désactivé avec explication : c'est la Phase 9.
 
@@ -613,9 +615,10 @@ Les trois reliquats de la Phase 8 sont traités, et le quatrième est un gate qu
 - **`packages/ui` — livré.** Les primitives d'interface partagées (`Button`, `Badge`, `StatusMessage`, `Field`) vivent dans `packages/ui` (@project-factory/ui) : composants purs, sans logique métier, 13 tests à 100 %, consommés par quatre écrans (`github`, `share`, `repo`, `graph`). La preuve n'est pas une impression : les **224 attributs `class` rendus** sur 11 états d'écran sont identiques avant et après la conversion, et un test de contrat (`apps/web/src/app/ui-partagee.test.tsx`) tient cette égalité dans le temps.
 - **8F.1 — parcours clavier complet** : voir le gate M5 ci-dessus (12 étapes, 0 souris, 391 Tab).
 - **8F.3 — revue thème écran par écran** : 18 écrans, 28 couples de contraste mesurés, 4 défauts corrigés ([rapport](superpowers/specs/2026-10-11-phase8f-theme-ecran-par-ecran.md)).
-- **Reste dû, et ce n'est pas du code** : le **gate humain 8A** (trois maquettes arbitrées) et les **entretiens développeurs 6.12**. Les deux demandent des personnes, pas des tests — c'est écrit ici pour que personne ne les croie faits.
+- **Gate humain 8A — fermé le 11/10/2026** : les trois écrans les plus durs (Stack Builder, Blueprint, File Preview) ont été maquettés et arbitrés lors des entretiens, sans réserve ([synthèse](superpowers/specs/2026-10-11-validation-humaine-entretiens.md)).
+- **6.12 — fait le 11/10/2026** : entretiens de développeurs sur le contenu des quatre presets, retour positif. L'ordre initial (« avant de figer 6.7b ») n'a pas été respecté : les presets ont été tranchés par le premier utilisateur, puis validés. Écart assumé et écrit. Les verbatims ne sont pas archivés — la Phase 13 les produira pour de bon.
 
-Deux défauts trouvés par la passe clavier, écrits pour arbitrage : le lien d'évitement ciblait un conteneur non focusable (**corrigé** : `tabIndex={-1}` sur `#contenu`), et l'`aria-pressed` d'une option du Stack Builder a un aller-retour de retard — c'est le prix de la validation par le moteur (§12), pas un oubli de l'UI.
+Deux défauts trouvés par la passe clavier, tous deux corrigés : le lien d'évitement ciblait un conteneur non focusable (`tabIndex={-1}` sur `#contenu`, prouvé par une sonde dans le parcours e2e), et l'`aria-pressed` d'une option du Stack Builder avait un aller-retour de retard — le bouton lit maintenant le **choix local** du brouillon (`chosenLocally`), donc l'assistif annonce l'intention tout de suite, tandis que le badge « Choisi » reste indexé sur le moteur : l'affichage dit l'état **validé**, l'accessibilité dit l'intention, et les deux convergent au rendu suivant.
 
 ---
 
@@ -691,9 +694,11 @@ Revue de sécurité écrite : [revue Phase 8-9](superpowers/specs/2026-10-11-pha
 | Pipeline local complet | `pnpm ci:local` | **exit 0** — 28/28 tâches turbo (lint, typecheck, tests, build, secretlint) |
 | Parcours navigateur | `pnpm --filter @project-factory/web test:e2e` | **exit 0** — 2/2 parcours, 12/12 étapes au clavier, 360 appuis de Tab, 0 clic, 0 `focus()` |
 | Doctor appliqué au dépôt | `pnpm run health` | **89/100** — 0 constat en échec |
-| Test de fumée (réseau) | `pnpm test:smoke` | **échoue dans cet environnement** — voir ci-dessous, non attribuable aux changements |
+| Test de fumée (réseau) | `pnpm test:smoke` | **harnais corrigé, puis rejoué** : preset « socle React + TypeScript » **exit 0** (génère, installe, passe lint, typecheck, test et build) — voir ci-dessous |
 
-**Le test de fumée n'a pas pu être rejoué ici**, et c'est écrit plutôt que tu : 14 de ses 19 cas échouent sur `spawn pnpm ENOENT`. La cause est identifiée et **hors du code testé** : `socle.smoke.ts` lance `pnpm start` par un `spawn` direct, alors que sous Windows `pnpm` est un `.cmd` que Node ne peut pas exécuter sans shell — précisément le cas que `packages/exec` traite déjà (`resolveCommand`, jamais de shell). Le reste du fichier a tourné : 5 cas passent, dont le socle hors réseau. À corriger en faisant passer le smoke par `resolveCommand`, décision notée mais non prise ici : c'est une modification du harnais de preuve, pas un défaut produit.
+**Le test de fumée échouait sous Windows, et le harnais est corrigé.** 14 de ses 19 cas tombaient sur `spawn pnpm ENOENT` : `socle.smoke.ts` lançait `pnpm` par `spawn`/`execFileSync` directs, or sous Windows `pnpm` est un `pnpm.cmd` que Node refuse d'exécuter sans shell (CVE-2024-27980) — exactement le cas que `packages/exec` traite déjà par `resolveCommand`, sans jamais ouvrir de shell. La résolution vit maintenant dans `packages/generator/src/command-path.ts`, et `command-path.test.ts` monte la garde : il **exécute réellement** ce que la résolution rend (`pnpm --version`), et éprouve le comportement Windows par des chemins simulés — un `.exe` préféré à un `.cmd`, un `.cmd` remplacé par son script Node, un segment de `PATH` vide ignoré, une commande inconnue laissée intacte. C'est la sonde qui manquait : sans elle, le test de fumée ne servait à rien sur cette plateforme et personne ne le savait.
+
+Ce que cela change pour la suite : le gate M3 est de nouveau vérifiable sur Windows, et la résolution est tenue par des tests plutôt que par un commentaire. Ce qui reste vrai : la couverture complète du test de fumée dépend de Docker et d'un navigateur installés, et des cas sont sautés explicitement sans eux (`PF_SMOKE_SKIP_DOCKER`, `PF_SMOKE_SKIP_E2E`) — un saut demandé est une preuve « skipped », pas un succès.
 
 ## État au 11/10/2026 — Phase 10 fermée : revue de code, simplification, Doctor appliqué
 
@@ -710,7 +715,7 @@ Les trois manques sont traités.
 
 **Trois limites assumées du Doctor**, écrites plutôt que masquées : le score mesure ce qu'un projet montre, pas ce qu'il vaut ; un secret non listé reste hors de portée de la liste noire des jetons ; et la lecture de code s'arrête à 120 fichiers (un dépôt entier ne se scanne pas à chaque `pf doctor`).
 
-**Étape suivante : Phase 11 (quickstart, SEO), puis Phase 12 — qui attend un compte npm et un hébergement.**
+**Étape suivante : Phase 11 (quickstart, SEO) — faite — puis Phase 12**, dont le [runbook](superpowers/specs/2026-10-11-phase12-deploiement-readiness.md) est prêt et qui attend un compte npm et un hébergement.
 
 **État au 11/10/2026 : les trois manques ci-dessus sont traités — voir « Phase 10 fermée » sur la même page.**
 
@@ -734,8 +739,10 @@ Les trois manques sont traités.
 
 ### Gate M6 — `verification-before-completion`
 - [ ] Quickstart suivi de zéro par une personne extérieure → projet généré en < 10 min
-- [ ] Chaque commande du §21 documentée
+- [x] Chaque commande du §21 documentée
 - [ ] `seo-audit` sans erreur bloquante, `llms.txt` publié
+
+L'état réel est détaillé dans le second bloc « Gate M6 » de cette page (§11) : deux cases sont fermées, la troisième attend un site.
 
 ## État au 11/10/2026 — Phase 11 : le contenu est écrit, le site attend un hébergement
 
@@ -746,9 +753,9 @@ Tout ce que le guide affirme est vérifiable : chaque commande du quickstart a �
 Le guide a trouvé trois dérives dans la documentation existante, corrigées : « 282 fiches » (il y en a **283**), « commençant par une lettre » dans `pf create` (le motif accepte les chiffres, les points et les soulignés), et `pf share` encore annoncé « à venir » alors que la Phase 9 l'a livré.
 
 ### Gate M6 — `verification-before-completion`
-- [ ] Quickstart suivi de zéro par une personne extérieure → projet généré en < 10 min — le quickstart est écrit et chaque commande a été jouée, mais **personne d'extérieur ne l'a encore suivi** : le gate demande une personne, pas une relecture.
-- [x] Chaque commande du §21 documentée — `guide/commandes.md`, y compris celles qui répondent « à venir ».
-- [ ] `seo-audit` sans erreur bloquante, `llms.txt` publié — `llms.txt` est écrit et versionné, mais **pas publié** : il n'y a pas encore de site (Phase 12).
+- [ ] Quickstart suivi de zéro par une personne extérieure → projet généré en < 10 min — le guide est écrit, chaque commande a été jouée, le chrono a été mesuré (98,6 s jusqu'au projet généré **et installé**, store pnpm chaud), mais **personne d'extérieur ne l'a encore suivi** : le gate demande une personne, pas une relecture. Ce qui reste à faire est d'une seule ligne : faire lire [le quickstart](guide/quickstart.md) à quelqu'un qui n'a jamais vu le produit et chronométrer.
+- [x] Chaque commande du §21 documentée — `guide/commandes.md`, y compris celles qui répondent « à venir » ; `pf doctor`, livré en Phase 10, y est documenté aussi.
+- [ ] `seo-audit` sans erreur bloquante, `llms.txt` publié — l'audit est fait et `robots.ts`, `sitemap.ts`, `llms.txt` sont prêts et vérifiés localement, mais **pas publiés** : il n'y a pas encore de site (Phase 12).
 
 ---
 

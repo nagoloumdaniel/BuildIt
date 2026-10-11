@@ -4,7 +4,6 @@ import {
   type ManifestIssueCode,
   type ParseResult,
   parseManifest,
-  type Target,
 } from '@project-factory/manifest';
 import {
   loadCatalogue,
@@ -13,6 +12,7 @@ import {
   slotFor,
 } from '@project-factory/registry';
 import type { DraftState } from './draft';
+import { APP_TARGET, type AppKey } from './targets';
 
 /**
  * Brouillon → Project Manifest (§9, §10).
@@ -38,16 +38,7 @@ import type { DraftState } from './draft';
  * catégories viennent du catalogue, et cette table ne dit que des rôles.
  */
 
-type AppKey = 'frontend' | 'mobile' | 'desktop' | 'backend';
 type AppField = 'framework' | 'language' | 'styling' | 'ui';
-
-/** Les applications qu'une cible implique, et le champ du manifest qui les décrit. */
-const APP_TARGET: Readonly<Record<AppKey, Target>> = {
-  frontend: 'web',
-  mobile: 'mobile',
-  desktop: 'desktop',
-  backend: 'api',
-};
 
 /** Les champs que chaque application accepte — le schéma du §10, ni plus ni moins. */
 const APP_FIELDS: Readonly<Record<AppKey, readonly AppField[]>> = {

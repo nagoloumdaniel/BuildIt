@@ -22,6 +22,15 @@
 | [Roadmap](roadmap.md) | Phases 0 → beta publique, avec leurs gates |
 | [Spécifications et plans](superpowers/) | Les specs et plans d'exécution, phase par phase |
 
+## Revue et preuves
+
+| Document | Contenu |
+|---|---|
+| [Validation humaine](superpowers/specs/2026-10-11-validation-humaine-entretiens.md) | Entretiens développeurs et gate 8A : ce qui est validé, ce qui n'est pas archivé |
+| [Revue de code, Phase 10](superpowers/specs/2026-10-11-phase10-code-review.md) | Le diff cumulé passé au niveau `high` : findings classés, sondes, ce qui est sain |
+| [Revue de sécurité, Phases 8-9](superpowers/specs/2026-10-11-phase8-security-review.md) | Le §24 point par point |
+| [Runbook Phase 12](superpowers/specs/2026-10-11-phase12-deploiement-readiness.md) | Publier le CLI, déployer le web, observabilité, critères de rollback |
+
 ## Contribuer
 
 | Document | Contenu |

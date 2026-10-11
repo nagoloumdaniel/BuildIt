@@ -1,4 +1,12 @@
-import { clearDraft, type DraftState, freshDraft, loadDraft, saveDraft } from './draft';
+import {
+  clearDraft,
+  type DraftState,
+  freshDraft,
+  loadDraft,
+  restorePersistedDraft,
+  samePersistedDraft,
+  saveDraft,
+} from './draft';
 
 /**
  * L'état du parcours, en mémoire pour l'écran et **persisté à chaque
@@ -29,13 +37,23 @@ export interface SessionStore {
    * doit produire le même HTML que le serveur, sinon React signale une
    * divergence d'hydratation. Le provider branche donc le stockage dans un
    * effet, une fois l'hydratation terminée.
+   *
+   * Relire un brouillon **identique** à l'état courant n'est pas un
+   * changement : `attach` ne notifie pas les abonnés dans ce cas, sans quoi
+   * les écrans rejouent leurs effets pour la même valeur — c'est ce qui
+   * chargeait le catalogue du Stack Builder deux fois par visite (§8bis).
+   * Un brouillon relu différent, lui, est annoncé : c'est la reprise.
    */
   attach(storage: Storage | null): DraftState;
 }
 
 export function createSessionStore(storage: Storage | null, initial?: DraftState): SessionStore {
   let current = storage;
-  let state = initial ?? loadDraft(current);
+  // L'état de départ : c'est lui qui dit, au branchement du stockage, ce que
+  // l'application a changé **en mémoire** entre-temps (`StepShell` écrit
+  // l'étape de l'URL avant que le provider ne branche `localStorage`).
+  const baseline = initial ?? loadDraft(current);
+  let state = baseline;
   const listeners = new Set<() => void>();
 
   function commit(next: DraftState): DraftState {
@@ -65,7 +83,11 @@ export function createSessionStore(storage: Storage | null, initial?: DraftState
     },
     attach(nextStorage) {
       current = nextStorage;
-      return commit(loadDraft(current));
+      const restored = restorePersistedDraft(loadDraft(current), state, baseline);
+      // Un brouillon relu identique n'est pas un changement : le notifier ferait
+      // rejouer les effets des écrans pour les mêmes valeurs — c'est ce qui
+      // chargeait le catalogue du Stack Builder deux fois par visite (§8bis).
+      return samePersistedDraft(restored, state) ? state : commit(restored);
     },
   };
 }

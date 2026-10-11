@@ -70,6 +70,26 @@ describe('canAdvance — bloquants du §6', () => {
     expect(canAdvance({ ...freshDraft(), step: 'target', targets: ['web'] })).toBe(true);
   });
 
+  it('target : une cible sans framework au catalogue est refusée avec sa raison', () => {
+    // Le refus existait déjà, mais trois écrans plus loin et sous la forme d'un
+    // champ de manifest absent (« mobile.framework »). Ici, il est nommé à
+    // l'endroit du choix, et il dit pourquoi (test négatif, §7.9, §7.10).
+    for (const target of ['mobile', 'desktop']) {
+      const draft = { ...freshDraft(), step: 'target' as const, targets: [target] };
+      const reason = blockedReason(draft);
+      expect(canAdvance(draft), `${target} ne devrait pas être franchissable`).toBe(false);
+      expect(reason, `${target} devrait être refusée en la nommant`).toContain(target);
+      expect(reason).toContain('framework');
+    }
+  });
+
+  it('target : les cibles que le catalogue honore passent', () => {
+    for (const target of ['web', 'api', 'library']) {
+      const draft = { ...freshDraft(), step: 'target' as const, targets: [target] };
+      expect(canAdvance(draft), `${target} devrait passer`).toBe(true);
+    }
+  });
+
   it('stack : la résolution doit exister et ne porter aucun problème', () => {
     const base = { ...freshDraft(), name: 'ok', targets: ['web'], step: 'stack' as const };
     expect(canAdvance(base)).toBe(false);

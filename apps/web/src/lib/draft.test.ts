@@ -1,5 +1,13 @@
 import { describe, expect, it } from 'vitest';
-import { clearDraft, DRAFT_VERSION, freshDraft, loadDraft, saveDraft } from './draft';
+import {
+  clearDraft,
+  DRAFT_VERSION,
+  freshDraft,
+  loadDraft,
+  restorePersistedDraft,
+  samePersistedDraft,
+  saveDraft,
+} from './draft';
 
 /** Un `Storage` en mémoire : le navigateur n'est pas disponible sous Vitest. */
 function fakeStorage(values: Record<string, string> = {}) {
@@ -135,6 +143,97 @@ describe('§6.8 — aucune valeur sensible dans le brouillon', () => {
       'technologies',
       'version',
     ]);
+  });
+});
+
+describe('samePersistedDraft — ce qui part dans localStorage, et rien d’autre', () => {
+  it('vrai pour deux brouillons frais distincts', () => {
+    expect(samePersistedDraft(freshDraft(), freshDraft())).toBe(true);
+  });
+
+  it('faux dès qu’un champ persisté diffère', () => {
+    expect(samePersistedDraft(freshDraft(), { ...freshDraft(), name: 'x' })).toBe(false);
+    expect(samePersistedDraft(freshDraft(), { ...freshDraft(), targets: ['web'] })).toBe(false);
+    expect(samePersistedDraft(freshDraft(), { ...freshDraft(), mode: 'expert' })).toBe(false);
+    expect(
+      samePersistedDraft(freshDraft(), { ...freshDraft(), infra: { docker: true, ci: false } }),
+    ).toBe(false);
+    expect(samePersistedDraft(freshDraft(), { ...freshDraft(), step: 'stack' })).toBe(false);
+  });
+
+  it('ignore resolution, qui n’est jamais persistée', () => {
+    const avecResolution = {
+      ...freshDraft(),
+      resolution: { status: 'certified' as const, issues: ['un point à corriger'] },
+    };
+    expect(samePersistedDraft(freshDraft(), avecResolution)).toBe(true);
+  });
+
+  it('compare l’ordre des tableaux : strict, donc jamais un faux « identique »', () => {
+    const a = { ...freshDraft(), targets: ['web', 'mobile'] };
+    const b = { ...freshDraft(), targets: ['mobile', 'web'] };
+    expect(samePersistedDraft(a, b)).toBe(false);
+  });
+
+  it('vrai pour un brouillon relu depuis le stockage, sans la résolution', () => {
+    const storage = fakeStorage() as unknown as Storage;
+    const draft = { ...freshDraft(), name: 'mon-projet', targets: ['web'] };
+    saveDraft(storage, draft);
+    expect(samePersistedDraft(loadDraft(storage), draft)).toBe(true);
+  });
+});
+
+describe('restorePersistedDraft — le stockage relu, sans défaire la mémoire', () => {
+  it('ce qui a changé en mémoire depuis la création du store gagne', () => {
+    const baseline = freshDraft();
+    const current = { ...baseline, step: 'stack' as const };
+    const restored = restorePersistedDraft({ ...baseline, step: 'blueprint' }, current, baseline);
+    expect(restored.step).toBe('stack');
+  });
+
+  it('les champs que la mémoire n’a pas touchés viennent du stockage', () => {
+    const baseline = freshDraft();
+    const stored = { ...baseline, name: 'repris', targets: ['web'] };
+    const restored = restorePersistedDraft(stored, baseline, baseline);
+    expect(restored.name).toBe('repris');
+    expect(restored.targets).toEqual(['web']);
+  });
+
+  it('un tableau de même valeur garde sa référence : c’est ce que lit useMemo', () => {
+    const baseline = freshDraft();
+    const current = { ...baseline, step: 'stack' as const };
+    const restored = restorePersistedDraft({ ...baseline }, current, baseline);
+    expect(restored.targets).toBe(current.targets);
+    expect(restored.technologies).toBe(current.technologies);
+    expect(restored.step).toBe('stack');
+  });
+
+  it('un tableau de valeur différente vient du stockage', () => {
+    const baseline = freshDraft();
+    const restored = restorePersistedDraft(
+      { ...baseline, technologies: ['next'] },
+      baseline,
+      baseline,
+    );
+    expect(restored.technologies).toEqual(['next']);
+    expect(restored.technologies).not.toBe(baseline.technologies);
+  });
+
+  it('un tableau changé en mémoire n’est pas écrasé par le stockage', () => {
+    const baseline = freshDraft();
+    const current = { ...baseline, targets: ['mobile'] };
+    const restored = restorePersistedDraft({ ...baseline, targets: ['web'] }, current, baseline);
+    expect(restored.targets).toBe(current.targets);
+  });
+
+  it('la résolution n’est pas restaurée : elle n’est jamais persistée', () => {
+    const baseline = freshDraft();
+    const restored = restorePersistedDraft(
+      { ...baseline, resolution: { status: 'certified', issues: ['x'] } },
+      baseline,
+      baseline,
+    );
+    expect(restored.resolution).toBeUndefined();
   });
 });
 

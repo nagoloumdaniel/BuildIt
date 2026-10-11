@@ -96,6 +96,94 @@ describe('createSessionStore', () => {
     session.attach(fakeStorage() as unknown as Storage);
     expect(session.get()).toEqual(freshDraft());
   });
+
+  it('attach à un brouillon identique ne notifie pas : rien n’a changé', () => {
+    // Le cas mesuré du §8bis : le premier rendu part sans stockage (donc d'un
+    // brouillon frais), le `localStorage` est branché, et le brouillon relu est
+    // le même. Notifier ferait rejouer l'effet qui charge le catalogue — deux
+    // chargements identiques par visite.
+    const session = createSessionStore(null);
+    const avant = session.get();
+    let notifie = 0;
+    session.subscribe(() => {
+      notifie += 1;
+    });
+    session.attach(fakeStorage() as unknown as Storage);
+    expect(notifie).toBe(0);
+    expect(session.get()).toBe(avant);
+  });
+
+  it('attach annonce un changement réel, même sur un champ qu’un écran ne lit pas', () => {
+    // Le garde-fou inverse : ne pas notifier serait un bug si le brouillon relu
+    // différait — la reprise du brouillon repose sur cette notification.
+    const storage = fakeStorage();
+    storage.setItem('pf-draft', JSON.stringify({ ...freshDraft(), mode: 'expert' }));
+    const session = createSessionStore(null);
+    let notifie = 0;
+    session.subscribe(() => {
+      notifie += 1;
+    });
+    session.attach(storage as unknown as Storage);
+    expect(notifie).toBe(1);
+    expect(session.get().mode).toBe('expert');
+  });
+
+  it('attach compare ce qui est persisté : la résolution en mémoire ne compte pas', () => {
+    // `resolution` est recalculée par le moteur et jamais persistée : sa
+    // présence ne doit pas faire passer pour différent un brouillon relu
+    // identique, sinon le doublon revient après chaque résolution.
+    const session = createSessionStore(null);
+    session.update((draft) => ({
+      ...draft,
+      resolution: { status: 'certified', issues: [] },
+    }));
+    let notifie = 0;
+    session.subscribe(() => {
+      notifie += 1;
+    });
+    session.attach(fakeStorage() as unknown as Storage);
+    expect(notifie).toBe(0);
+  });
+
+  it('attach ne défait pas l’étape écrite en mémoire avant le branchement', () => {
+    // Le vrai cas du §8bis : `StepShell` écrit l'étape de l'URL dans un effet,
+    // et les effets des enfants passent avant celui du provider qui branche le
+    // stockage. Le brouillon persisté porte l'étape **quittée** : le relire ne
+    // doit ni la ramener en arrière, ni faire rejouer les effets de l'écran.
+    const storage = fakeStorage();
+    storage.setItem('pf-draft', JSON.stringify({ ...freshDraft(), step: 'blueprint' }));
+    const session = createSessionStore(null);
+    session.update((draft) => ({ ...draft, step: 'stack' }));
+    const avant = session.get();
+    let notifie = 0;
+    session.subscribe(() => {
+      notifie += 1;
+    });
+    session.attach(storage as unknown as Storage);
+    expect(session.get().step).toBe('stack');
+    expect(notifie).toBe(0);
+    expect(session.get()).toBe(avant);
+  });
+
+  it('attach garde la référence des tableaux dont la valeur ne change pas', () => {
+    // La reprise est réelle (le nom diffère), mais `targets` a la même valeur :
+    // il doit garder sa référence, sinon la sélection mémoïsée de l'écran
+    // change d'identité et le catalogue est rechargé pour rien.
+    const storage = fakeStorage();
+    storage.setItem('pf-draft', JSON.stringify({ ...freshDraft(), name: 'repris' }));
+    const session = createSessionStore(null);
+    session.update((draft) => ({ ...draft, step: 'stack' }));
+    const avant = session.get();
+    let notifie = 0;
+    session.subscribe(() => {
+      notifie += 1;
+    });
+    session.attach(storage as unknown as Storage);
+    expect(notifie).toBe(1);
+    expect(session.get().name).toBe('repris');
+    expect(session.get().step).toBe('stack');
+    expect(session.get().targets).toBe(avant.targets);
+  });
 });
 
 describe('toggle', () => {

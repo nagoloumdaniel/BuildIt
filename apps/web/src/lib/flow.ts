@@ -1,5 +1,6 @@
 import { PROJECT_NAME_PATTERN } from '@project-factory/manifest';
 import type { DraftState } from './draft';
+import { offeredTargets, refusedTargets } from './targets';
 
 /**
  * La machine à états du parcours (§3) — les 14 écrans moins le menu d'accueil
@@ -62,9 +63,24 @@ export function blockedReason(draft: DraftState): string | undefined {
       return PROJECT_NAME_PATTERN.test(draft.name)
         ? undefined
         : 'Choisissez un nom : minuscules, chiffres, points, tirets ou soulignés.';
-    case 'target':
-      // §6.3 : au moins une cible.
-      return draft.targets.length > 0 ? undefined : 'Choisissez au moins une plateforme.';
+    case 'target': {
+      // §6.3 : au moins une cible. Puis §7.9, §7.10 : une cible sans framework
+      // au catalogue ne peut pas produire de manifest (§10) — le refus est dit
+      // ici, avec sa raison, plutôt que découvert trois écrans plus loin sur un
+      // champ absent. Un brouillon hérité ou un lien de partage peut encore la
+      // porter : l'écran Target, lui, ne la propose plus.
+      if (draft.targets.length === 0) {
+        return 'Choisissez au moins une plateforme.';
+      }
+      const refused = refusedTargets(draft.targets);
+      if (refused.length === 0) {
+        return undefined;
+      }
+      const plural = refused.length > 1;
+      return `Le catalogue n’offre aucun framework pour ${refused.join(', ')} : ${
+        plural ? 'ces plateformes ne peuvent' : 'cette plateforme ne peut'
+      } pas produire de manifest (§10). Plateformes proposées : ${offeredTargets().join(', ')}.`;
+    }
     case 'stack':
       if (draft.resolution === undefined) {
         return 'La compatibilité de la sélection n’a pas encore été vérifiée.';

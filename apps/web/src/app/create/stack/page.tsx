@@ -1,11 +1,12 @@
 'use client';
 
-import { CATEGORIES, type Category } from '@project-factory/registry';
+import type { Category } from '@project-factory/registry';
 import { useEffect, useMemo, useState } from 'react';
 import { useDraft, useSession } from '../../../components/wizard/draft-provider';
 import { StepShell } from '../../../components/wizard/shell';
 import { toggle } from '../../../lib/session';
-import { checkSelectionAction, loadOptionsAction } from '../../actions';
+import { checkSelectionAction } from '../../actions';
+import { loadStackBlocksAction } from './actions';
 import { CategoryNav, ExpertToolbar, OptionButton } from './stack-options';
 import {
   type CategoryBlock,
@@ -23,8 +24,8 @@ import {
  *
  * Le chemin est celui de tous les écrans : le composant client ne connaît que
  * `actions.ts`, jamais l'adaptateur moteur (`lib/engine.ts` porte `server-only`).
- * Les options viennent de `loadOptionsAction`, une catégorie à la fois, et le
- * moteur reste seul juge de ce qui va ensemble.
+ * Les options viennent de `loadStackBlocksAction`, un **seul** aller-retour pour
+ * les 37 catégories (§8bis), et le moteur reste seul juge de ce qui va ensemble.
  *
  * Deux effets, deux responsabilités :
  *
@@ -79,17 +80,15 @@ export default function StackPage() {
   useEffect(() => {
     let alive = true;
     setLoading(true);
-    void Promise.all(
-      CATEGORIES.map(async (category) => ({
-        category,
-        options: await loadOptionsAction(category, selection),
-      })),
-    ).then((loaded) => {
+    // Un seul aller-retour pour tout le catalogue. Le chargement par catégorie
+    // (37 Server Actions) exécutait les mêmes appels côté serveur, mais en
+    // payant 36 allers-retours de plus — mesuré à ~325 ms sur le build de
+    // production (rapport 8bis).
+    void loadStackBlocksAction(selection).then((loaded) => {
       if (!alive) {
         return;
       }
-      // Une catégorie sans fiche ne s'affiche pas : elle ne serait qu'un cul-de-sac.
-      setBlocks(loaded.filter((block) => block.options.length > 0));
+      setBlocks(loaded);
       setLoading(false);
     });
     return () => {

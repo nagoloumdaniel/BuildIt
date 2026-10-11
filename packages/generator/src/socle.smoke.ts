@@ -5,6 +5,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import type { Manifest } from '@project-factory/manifest';
 import { afterAll, describe, expect, it } from 'vitest';
+import { resolveCommand } from './command-path.js';
 import { CI_SCRIPTS } from './infrastructure.js';
 import { generateProject, PIPELINE_STEPS } from './pipeline.js';
 
@@ -177,6 +178,16 @@ function dockerAvailable(): boolean {
 const DOCKER = dockerAvailable();
 const composed: string[] = [];
 
+/**
+ * Comment lancer une commande du projet généré, **sous Windows comprise**.
+ *
+ * `spawn('pnpm', …)` et `execFileSync('pnpm', …)` échouaient en `ENOENT` sous
+ * Windows : `pnpm` y est un `pnpm.cmd`, et Node refuse de lancer un `.cmd` sans
+ * shell (CVE-2024-27980). C'est la résolution synchrone du produit
+ * (`@project-factory/generator`, `command-path.ts`) qui est utilisée ici et
+ * **tenue par un test** (`command-path.test.ts`) : c'est la sonde qui manquait
+ * quand ce fichier échouait sur cette plateforme sans que rien ne le dise.
+ */
 function run(
   command: string,
   args: string[],
@@ -184,8 +195,9 @@ function run(
   env: NodeJS.ProcessEnv = {},
   input?: string,
 ): string {
+  const resolved = resolveCommand(command);
   try {
-    return execFileSync(command, args, {
+    return execFileSync(resolved.file, [...resolved.prefix, ...args], {
       cwd,
       stdio: 'pipe',
       ...(input === undefined ? {} : { input }),
@@ -297,7 +309,8 @@ async function withRunningApp(
   if (occupied) {
     throw new Error(`Le port ${port} répond déjà : impossible de tester ${target}.`);
   }
-  const server = spawn('pnpm', ['start'], {
+  const start = resolveCommand('pnpm');
+  const server = spawn(start.file, [...start.prefix, 'start'], {
     cwd: target,
     stdio: 'ignore',
     detached: true,

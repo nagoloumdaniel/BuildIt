@@ -172,6 +172,84 @@ function toPersisted(draft: DraftState): PersistedDraft {
   };
 }
 
+/**
+ * Vrai si les deux brouillons se **persisteraient à l'identique**.
+ *
+ * C'est la question que pose `SessionStore.attach` : brancher `localStorage`
+ * après l'hydratation relit un brouillon, et si c'est celui qu'on avait déjà,
+ * l'annoncer comme un changement fait rejouer les effets des écrans pour rien
+ * (mesuré : le Stack Builder chargeait son catalogue deux fois par visite,
+ * §8bis). La comparaison passe par la forme **persistée** : un champ ajouté à
+ * `toPersisted` est donc comparé sans qu'on y pense, et `resolution` — jamais
+ * persistée, recalculée par le moteur — ne compte pas.
+ *
+ * Elle est volontairement stricte sur l'ordre des tableaux : notifier un
+ * changement qui n'en est pas un coûte un rendu, ne pas notifier un vrai
+ * changement coûterait la reprise du brouillon.
+ */
+export function samePersistedDraft(a: DraftState, b: DraftState): boolean {
+  return JSON.stringify(toPersisted(a)) === JSON.stringify(toPersisted(b));
+}
+
+/** Deux listes de chaînes, même ordre, mêmes valeurs. */
+function sameList(a: readonly string[], b: readonly string[]): boolean {
+  return a.length === b.length && a.every((value, index) => value === b[index]);
+}
+
+/** La valeur lue du stockage, sauf si la mémoire l'a changée depuis la création du store. */
+function keep<T>(stored: T, current: T, baseline: T): T {
+  return Object.is(current, baseline) ? stored : current;
+}
+
+/**
+ * La liste qui gagne, mais la **référence** courante quand la valeur ne change
+ * pas : c'est elle que `React.useMemo` compare.
+ */
+function keepList(stored: string[], current: string[], baseline: string[]): string[] {
+  const winner = sameList(current, baseline) ? stored : current;
+  return sameList(winner, current) ? current : winner;
+}
+
+/**
+ * Le brouillon **relu du stockage**, recouvert par ce que l'application a
+ * changé en mémoire depuis la création du store.
+ *
+ * `attach` branche le stockage dans un effet du provider, donc **après** les
+ * effets des écrans, qui sont ses enfants — et `StepShell` y écrit l'étape de
+ * l'URL courante. Le brouillon persisté est plus ancien que cette écriture :
+ * le relire ne doit pas la défaire (sans quoi le brouillon retient l'étape
+ * quittée, et la reprise du §3 repart du mauvais écran).
+ *
+ * Deuxième règle, discrète mais c'est elle qui coûtait cher : un tableau dont
+ * la valeur ne change pas **garde sa référence**. Sans cela, `targets` et
+ * `technologies` sont neufs à chaque branchement, la sélection mémoïsée de
+ * l'écran change d'identité, et l'écran recharge son catalogue pour des valeurs
+ * identiques — mesuré deux fois par visite sur le Stack Builder (§8bis).
+ */
+export function restorePersistedDraft(
+  stored: DraftState,
+  current: DraftState,
+  baseline: DraftState,
+): DraftState {
+  const type = keep(stored.type, current.type, baseline.type);
+  const architecture = keep(stored.architecture, current.architecture, baseline.architecture);
+  return {
+    version: stored.version,
+    step: keep(stored.step, current.step, baseline.step),
+    mode: keep(stored.mode, current.mode, baseline.mode),
+    name: keep(stored.name, current.name, baseline.name),
+    targets: keepList(stored.targets, current.targets, baseline.targets),
+    ...(type === undefined ? {} : { type }),
+    ...(architecture === undefined ? {} : { architecture }),
+    technologies: keepList(stored.technologies, current.technologies, baseline.technologies),
+    capabilities: keepList(stored.capabilities, current.capabilities, baseline.capabilities),
+    envVarNames: keepList(stored.envVarNames, current.envVarNames, baseline.envVarNames),
+    infra: keep(stored.infra, current.infra, baseline.infra),
+    // `resolution` n'est jamais persistée : le brouillon relu ne la porte pas,
+    // et un écran la recalcule de toute façon.
+  };
+}
+
 export function saveDraft(storage: Storage | null, draft: DraftState): void {
   storage?.setItem(DRAFT_STORAGE_KEY, JSON.stringify(toPersisted(draft)));
 }

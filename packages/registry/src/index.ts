@@ -30,3 +30,5 @@ export {
 } from './schema/entry.js';
 export type { AppField, Slot } from './slots.js';
 export { SLOTS, slotFor } from './slots.js';
+export type { TargetCoverage } from './targets.js';
+export { FRAMEWORK_CATEGORIES, targetCoverage, targetsWithoutFramework } from './targets.js';
