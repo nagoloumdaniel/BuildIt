@@ -1,4 +1,5 @@
 import { type NextRequest, NextResponse } from 'next/server';
+import { isAllowedHost } from './lib/hosting';
 
 /**
  * Le configurateur ne répond qu'à ses propres adresses.
@@ -13,20 +14,19 @@ import { type NextRequest, NextResponse } from 'next/server';
  * Refuser tout `Host` qui n'est pas une adresse de boucle locale ferme cette
  * porte : le nom de domaine de l'attaquant ne sera jamais celui sous lequel le
  * serveur accepte de répondre.
+ *
+ * Phase 12 — hébergement multi-visiteurs : sur Vercel (`VERCEL=1`), le `Host`
+ * n'est jamais `127.0.0.1` pour un visiteur légitime non plus. `lib/hosting.ts`
+ * porte la liste des hôtes autorisés et bascule selon l'environnement ; ce
+ * fichier ne fait plus que l'interroger, pour que le comportement local
+ * (§8B.6) reste figé et testé indépendamment de l'hébergement.
  */
-const LOCAL_HOSTS = new Set(['127.0.0.1', 'localhost', '::1', '[::1]']);
-
-/** Le nom d'hôte sans son port, en minuscules. */
-function hostName(raw: string | null): string {
-  return (raw ?? '').replace(/:\d+$/, '').toLowerCase();
-}
-
 export function middleware(request: NextRequest): NextResponse {
-  if (LOCAL_HOSTS.has(hostName(request.headers.get('host')))) {
+  if (isAllowedHost(request.headers.get('host'))) {
     return NextResponse.next();
   }
   return new NextResponse(
-    'Hôte non autorisé : le configurateur de BuildIt ne répond qu’en local (127.0.0.1).',
+    'Hôte non autorisé : le configurateur de BuildIt ne répond pas à cette adresse.',
     { status: 403, headers: { 'content-type': 'text/plain; charset=utf-8' } },
   );
 }

@@ -1,6 +1,8 @@
 'use server';
 
 import { type CommandRunner, nodeCommandRunner } from '@buildit/exec';
+import { isHostedEnvironment } from '../lib/hosting';
+import { cookieTokenStore } from '../lib/session-cookie';
 import {
   type ClonePreviewView,
   type CloneResultView,
@@ -72,11 +74,23 @@ function inputRecord(input: unknown): Record<string, unknown> {
     : {};
 }
 
-/** Les dépendances réelles : `fetch`, trousseau et identifiant d'application OAuth. */
+/**
+ * Les dépendances réelles : `fetch`, trousseau et identifiant d'application OAuth.
+ *
+ * Phase 12 : en mode hébergé (`VERCEL=1` ou `PF_HOSTED=1`), le jeton ne va
+ * jamais au trousseau du système ni à `PF_GITHUB_TOKEN` — ce serait un jeton
+ * partagé entre tous les visiteurs du déploiement (§2 de la tâche Phase 12).
+ * Il vit dans un cookie scellé, unique par visiteur (`lib/session-cookie.ts`).
+ * En local, rien ne change : `tokenStoreFor` garde le comportement de
+ * `pf web` tel qu'avant cette phase.
+ */
 function sessionDeps(): SessionDeps {
+  const store = isHostedEnvironment()
+    ? cookieTokenStore(process.env['SESSION_SECRET'] ?? '')
+    : tokenStoreFor(process.env, nodeCommandRunner);
   return {
     fetch: (input, init) => globalThis.fetch(input, init),
-    store: tokenStoreFor(process.env, nodeCommandRunner),
+    store,
     clientId: process.env['PF_GITHUB_CLIENT_ID'] ?? '',
   };
 }

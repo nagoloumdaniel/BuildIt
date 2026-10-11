@@ -4,6 +4,12 @@
   "type": "module",
   "license": "MIT",
   "description": "pf — le CLI de BuildIt : décrire un projet, obtenir un projet prêt à développer.",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/nagoloumdaniel/BuildIt",
+    "directory": "apps/cli"
+  },
+  "homepage": "https://github.com/nagoloumdaniel/BuildIt",
   "bin": {
     "pf": "./bin/pf.js"
   },

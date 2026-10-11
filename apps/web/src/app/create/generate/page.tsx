@@ -10,6 +10,24 @@ import { browserSessionStorage, saveReport } from '../report/result';
 import { PipelineProgress } from './PipelineProgress';
 import { formatBytes, GENERATION_STEPS, progressStates, targetDirectory } from './steps';
 
+/** Déclenche le téléchargement de l'archive (mode hébergé, Phase 12). */
+function downloadZip(zipBase64: string, projectName: string): void {
+  const binary = atob(zipBase64);
+  const bytes = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i += 1) {
+    bytes[i] = binary.charCodeAt(i);
+  }
+  const blob = new Blob([bytes], { type: 'application/zip' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = `${projectName}.zip`;
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  URL.revokeObjectURL(url);
+}
+
 /**
  * Generation Progress (§6.13).
  *
@@ -66,6 +84,12 @@ export default function GeneratePage() {
       // pouvoir dire le refus, pas seulement un succès.
       saveReport(browserSessionStorage(), result);
       setReport(result);
+      // Mode hébergé (Phase 12) : rien n'est écrit sur le serveur au-delà de
+      // la requête — le projet est proposé en téléchargement, ici, tout de
+      // suite, puisque l'archive ne sera plus disponible après ce rendu.
+      if (result.ok && result.zipBase64 !== undefined) {
+        downloadZip(result.zipBase64, manifest.value.name);
+      }
     } catch {
       setFatal('La génération n’a pas pu être lancée. Rien n’a été écrit — réessayez.');
     } finally {

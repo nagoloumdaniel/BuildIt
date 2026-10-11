@@ -1,11 +1,11 @@
 'use server';
 
-import { mkdir, stat } from 'node:fs/promises';
-import { homedir } from 'node:os';
+import { mkdir, mkdtemp, readFile, rm, stat } from 'node:fs/promises';
+import { homedir, tmpdir } from 'node:os';
 import { join, resolve, sep } from 'node:path';
 import type { Selection } from '@buildit/compatibility';
 import { generateProject } from '@buildit/generator';
-import { parseManifest } from '@buildit/manifest';
+import { type Manifest, parseManifest } from '@buildit/manifest';
 import type { Category } from '@buildit/registry';
 import {
   dependencyGraph,
@@ -21,6 +21,8 @@ import {
   resolveSelection,
   stackOptions,
 } from '../lib/engine';
+import { isHostedEnvironment } from '../lib/hosting';
+import { createZip } from '../lib/zip';
 
 /**
  * Les Server Actions : le **seul** chemin par lequel le navigateur parle au
@@ -101,6 +103,13 @@ export interface GenerationView {
   readonly steps: readonly string[];
   /** Les problèmes d'un refus : manifest invalide, dossier déjà pris. */
   readonly issues: readonly string[];
+  /**
+   * Présent seulement en mode hébergé (Phase 12, §3) : l'archive du projet,
+   * en base64, prête à être transformée en `Blob` et proposée au
+   * téléchargement. En mode local, ce champ est absent — le projet est
+   * écrit directement sur le disque de l'utilisateur, comme avant.
+   */
+  readonly zipBase64?: string;
 }
 
 /**
@@ -131,7 +140,57 @@ function refused(issues: readonly string[]): GenerationView {
 }
 
 /**
- * Génère le projet sur la machine qui sert l'UI (décision 8B.6).
+ * Génère le projet dans un répertoire temporaire **isolé par requête**
+ * (`fs.mkdtempSync` dans `os.tmpdir()`), produit une archive `.zip` du
+ * résultat, puis nettoie ce répertoire — jamais d'écriture dans un dossier
+ * partagé entre visiteurs (Phase 12, §3). C'est la contrepartie hébergée de
+ * `generateProjectAction` : un visiteur anonyme ne peut ni écrire sur le
+ * disque du serveur de façon persistante, ni y laisser quoi que ce soit après
+ * sa requête.
+ */
+async function generateHosted(manifest: Manifest): Promise<GenerationView> {
+  const tmpRoot = await mkdtemp(join(tmpdir(), 'buildit-hosted-'));
+  const directory = join(tmpRoot, manifest.name);
+  try {
+    const result = await generateProject(manifest, directory);
+    if (!result.ok) {
+      return {
+        ok: false,
+        directory: '',
+        files: [],
+        bytes: 0,
+        warnings: [],
+        steps: result.completedSteps,
+        issues: result.issues.map((issue) => issue.message),
+      };
+    }
+    const entries = await Promise.all(
+      result.value.report.written.map(async (file) => ({
+        path: file,
+        data: await readFile(join(directory, ...file.split('/'))),
+      })),
+    );
+    return {
+      ok: true,
+      // Pas de chemin disque à montrer : seul le nom de l'archive a un sens
+      // pour le visiteur, le répertoire temporaire aura disparu au retour.
+      directory: `${manifest.name}.zip`,
+      files: result.value.report.written,
+      bytes: result.value.report.bytes,
+      warnings: result.value.warnings.map((warning) => warning.message),
+      steps: result.value.completedSteps,
+      issues: [],
+      zipBase64: createZip(entries).toString('base64'),
+    };
+  } finally {
+    await rm(tmpRoot, { recursive: true, force: true });
+  }
+}
+
+/**
+ * Génère le projet sur la machine qui sert l'UI (décision 8B.6) — en local
+ * seulement. En mode hébergé (`VERCEL=1`/`PF_HOSTED=1`), voir `generateHosted` :
+ * aucune écriture partagée entre visiteurs anonymes (Phase 12, §3).
  *
  * `generateProject` n'installe rien et n'initialise rien par défaut : le
  * moteur ne lance aucune commande qu'on ne lui a pas demandée. Pas de réseau,
@@ -141,6 +200,10 @@ export async function generateProjectAction(input: unknown): Promise<GenerationV
   const manifest = parseManifest(input);
   if (!manifest.ok) {
     return refused(manifest.issues.map((issue) => issue.message));
+  }
+
+  if (isHostedEnvironment()) {
+    return generateHosted(manifest.value);
   }
 
   const root = workspaceRoot();

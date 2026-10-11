@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it } from 'vitest';
 import { middleware } from './middleware';
 
 /**
@@ -64,5 +64,41 @@ describe('middleware — un seul hôte : le local', () => {
     // une Server Action (`POST` avec en-tête `Next-Action`) passerait à côté.
     const { config } = await import('./middleware');
     expect(config.matcher).toBe('/:path*');
+  });
+});
+
+describe('middleware — mode hébergé (Phase 12)', () => {
+  const originalVercel = process.env['VERCEL'];
+  const originalSiteUrl = process.env['PF_SITE_URL'];
+
+  afterEach(() => {
+    if (originalVercel === undefined) {
+      delete process.env['VERCEL'];
+    } else {
+      process.env['VERCEL'] = originalVercel;
+    }
+    if (originalSiteUrl === undefined) {
+      delete process.env['PF_SITE_URL'];
+    } else {
+      process.env['PF_SITE_URL'] = originalSiteUrl;
+    }
+  });
+
+  it('refuse toujours un hôte d’attaquant, même avec VERCEL=1', () => {
+    process.env['VERCEL'] = '1';
+    process.env['PF_SITE_URL'] = 'https://trybuildit.vercel.app';
+    expect(middleware(host('attaquant.example')).status).toBe(403);
+  });
+
+  it('laisse passer le domaine de PF_SITE_URL quand VERCEL=1', () => {
+    process.env['VERCEL'] = '1';
+    process.env['PF_SITE_URL'] = 'https://trybuildit.vercel.app';
+    expect(middleware(host('trybuildit.vercel.app')).status).toBe(200);
+  });
+
+  it('n’élargit rien sans VERCEL=1, même si PF_SITE_URL est définie par erreur', () => {
+    process.env['PF_SITE_URL'] = 'https://trybuildit.vercel.app';
+    expect(middleware(host('trybuildit.vercel.app')).status).toBe(403);
+    expect(middleware(host('127.0.0.1')).status).toBe(200);
   });
 });

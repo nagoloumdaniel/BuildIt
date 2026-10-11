@@ -17,6 +17,7 @@ export const GITHUB_CODES = [
   'GITHUB_KEYCHAIN_UNAVAILABLE',
   'GITHUB_KEYCHAIN_FAILED',
   'GITHUB_TOKEN_FROM_ENV',
+  'GITHUB_SESSION_SECRET_MISSING',
 ] as const;
 
 export type GitHubCode = (typeof GITHUB_CODES)[number];
@@ -42,6 +43,8 @@ const MESSAGES: Readonly<Record<GitHubCode, string>> = {
   GITHUB_KEYCHAIN_FAILED: 'Le trousseau du système a refusé l’opération ({value}).',
   GITHUB_TOKEN_FROM_ENV:
     'Le jeton vient de la variable PF_GITHUB_TOKEN : BuildIt ne la modifie pas.',
+  GITHUB_SESSION_SECRET_MISSING:
+    'SESSION_SECRET n’est pas configurée sur ce déploiement : le jeton ne peut pas être scellé dans un cookie par visiteur, il n’a donc pas été enregistré.',
 };
 
 const messageFor = createMessageFormatter(MESSAGES);
