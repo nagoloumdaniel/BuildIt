@@ -18,5 +18,6 @@
   },
   "env": ["DATABASE_URL"],
   "recipes": ["migrate", "seed"],
+  "ecosystems": ["node"],
   "docs": "https://www.prisma.io"
 }

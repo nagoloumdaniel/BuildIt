@@ -13,5 +13,6 @@
   "packageRanges": {
     "turbo": ">=2.0.0"
   },
+  "conflictsWith": ["nx", "moon", "lerna"],
   "docs": "https://turborepo.com"
 }

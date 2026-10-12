@@ -14,5 +14,6 @@
     "kysely": "^0.28.0"
   },
   "env": ["DATABASE_URL"],
+  "ecosystems": ["node"],
   "docs": "https://kysely.dev"
 }

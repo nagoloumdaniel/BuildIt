@@ -7,5 +7,6 @@
   "generation": "declared",
   "license": "MIT",
   "lastReviewedAt": "2026-09-23",
+  "ecosystems": ["react", "preact", "vue", "svelte", "solid"],
   "docs": "https://commerce.nearform.com/open-source/urql"
 }

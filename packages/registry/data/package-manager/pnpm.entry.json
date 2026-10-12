@@ -8,5 +8,6 @@
   "license": "MIT",
   "lastReviewedAt": "2026-09-28",
   "versionRange": ">=10.0.0",
+  "conflictsWith": ["npm", "yarn", "bun"],
   "docs": "https://pnpm.io"
 }

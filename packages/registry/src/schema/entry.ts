@@ -51,6 +51,52 @@ export const CATEGORIES = [
 
 export type Category = (typeof CATEGORIES)[number];
 
+/**
+ * Les écosystèmes dans lesquels une technologie s'exécute.
+ *
+ * Deux dimensions, et une seule règle pour chacune
+ * (`checkEcosystems`, dans `@buildit/compatibility`) : deux technologies qui
+ * se déclarent dans la même dimension doivent partager au moins un
+ * écosystème.
+ *
+ * - **interface** : le moteur de composants. `vuetify` ne s'affiche que dans
+ *   Vue, `shadcn-ui` que dans React ; les marier compile peut-être, mais rien
+ *   ne s'affiche.
+ * - **exécution** : le langage du serveur. Prisma tourne sur Node, Django sur
+ *   Python ; aucune configuration ne les fait parler.
+ *
+ * Une fiche **sans** écosystème est agnostique (Tailwind, Bootstrap, Sentry) :
+ * elle ne contraint rien. C'est la valeur par défaut, et elle est voulue — on
+ * ne déclare un écosystème que lorsqu'il est une vraie limite.
+ */
+export const UI_ECOSYSTEMS = [
+  'react',
+  'vue',
+  'svelte',
+  'angular',
+  'solid',
+  'qwik',
+  'preact',
+  'html',
+] as const;
+
+export const RUNTIME_ECOSYSTEMS = [
+  'node',
+  'python',
+  'go',
+  'rust',
+  'php',
+  'ruby',
+  'jvm',
+  'dotnet',
+] as const;
+
+export type UiEcosystem = (typeof UI_ECOSYSTEMS)[number];
+export type RuntimeEcosystem = (typeof RUNTIME_ECOSYSTEMS)[number];
+export type Ecosystem = UiEcosystem | RuntimeEcosystem;
+
+export const ECOSYSTEMS: readonly Ecosystem[] = [...UI_ECOSYSTEMS, ...RUNTIME_ECOSYSTEMS];
+
 /** Cycle de vie d'une technologie (§7, politique de fraîcheur). */
 export const LIFECYCLE_STATUSES = ['stable', 'beta', 'deprecated'] as const;
 
@@ -111,6 +157,8 @@ export interface RegistryEntry {
   requires?: string[] | undefined;
   compatibleWith?: string[] | undefined;
   conflictsWith?: string[] | undefined;
+  /** Où la technologie s'exécute. Absent : agnostique, elle ne contraint rien. */
+  ecosystems?: Ecosystem[] | undefined;
   /** Paquets npm installés en dépendances de production. */
   packages?: string[] | undefined;
   /**
@@ -189,6 +237,13 @@ export const entrySchema: z.ZodType<RegistryEntry, unknown> = z
     requires: uniqueSlugs().optional(),
     compatibleWith: uniqueSlugs().optional(),
     conflictsWith: uniqueSlugs().optional(),
+    ecosystems: z
+      .array(z.enum([...UI_ECOSYSTEMS, ...RUNTIME_ECOSYSTEMS]))
+      .min(1)
+      .refine((values) => new Set(values).size === values.length, {
+        message: 'écosystème en double',
+      })
+      .optional(),
     packages: z.array(z.string().min(1)).optional(),
     devPackages: z.array(z.string().min(1)).optional(),
     packageRanges: z.record(z.string().min(1), z.string().min(1)).optional(),

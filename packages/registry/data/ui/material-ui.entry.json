@@ -15,5 +15,6 @@
     "@emotion/react": "^11.0.0",
     "@emotion/styled": "^11.0.0"
   },
+  "ecosystems": ["react"],
   "docs": "https://mui.com"
 }

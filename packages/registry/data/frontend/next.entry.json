@@ -20,5 +20,6 @@
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0"
   },
+  "ecosystems": ["react"],
   "docs": "https://nextjs.org"
 }

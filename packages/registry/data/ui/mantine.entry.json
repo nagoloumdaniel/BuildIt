@@ -14,5 +14,6 @@
     "@mantine/core": ">=7.0.0",
     "@mantine/hooks": ">=7.0.0"
   },
+  "ecosystems": ["react"],
   "docs": "https://mantine.dev"
 }

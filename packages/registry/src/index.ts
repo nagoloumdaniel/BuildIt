@@ -16,6 +16,7 @@ export type { Registry, RegistryQuery } from './load.js';
 export { loadRegistry } from './load.js';
 export type {
   Category,
+  Ecosystem,
   GenerationStatus,
   License,
   LifecycleStatus,
@@ -23,10 +24,13 @@ export type {
 } from './schema/entry.js';
 export {
   CATEGORIES,
+  ECOSYSTEMS,
   entrySchema,
   GENERATION_STATUSES,
   LICENSES,
   LIFECYCLE_STATUSES,
+  RUNTIME_ECOSYSTEMS,
+  UI_ECOSYSTEMS,
 } from './schema/entry.js';
 export type { AppField, Slot } from './slots.js';
 export { SLOTS, slotFor } from './slots.js';

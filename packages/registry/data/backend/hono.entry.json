@@ -20,5 +20,6 @@
     "@types/node": "^24.0.0"
   },
   "template": "backend/hono",
+  "ecosystems": ["node"],
   "docs": "https://hono.dev"
 }

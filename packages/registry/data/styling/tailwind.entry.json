@@ -14,5 +14,6 @@
   "packageRanges": {
     "tailwindcss": ">=4.0.0 <5.0.0"
   },
+  "conflictsWith": ["unocss"],
   "docs": "https://tailwindcss.com"
 }

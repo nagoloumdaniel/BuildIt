@@ -14,5 +14,6 @@
   "packageRanges": {
     "@tanstack/react-query": "^5.0.0"
   },
+  "ecosystems": ["react", "vue", "svelte", "solid", "angular", "preact"],
   "docs": "https://tanstack.com/query"
 }

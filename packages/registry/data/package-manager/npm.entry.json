@@ -7,5 +7,6 @@
   "generation": "declared",
   "license": "Artistic-2.0",
   "lastReviewedAt": "2026-09-23",
+  "conflictsWith": ["pnpm", "yarn", "bun"],
   "docs": "https://docs.npmjs.com"
 }
