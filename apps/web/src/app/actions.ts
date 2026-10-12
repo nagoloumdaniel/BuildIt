@@ -1,11 +1,11 @@
 'use server';
 
-import { mkdir, mkdtemp, readFile, rm, stat } from 'node:fs/promises';
-import { homedir, tmpdir } from 'node:os';
+import { mkdir, rm, stat } from 'node:fs/promises';
+import { homedir } from 'node:os';
 import { join, resolve, sep } from 'node:path';
 import type { Selection } from '@buildit/compatibility';
 import { generateProject } from '@buildit/generator';
-import { type Manifest, parseManifest } from '@buildit/manifest';
+import { parseManifest } from '@buildit/manifest';
 import type { Category } from '@buildit/registry';
 import { type DeleteRefusal, deletionTarget } from '../lib/delete-project';
 import {
@@ -23,7 +23,9 @@ import {
   stackOptions,
 } from '../lib/engine';
 import { isHostedEnvironment } from '../lib/hosting';
-import { createZip } from '../lib/zip';
+import { readRegistry, unregisterGenerated } from '../lib/output-registry';
+import { generateArchive } from './create/generate/archive';
+import { checkOutputDestination } from './create/generate/output-destination';
 
 /**
  * Les Server Actions : le **seul** chemin par lequel le navigateur parle au
@@ -105,10 +107,16 @@ export interface GenerationView {
   /** Les problèmes d'un refus : manifest invalide, dossier déjà pris. */
   readonly issues: readonly string[];
   /**
-   * Présent seulement en mode hébergé (Phase 12, §3) : l'archive du projet,
-   * en base64, prête à être transformée en `Blob` et proposée au
-   * téléchargement. En mode local, ce champ est absent — le projet est
-   * écrit directement sur le disque de l'utilisateur, comme avant.
+   * Les dépendances ont réellement été installées après l'écriture. Absent
+   * quand l'installation n'a pas été demandée : le rapport montre alors la
+   * commande à lancer, il ne prétend rien.
+   */
+  readonly installed?: boolean;
+  /**
+   * Présent seulement pour une sortie en archive (`generateZipAction`, et
+   * `generateProjectAction` en hébergé) : l'archive du projet, en base64,
+   * prête à être transformée en `Blob` et proposée au téléchargement. Absent
+   * quand le projet est écrit dans un dossier.
    */
   readonly zipBase64?: string;
 }
@@ -150,57 +158,10 @@ function refused(issues: readonly string[]): GenerationView {
 }
 
 /**
- * Génère le projet dans un répertoire temporaire **isolé par requête**
- * (`fs.mkdtempSync` dans `os.tmpdir()`), produit une archive `.zip` du
- * résultat, puis nettoie ce répertoire — jamais d'écriture dans un dossier
- * partagé entre visiteurs (Phase 12, §3). C'est la contrepartie hébergée de
- * `generateProjectAction` : un visiteur anonyme ne peut ni écrire sur le
- * disque du serveur de façon persistante, ni y laisser quoi que ce soit après
- * sa requête.
- */
-async function generateHosted(manifest: Manifest): Promise<GenerationView> {
-  const tmpRoot = await mkdtemp(join(tmpdir(), 'buildit-hosted-'));
-  const directory = join(tmpRoot, manifest.name);
-  try {
-    const result = await generateProject(manifest, directory);
-    if (!result.ok) {
-      return {
-        ok: false,
-        directory: '',
-        files: [],
-        bytes: 0,
-        warnings: [],
-        steps: result.completedSteps,
-        issues: result.issues.map((issue) => issue.message),
-      };
-    }
-    const entries = await Promise.all(
-      result.value.report.written.map(async (file) => ({
-        path: file,
-        data: await readFile(join(directory, ...file.split('/'))),
-      })),
-    );
-    return {
-      ok: true,
-      // Pas de chemin disque à montrer : seul le nom de l'archive a un sens
-      // pour le visiteur, le répertoire temporaire aura disparu au retour.
-      directory: `${manifest.name}.zip`,
-      files: result.value.report.written,
-      bytes: result.value.report.bytes,
-      warnings: result.value.warnings.map((warning) => warning.message),
-      steps: result.value.completedSteps,
-      issues: [],
-      zipBase64: createZip(entries).toString('base64'),
-    };
-  } finally {
-    await rm(tmpRoot, { recursive: true, force: true });
-  }
-}
-
-/**
  * Génère le projet sur la machine qui sert l'UI (décision 8B.6) — en local
- * seulement. En mode hébergé (`VERCEL=1`/`PF_HOSTED=1`), voir `generateHosted` :
- * aucune écriture partagée entre visiteurs anonymes (Phase 12, §3).
+ * seulement. En mode hébergé (`VERCEL=1`/`PF_HOSTED=1`), le projet part en
+ * archive (`generateArchive`) : aucune écriture partagée entre visiteurs
+ * anonymes (Phase 12, §3).
  *
  * `generateProject` n'installe rien et n'initialise rien par défaut : le
  * moteur ne lance aucune commande qu'on ne lui a pas demandée. Pas de réseau,
@@ -213,7 +174,7 @@ export async function generateProjectAction(input: unknown): Promise<GenerationV
   }
 
   if (isHostedEnvironment()) {
-    return generateHosted(manifest.value);
+    return generateArchive(manifest.value);
   }
 
   const root = workspaceRoot();
@@ -256,6 +217,48 @@ export async function workspaceRootAction(): Promise<string> {
   return workspaceRoot();
 }
 
+/**
+ * Le projet entier en archive `.zip`, dans les deux modes.
+ *
+ * Le projet est écrit dans un répertoire temporaire isolé, archivé, puis ce
+ * répertoire est supprimé : rien ne reste sur la machine qui sert l'UI, et le
+ * navigateur choisit où l'archive atterrit. C'est la même implémentation que
+ * la sortie hébergée de `generateProjectAction` (`generateArchive`).
+ */
+export async function generateZipAction(input: unknown): Promise<GenerationView> {
+  const manifest = parseManifest(input);
+  if (!manifest.ok) {
+    return refused(manifest.issues.map((issue) => issue.message));
+  }
+  return generateArchive(manifest.value);
+}
+
+export interface OutputDestinationView {
+  readonly ok: boolean;
+  /** Le dossier qui sera écrit, résolu par le serveur. Vide si le parent est refusé. */
+  readonly directory: string;
+  readonly issues: readonly string[];
+}
+
+/**
+ * Vérifie, **sans rien écrire**, le dossier où le projet atterrira : le parent
+ * choisi dans l'explorateur, plus le nom du projet.
+ *
+ * L'écran l'appelle dès le choix du dossier pour dire tout de suite qu'un
+ * dossier est inaccessible ou déjà occupé, plutôt qu'après le clic sur
+ * « Générer ». La route d'écriture refait la même vérification : le disque a
+ * pu changer entre les deux.
+ */
+export async function checkOutputDestinationAction(
+  parent: unknown,
+  name: unknown,
+): Promise<OutputDestinationView> {
+  const checked = await checkOutputDestination(parent, name, isHostedEnvironment());
+  return checked.ok
+    ? { ok: true, directory: checked.directory, issues: [] }
+    : { ok: false, directory: checked.directory, issues: checked.issues };
+}
+
 export interface DeleteProjectView {
   readonly ok: boolean;
   /** Le dossier réellement supprimé, pour que l'écran dise lequel. */
@@ -268,11 +271,11 @@ const DELETE_REFUSALS: Readonly<Record<DeleteRefusal, string>> = {
   hosted: 'Rien n’est écrit sur le disque en mode hébergé : il n’y a pas de dossier à supprimer.',
   empty: 'Aucun dossier n’a été indiqué.',
   notInWorkspace:
-    'Ce dossier n’est pas dans le dossier de travail de BuildIt : il n’a pas été écrit ici, et rien ne sera supprimé.',
+    'BuildIt n’a pas écrit ce dossier : il n’est ni dans le dossier de travail, ni parmi les projets générés ailleurs. Rien ne sera supprimé.',
   isWorkspace:
     'C’est le dossier de travail lui-même, pas un projet. Supprimez-le vous-même si c’est votre intention.',
   notADirectChild:
-    'Seul un projet posé directement dans le dossier de travail peut être supprimé d’ici.',
+    'Seul un projet généré par BuildIt peut être supprimé d’ici, pas un dossier qu’il contient.',
 };
 
 /**
@@ -280,9 +283,10 @@ const DELETE_REFUSALS: Readonly<Record<DeleteRefusal, string>> = {
  *
  * Le dossier n'est pas celui que le navigateur demande : c'est celui que la
  * règle de `deletionTarget` accepte — un enfant direct du dossier de travail,
- * celui-là même où `generateProjectAction` écrit. Tout le reste est refusé
- * **nommément**, parce qu'un refus muet sur une suppression laisse croire que
- * le fichier a disparu.
+ * celui-là même où `generateProjectAction` écrit, ou un dossier que la route
+ * de génération a inscrit à son registre après l'avoir écrit ailleurs. Tout le
+ * reste est refusé **nommément**, parce qu'un refus muet sur une suppression
+ * laisse croire que le fichier a disparu.
  *
  * `rm -r` est irréversible : il n'y a pas de corbeille ici. C'est l'écran qui
  * porte la confirmation explicite, et l'action ne part jamais d'un seul clic.
@@ -292,7 +296,11 @@ export async function deleteProjectAction(directory: unknown): Promise<DeletePro
     return { ok: false, directory: '', issues: [DELETE_REFUSALS.empty] };
   }
 
-  const target = deletionTarget(resolve(directory), workspaceRoot(), isHostedEnvironment());
+  const root = workspaceRoot();
+  const hosted = isHostedEnvironment();
+  // Le registre n'est lu qu'en local : en hébergé, le refus tombe avant.
+  const registered = hosted ? [] : await readRegistry(root);
+  const target = deletionTarget(resolve(directory), root, hosted, registered);
   if (!target.ok) {
     return { ok: false, directory: '', issues: [DELETE_REFUSALS[target.reason]] };
   }
@@ -301,6 +309,7 @@ export async function deleteProjectAction(directory: unknown): Promise<DeletePro
   if (info === 'missing') {
     // Déjà parti : l'intention de l'utilisateur est satisfaite, ce n'est pas
     // une panne. L'écran retirera la carte comme pour une suppression réussie.
+    await forget(root, target.directory);
     return { ok: true, directory: target.directory, issues: [] };
   }
   if (info === 'notADirectory') {
@@ -322,5 +331,18 @@ export async function deleteProjectAction(directory: unknown): Promise<DeletePro
       ],
     };
   }
+  await forget(root, target.directory);
   return { ok: true, directory: target.directory, issues: [] };
+}
+
+/**
+ * Retire du registre un dossier supprimé : son droit de suppression part avec
+ * lui. Un échec ici ne change rien au résultat, le dossier est déjà parti.
+ */
+async function forget(root: string, directory: string): Promise<void> {
+  try {
+    await unregisterGenerated(root, directory);
+  } catch {
+    // Registre illisible ou protégé : il sera réécrit à la prochaine génération.
+  }
 }

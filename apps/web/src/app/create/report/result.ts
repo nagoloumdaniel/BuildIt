@@ -50,10 +50,8 @@ export function loadReport(storage: Storage | null): GenerationReport | null {
     if (typeof parsed !== 'object' || parsed === null || Array.isArray(parsed)) {
       return null;
     }
-    const { ok, directory, bytes, files, warnings, steps, issues, zipBase64 } = parsed as Record<
-      string,
-      unknown
-    >;
+    const { ok, directory, bytes, files, warnings, steps, issues, installed, zipBase64 } =
+      parsed as Record<string, unknown>;
     if (typeof ok !== 'boolean' || typeof directory !== 'string' || typeof bytes !== 'number') {
       return null;
     }
@@ -65,6 +63,7 @@ export function loadReport(storage: Storage | null): GenerationReport | null {
       warnings: strings(warnings),
       steps: strings(steps),
       issues: strings(issues),
+      ...(typeof installed === 'boolean' ? { installed } : {}),
       ...(typeof zipBase64 === 'string' ? { zipBase64 } : {}),
     };
   } catch {

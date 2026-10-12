@@ -89,7 +89,8 @@ describe('ArchitectureChoices', () => {
     );
 
     expect(html).toMatch(/data-architecture="monorepo"[^>]*aria-pressed="true"/);
-    expect(html).toContain('Choisie');
+    // Plus de badge « Choisie » : la carte appuyée le dit déjà.
+    expect(html).not.toContain('>Choisie<');
     expect(html.match(/aria-pressed="true"/g)).toHaveLength(1);
   });
 });

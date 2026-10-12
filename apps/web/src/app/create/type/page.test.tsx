@@ -93,7 +93,8 @@ describe('ProjectTypeChoices', () => {
     );
 
     expect(html).toMatch(/data-type="saas"[^>]*aria-pressed="true"/);
-    expect(html).toContain('Choisi');
+    // Plus de badge « Choisi » : la carte appuyée le dit déjà.
+    expect(html).not.toContain('>Choisi<');
     expect(html.match(/aria-pressed="true"/g)).toHaveLength(1);
   });
 

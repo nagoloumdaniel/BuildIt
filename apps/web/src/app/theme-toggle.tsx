@@ -12,21 +12,17 @@ import {
 } from '../lib/theme';
 
 /**
- * La bascule de thème — **deux icônes**, un soleil et une lune.
+ * La bascule de thème : **un seul bouton**, qui montre le soleil en clair et
+ * la lune en sombre.
  *
- * Le troisième état (« suivre le système ») existe toujours : il est le
- * **défaut**, et c'est lui qu'on retrouve en rappuyant sur l'icône déjà
- * active. Autrement dit : en clair, le soleil est allumé ; appuyer dessus rend
- * la main au système, appuyer sur la lune force le sombre. Un cycle à trois
- * positions obligeait à passer par « système » pour revenir au clair, et une
- * troisième icône (l'écran) demandait d'apprendre un pictogramme pour un
- * réglage qu'on touche une fois.
+ * Le défaut reste le thème du système — c'est lui que le script
+ * anti-clignotement applique au premier affichage, et le bouton le reflète.
+ * Un appui force le thème opposé à celui qui est affiché ; la préférence est
+ * conservée dans le navigateur (`pf-theme`). Tant que rien n'a été forcé, le
+ * bouton suit le système en direct.
  *
- * Le repère n'est donc pas « ce que le clic va faire » mais « le thème
- * affiché » : un contrôle segmenté se lit comme un état. Quand ce thème vient
- * du système, le segment le dit (`data-auto`) et le libellé accessible le
- * nomme — sans quoi « clair » et « clair parce que votre système l'est »
- * seraient indistinguables.
+ * Le libellé accessible dit ce que le clic **fait** (« Passer au thème
+ * sombre ») : l'icône dit l'état, la phrase dit l'action.
  */
 export function ThemeToggle(): ReactElement {
   const t = useMessages();
@@ -53,41 +49,21 @@ export function ThemeToggle(): ReactElement {
   }, [preference]);
 
   const resolved = resolveTheme(preference, prefersDark);
-  const auto = preference === 'system';
-
-  function choose(theme: 'light' | 'dark'): void {
-    // Rappuyer sur le thème affiché rend la main au système : c'est le seul
-    // chemin de retour, et il est sur le bouton qu'on vient d'utiliser.
-    const next: ThemePreference = resolved === theme ? 'system' : theme;
-    setPreference(next);
-    writePreference(browserStorage(), next);
-  }
+  const next = resolved === 'dark' ? 'light' : 'dark';
+  const label = t.a11y.themeSet(next === 'dark' ? t.common.themeDark : t.common.themeLight);
 
   return (
-    <div className="pf-segmented">
-      {(['light', 'dark'] as const).map((theme) => {
-        const active = resolved === theme;
-        const name = theme === 'light' ? t.common.themeLight : t.common.themeDark;
-        const label = active
-          ? auto
-            ? t.a11y.themeAuto(name)
-            : t.a11y.themeRelease(name)
-          : t.a11y.themeSet(name);
-        return (
-          <button
-            aria-label={label}
-            aria-pressed={active}
-            className="pf-segment"
-            data-auto={active && auto ? 'true' : 'false'}
-            key={theme}
-            onClick={() => choose(theme)}
-            title={label}
-            type="button"
-          >
-            <Icon name={theme === 'light' ? 'sun' : 'moon'} size={15} />
-          </button>
-        );
-      })}
-    </div>
+    <button
+      aria-label={label}
+      className="pf-btn pf-btn-ghost pf-btn-sm pf-btn-icon"
+      onClick={() => {
+        setPreference(next);
+        writePreference(browserStorage(), next);
+      }}
+      title={label}
+      type="button"
+    >
+      <Icon name={resolved === 'dark' ? 'moon' : 'sun'} size={16} />
+    </button>
   );
 }

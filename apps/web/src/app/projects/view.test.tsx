@@ -79,14 +79,33 @@ describe('ProjectsView — la liste', () => {
     expect(html).not.toContain('Retirer de la liste');
   });
 
-  it('ne propose le re-téléchargement que pour l’archive en main', () => {
+  it('propose l’export et l’architecture aux projets dont les choix sont gardés', () => {
+    const manifest = {
+      manifestVersion: 1,
+      name: 'recent-app',
+      targets: ['web'],
+      architecture: 'single-app',
+      frontend: { framework: 'next', language: 'typescript' },
+    } as const;
     const html = render({
-      projects: [RECENT, OLD],
-      isRedownloadable: (item) => item.id === RECENT.id,
-      onRedownload: () => undefined,
+      projects: [{ ...RECENT, manifest } as never, OLD],
+      onExported: () => undefined,
     });
 
-    expect(html.match(/Télécharger à nouveau/g)).toHaveLength(1);
+    expect(html.match(/Télécharger le ZIP ou installer/g)).toHaveLength(1);
+    expect(html).toContain(`href="/projects/architecture?id=${RECENT.id}"`);
+    // Un projet d'avant la version 0.2.0 dit pourquoi il ne peut rien refaire.
+    expect(html).toContain('Généré avant la version 0.2.0');
+  });
+
+  it('ouvre le dépôt GitHub seulement quand son adresse est connue', () => {
+    const html = render({
+      projects: [{ ...RECENT, repositoryUrl: 'https://github.com/octocat/recent-app' }, OLD],
+    });
+
+    expect(html).toContain('href="https://github.com/octocat/recent-app"');
+    expect(html.match(/Ouvrir sur GitHub/g)).toHaveLength(1);
+    expect(html.match(/Connecter à GitHub/g)).toHaveLength(1);
   });
 });
 

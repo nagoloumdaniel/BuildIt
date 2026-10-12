@@ -1,6 +1,7 @@
 'use client';
 
 import type { ReactElement } from 'react';
+import { OptionCard } from '../../../components/ui/option-card';
 import type { OptionView } from '../../../lib/engine';
 import { useMessages } from '../../../lib/i18n/provider';
 
@@ -13,10 +14,11 @@ export interface CapabilityOptionsProps {
 /**
  * Les options d'**une** famille de capacités, telles que le moteur les voit.
  *
- * Une option bloquée est désactivée et porte la raison du moteur (§12) : un
- * bouton grisé sans explication est un cul-de-sac. L'état vient de
- * `OptionView`, il n'est jamais recalculé ici — recopier une règle de
- * compatibilité la ferait diverger du CLI.
+ * La carte est `OptionCard`, la même que celle du Stack Builder : une option
+ * bloquée est grisée, son nom passe au rouge, et la pastille `!` ouvre la
+ * raison du moteur (§12), les technologies en cause et leur documentation.
+ * L'état vient de `OptionView`, il n'est jamais recalculé ici : recopier une
+ * règle de compatibilité la ferait diverger du CLI.
  */
 export function CapabilityOptions({ options, onToggle }: CapabilityOptionsProps): ReactElement {
   const t = useMessages();
@@ -27,40 +29,22 @@ export function CapabilityOptions({ options, onToggle }: CapabilityOptionsProps)
 
   return (
     <div className="pf-grid">
-      {options.map((option) => {
-        const blocked = option.state === 'blocked';
-        const selected = option.state === 'selected';
-        return (
-          <button
-            key={option.id}
-            type="button"
-            className="pf-choice"
-            aria-pressed={selected}
-            disabled={blocked}
-            onClick={() => {
-              onToggle?.(option.id);
-            }}
-          >
-            <span className="pf-choice-name">
-              {option.label}
-              {selected ? (
-                <span className="pf-badge pf-badge-accent ml-2">
-                  {t.wizard.capabilities.chosenBadge}
-                </span>
-              ) : null}
-            </span>
-            <span className="pf-choice-note pf-mono break-all">{option.id}</span>
-            {blocked ? (
-              <span className="pf-error">
-                <span className="pf-badge pf-badge-danger mr-1">
-                  {t.wizard.capabilities.blockedBadge}
-                </span>
-                {option.reason}
-              </span>
-            ) : null}
-          </button>
-        );
-      })}
+      {options.map((option) => (
+        <OptionCard
+          key={option.id}
+          option={option}
+          alternatives={
+            option.state === 'blocked'
+              ? options
+                  .filter((item) => item.id !== option.id && item.state === 'available')
+                  .slice(0, 3)
+              : []
+          }
+          onToggle={(id) => {
+            onToggle?.(id);
+          }}
+        />
+      ))}
     </div>
   );
 }

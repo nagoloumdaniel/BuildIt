@@ -8,10 +8,12 @@ import {
   forgetAllProjects,
   forgetProject,
   loadProjects,
+  projectId,
+  rememberProject,
   type StoredProject,
 } from '../../lib/projects';
 import { toast } from '../../lib/toasts';
-import { deleteProjectAction } from '../actions';
+import { deleteProjectAction, type GenerationView } from '../actions';
 import { browserSessionStorage, type GenerationReport, loadReport } from '../create/report/result';
 import { ProjectsView } from './view';
 
@@ -76,33 +78,38 @@ export default function ProjectsPage(): ReactElement {
     [t],
   );
 
-  const isRedownloadable = useCallback(
-    (project: StoredProject): boolean =>
-      report?.ok === true &&
-      report.zipBase64 !== undefined &&
-      report.directory === project.directory,
-    [report],
-  );
-
-  const redownload = useCallback(
-    (project: StoredProject): void => {
-      if (report?.zipBase64 !== undefined) {
-        downloadZip(report.zipBase64, project.name);
-      }
-    },
-    [report],
-  );
+  /**
+   * Un projet réécrit dans un **autre** dossier est un nouvel exemplaire sur le
+   * disque : il rejoint la liste, avec son dossier, pour qu'on le retrouve et
+   * qu'on puisse le supprimer. Une archive, elle, n'écrit rien chez BuildIt :
+   * la liste ne bouge pas.
+   */
+  const exported = useCallback((project: StoredProject, result: GenerationView): void => {
+    if (!result.ok || result.directory === '') {
+      return;
+    }
+    const at = new Date();
+    setProjects(
+      rememberProject(browserProjectStorage(), {
+        ...project,
+        id: projectId(project.name, at),
+        directory: result.directory,
+        fileCount: result.files.length,
+        bytes: result.bytes,
+        generatedAt: at.toISOString(),
+      }),
+    );
+  }, []);
 
   return (
     <ProjectsView
       confirmingClear={confirmingClear}
       deletingId={deletingId}
-      isRedownloadable={isRedownloadable}
       onConfirmingClear={setConfirmingClear}
       onDelete={remove}
       onForget={forget}
       onForgetAll={forgetAll}
-      onRedownload={redownload}
+      onExported={exported}
       projects={projects}
     />
   );

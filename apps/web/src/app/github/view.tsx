@@ -69,6 +69,7 @@ export function GithubView({
 
   return (
     <ScreenShell
+      icon="github"
       title={t.account.title}
       description={
         mode === 'redirect' ? t.account.descriptionRedirect : t.account.descriptionDevice

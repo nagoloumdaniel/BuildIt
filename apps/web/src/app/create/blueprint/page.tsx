@@ -150,10 +150,6 @@ export default function BlueprintPage() {
           <Icon name="gitBranch" />
           {t.build.blueprint.graphLink}
         </Link>
-        <Link className="pf-btn" href="/create/preview">
-          <Icon name="file" />
-          {t.build.blueprint.previewLink}
-        </Link>
         <button
           type="button"
           className="pf-btn"

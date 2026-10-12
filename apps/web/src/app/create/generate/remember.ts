@@ -1,3 +1,4 @@
+import type { Manifest } from '@buildit/manifest';
 import type { DraftState } from '../../../lib/draft';
 import {
   type ProjectStorage,
@@ -26,6 +27,7 @@ export function rememberGeneratedProject(
   draft: DraftState,
   report: GenerationView,
   now: Date = new Date(),
+  manifest?: Manifest,
 ): readonly StoredProject[] {
   if (!report.ok) {
     return [];
@@ -39,5 +41,6 @@ export function rememberGeneratedProject(
     generatedAt: now.toISOString(),
     // Copie : la liste est persistée, et le brouillon peut encore changer.
     technologies: [...draft.technologies],
+    ...(manifest === undefined ? {} : { manifest }),
   });
 }

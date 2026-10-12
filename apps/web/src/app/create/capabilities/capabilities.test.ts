@@ -131,10 +131,10 @@ describe('bascule d’une capacité', () => {
     expect(added.capabilities).toEqual(['stripe']);
   });
 
-  it('un second moyen de paiement remplace le premier (§12) — bug rapporté, même famille', () => {
+  it('un second moyen de paiement s’ajoute : Stripe et Paddle coexistent', () => {
     const draft = freshDraft();
     const withStripe = toggleCapability(draft, 'stripe', 'payments', categoryOf);
     const withPaddle = toggleCapability(withStripe, 'paddle', 'payments', categoryOf);
-    expect(withPaddle.capabilities).toEqual(['paddle']);
+    expect(withPaddle.capabilities).toEqual(['stripe', 'paddle']);
   });
 });

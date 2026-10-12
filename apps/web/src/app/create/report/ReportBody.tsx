@@ -5,7 +5,8 @@ import { IssueList, NoteList } from '../../../components/ui/empty-state';
 import { ErrorState } from '../../../components/ui/error-state';
 import { Icon } from '../../../components/ui/icon';
 import { useLocale } from '../../../lib/i18n/provider';
-import { formatBytes, stepLabel } from '../generate/steps';
+import { isGithubUrl } from '../../../lib/projects';
+import { formatBytes } from '../generate/steps';
 import { installSteps } from './install-steps';
 import type { GenerationReport } from './result';
 
@@ -15,36 +16,48 @@ export interface ReportBodyProps {
   readonly technologies: readonly string[];
   readonly docker: boolean;
   readonly envVarNames: readonly string[];
-  /** Absent si l'archive n'est plus en main (mode local : rien à re-télécharger). */
+  /** Le nom du projet, tel que le brouillon le porte : un rapport dit ce qu'il décrit. */
+  readonly projectName?: string;
+  /** Absent si l'archive n'est plus en main (sortie en dossier : rien à re-télécharger). */
   readonly onRedownload?: () => void;
+  /**
+   * L'adresse du dépôt GitHub du projet, telle que la liste des projets l'a
+   * retenue. Jamais devinée : sans elle, pas de bouton « Ouvrir sur GitHub ».
+   */
+  readonly repositoryUrl?: string;
 }
 
 /**
  * Le rapport du §6.14 — il reçoit son rapport et ne relit rien : ni le
  * brouillon, ni le moteur. Seule la langue vient du contexte (`useLocale`),
- * parce que le poids et les libellés d'étape en dépendent.
+ * parce que le poids en dépend.
  *
- * Il dit d'abord si la génération a réussi, puis ce qui a été écrit, puis ce
- * qui doit alerter : avertissements, puis problèmes. Un refus n'affiche pas une
- * liste de fichiers vide comme si c'était un succès : « Aucun fichier écrit »
- * est une phrase, pas une case blanche — et il propose de corriger les
- * technologies sans perdre le brouillon.
+ * Il dit d'abord si la génération a réussi, puis où et combien, puis ce qui
+ * doit alerter, puis comment reprendre le projet. La liste des fichiers n'y
+ * est plus : l'architecture du projet a son propre écran (étape 10), et un
+ * seul bouton y mène. Pas de retour à l'accueil ici : la navigation de
+ * l'application le porte déjà.
  */
 export function ReportBody({
   report,
+  projectName,
   technologies,
   docker,
   envVarNames,
   onRedownload,
+  repositoryUrl,
 }: ReportBodyProps): ReactElement {
   const { t, locale } = useLocale();
   const body = t.build.report;
-  const stepLabels = t.build.generate.steps;
-  const steps = report.steps;
+  const o = t.output.report;
+  const github = isGithubUrl(repositoryUrl) ? repositoryUrl : undefined;
 
   return (
     <div>
       <p className="flex flex-wrap items-center gap-2">
+        {projectName === undefined || projectName === '' ? null : (
+          <span className="pf-title-sm pf-mono">{projectName}</span>
+        )}
         <span className={report.ok ? 'pf-badge pf-badge-ok' : 'pf-badge pf-badge-danger'}>
           {report.ok ? body.okBadge : body.refusedBadge}
         </span>
@@ -54,24 +67,18 @@ export function ReportBody({
         <CommandLine className="mt-3" value={report.directory} what={body.directoryWhat} />
       )}
 
-      <dl className="pf-grid mt-4">
-        <div className="pf-card pf-card-pad">
-          <dt className="pf-eyebrow">{body.filesCount}</dt>
-          <dd>{report.files.length}</dd>
-        </div>
-        <div className="pf-card pf-card-pad">
-          <dt className="pf-eyebrow">{body.weight}</dt>
-          <dd>{formatBytes(report.bytes, locale)}</dd>
-        </div>
-        <div className="pf-card pf-card-pad">
-          <dt className="pf-eyebrow">{body.stepsTitle}</dt>
-          <dd>
-            {steps.length === 0
-              ? body.noSteps
-              : steps.map((step) => stepLabel(step, stepLabels)).join(', ')}
-          </dd>
-        </div>
-      </dl>
+      {report.ok ? (
+        <dl className="pf-grid mt-4">
+          <div className="pf-card pf-card-pad">
+            <dt className="pf-eyebrow">{body.filesCount}</dt>
+            <dd className="pf-mono">{report.files.length}</dd>
+          </div>
+          <div className="pf-card pf-card-pad">
+            <dt className="pf-eyebrow">{body.weight}</dt>
+            <dd className="pf-mono">{formatBytes(report.bytes, locale)}</dd>
+          </div>
+        </dl>
+      ) : null}
 
       {report.warnings.length === 0 ? null : (
         <section className="mt-5">
@@ -94,16 +101,10 @@ export function ReportBody({
             body={body.refusalBody}
             issues={report.issues}
             actions={
-              <>
-                <Link className="pf-btn" href="/create/stack">
-                  <Icon name="layers" />
-                  {body.fixStack}
-                </Link>
-                <Link className="pf-btn pf-btn-ghost" href="/">
-                  <Icon name="home" />
-                  {body.backHome}
-                </Link>
-              </>
+              <Link className="pf-btn" href="/create/stack">
+                <Icon name="layers" />
+                {body.fixStack}
+              </Link>
             }
           />
 
@@ -128,47 +129,53 @@ export function ReportBody({
         <section className="mt-5">
           <h3 className="pf-label">{body.installationTitle}</h3>
           <p className="pf-hint">{body.installationNote}</p>
+          {report.installed === true ? <p className="pf-hint mt-1">{o.installedNote}</p> : null}
           <CommandSteps
             className="mt-3"
-            steps={installSteps({ directory: report.directory, docker, envVarNames }, t)}
+            steps={installSteps(
+              {
+                directory: report.directory,
+                docker,
+                envVarNames,
+                ...(report.installed === undefined ? {} : { installed: report.installed }),
+              },
+              t,
+            )}
             what={body.commandWhat}
           />
-
-          <div className="mt-4 flex flex-wrap items-center gap-3">
-            {report.zipBase64 === undefined || onRedownload === undefined ? null : (
-              <button type="button" className="pf-btn" onClick={onRedownload}>
-                <Icon name="download" />
-                {body.download}
-              </button>
-            )}
-            {report.directory === '' ? null : (
-              <Link className="pf-btn" href="/repo">
-                <Icon name="github" />
-                {body.connectGithub}
-              </Link>
-            )}
-            <Link className="pf-btn pf-btn-ghost" href="/">
-              <Icon name="home" />
-              {body.backHome}
-            </Link>
-          </div>
         </section>
       )}
 
-      <section className="mt-5">
-        <h3 className="pf-label">{body.filesTitle}</h3>
-        {report.files.length === 0 ? (
-          <p className="pf-hint">{body.noFiles}</p>
-        ) : (
-          <ul className="pf-mono mt-1 list-none p-0">
-            {report.files.map((file) => (
-              <li key={file} className="break-all">
-                {file}
-              </li>
-            ))}
-          </ul>
+      <div className="mt-5 flex flex-wrap items-center gap-3">
+        <Link className="pf-btn" href="/create/preview">
+          <Icon name="layers" />
+          {o.architecture}
+        </Link>
+        {!report.ok ? null : github !== undefined ? (
+          <a
+            aria-label={o.openGithubLabel}
+            className="pf-btn"
+            href={github}
+            rel="noopener noreferrer"
+            target="_blank"
+          >
+            <Icon name="github" />
+            {o.openGithub}
+            <Icon name="externalLink" size={14} />
+          </a>
+        ) : report.directory === '' ? null : (
+          <Link className="pf-btn" href="/repo">
+            <Icon name="github" />
+            {body.connectGithub}
+          </Link>
         )}
-      </section>
+        {!report.ok || report.zipBase64 === undefined || onRedownload === undefined ? null : (
+          <button type="button" className="pf-btn" onClick={onRedownload}>
+            <Icon name="download" />
+            {body.download}
+          </button>
+        )}
+      </div>
     </div>
   );
 }

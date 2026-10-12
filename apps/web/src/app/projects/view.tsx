@@ -9,6 +9,7 @@ import { ProjectCard } from '../../components/ui/project-card';
 import { ScreenShell } from '../../components/wizard/shell';
 import { useMessages } from '../../lib/i18n/provider';
 import type { StoredProject } from '../../lib/projects';
+import type { GenerationView } from '../actions';
 
 /**
  * L'écran « Tous les projets » (§6.14).
@@ -47,9 +48,8 @@ export interface ProjectsViewProps {
   readonly onDelete?: ((project: StoredProject) => void) | undefined;
   /** Le projet dont le dossier est en cours de suppression, s'il y en a un. */
   readonly deletingId?: string | null;
-  /** Donné pour les projets dont l'archive est encore en main (session courante). */
-  readonly isRedownloadable?: ((project: StoredProject) => boolean) | undefined;
-  readonly onRedownload?: ((project: StoredProject) => void) | undefined;
+  /** Une sortie réussie (archive ou dossier) depuis la carte d'un projet. */
+  readonly onExported?: ((project: StoredProject, result: GenerationView) => void) | undefined;
   readonly confirmingClear?: boolean;
   readonly onConfirmingClear?: ((value: boolean) => void) | undefined;
 }
@@ -60,8 +60,7 @@ export function ProjectsView({
   onForgetAll,
   onDelete,
   deletingId = null,
-  isRedownloadable,
-  onRedownload,
+  onExported,
   confirmingClear = false,
   onConfirmingClear,
 }: ProjectsViewProps): ReactElement {
@@ -69,7 +68,7 @@ export function ProjectsView({
 
   if (projects === null) {
     return (
-      <ScreenShell description={t.projects.description} title={t.projects.title}>
+      <ScreenShell description={t.projects.description} icon="layers" title={t.projects.title}>
         <LoadingLine>{t.projects.loading}</LoadingLine>
       </ScreenShell>
     );
@@ -78,7 +77,7 @@ export function ProjectsView({
   const ordered = newestFirst(projects);
 
   return (
-    <ScreenShell description={t.projects.description} title={t.projects.title}>
+    <ScreenShell description={t.projects.description} icon="layers" title={t.projects.title}>
       {ordered.length === 0 ? (
         <EmptyState
           actions={
@@ -112,11 +111,11 @@ export function ProjectsView({
                         onForget(project.id);
                       }
                 }
-                onRedownload={
-                  onRedownload === undefined || isRedownloadable?.(project) !== true
+                onExported={
+                  onExported === undefined
                     ? undefined
-                    : () => {
-                        onRedownload(project);
+                    : (result) => {
+                        onExported(project, result);
                       }
                 }
                 project={project}

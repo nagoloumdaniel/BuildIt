@@ -2,21 +2,24 @@
 
 import type { Category } from '@buildit/registry';
 import { useEffect, useMemo, useState } from 'react';
+import { DisclosureButton } from '../../../components/ui/disclosure-button';
 import { EmptyState } from '../../../components/ui/empty-state';
 import { ErrorState } from '../../../components/ui/error-state';
-import { Icon } from '../../../components/ui/icon';
+import { Icon, type IconName } from '../../../components/ui/icon';
 import { LoadingLine } from '../../../components/ui/loading';
+import { OptionCard } from '../../../components/ui/option-card';
 import { useDraft, useSession } from '../../../components/wizard/draft-provider';
 import { StepShell } from '../../../components/wizard/shell';
 import { useMessages } from '../../../lib/i18n/provider';
 import { toggle, toggleExclusive } from '../../../lib/session';
 import { checkSelectionAction } from '../../actions';
 import { loadStackBlocksAction } from './actions';
-import { CategoryNav, ExpertToolbar, OptionButton } from './stack-options';
+import { CategoryNav, ExpertToolbar } from './stack-options';
 import {
   type CategoryBlock,
   categoryLabel,
   categoryProgress,
+  compatibleAlternatives,
   defaultCategory,
   filterCatalogue,
   filterOptions,
@@ -148,11 +151,14 @@ export default function StackPage() {
       value: 'guided' as const,
       label: t.wizard.stack.modeGuided,
       note: t.wizard.stack.modeGuidedNote,
+      // Guidé : on vous indique la route. Expert : vous réglez tout vous-même.
+      icon: 'compass' as IconName,
     },
     {
       value: 'expert' as const,
       label: t.wizard.stack.modeExpert,
       note: t.wizard.stack.modeExpertNote,
+      icon: 'sliders' as IconName,
     },
   ];
 
@@ -171,7 +177,12 @@ export default function StackPage() {
                 session.update((currentDraft) => ({ ...currentDraft, mode: mode.value }))
               }
             >
-              <span className="pf-choice-name">{mode.label}</span>
+              <span className="pf-choice-name">
+                <span aria-hidden="true" className="pf-option-icon">
+                  <Icon name={mode.icon} size={16} />
+                </span>
+                {mode.label}
+              </span>
               <span className="pf-choice-note">{mode.note}</span>
             </button>
           ))}
@@ -237,16 +248,21 @@ export default function StackPage() {
           ) : null}
           {results.blocks.map((block) => (
             <div key={block.category} className="pf-card pf-card-pad mt-3">
-              <p className="pf-label">
+              <p className="pf-label flex items-center gap-2">
                 {categoryLabel(t, block.category)}
-                <span className="pf-badge ml-2">{block.options.length}</span>
+                <span className="pf-badge">{block.options.length}</span>
               </p>
               <div className="pf-grid mt-2">
                 {block.options.map((option) => (
-                  <OptionButton
+                  <OptionCard
                     key={option.id}
                     option={option}
-                    chosenLocally={draft.technologies.includes(option.id)}
+                    pressed={draft.technologies.includes(option.id)}
+                    alternatives={
+                      option.state === 'blocked'
+                        ? compatibleAlternatives(block.options, option.id)
+                        : []
+                    }
                     onToggle={(id) => toggleTechnology(id, block.category)}
                   />
                 ))}
@@ -281,10 +297,15 @@ export default function StackPage() {
 
               <div className="pf-grid mt-3">
                 {shownOptions.map((option) => (
-                  <OptionButton
+                  <OptionCard
                     key={option.id}
                     option={option}
-                    chosenLocally={draft.technologies.includes(option.id)}
+                    pressed={draft.technologies.includes(option.id)}
+                    alternatives={
+                      option.state === 'blocked'
+                        ? compatibleAlternatives(activeOptions, option.id)
+                        : []
+                    }
                     recommended={
                       draft.mode === 'guided' &&
                       !expandedHere &&
@@ -297,16 +318,13 @@ export default function StackPage() {
               </div>
 
               {draft.mode === 'guided' && guided.hidden.length > 0 ? (
-                <button
-                  type="button"
-                  className="pf-btn pf-btn-ghost mt-3"
-                  onClick={() => setExpanded((list) => toggle(list, activeBlock.category))}
-                >
-                  <Icon name={expandedHere ? 'arrowLeft' : 'list'} />
-                  {expandedHere
-                    ? t.wizard.stack.showRecommended
-                    : t.wizard.stack.showAll(guided.hidden.length)}
-                </button>
+                <DisclosureButton
+                  className="mt-3"
+                  expanded={expandedHere}
+                  lessLabel={t.wizard.stack.showRecommended}
+                  moreLabel={t.wizard.stack.showAll(guided.hidden.length)}
+                  onToggle={() => setExpanded((list) => toggle(list, activeBlock.category))}
+                />
               ) : null}
 
               {draft.mode === 'expert' && expertOptions.hiddenBlocked > 0 ? (

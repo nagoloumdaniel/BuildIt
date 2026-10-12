@@ -35,6 +35,16 @@ export interface StackOption {
   readonly state: OptionState;
   /** La raison d'un blocage — toujours présente côté moteur pour un `blocked`. */
   readonly reason?: string;
+  /** La documentation officielle de la technologie. */
+  readonly docs?: string;
+  /** Le code du refus : il choisit la conséquence et la solution à afficher. */
+  readonly code?: string;
+  /** Les technologies en cause dans le refus, avec leur documentation. */
+  readonly conflicts?: readonly {
+    readonly id: string;
+    readonly label: string;
+    readonly docs?: string;
+  }[];
 }
 
 /** Une catégorie du catalogue et ses fiches, dans l'ordre du registry. */
@@ -207,4 +217,19 @@ export function defaultCategory(blocks: readonly CategoryBlock[]): Category | un
     block.options.some((option) => option.state === 'selected'),
   );
   return (withSelection ?? blocks[0])?.category;
+}
+
+/**
+ * Les alternatives à proposer pour une option bloquée : les options **disponibles**
+ * de la même famille (ni bloquées, ni déjà choisies : celles-là sont la cause), dans l'ordre du catalogue, sans l'option elle-même.
+ *
+ * Bornées à trois : la bulle de détails dit « voici par quoi remplacer », elle
+ * ne recopie pas la grille qu'on a sous les yeux.
+ */
+export function compatibleAlternatives(
+  options: readonly StackOption[],
+  id: string,
+  max = 3,
+): readonly StackOption[] {
+  return options.filter((option) => option.id !== id && option.state === 'available').slice(0, max);
 }

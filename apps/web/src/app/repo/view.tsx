@@ -151,7 +151,7 @@ export function RepoView(props: RepoViewProps): ReactElement {
   const selectedRole = roles.find((item) => item.role === role);
 
   return (
-    <ScreenShell description={t.repo.description} title={t.repo.title}>
+    <ScreenShell description={t.repo.description} icon="link" title={t.repo.title}>
       {message === undefined || message === '' ? null : (
         <StatusMessage className="mb-3">{message}</StatusMessage>
       )}

@@ -4,6 +4,7 @@ import { type ReactElement, useEffect, useMemo, useState } from 'react';
 import { useDraft } from '../../components/wizard/draft-provider';
 import { draftToManifest } from '../../lib/draft-to-manifest';
 import { useMessages } from '../../lib/i18n/provider';
+import { attachRepository, browserProjectStorage } from '../../lib/projects';
 import {
   accessListAction,
   createRepositoryAction,
@@ -82,6 +83,12 @@ export default function RepoPage(): ReactElement {
       setMessage(undefined);
       const next = await repositoryStatusAction(target);
       setStatus(next);
+      // Le dépôt GitHub réel de ce dossier, tel que git le rapporte : c'est la
+      // seule source de l'adresse que la liste des projets montrera derrière
+      // « Ouvrir sur GitHub ». Jamais une adresse déduite du nom du projet.
+      if (next.ok && next.github && next.url !== undefined) {
+        attachRepository(browserProjectStorage(), next.directory, next.url);
+      }
       if (next.ok && !next.github && name.trim() === '') {
         setName(next.proposedName);
       }

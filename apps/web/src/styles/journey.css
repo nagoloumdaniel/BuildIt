@@ -1,0 +1,270 @@
+/*
+ * Le parcours : stepper, transitions entre étapes, annulation, titres.
+ *
+ * Importée par `app/globals.css`. Mêmes règles que lui : aucune couleur en
+ * dur (tout passe par les variables `--pf-*`), un `:focus-visible` sur tout
+ * élément interactif, rien qui bouge au survol, `prefers-reduced-motion`
+ * respecté.
+ */
+
+@layer components {
+  /* --- Texte pour lecteur d'écran -------------------------------------- */
+
+  /* Le nom des étapes et la position (« Étape 5 sur 12 ») ne sont pas
+     affichés, mais ils restent dits. */
+  .pf-journey-sr {
+    border: 0;
+    clip: rect(0 0 0 0);
+    height: 1px;
+    margin: -1px;
+    overflow: hidden;
+    padding: 0;
+    position: absolute;
+    white-space: nowrap;
+    width: 1px;
+  }
+
+  /* --- Stepper : douze numéros sur un rail ----------------------------- */
+
+  .pf-rail-nav {
+    position: relative;
+  }
+
+  /* Une seule taille de pastille, posée en variable : le rail s'arrête au
+     centre de la première et de la dernière, il doit donc la connaître.
+     22 px tiennent douze fois dans 328 px (360 moins les gouttières) avec
+     un vrai jour entre elles. */
+  .pf-rail {
+    --pf-rail-node: 1.375rem;
+    align-items: center;
+    display: flex;
+    justify-content: space-between;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    position: relative;
+  }
+
+  /* Le rail neutre, puis son remplissage : un seul trait continu, du centre
+     de la première pastille au centre de la dernière. */
+  .pf-rail::before,
+  .pf-rail::after {
+    border-radius: 999px;
+    content: "";
+    height: 2px;
+    left: calc(var(--pf-rail-node) / 2);
+    position: absolute;
+    right: calc(var(--pf-rail-node) / 2);
+    top: calc(50% - 1px);
+  }
+
+  .pf-rail::before {
+    background: var(--pf-border);
+  }
+
+  /* `scaleX` plutôt que `width` : le compositeur anime une transformation
+     sans recalculer la mise en page. La durée est celle du glissement du
+     contenu, pour que les deux arrivent ensemble. */
+  .pf-rail::after {
+    background: var(--pf-accent);
+    transform: scaleX(var(--pf-rail-fill, 0));
+    transform-origin: left center;
+    transition: transform 220ms var(--pf-ease);
+  }
+
+  .pf-rail-step {
+    display: flex;
+    flex: none;
+    position: relative;
+    z-index: 1;
+  }
+
+  .pf-rail-node {
+    align-items: center;
+    background: var(--pf-surface);
+    border: 1px solid var(--pf-border-strong);
+    border-radius: 999px;
+    color: var(--pf-muted);
+    display: inline-flex;
+    font-family: var(--pf-mono);
+    font-size: 0.625rem;
+    font-variant-numeric: tabular-nums;
+    font-weight: 600;
+    height: var(--pf-rail-node);
+    justify-content: center;
+    line-height: 1;
+    text-decoration: none;
+    transition:
+      background-color 160ms ease,
+      border-color 160ms ease,
+      box-shadow 160ms ease,
+      color 160ms ease;
+    width: var(--pf-rail-node);
+  }
+
+  .pf-rail-step[data-state="done"] .pf-rail-node {
+    background: var(--pf-accent-soft);
+    border-color: var(--pf-accent-line);
+    color: var(--pf-accent-strong);
+  }
+
+  .pf-rail-step[data-state="current"] .pf-rail-node {
+    background: var(--pf-accent);
+    border-color: var(--pf-accent);
+    box-shadow: var(--pf-ring-accent);
+    color: var(--pf-accent-text);
+  }
+
+  /* Revenir corriger une étape : la pastille franchie réagit en couleur
+     seulement, elle ne bouge pas. */
+  .pf-rail-step[data-state="done"] .pf-rail-node:hover {
+    background: var(--pf-accent-soft-2);
+    border-color: var(--pf-accent);
+  }
+
+  /* Le contour de focus global a un rayon de 4 px : sur une pastille ronde,
+     il faut le rond. */
+  .pf-rail-node:focus-visible {
+    border-radius: 999px;
+    outline: 2px solid var(--pf-focus);
+    outline-offset: 2px;
+  }
+
+  @media (min-width: 640px) {
+    .pf-rail {
+      --pf-rail-node: 1.75rem;
+    }
+
+    .pf-rail-node {
+      font-size: 0.75rem;
+    }
+  }
+
+  /* --- Glissement entre étapes ----------------------------------------- */
+
+  /* Le contenu glisse de quelques pixels : sans cette coupe, il dépasserait
+     un instant à droite et ferait naître une barre de défilement horizontale
+     sur téléphone. `clip` et non `hidden` : pas de conteneur de défilement,
+     donc la barre « Continuer » collante continue de coller. La marge
+     négative rend la place des contours de focus des bords. */
+  .pf-journey-viewport {
+    margin-inline: -0.5rem;
+    overflow-x: clip;
+    padding-inline: 0.5rem;
+  }
+
+  .pf-journey-stage[data-slide="forward"] {
+    animation: pf-journey-from-right 220ms var(--pf-ease) both;
+  }
+
+  .pf-journey-stage[data-slide="backward"] {
+    animation: pf-journey-from-left 220ms var(--pf-ease) both;
+  }
+
+  @keyframes pf-journey-from-right {
+    from {
+      opacity: 0;
+      transform: translateX(1.5rem);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+
+  @keyframes pf-journey-from-left {
+    from {
+      opacity: 0;
+      transform: translateX(-1.5rem);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+
+  @keyframes pf-journey-fade {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+
+  /* Mouvement réduit : aucun déplacement, au plus un fondu (que la règle
+     globale de `globals.css` ramène d'ailleurs à presque rien). */
+  @media (prefers-reduced-motion: reduce) {
+    .pf-journey-stage[data-slide="forward"],
+    .pf-journey-stage[data-slide="backward"] {
+      animation-name: pf-journey-fade;
+    }
+  }
+
+  /* --- Titre d'écran ---------------------------------------------------- */
+
+  /* Le titre et ses gestes sur une même ligne, centrés l'un sur l'autre :
+     « Annuler » se lit comme une action sur ce titre, pas sur l'eyebrow. */
+  .pf-journey-head {
+    align-items: center;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem 1rem;
+    justify-content: space-between;
+  }
+
+  /* Deux colonnes : quand le titre passe à la ligne, il reste aligné sur
+     lui-même au lieu de repartir sous l'icône. */
+  .pf-journey-title {
+    align-items: center;
+    column-gap: 0.6rem;
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    min-width: 0;
+  }
+
+  /* Sans icône (écrans hors parcours qui n'en passent pas), pas de colonne
+     vide ni de gouttière avant le titre. */
+  .pf-journey-title-plain {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .pf-journey-title > h1 {
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
+
+  .pf-journey-head > .pf-journey-title {
+    flex: 1 1 16rem;
+  }
+
+  .pf-journey-title-icon {
+    color: var(--pf-accent);
+    display: inline-flex;
+    line-height: 1;
+  }
+
+  /* L'icône suit la taille du titre (`pf-display` sur son conteneur). */
+  .pf-journey-title-icon svg {
+    height: 0.8em;
+    width: 0.8em;
+  }
+
+  /* --- Confirmation d'annulation --------------------------------------- */
+
+  .pf-journey-confirm {
+    background: var(--pf-danger-soft);
+    border: 1px solid var(--pf-danger-line);
+    border-left-width: 3px;
+    border-radius: var(--pf-radius-sm);
+    color: var(--pf-text);
+    padding: 0.8rem 0.9rem;
+  }
+
+  .pf-journey-confirm-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    justify-content: flex-end;
+  }
+}

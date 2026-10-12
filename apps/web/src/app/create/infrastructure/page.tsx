@@ -4,6 +4,7 @@ import { type ReactElement, useEffect, useState } from 'react';
 import { ErrorState } from '../../../components/ui/error-state';
 import { Icon } from '../../../components/ui/icon';
 import { LoadingLine } from '../../../components/ui/loading';
+import { OptionCard } from '../../../components/ui/option-card';
 import { useDraft, useSession } from '../../../components/wizard/draft-provider';
 import { StepShell } from '../../../components/wizard/shell';
 import type { OptionView } from '../../../lib/engine';
@@ -153,31 +154,24 @@ export default function InfrastructurePage(): ReactElement {
           <div className="pf-grid mt-2">
             {hosts.map((host) => {
               const chosen = host.id === current;
-              const blocked = host.state === 'blocked';
               return (
-                <button
+                <OptionCard
                   key={host.id}
-                  type="button"
-                  className="pf-choice"
-                  aria-pressed={chosen}
-                  disabled={blocked}
-                  onClick={() => {
+                  option={host}
+                  pressed={chosen}
+                  alternatives={
+                    host.state === 'blocked'
+                      ? hosts
+                          .filter((item) => item.id !== host.id && item.state === 'available')
+                          .slice(0, 3)
+                      : []
+                  }
+                  onToggle={() => {
                     session.update((currentDraft) =>
                       chooseHosting(currentDraft, hostingIds, chosen ? null : host.id),
                     );
                   }}
-                >
-                  <span className="pf-choice-name">
-                    {host.label}
-                    {chosen ? (
-                      <span className="pf-badge pf-badge-accent ml-2">
-                        {t.build.infrastructure.chosenBadge}
-                      </span>
-                    ) : null}
-                  </span>
-                  <span className="pf-choice-note pf-mono break-all">{host.id}</span>
-                  {blocked ? <span className="pf-error">{host.reason}</span> : null}
-                </button>
+                />
               );
             })}
           </div>

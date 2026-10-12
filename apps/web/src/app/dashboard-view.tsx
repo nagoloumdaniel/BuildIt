@@ -96,9 +96,6 @@ export interface DashboardViewProps {
   readonly onRedownload?: (() => void) | undefined;
   /** `null` : la liste n'a pas encore été lue (`localStorage`, après hydratation). */
   readonly projects?: readonly StoredProject[] | null;
-  /** Donné pour les projets dont l'archive est encore en main (session courante). */
-  readonly isRedownloadable?: ((project: StoredProject) => boolean) | undefined;
-  readonly onRedownloadProject?: ((project: StoredProject) => void) | undefined;
   /** Le choix du dossier ; absent, la carte redevient un simple lien. */
   readonly openLocal?: PickHandoff | undefined;
 }
@@ -109,8 +106,6 @@ export function DashboardView({
   onReset,
   onRedownload,
   projects = [],
-  isRedownloadable,
-  onRedownloadProject,
   openLocal,
 }: DashboardViewProps): ReactElement {
   const t = useMessages();
@@ -181,17 +176,7 @@ export function DashboardView({
                 </div>
                 <div className="pf-stack mt-3">
                   {list.map((project) => (
-                    <ProjectCard
-                      key={project.id}
-                      onRedownload={
-                        onRedownloadProject === undefined || isRedownloadable?.(project) !== true
-                          ? undefined
-                          : () => {
-                              onRedownloadProject(project);
-                            }
-                      }
-                      project={project}
-                    />
+                    <ProjectCard key={project.id} project={project} />
                   ))}
                 </div>
               </>
@@ -217,7 +202,7 @@ export function DashboardView({
                   {onRedownload === undefined ? null : (
                     <button className="pf-btn pf-btn-ghost" onClick={onRedownload} type="button">
                       <Icon name="download" size={15} />
-                      {t.projects.download}
+                      {t.build.report.download}
                     </button>
                   )}
                 </div>

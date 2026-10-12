@@ -25,12 +25,16 @@ describe('CapabilityOptions', () => {
     expect(html).toContain('aria-pressed="false"');
   });
 
-  it('grise une option bloquée et affiche la raison du moteur (§12)', () => {
+  it('grise une option bloquée et garde la raison du moteur dans sa bulle (§12)', () => {
     const html = renderToStaticMarkup(<CapabilityOptions options={OPTIONS} />);
 
-    // Le refus est porté par l'élément lui-même, pas par une couleur seule.
-    expect(html).toContain('disabled=""');
+    // Le refus est porté par l'élément lui-même, pas par une couleur seule, et
+    // l'option reste atteignable au clavier : `aria-disabled`, jamais `disabled`.
+    expect(html).toContain('aria-disabled="true"');
+    expect(html).toContain('data-blocked="true"');
     expect(html).toContain('Adyen est exclusif avec Stripe.');
+    // La carte propose les options utilisables de la même famille.
+    expect(html).toContain('Alternatives compatibles : PayPal.');
   });
 
   it('n’invente aucune option quand la famille est vide', () => {

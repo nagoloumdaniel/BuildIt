@@ -32,23 +32,23 @@ function render(props: ReportBodyProps): string {
 
 /** Le rapport (§6.14) est pur : il reçoit son rapport, il ne relit rien. */
 describe('ReportBody', () => {
-  it('rend le dossier, le compte de fichiers, le poids et les étapes', () => {
+  it('rend le dossier, le compte de fichiers et le poids, sans la liste des fichiers', () => {
     const html = render({ report: SUCCESS, technologies: ['next'], ...BASE_PROPS });
 
     expect(html).toContain('/tmp/pf/mon-projet');
-    expect(html).toContain('2');
+    expect(html).toContain('Fichiers écrits');
     expect(html).toContain('2,0 ko');
-    expect(html).toContain('Planification');
-    expect(html).toContain('Écriture des fichiers');
-    expect(html).toContain('package.json');
     expect(html).toContain('un avertissement du plan');
+    // La liste des fichiers est partie : l'architecture a son propre écran.
+    expect(html).not.toContain('src/app/page.tsx');
+    expect(html).not.toContain('Planification');
   });
 
-  it('rend un refus avec ses raisons, sans liste de fichiers', () => {
+  it('rend un refus avec ses raisons, sans statistiques d’écriture', () => {
     const html = render({ report: REFUSED, technologies: [], ...BASE_PROPS });
 
     expect(html).toContain('existe déjà');
-    expect(html).toContain('Aucun fichier écrit');
+    expect(html).not.toContain('Fichiers écrits');
   });
 
   it('un rapport réussi sans avertissement ne montre pas de section vide', () => {
@@ -58,7 +58,53 @@ describe('ReportBody', () => {
       ...BASE_PROPS,
     });
     expect(html).not.toContain('Avertissements');
-    expect(html).toContain('Aucun fichier écrit');
+  });
+
+  it('un seul bouton mène à l’architecture du projet, et aucun à l’accueil', () => {
+    for (const report of [SUCCESS, REFUSED]) {
+      const html = render({ report, technologies: [], ...BASE_PROPS });
+      expect(html.split('href="/create/preview"')).toHaveLength(2);
+      expect(html).toContain('Architecture du projet');
+      expect(html).not.toContain('href="/"');
+      expect(html).not.toContain('Retour au tableau de bord');
+    }
+  });
+
+  it('« Ouvrir sur GitHub » seulement avec une adresse de dépôt valide, dans un nouvel onglet', () => {
+    const withRepo = render({
+      report: SUCCESS,
+      technologies: [],
+      ...BASE_PROPS,
+      repositoryUrl: 'https://github.com/moi/mon-projet',
+    });
+    expect(withRepo).toContain('href="https://github.com/moi/mon-projet"');
+    expect(withRepo).toContain('target="_blank"');
+    expect(withRepo).toContain('noopener');
+    expect(withRepo).toContain('Ouvrir sur GitHub');
+    // Le dépôt existe : pas de « Connecter à GitHub » en double.
+    expect(withRepo).not.toContain('Connecter à GitHub');
+
+    const guessed = render({
+      report: SUCCESS,
+      technologies: [],
+      ...BASE_PROPS,
+      repositoryUrl: 'https://github.com/settings',
+    });
+    expect(guessed).not.toContain('Ouvrir sur GitHub');
+
+    const none = render({ report: SUCCESS, technologies: [], ...BASE_PROPS });
+    expect(none).not.toContain('Ouvrir sur GitHub');
+  });
+
+  it('des dépendances déjà installées ne sont pas à réinstaller', () => {
+    const html = render({
+      report: { ...SUCCESS, installed: true },
+      technologies: [],
+      ...BASE_PROPS,
+    });
+    expect(html).toContain('Les dépendances ont été installées pendant la génération.');
+    expect(html).not.toContain('pnpm install');
+    expect(html).toContain('pnpm dev');
   });
 
   it('un succès ne montre jamais le bouton de correction (rien à corriger)', () => {
@@ -66,7 +112,7 @@ describe('ReportBody', () => {
     expect(html).not.toContain('Modifier les technologies');
   });
 
-  it('un refus propose de corriger les technologies et de revenir au tableau de bord', () => {
+  it('un refus propose de corriger les technologies', () => {
     const html = render({
       report: REFUSED,
       technologies: ['next', 'javascript'],
@@ -74,8 +120,6 @@ describe('ReportBody', () => {
     });
     expect(html).toContain('href="/create/stack"');
     expect(html).toContain('Modifier les technologies');
-    expect(html).toContain('href="/"');
-    expect(html).toContain('Retour au tableau de bord');
     expect(html).toContain('next');
     expect(html).toContain('javascript');
   });
@@ -91,13 +135,11 @@ describe('ReportBody', () => {
     expect(html).toContain('Aucune technologie choisie.');
   });
 
-  it('un succès affiche la marche à suivre et le retour au tableau de bord', () => {
+  it('un succès affiche la marche à suivre', () => {
     const html = render({ report: SUCCESS, technologies: ['next'], ...BASE_PROPS });
     expect(html).toContain('Installation');
     expect(html).toContain('pnpm install');
     expect(html).toContain('pnpm dev');
-    expect(html).toContain('href="/"');
-    expect(html).toContain('Retour au tableau de bord');
   });
 
   it('un succès avec un dossier connu (mode local) propose de connecter GitHub', () => {

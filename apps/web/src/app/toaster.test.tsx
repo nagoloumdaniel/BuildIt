@@ -124,7 +124,7 @@ describe('layout racine', () => {
 
     // Le script anti-flash et la bascule de thème sont toujours là…
     expect(html).toContain('pf-theme');
-    expect(html).toContain('pf-segment');
+    expect(html).toContain('Passer au thème');
     // …et le Toaster est bien branché, sinon aucun toast ne s'afficherait.
     expect(html).toContain('role="status"');
   });

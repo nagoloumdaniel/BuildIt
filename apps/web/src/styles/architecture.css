@@ -1,0 +1,136 @@
+/*
+ * L'architecture d'un projet : l'arbre des fichiers générés et le rôle de chacun.
+ *
+ * Importée par `app/globals.css`. Mêmes règles que lui : aucune couleur en
+ * dur (tout passe par les variables `--pf-*`), un `:focus-visible` sur tout
+ * élément interactif, rien qui bouge au survol, `prefers-reduced-motion`
+ * respecté.
+ */
+
+@layer components {
+  /* --- L'arbre ---------------------------------------------------------- */
+
+  /* Des listes imbriquées : la profondeur se lit au retrait et au filet, pas
+     seulement à la couleur. */
+  .pf-arch-tree,
+  .pf-arch-children {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  .pf-arch-children {
+    border-left: 1px solid var(--pf-border);
+    margin-left: 0.4rem;
+    padding-left: 0.75rem;
+  }
+
+  .pf-arch-children[hidden] {
+    display: none;
+  }
+
+  /* Le nom et sa phrase sur la même ligne au large ; la phrase passe dessous
+     quand la place manque (`flex-wrap`), sans débordement horizontal. */
+  .pf-arch-row {
+    align-items: baseline;
+    column-gap: 0.75rem;
+    display: flex;
+    flex-wrap: wrap;
+    padding: 0.2rem 0;
+    row-gap: 0.1rem;
+  }
+
+  .pf-arch-head {
+    align-items: center;
+    display: inline-flex;
+    gap: 0.5rem;
+    max-width: 100%;
+    min-width: 0;
+  }
+
+  .pf-arch-toggle {
+    align-items: center;
+    background: transparent;
+    border: 0;
+    border-radius: var(--pf-radius-sm);
+    color: var(--pf-text);
+    cursor: pointer;
+    display: inline-flex;
+    font: inherit;
+    gap: 0.375rem;
+    margin-left: -0.25rem;
+    min-width: 0;
+    padding: 0.125rem 0.25rem;
+    text-align: left;
+    transition: background-color var(--pf-fast) var(--pf-ease);
+  }
+
+  /* Le survol teinte le fond, il ne déplace rien (§7). */
+  .pf-arch-toggle:hover {
+    background: var(--pf-bg-sunken);
+  }
+
+  /* Un fichier n'a pas de chevron : un retrait de la même largeur aligne son
+     icône sur celle des dossiers voisins. */
+  .pf-arch-file {
+    gap: 0.375rem;
+    padding-left: calc(14px + 0.375rem);
+  }
+
+  .pf-arch-chevron {
+    color: var(--pf-muted);
+    flex: none;
+    transition: transform var(--pf-fast) var(--pf-ease);
+  }
+
+  .pf-arch-toggle[aria-expanded="true"] .pf-arch-chevron {
+    transform: rotate(90deg);
+  }
+
+  .pf-arch-icon {
+    color: var(--pf-muted);
+    flex: none;
+  }
+
+  /* L'acier dit l'information : un dossier est une donnée, pas une action. */
+  .pf-arch-icon-folder {
+    color: var(--pf-steel);
+  }
+
+  .pf-arch-name {
+    font-size: 0.875rem;
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
+
+  .pf-arch-count {
+    color: var(--pf-muted);
+    flex: none;
+    font-size: 0.75rem;
+    white-space: nowrap;
+  }
+
+  .pf-arch-note {
+    color: var(--pf-muted);
+    flex: 1 1 18rem;
+    font-size: 0.8125rem;
+    line-height: 1.45;
+    min-width: 0;
+  }
+
+  /* Au petit écran, la phrase prend toute la ligne, sous le nom, alignée sur
+     son icône plutôt que sur le chevron. */
+  @media (max-width: 40rem) {
+    .pf-arch-note {
+      flex-basis: 100%;
+      padding-left: calc(14px + 0.375rem);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .pf-arch-toggle,
+    .pf-arch-chevron {
+      transition: none;
+    }
+  }
+}

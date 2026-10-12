@@ -33,7 +33,7 @@ import { decodeSharePayload, payloadFromHash, type ShareDecodeResult } from './c
 function ShareLoading(): ReactElement {
   const t = useMessages();
   return (
-    <ScreenShell description={t.share.descriptionLoading} title={t.share.title}>
+    <ScreenShell description={t.share.descriptionLoading} icon="send" title={t.share.title}>
       <Card>
         <LoadingLine>{t.share.loading}</LoadingLine>
       </Card>
@@ -64,7 +64,7 @@ export function SharePreview({
 
   if (!result.ok) {
     return (
-      <ScreenShell description={t.share.descriptionLoading} title={t.share.title}>
+      <ScreenShell description={t.share.descriptionLoading} icon="send" title={t.share.title}>
         <ErrorState
           actions={
             <a className={buttonClassName('primary')} href="/">
@@ -84,7 +84,7 @@ export function SharePreview({
   }
 
   return (
-    <ScreenShell description={t.share.description} title={t.share.title}>
+    <ScreenShell description={t.share.description} icon="send" title={t.share.title}>
       <Card>
         <p className={badgeClassName()}>{t.share.readOnly}</p>
         <div className="mt-3">

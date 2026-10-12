@@ -2,88 +2,23 @@
 
 import type { Category } from '@buildit/registry';
 import type { ReactElement } from 'react';
+import { categoryIcon } from '../../../components/ui/category-icon';
+import { Icon } from '../../../components/ui/icon';
 import { useMessages } from '../../../lib/i18n/provider';
-import {
-  type CategoryBlock,
-  categoryLabel,
-  categoryProgress,
-  optionReason,
-  type StackOption,
-} from './stack-view';
+import { type CategoryBlock, categoryLabel, categoryProgress } from './stack-view';
 
 /**
  * Les morceaux d'écran du Stack Builder.
  *
  * Ils ne décident rien : ils reçoivent des options déjà filtrées et rendent
- * uniquement des classes `pf-*` du design system 8A. Toute la logique du §5 est
+ * uniquement des classes `pf-*` du design system. Toute la logique du §5 est
  * dans `stack-view.ts`, où elle se teste sans DOM, et tous les libellés
  * viennent du dictionnaire de la langue courante (`useMessages`).
  *
- * Une option bloquée n'est **pas** `disabled` : un bouton désactivé sort de
- * l'ordre de tabulation, et l'utilisateur au clavier n'entendrait jamais la
- * raison du blocage. Elle reste focusable, `aria-disabled`, et la raison est
- * écrite sous le nom (§5, §12).
+ * La carte d'une option n'est plus dessinée ici : c'est `OptionCard`
+ * (`components/ui/option-card.tsx`), partagée avec les capacités et
+ * l'hébergement — une technologie se lit de la même façon partout.
  */
-
-export interface OptionButtonProps {
-  readonly option: StackOption;
-  /** Badge « Recommandé » du §5 — jamais posé sur une option bloquée. */
-  readonly recommended?: boolean;
-  /**
-   * Le choix **local** du brouillon, quand il différe de l'état rendu par le
-   * moteur. L'état du moteur arrive après un aller-retour serveur (c'est lui qui
-   * tranche la compatibilité, §12) : sans ce drapeau, `aria-pressed` annonce
-   * pendant un aller-retour le contraire de ce que l'utilisateur vient de faire —
-   * un lecteur d'écran lit « non appuyé » sur un bouton qu'il vient d'appuyer.
-   * Le badge « Choisi » reste indexé sur le moteur : l'assistif dit l'intention,
-   * l'affichage dit l'état validé, et les deux convergent au rendu suivant.
-   */
-  readonly chosenLocally?: boolean;
-  readonly onToggle: (id: string) => void;
-}
-
-export function OptionButton({
-  option,
-  recommended = false,
-  chosenLocally,
-  onToggle,
-}: OptionButtonProps): ReactElement {
-  const t = useMessages();
-  const chosen = option.state === 'selected';
-  const pressed = chosenLocally ?? chosen;
-  const blocked = option.state === 'blocked';
-  const reason = optionReason(option, t.wizard.stack.blockedFallback);
-
-  return (
-    <button
-      type="button"
-      className={blocked ? 'pf-choice cursor-not-allowed opacity-50' : 'pf-choice'}
-      aria-pressed={pressed}
-      aria-disabled={blocked}
-      {...(reason === undefined ? {} : { title: reason })}
-      onClick={() => {
-        if (!blocked) {
-          onToggle(option.id);
-        }
-      }}
-    >
-      <span className="pf-choice-name min-w-0 break-words">
-        {option.label}
-        {chosen ? (
-          <span className="pf-badge pf-badge-accent ml-2">{t.wizard.stack.chosenBadge}</span>
-        ) : null}
-        {blocked ? (
-          <span className="pf-badge pf-badge-danger ml-2">{t.wizard.stack.blockedBadge}</span>
-        ) : null}
-        {!blocked && !chosen && recommended ? (
-          <span className="pf-badge ml-2">{t.wizard.stack.recommendedBadge}</span>
-        ) : null}
-      </span>
-      {reason === undefined ? null : <span className="pf-choice-note break-words">{reason}</span>}
-      <span className="pf-hint pf-mono mt-1 block break-all">{option.id}</span>
-    </button>
-  );
-}
 
 export interface CategoryNavProps {
   readonly blocks: readonly CategoryBlock[];
@@ -111,9 +46,12 @@ export function CategoryNav({ blocks, current, onSelect }: CategoryNavProps): Re
               onClick={() => onSelect(block.category)}
             >
               <span className="pf-choice-name">
+                <span aria-hidden="true" className="pf-option-icon">
+                  <Icon name={categoryIcon(block.category)} size={16} />
+                </span>
                 {categoryLabel(t, block.category)}
                 {progress.selected > 0 ? (
-                  <span className="pf-badge pf-badge-accent ml-2">{progress.selected}</span>
+                  <span className="pf-badge pf-badge-accent">{progress.selected}</span>
                 ) : null}
               </span>
               <span className="pf-choice-note">{t.wizard.stack.files(progress.total)}</span>

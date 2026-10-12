@@ -1,56 +1,10 @@
 import { describe, expect, it } from 'vitest';
-import { FR } from '../../../lib/i18n/messages';
-import { formatBytes, GENERATION_STEPS, progressStates, stepLabel, targetDirectory } from './steps';
+import { formatBytes, targetDirectory } from './steps';
 
 /**
- * L'écran Generation Progress (§6.13) et le rapport (§6.14) affichent le même
- * vocabulaire : ces fonctions sont pures, donc ce que l'utilisateur lit est
- * vérifié sans navigateur. Les libellés viennent du dictionnaire — ces tests
- * passent le français, l'anglais est vérifié par le typecheck de `Messages`.
+ * Ce que l'écran Generation (§6.13) et le rapport (§6.14) affichent hors de
+ * toute mesure du moteur : le poids, et le dossier montré avant d'écrire.
  */
-
-const STEPS = FR.build.generate.steps;
-
-describe('stepLabel — les étapes du pipeline en clair', () => {
-  it('nomme les étapes du moteur', () => {
-    expect(stepLabel('plan', STEPS)).toBe('Planification');
-    expect(stepLabel('write', STEPS)).toBe('Écriture des fichiers');
-    expect(stepLabel('install', STEPS)).toBe('Installation des dépendances');
-  });
-
-  it('une étape inconnue est affichée telle quelle, jamais masquée', () => {
-    expect(stepLabel('deploy', STEPS)).toBe('deploy');
-  });
-});
-
-describe('GENERATION_STEPS — ce que generateProjectAction exécute vraiment', () => {
-  it('ne promet ni installation, ni Git, ni validation', () => {
-    // Le moteur ne lance aucune commande qu'on ne lui demande pas : l'écran
-    // n'affiche donc pas des étapes qui n'auront pas lieu.
-    expect([...GENERATION_STEPS]).toEqual(['plan', 'write']);
-    expect(GENERATION_STEPS).not.toContain('install');
-    expect(GENERATION_STEPS).not.toContain('git');
-  });
-});
-
-describe('progressStates — l’avancement affiché', () => {
-  it('marque terminé ce que le moteur a terminé, en attente le reste', () => {
-    expect(progressStates(['plan'], GENERATION_STEPS, STEPS)).toEqual([
-      { step: 'plan', label: 'Planification', done: true },
-      { step: 'write', label: 'Écriture des fichiers', done: false },
-    ]);
-  });
-
-  it('rien de terminé : tout est en attente', () => {
-    expect(progressStates([], GENERATION_STEPS, STEPS).every((step) => !step.done)).toBe(true);
-  });
-
-  it('une étape terminée hors liste n’est pas perdue : elle est ajoutée au compte rendu', () => {
-    const states = progressStates(['plan', 'write', 'validate'], GENERATION_STEPS, STEPS);
-    expect(states.map((state) => state.step)).toEqual(['plan', 'write', 'validate']);
-    expect(states.at(-1)).toEqual({ step: 'validate', label: 'Validation', done: true });
-  });
-});
 
 describe('formatBytes — le poids du rapport', () => {
   it.each([
@@ -80,6 +34,10 @@ describe('targetDirectory — le dossier montré AVANT d’écrire', () => {
     expect(targetDirectory('C:\\Users\\moi\\buildit\\', 'mon-projet')).toBe(
       'C:\\Users\\moi\\buildit\\mon-projet',
     );
+  });
+
+  it('garde la barre inverse d’un dossier Windows choisi dans l’explorateur', () => {
+    expect(targetDirectory('D:\\Projets', 'mon-projet')).toBe('D:\\Projets\\mon-projet');
   });
 
   it('la racine « / » reste une racine', () => {

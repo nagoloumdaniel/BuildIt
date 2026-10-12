@@ -1,0 +1,69 @@
+/*
+ * La sortie d'un projet : archive ZIP, dossier choisi, installation des dépendances, rapport.
+ *
+ * Importée par `app/globals.css`. Mêmes règles que lui : aucune couleur en
+ * dur (tout passe par les variables `--pf-*`), un `:focus-visible` sur tout
+ * élément interactif, rien qui bouge au survol, `prefers-reduced-motion`
+ * respecté.
+ */
+
+@layer components {
+  /* Le groupe des deux sorties : un vrai `fieldset`, sans son cadre par défaut. */
+  .pf-output-fieldset {
+    border: 0;
+    margin: 0;
+    min-width: 0;
+    padding: 0;
+  }
+
+  /*
+   * Les deux sorties, côte à côte au large, l'une sous l'autre au petit. Deux
+   * cartes de décision, pas une grille : elles ne passent jamais à trois.
+   */
+  .pf-output-choices {
+    display: grid;
+    gap: 0.75rem;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 15rem), 1fr));
+    max-width: 44rem;
+  }
+
+  .pf-output-progress {
+    max-width: 44rem;
+  }
+
+  /*
+   * La ligne d'état : l'opération en cours, au-dessus de l'unique barre. Le
+   * ton (fini, en faute) est posé par le résultat, jamais choisi par l'écran.
+   */
+  .pf-output-status {
+    align-items: flex-start;
+    color: var(--pf-text);
+    display: flex;
+    font-size: 0.9375rem;
+    font-weight: 560;
+    gap: 0.5rem;
+    line-height: 1.4;
+  }
+
+  .pf-output-status .pf-spinner,
+  .pf-output-status-icon {
+    flex: none;
+    margin-top: 0.15rem;
+  }
+
+  .pf-output-status-icon {
+    display: inline-flex;
+  }
+
+  .pf-output-status[data-tone="ok"] .pf-output-status-icon {
+    color: var(--pf-ok);
+  }
+
+  .pf-output-status[data-tone="error"] .pf-output-status-icon {
+    color: var(--pf-danger);
+  }
+
+  .pf-output-callout-title {
+    font-weight: 620;
+  }
+}

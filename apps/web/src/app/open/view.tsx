@@ -42,7 +42,7 @@ export function OpenView({ controller }: OpenViewProps): ReactElement {
   const inspection = controller.inspection;
 
   return (
-    <ScreenShell description={t.open.description} title={t.open.title}>
+    <ScreenShell description={t.open.description} icon="folderOpen" title={t.open.title}>
       <PickCard
         busy={picking || controller.phase === 'inspecting'}
         busyLabel={picking ? t.picker.openingHint : t.open.analysing}

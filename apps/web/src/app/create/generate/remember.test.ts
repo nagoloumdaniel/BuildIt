@@ -114,10 +114,11 @@ describe('rememberGeneratedProject', () => {
   it('l’écran de génération l’appelle, après l’enregistrement du rapport', () => {
     // Le seul endroit qui écrit la mémoire est l'écran de génération, et il le
     // fait après `saveReport` : l'ordre est la règle (« jamais avant un succès »).
+    // Le manifest y est passé : c'est lui qui permet de refaire le projet.
     const source = readFileSync(fileURLToPath(new URL('page.tsx', import.meta.url)), 'utf8');
     const save = source.indexOf('saveReport(');
     const remember = source.indexOf(
-      'rememberGeneratedProject(browserProjectStorage(), draft, result)',
+      'rememberGeneratedProject(browserProjectStorage(), draft, result, new Date(), manifest.value)',
     );
 
     expect(save).toBeGreaterThan(-1);

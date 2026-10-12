@@ -2,6 +2,7 @@
 
 import { ARCHITECTURES, type Architecture } from '@buildit/manifest';
 import { type ReactElement, useState } from 'react';
+import { DisclosureButton } from '../../../components/ui/disclosure-button';
 import type { DraftState } from '../../../lib/draft';
 import { useMessages } from '../../../lib/i18n/provider';
 import { isProjectType, type ProjectType } from '../type/profiles';
@@ -124,12 +125,9 @@ export function ArchitectureChoices({
                 <span className="pf-choice-name">
                   {note.label}
                   {isRecommended ? (
-                    <span className="pf-badge pf-badge-accent ml-2">
+                    <span className="pf-badge pf-badge-accent">
                       {t.wizard.architecture.recommendedBadge}
                     </span>
-                  ) : null}
-                  {chosen === architecture ? (
-                    <span className="pf-badge ml-2">{t.wizard.architecture.chosenBadge}</span>
                   ) : null}
                 </span>
                 <span className="pf-choice-note">{note.note}</span>
@@ -142,14 +140,14 @@ export function ArchitectureChoices({
         </div>
       </fieldset>
 
-      {guided && !expanded ? (
-        <button
-          type="button"
-          className="pf-btn pf-btn-ghost mt-3"
-          onClick={() => setExpanded(true)}
-        >
-          {t.wizard.architecture.showAll(ARCHITECTURES.length - recommended.length)}
-        </button>
+      {guided ? (
+        <DisclosureButton
+          className="mt-3"
+          expanded={expanded}
+          lessLabel={t.wizard.stack.showRecommended}
+          moreLabel={t.wizard.architecture.showAll(ARCHITECTURES.length - recommended.length)}
+          onToggle={() => setExpanded((value) => !value)}
+        />
       ) : null}
 
       <p className="pf-hint mt-4">

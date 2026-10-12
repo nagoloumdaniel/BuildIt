@@ -95,6 +95,7 @@ export default function GraphPage(): ReactElement {
 
   return (
     <ScreenShell
+      icon="workflow"
       actions={
         <Link className={buttonClassName()} href="/create/blueprint">
           <Icon name="arrowLeft" />

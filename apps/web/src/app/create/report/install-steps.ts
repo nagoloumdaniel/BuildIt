@@ -24,6 +24,8 @@ export interface InstallGuideInput {
   readonly directory: string;
   readonly docker: boolean;
   readonly envVarNames: readonly string[];
+  /** Les dépendances ont déjà été installées par la génération : pas d'étape à refaire. */
+  readonly installed?: boolean;
 }
 
 /** `cd` seulement si une destination est connue — absente en mode hébergé. */
@@ -32,7 +34,10 @@ export function installSteps(input: InstallGuideInput, t: Messages): readonly In
   const steps: InstallStep[] = [];
 
   if (input.directory !== '') {
-    steps.push({ label: labels.open, command: `cd ${input.directory}` });
+    // Un dossier choisi dans l'explorateur peut contenir des espaces : la
+    // commande copiée doit marcher telle quelle, donc le chemin est cité.
+    const target = /\s/.test(input.directory) ? `"${input.directory}"` : input.directory;
+    steps.push({ label: labels.open, command: `cd ${target}` });
   }
 
   if (input.docker) {
@@ -46,7 +51,9 @@ export function installSteps(input: InstallGuideInput, t: Messages): readonly In
     });
   }
 
-  steps.push({ label: labels.install, command: 'pnpm install' });
+  if (input.installed !== true) {
+    steps.push({ label: labels.install, command: 'pnpm install' });
+  }
   steps.push({ label: labels.dev, command: 'pnpm dev' });
 
   return steps;

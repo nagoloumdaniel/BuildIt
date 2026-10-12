@@ -227,7 +227,7 @@ export function CloneView(props: CloneViewProps): ReactElement {
     status === 'failed' && props.failure !== null ? failureMessage(props.failure, c) : null;
 
   return (
-    <ScreenShell title={c.title} description={c.description}>
+    <ScreenShell title={c.title} description={c.description} icon="gitBranch">
       <div className="pf-tabs" role="tablist" aria-label={c.sourceLabel}>
         <button
           type="button"

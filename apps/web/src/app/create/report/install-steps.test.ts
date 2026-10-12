@@ -71,3 +71,29 @@ describe('installSteps — la marche à suivre après une génération réussie'
     ]);
   });
 });
+
+describe('installSteps — après une sortie en dossier', () => {
+  it('des dépendances déjà installées ne sont pas à réinstaller', () => {
+    const steps = installSteps(
+      { directory: '/home/dev/app', docker: false, envVarNames: [], installed: true },
+      FR,
+    );
+    expect(steps.map((step) => step.command)).toEqual(['cd /home/dev/app', 'pnpm dev']);
+  });
+
+  it('une installation ratée laisse l’étape d’installation', () => {
+    const steps = installSteps(
+      { directory: '', docker: false, envVarNames: [], installed: false },
+      FR,
+    );
+    expect(steps.map((step) => step.command)).toContain('pnpm install');
+  });
+
+  it('un dossier avec des espaces est cité, pour que la commande copiée marche', () => {
+    const steps = installSteps(
+      { directory: 'C:\\Mes Projets\\app', docker: false, envVarNames: [] },
+      FR,
+    );
+    expect(steps[0]?.command).toBe('cd "C:\\Mes Projets\\app"');
+  });
+});

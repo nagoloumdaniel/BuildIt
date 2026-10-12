@@ -116,3 +116,19 @@ describe('loadReport — la relecture ne croit rien sur parole', () => {
     expect(() => saveReport(hostile, REPORT)).not.toThrow();
   });
 });
+
+describe('loadReport — l’installation des dépendances', () => {
+  it('relit une installation faite ou ratée, et ignore une valeur qui n’est pas un booléen', () => {
+    const storage = fakeStorage() as unknown as Storage;
+    saveReport(storage, { ...REPORT, installed: true });
+    expect(loadReport(storage)?.installed).toBe(true);
+
+    saveReport(storage, { ...REPORT, installed: false });
+    expect(loadReport(storage)?.installed).toBe(false);
+
+    const hostile = fakeStorage({
+      [REPORT_STORAGE_KEY]: JSON.stringify({ ...REPORT, installed: 'oui' }),
+    }) as unknown as Storage;
+    expect(loadReport(hostile)).not.toHaveProperty('installed');
+  });
+});

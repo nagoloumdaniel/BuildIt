@@ -1,5 +1,6 @@
-import { readdir } from 'node:fs/promises';
+import { readdir, stat } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
 import { type DraftState, freshDraft } from '../../../lib/draft';
 import { draftToManifest } from '../../../lib/draft-to-manifest';
@@ -68,11 +69,22 @@ describe('generateProjectAction en mode hébergé (VERCEL=1)', () => {
     expect(zip.includes(Buffer.from('mon-projet-heberge'))).toBe(true);
 
     // Le répertoire temporaire isolé a été nettoyé : rien de nouveau ne traîne
-    // sous `os.tmpdir()` après l'appel.
+    // sous `os.tmpdir()` après l'appel. D'autres fichiers de test génèrent
+    // des archives en parallèle avec le même préfixe : seul compte un dossier
+    // temporaire qui contiendrait **ce** projet.
     const after = await readdir(tmpdir());
-    const leftover = after.filter(
+    const fresh = after.filter(
       (entry) => !before.includes(entry) && entry.startsWith('buildit-hosted-'),
     );
+    const leftover: string[] = [];
+    for (const entry of fresh) {
+      try {
+        await stat(join(tmpdir(), entry, 'mon-projet-heberge'));
+        leftover.push(entry);
+      } catch {
+        // Le dossier d'une autre génération, ou déjà nettoyé.
+      }
+    }
     expect(leftover).toEqual([]);
   });
 

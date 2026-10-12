@@ -5,6 +5,7 @@ import { useEffect, useState } from 'react';
 import { useDraft, useSession } from '../components/wizard/draft-provider';
 import { ScreenShell } from '../components/wizard/shell';
 import { downloadZip } from '../lib/download-zip';
+import { stepMemory } from '../lib/journey-transition';
 import { browserProjectStorage, loadProjects, type StoredProject } from '../lib/projects';
 import { browserSessionStorage, type GenerationReport, loadReport } from './create/report/result';
 import { DashboardView } from './dashboard-view';
@@ -37,29 +38,18 @@ export default function Home(): ReactElement {
   const openLocal = usePickHandoff();
 
   useEffect(() => {
+    // L'accueil n'est pas une étape : revenir d'ici au parcours ne doit pas
+    // faire glisser l'étape 1 comme un retour en arrière.
+    stepMemory.clear();
     setReport(loadReport(browserSessionStorage()));
     setProjects(loadProjects(browserProjectStorage()));
   }, []);
-
-  /**
-   * Le re-téléchargement n'est proposé que pour le projet dont l'archive est
-   * encore en main : en local, le projet est sur le disque, il n'y a rien à
-   * re-télécharger et le bouton disparaît plutôt que de mentir.
-   */
-  const isRedownloadable = (project: StoredProject): boolean =>
-    report?.ok === true && report.zipBase64 !== undefined && report.directory === project.directory;
 
   return (
     <ScreenShell back={null}>
       <DashboardView
         draft={draft}
-        isRedownloadable={isRedownloadable}
         openLocal={openLocal}
-        onRedownloadProject={(project) => {
-          if (report?.zipBase64 !== undefined) {
-            downloadZip(report.zipBase64, project.name);
-          }
-        }}
         onReset={() => {
           session.reset();
         }}
