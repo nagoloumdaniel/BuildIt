@@ -2,7 +2,6 @@
 
 import { type CommandRunner, nodeCommandRunner } from '@buildit/exec';
 import { isHostedEnvironment } from '../lib/hosting';
-import { cookieTokenStore } from '../lib/session-cookie';
 import {
   type ClonePreviewView,
   type CloneResultView,
@@ -22,13 +21,8 @@ import {
 } from './github/device';
 import { cookieDevicePendingStore } from './github/device-pending-cookie';
 import { type RepositoryListView, repositoriesFor } from './github/repositories';
-import {
-  type GithubStatusView,
-  githubDisconnect,
-  githubStatus,
-  type SessionDeps,
-  tokenStoreFor,
-} from './github/session';
+import { sessionDeps } from './github/server-deps';
+import { type GithubStatusView, githubDisconnect, githubStatus } from './github/session';
 import {
   type InstallResultView,
   inspectProject,
@@ -78,27 +72,6 @@ function inputRecord(input: unknown): Record<string, unknown> {
 }
 
 /**
- * Les dépendances réelles : `fetch`, trousseau et identifiant d'application OAuth.
- *
- * Phase 12 : en mode hébergé (`VERCEL=1` ou `PF_HOSTED=1`), le jeton ne va
- * jamais au trousseau du système ni à `PF_GITHUB_TOKEN` — ce serait un jeton
- * partagé entre tous les visiteurs du déploiement (§2 de la tâche Phase 12).
- * Il vit dans un cookie scellé, unique par visiteur (`lib/session-cookie.ts`).
- * En local, rien ne change : `tokenStoreFor` garde le comportement de
- * `pf web` tel qu'avant cette phase.
- */
-function sessionDeps(): SessionDeps {
-  const store = isHostedEnvironment()
-    ? cookieTokenStore(process.env['SESSION_SECRET'] ?? '')
-    : tokenStoreFor(process.env, nodeCommandRunner);
-  return {
-    fetch: (input, init) => globalThis.fetch(input, init),
-    store,
-    clientId: process.env['PF_GITHUB_CLIENT_ID'] ?? '',
-  };
-}
-
-/**
  * Où vit le `device_code` en attente entre `startDevice` et `waitDevice` —
  * deux Server Actions, donc deux requêtes. En hébergé, rien ne garantit
  * qu'elles atteignent la même instance serverless : une mémoire de module y
@@ -130,6 +103,18 @@ export async function githubStatusAction(): Promise<GithubStatusView> {
 
 export async function githubPermissionsAction(): Promise<readonly PermissionView[]> {
   return PERMISSIONS;
+}
+
+/**
+ * Le flux de connexion que l'écran doit proposer.
+ *
+ * En hébergé : la redirection OAuth (`/github/authorize`), un clic, aucun
+ * code à recopier. En local, le device flow garde son avantage — un seul
+ * processus, pas de callback HTTP à exposer sur une machine qui n'écoute
+ * que `127.0.0.1` : rien à y rediriger depuis github.com.
+ */
+export async function githubConnectionModeAction(): Promise<'redirect' | 'device'> {
+  return isHostedEnvironment() ? 'redirect' : 'device';
 }
 
 export async function githubStartDeviceAction(): Promise<DeviceStartResult> {

@@ -13,6 +13,8 @@ export const GITHUB_CODES = [
   'GITHUB_DEVICE_DISABLED',
   'GITHUB_DEVICE_EXPIRED',
   'GITHUB_DEVICE_DENIED',
+  'GITHUB_OAUTH_CODE_INVALID',
+  'GITHUB_OAUTH_STATE_INVALID',
   'GITHUB_TOKEN_INVALID',
   'GITHUB_KEYCHAIN_UNAVAILABLE',
   'GITHUB_KEYCHAIN_FAILED',
@@ -37,6 +39,10 @@ const MESSAGES: Readonly<Record<GitHubCode, string>> = {
     'Cette application GitHub n’accepte pas la connexion par code (device flow), ou son identifiant est faux.',
   GITHUB_DEVICE_EXPIRED: 'Le code a expiré avant d’être saisi : rien n’a été connecté.',
   GITHUB_DEVICE_DENIED: 'Connexion refusée sur github.com : rien n’a été connecté.',
+  GITHUB_OAUTH_CODE_INVALID:
+    'Code d’autorisation invalide ou déjà utilisé : relancez la connexion.',
+  GITHUB_OAUTH_STATE_INVALID:
+    'La réponse de GitHub ne correspond à aucune connexion en cours : relancez-la depuis BuildIt, pas depuis un lien gardé de côté.',
   GITHUB_TOKEN_INVALID: 'Ce jeton n’a pas la forme d’un jeton GitHub.',
   GITHUB_KEYCHAIN_UNAVAILABLE:
     'Le trousseau du système est indisponible ({value}) : le jeton n’est jamais stocké en clair, il n’a donc pas été enregistré.',

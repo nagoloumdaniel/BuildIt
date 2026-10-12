@@ -2,6 +2,7 @@
 
 import { type ReactElement, useEffect, useState } from 'react';
 import {
+  githubConnectionModeAction,
   githubDisconnectAction,
   githubPermissionsAction,
   githubStartDeviceAction,
@@ -10,7 +11,7 @@ import {
 } from '../actions-node';
 import type { DeviceStartView, PermissionView } from './device';
 import type { GithubStatusView } from './session';
-import { GithubView } from './view';
+import { CALLBACK_ERROR_MESSAGES, GithubView } from './view';
 
 /**
  * Écran 21 — GitHub Connection (§6.21, §20bis) : le branchement des Server
@@ -26,21 +27,40 @@ export default function GithubPage(): ReactElement {
   const [device, setDevice] = useState<DeviceStartView | null>(null);
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState<string | undefined>(undefined);
+  const [mode, setMode] = useState<'redirect' | 'device' | null>(null);
 
   useEffect(() => {
     let alive = true;
-    void Promise.all([githubStatusAction(), githubPermissionsAction()]).then(
-      ([nextStatus, nextPermissions]) => {
-        if (!alive) {
-          return;
-        }
-        setStatus(nextStatus);
-        setPermissions(nextPermissions);
-      },
-    );
+    void Promise.all([
+      githubStatusAction(),
+      githubPermissionsAction(),
+      githubConnectionModeAction(),
+    ]).then(([nextStatus, nextPermissions, nextMode]) => {
+      if (!alive) {
+        return;
+      }
+      setStatus(nextStatus);
+      setPermissions(nextPermissions);
+      setMode(nextMode);
+    });
     return () => {
       alive = false;
     };
+  }, []);
+
+  // Le retour du flux de redirection (`github/callback`) arrive ici par
+  // l'adresse, pas par un état que ce composant aurait gardé — l'écran a été
+  // rechargé entre-temps. `connected=1` : le statut ci-dessus le confirmera
+  // déjà. `error=...` : il faut le traduire, une seule fois.
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const error = params.get('error');
+    if (error !== null) {
+      setMessage(CALLBACK_ERROR_MESSAGES[error] ?? CALLBACK_ERROR_MESSAGES['unknown']);
+    }
+    if (error !== null || params.has('connected')) {
+      window.history.replaceState(null, '', window.location.pathname);
+    }
   }, []);
 
   async function connect(): Promise<void> {
@@ -75,6 +95,7 @@ export default function GithubPage(): ReactElement {
       device={device}
       busy={busy}
       message={message}
+      mode={mode}
       onConnect={() => void connect()}
       onDisconnect={() => void disconnect()}
     />

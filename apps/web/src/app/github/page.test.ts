@@ -17,6 +17,7 @@ function render(overrides: Partial<GithubViewProps> = {}): string {
       permissions: PERMISSIONS,
       device: null,
       busy: false,
+      mode: 'device',
       onConnect: () => undefined,
       onDisconnect: () => undefined,
       ...overrides,
@@ -81,6 +82,33 @@ describe('GithubView — déconnecté', () => {
     expect(html).toContain('En attente de votre accord');
     // L'identifiant opaque du serveur n'a rien à faire à l'écran.
     expect(html).not.toContain('opaque');
+  });
+
+  it('en mode hébergé (mode « redirect »), propose un lien vers /github/authorize, jamais de code', () => {
+    const html = render({ status: DISCONNECTED, mode: 'redirect' });
+
+    expect(html).toContain('href="/github/authorize"');
+    expect(html).toContain('Se connecter à GitHub');
+    expect(html).not.toContain('saisissez ce code');
+  });
+
+  it('en mode « redirect », un device démarré par erreur n’apparaît jamais', () => {
+    // Le serveur ne devrait jamais renvoyer `device` en mode redirect, mais
+    // l'écran ne doit pas l'afficher même si c'était le cas.
+    const html = render({
+      status: DISCONNECTED,
+      mode: 'redirect',
+      device: {
+        id: 'opaque',
+        userCode: 'ABCD-1234',
+        verificationUri: 'https://github.com/login/device',
+        expiresIn: 900,
+        interval: 5,
+      },
+    });
+
+    expect(html).not.toContain('ABCD-1234');
+    expect(html).toContain('href="/github/authorize"');
   });
 });
 

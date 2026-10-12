@@ -20,5 +20,6 @@ export type { AccessToken, DeviceCode, PollOptions } from './device-flow.js';
 export { pollAccessToken, requestDeviceCode, SCOPES } from './device-flow.js';
 export type { GitHubCode, GitHubIssue } from './errors.js';
 export { GITHUB_CODES, githubIssue } from './errors.js';
+export { exchangeAuthorizationCode } from './oauth-code.js';
 export type { TokenStore } from './token-store.js';
 export { environmentStore, isTokenShaped, keychainStore, TOKEN_PATTERN } from './token-store.js';

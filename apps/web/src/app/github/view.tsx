@@ -17,12 +17,26 @@ import type { GithubStatusView } from './session';
  * et **où** le jeton est rangé — jamais le jeton.
  */
 
+/** Traduction des codes d'erreur que `github/callback` écrit dans `?error=`. */
+export const CALLBACK_ERROR_MESSAGES: Readonly<Record<string, string>> = {
+  not_configured:
+    'La connexion GitHub n’est pas configurée sur ce déploiement : PF_GITHUB_CLIENT_ID, PF_GITHUB_CLIENT_SECRET ou SESSION_SECRET manque.',
+  denied: 'Connexion refusée sur github.com : rien n’a été connecté.',
+  state:
+    'La réponse de GitHub ne correspond à aucune connexion en cours : relancez-la depuis cet écran.',
+  exchange: 'GitHub a refusé l’échange du code d’autorisation : relancez la connexion.',
+  store: 'Le jeton n’a pas pu être enregistré : relancez la connexion.',
+  unknown: 'La connexion a échoué pour une raison inconnue : relancez-la.',
+};
+
 export interface GithubViewProps {
   readonly status: GithubStatusView | null;
   readonly permissions: readonly PermissionView[];
   readonly device: DeviceStartView | null;
   readonly busy: boolean;
   readonly message?: string | undefined;
+  /** `null` tant que l'écran n'a pas encore demandé le flux à proposer. */
+  readonly mode: 'redirect' | 'device' | null;
   readonly onConnect: () => void;
   readonly onDisconnect: () => void;
 }
@@ -33,6 +47,7 @@ export function GithubView({
   device,
   busy,
   message,
+  mode,
   onConnect,
   onDisconnect,
 }: GithubViewProps): ReactElement {
@@ -40,7 +55,11 @@ export function GithubView({
   return (
     <ScreenShell
       title="Compte GitHub"
-      description="La connexion se fait par un code à saisir sur github.com : aucun mot de passe ne transite par BuildIt, et le jeton reste dans le trousseau de cette machine."
+      description={
+        mode === 'redirect'
+          ? 'La connexion ouvre github.com : choisissez votre compte, acceptez les permissions, vous revenez ici connecté. Aucun mot de passe ne transite par BuildIt.'
+          : 'La connexion se fait par un code à saisir sur github.com : aucun mot de passe ne transite par BuildIt, et le jeton reste dans le trousseau de cette machine.'
+      }
     >
       {message === undefined || message === '' ? null : (
         <StatusMessage className="mb-3">{message}</StatusMessage>
@@ -77,10 +96,20 @@ export function GithubView({
         ) : (
           <>
             <p className="pf-hint mt-2">Aucun compte GitHub connecté.</p>
-            {device === null ? (
+            {mode === 'redirect' ? (
+              <div className="mt-3">
+                <a className="pf-btn pf-btn-primary" href="/github/authorize">
+                  Se connecter à GitHub
+                </a>
+                <p className="pf-hint mt-2">
+                  Ouvre github.com dans cet onglet : choisissez votre compte, acceptez les
+                  permissions, vous revenez ici connecté.
+                </p>
+              </div>
+            ) : device === null ? (
               <div className="mt-3 flex items-center gap-3">
                 <Button
-                  disabled={busy || !status.deviceFlowAvailable}
+                  disabled={busy || mode === null || !status.deviceFlowAvailable}
                   onClick={onConnect}
                   variant="primary"
                 >

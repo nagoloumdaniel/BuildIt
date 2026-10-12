@@ -37,7 +37,7 @@ function wireBetweenRequests() {
         get(name: string) {
           return local === undefined ? undefined : { name, value: local };
         },
-        set(name: string, value: string) {
+        set(_name: string, value: string) {
           local = value;
           sealedValue = value;
         },
@@ -54,7 +54,7 @@ function wireBetweenRequests() {
         get(name: string) {
           return local === undefined ? undefined : { name, value: local };
         },
-        set(name: string, value: string) {
+        set(_name: string, value: string) {
           local = value;
           sealedValue = value;
         },
