@@ -45,7 +45,6 @@
   /* --- Orange : l'action ------------------------------------------------ */
   --pf-accent: #c2490c;
   --pf-accent-hover: #a93f0a;
-  --pf-accent-active: #8f3507;
   /* L'orange sur son propre fond clair (`--pf-accent-soft`) tombe à 4,48:1 :
      trop juste pour du texte de 11 px. Cette variante porte donc **le texte
      posé sur un fond teinté** (bulle active, badge, étape franchie) — 5,02:1.
@@ -58,8 +57,6 @@
 
   /* --- Acier : l'information ------------------------------------------- */
   --pf-steel: #0d6e7b;
-  --pf-steel-hover: #0a5d68;
-  --pf-steel-text: #ffffff;
   --pf-steel-soft: #e7f3f4;
   --pf-steel-line: #8cc3c9;
 
@@ -79,11 +76,8 @@
   --pf-radius: 12px;
   --pf-radius-sm: 8px;
   --pf-radius-lg: 18px;
-  --pf-radius-xl: 26px;
   --pf-shadow-sm: 0 1px 2px rgb(22 24 27 / 6%);
   --pf-shadow: 0 1px 2px rgb(22 24 27 / 5%), 0 12px 28px -20px rgb(22 24 27 / 28%);
-  --pf-shadow-lift: 0 2px 4px rgb(22 24 27 / 6%), 0 18px 36px -22px rgb(194 73 12 / 32%);
-  --pf-shadow-lg: 0 4px 10px rgb(22 24 27 / 6%), 0 32px 60px -32px rgb(22 24 27 / 34%);
   --pf-ring-accent: 0 0 0 3px rgb(194 73 12 / 14%);
 
   /* --- Rythme ----------------------------------------------------------- */
@@ -91,8 +85,6 @@
      qu'une interface paraît tenue plutôt qu'assemblée. */
   --pf-ease: cubic-bezier(0.22, 1, 0.36, 1);
   --pf-fast: 120ms var(--pf-ease);
-  --pf-slow: 220ms var(--pf-ease);
-  --pf-scrim: rgb(22 24 27 / 42%);
 
   /* Le fichier du logo pour le thème clair. Le sombre le remplace plus bas,
      dans le même bloc `[data-theme="dark"]` — une seule requête, celle du
@@ -135,7 +127,6 @@
 
   --pf-accent: #ff8a3d;
   --pf-accent-hover: #ff9c58;
-  --pf-accent-active: #f07a2c;
   /* En sombre, l'orange sur son fond teinté monte à 7,29:1 : la variante
      « forte » est la même couleur, pour que les composants n'aient qu'un nom
      à connaître. */
@@ -146,8 +137,6 @@
   --pf-accent-line: #6e3c18;
 
   --pf-steel: #3fc6cf;
-  --pf-steel-hover: #59d4dc;
-  --pf-steel-text: #06211f;
   --pf-steel-soft: #0e2a2d;
   --pf-steel-line: #1d5257;
 
@@ -164,10 +153,7 @@
 
   --pf-shadow-sm: 0 1px 2px rgb(0 0 0 / 50%);
   --pf-shadow: 0 1px 2px rgb(0 0 0 / 55%), 0 14px 32px -20px rgb(0 0 0 / 80%);
-  --pf-shadow-lift: 0 2px 4px rgb(0 0 0 / 55%), 0 20px 40px -22px rgb(255 138 61 / 22%);
-  --pf-shadow-lg: 0 4px 12px rgb(0 0 0 / 55%), 0 34px 64px -34px rgb(0 0 0 / 90%);
   --pf-ring-accent: 0 0 0 3px rgb(255 138 61 / 18%);
-  --pf-scrim: rgb(0 0 0 / 62%);
   --pf-logo-image: url("/brand/logo-on-dark.webp");
 
   /* En sombre, les deux halos sont plus bas et plus larges : la même intention,
@@ -343,14 +329,6 @@
     box-shadow: var(--pf-shadow-sm);
   }
 
-  /* La carte qui porte l'action principale d'un écran : un filet chaud et une
-     ombre un peu plus haute — pas une couleur de fond, qui ferait croire à un
-     état alors que c'est une hiérarchie. */
-  .pf-card-hero {
-    border-color: color-mix(in oklab, var(--pf-accent) 34%, var(--pf-border));
-    box-shadow: var(--pf-shadow);
-  }
-
   .pf-card-pad {
     padding: 1.125rem 1.25rem;
   }
@@ -439,16 +417,6 @@
     white-space: pre;
   }
 
-  .pf-kbd {
-    background: var(--pf-surface-2);
-    border: 1px solid var(--pf-border-strong);
-    border-bottom-width: 2px;
-    border-radius: 5px;
-    font-family: var(--pf-mono);
-    font-size: 0.6875rem;
-    padding: 0.05rem 0.3rem;
-  }
-
   .pf-hint {
     color: var(--pf-muted);
     font-size: 0.8125rem;
@@ -515,18 +483,6 @@
     border-color: var(--pf-accent-hover);
     box-shadow: var(--pf-ring-accent);
     color: var(--pf-accent-text);
-  }
-
-  .pf-btn-steel {
-    background: var(--pf-steel);
-    border-color: var(--pf-steel);
-    color: var(--pf-steel-text);
-  }
-
-  .pf-btn-steel:hover:not(:disabled):not([aria-disabled="true"]) {
-    background: var(--pf-steel-hover);
-    border-color: var(--pf-steel-hover);
-    color: var(--pf-steel-text);
   }
 
   .pf-btn-ghost {
@@ -772,23 +728,6 @@
     background: linear-gradient(90deg, var(--pf-accent-line), var(--pf-accent-line));
   }
 
-  /* Le rail qui suit l'étape courante part de l'orange et retombe vers le
-     filet neutre : la progression se lit sans compter les pastilles. */
-  .pf-step[data-state="current"] .pf-step-rail {
-    background: linear-gradient(90deg, var(--pf-accent), var(--pf-border));
-  }
-
-  /* Revenir corriger une étape est le geste le plus fréquent : la pastille
-     franchie réagit, sans crier. */
-  .pf-step[data-state="done"] a:hover .pf-step-node {
-    background: var(--pf-accent-soft-2);
-    border-color: var(--pf-accent);
-  }
-
-  .pf-step[data-state="done"] a:hover .pf-step-label {
-    color: var(--pf-text);
-  }
-
   .pf-step[data-state="current"] .pf-step-node {
     background: var(--pf-accent);
     border-color: var(--pf-accent);
@@ -799,6 +738,26 @@
   .pf-step[data-state="current"] .pf-step-label {
     color: var(--pf-text);
     font-weight: 620;
+  }
+
+  /* Le rail qui suit l'étape courante part de l'orange et retombe vers le
+     filet neutre : la progression se lit sans compter les pastilles. */
+  .pf-step[data-state="current"] .pf-step-rail {
+    background: linear-gradient(90deg, var(--pf-accent), var(--pf-border));
+  }
+
+  /* Revenir corriger une étape est le geste le plus fréquent : la pastille
+     franchie réagit, sans crier. Ces règles de survol viennent **après** celles
+     des états : plus spécifiques, elles n'ont pas à être déclarées avant pour
+     gagner — et les déclarer avant faisait signaler une spécificité
+     descendante. */
+  .pf-step[data-state="done"] a:hover .pf-step-node {
+    background: var(--pf-accent-soft-2);
+    border-color: var(--pf-accent);
+  }
+
+  .pf-step[data-state="done"] a:hover .pf-step-label {
+    color: var(--pf-text);
   }
 
   /* --- Champs ----------------------------------------------------------- */
@@ -879,22 +838,10 @@
     color: var(--pf-accent-strong);
   }
 
-  .pf-badge-steel {
-    background: var(--pf-steel-soft);
-    border-color: var(--pf-steel-line);
-    color: var(--pf-steel);
-  }
-
   .pf-badge-ok {
     background: var(--pf-ok-soft);
     border-color: var(--pf-ok-line);
     color: var(--pf-ok);
-  }
-
-  .pf-badge-warn {
-    background: var(--pf-warn-soft);
-    border-color: var(--pf-warn-line);
-    color: var(--pf-warn);
   }
 
   .pf-badge-danger {
@@ -909,12 +856,6 @@
     display: grid;
     gap: 0.75rem;
     grid-template-columns: repeat(auto-fit, minmax(min(100%, 16rem), 1fr));
-  }
-
-  .pf-grid-wide {
-    display: grid;
-    gap: 0.875rem;
-    grid-template-columns: repeat(auto-fit, minmax(min(100%, 21rem), 1fr));
   }
 
   .pf-choice {
@@ -1089,12 +1030,6 @@
 
   /* --- Divers ----------------------------------------------------------- */
 
-  .pf-divider {
-    background: var(--pf-border);
-    border: 0;
-    height: 1px;
-  }
-
   .pf-sr-only-focusable {
     clip: rect(0 0 0 0);
     height: 1px;
@@ -1111,16 +1046,6 @@
     top: 0.5rem;
     width: auto;
     z-index: 50;
-  }
-
-  .pf-sr-only {
-    clip: rect(0 0 0 0);
-    clip-path: inset(50%);
-    height: 1px;
-    overflow: hidden;
-    position: absolute;
-    white-space: nowrap;
-    width: 1px;
   }
 
   /* --- En-tête de page -------------------------------------------------- */
@@ -1159,50 +1084,7 @@
     justify-content: flex-end;
   }
 
-  /* --- Héros ------------------------------------------------------------ */
-
-  /* Le bloc qui ouvre un écran sans action principale : une phrase, un geste.
-     Un dégradé très court vers la surface suffit — au-delà, c'est du décor. */
-  .pf-hero {
-    background: linear-gradient(
-      150deg,
-      color-mix(in oklab, var(--pf-accent) 7%, var(--pf-surface)) 0%,
-      var(--pf-surface) 46%,
-      color-mix(in oklab, var(--pf-steel) 6%, var(--pf-surface)) 100%
-    );
-    border: 1px solid var(--pf-border);
-    border-radius: var(--pf-radius-lg);
-    box-shadow: var(--pf-shadow-sm);
-    overflow: hidden;
-    padding: 1.5rem 1.35rem;
-    position: relative;
-  }
-
-  @media (min-width: 48rem) {
-    .pf-hero {
-      padding: 2rem 2rem 1.9rem;
-    }
-  }
-
-  /* Un liseré chaud, posé en haut plutôt qu'une ombre colorée : le héros reste
-     une carte, pas une bannière publicitaire. */
-  .pf-hero::before {
-    background: linear-gradient(90deg, var(--pf-accent), var(--pf-steel));
-    content: "";
-    height: 3px;
-    left: 0;
-    position: absolute;
-    right: 0;
-    top: 0;
-  }
-
-  .pf-hero-row {
-    align-items: center;
-    display: flex;
-    flex-wrap: wrap;
-    gap: 1.5rem;
-    justify-content: space-between;
-  }
+  /* --- Illustration ----------------------------------------------------- */
 
   .pf-illustration {
     color: var(--pf-accent);
@@ -1223,12 +1105,6 @@
     display: flex;
     flex-wrap: wrap;
     gap: 0.5rem;
-  }
-
-  .pf-grid-2 {
-    display: grid;
-    gap: 0.875rem;
-    grid-template-columns: repeat(auto-fit, minmax(min(100%, 18rem), 1fr));
   }
 
   /* --- Onglets segmentés ------------------------------------------------ */
@@ -1308,57 +1184,6 @@
     padding-bottom: 0;
   }
 
-  /* --- Tuile d'icône ---------------------------------------------------- */
-
-  .pf-icon-tile {
-    align-items: center;
-    background: var(--pf-surface-2);
-    border: 1px solid var(--pf-border);
-    border-radius: var(--pf-radius-sm);
-    color: var(--pf-muted);
-    display: inline-flex;
-    flex: none;
-    height: 2.25rem;
-    justify-content: center;
-    width: 2.25rem;
-  }
-
-  .pf-icon-tile-accent {
-    background: var(--pf-accent-soft);
-    border-color: var(--pf-accent-line);
-    color: var(--pf-accent);
-  }
-
-  .pf-icon-tile-steel {
-    background: var(--pf-steel-soft);
-    border-color: var(--pf-steel-line);
-    color: var(--pf-steel);
-  }
-
-  /* --- Mesure ----------------------------------------------------------- */
-
-  .pf-stat {
-    display: flex;
-    flex-direction: column;
-    gap: 0.1rem;
-    min-width: 0;
-  }
-
-  .pf-stat-value {
-    color: var(--pf-text);
-    font-family: var(--pf-mono);
-    font-size: 1.0625rem;
-    font-weight: 600;
-    letter-spacing: -0.02em;
-  }
-
-  .pf-stat-label {
-    color: var(--pf-faint);
-    font-family: var(--pf-mono);
-    font-size: 0.6875rem;
-    text-transform: lowercase;
-  }
-
   /* --- Encarts ---------------------------------------------------------- */
 
   /* Un encart ne crie pas : il met en marge ce qu'on doit lire avant d'agir. */
@@ -1389,26 +1214,6 @@
   .pf-link:hover {
     color: var(--pf-accent-hover);
     text-decoration-thickness: 2px;
-  }
-
-  /* --- Cartes cliquables ------------------------------------------------ */
-
-  /* Une carte qui est un lien le dit au survol : elle se soulève d'un pixel et
-     son filet chauffe. Rien ne bouge au clavier — le focus a son anneau. */
-  .pf-card-link {
-    color: inherit;
-    display: block;
-    text-decoration: none;
-    transition:
-      border-color var(--pf-fast),
-      box-shadow var(--pf-fast),
-      transform var(--pf-fast);
-  }
-
-  .pf-card-link:hover {
-    border-color: var(--pf-accent-line);
-    box-shadow: var(--pf-shadow);
-    transform: translateY(-2px);
   }
 
   /* --- Tables ----------------------------------------------------------- */

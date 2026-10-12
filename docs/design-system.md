@@ -39,26 +39,40 @@ famille dit déjà « étiquette de donnée ».
 
 ## 3. Les composants réutilisables
 
-Tous sous `src/components/ui/`. **Aucun écran ne redessine ce qui existe.**
+Tous sous `src/components/ui/` — sauf `Toaster`, `ThemeToggle` et
+`LocaleToggle`, qui vivent dans `src/app/` parce qu'ils portent l'état du
+document (stockage, `data-theme`, `lang`). **Aucun écran ne redessine ce qui
+existe.**
 
 | Composant | Rôle |
 |---|---|
 | `Icon` | le jeu d'icônes, grille 24, trait `currentColor` |
-| `TechIcon` | le logo d'une technologie du catalogue, monogramme en repli |
-| `Logo`, `Wordmark` | le logo, qui suit le thème sans JavaScript |
+| `TechIcon` | le logo d'une technologie du catalogue (sprite SVG), monogramme en repli |
+| `Illustration` | les trois dessins de la maison : `forge`, `lost`, `empty` |
+| `Logo`, `Wordmark` | le logo, qui suit le thème sans JavaScript (WebP en image de fond) |
 | `Card`, `CardHead` | une unité de décision délimitée |
 | `Stepper` | la progression du parcours (rail au large, barre au petit) |
 | `BubbleNav` | la navigation en pilules de l'en-tête |
 | `Spinner`, `Dots`, `ProgressBar`, `LoadingLine`, `ProgressPanel` | les attentes |
-| `EmptyState`, `IssueList`, `NoteList` | les vides et les refus |
+| `EmptyState`, `ErrorState`, `IssueList`, `NoteList` | les vides, les arrêts et les refus |
 | `PathPicker` | choisir un dossier ou un fichier **dans l'explorateur système** |
+| `ProjectCard` | un projet déjà généré, sur l'accueil comme dans la collection |
+| `Toaster`, `ThemeToggle`, `LocaleToggle` | les retours d'action et les deux réglages |
 | `AppShell` | en-tête collante, pied, liens d'évitement |
 | `ScreenShell`, `StepShell` (dans `components/wizard/shell.tsx`) | les deux cadres de page |
 
 Les classes `pf-*` de `globals.css` restent disponibles : `pf-btn`,
-`pf-btn-primary`, `pf-btn-steel`, `pf-btn-ghost`, `pf-btn-danger`,
-`pf-btn-sm`, `pf-btn-lg`, `pf-btn-icon`, `pf-card`, `pf-choice`, `pf-grid`,
-`pf-badge`, `pf-input`, `pf-code`, `pf-kbd`, `pf-bubble`.
+`pf-btn-primary`, `pf-btn-ghost`, `pf-btn-danger`, `pf-btn-sm`, `pf-btn-lg`,
+`pf-btn-icon`, `pf-card`, `pf-card-pad`, `pf-card-accent`, `pf-card-head`,
+`pf-choice`, `pf-grid`, `pf-badge` (+ `-accent`, `-ok`, `-danger`), `pf-input`,
+`pf-label`, `pf-code`, `pf-bubble`, `pf-tabs`/`pf-tab`, `pf-page-head`,
+`pf-rows`/`pf-row-item`, `pf-callout` (+ `-steel`), `pf-link`, `pf-table`,
+`pf-scroll-x`, `pf-card-progress`, `pf-route-loading`, `pf-sr-only-focusable`.
+
+Rien n'y est déclaré sans usage : une classe ou un jeton qui ne sert nulle part
+est du dessin mort, il part avec le reste. L'audit se fait en comparant les
+`.pf-*` / `--pf-*` déclarés dans `globals.css` à ce que le balisage consomme —
+`pf-sr-only` et `--pf-shadow-lift` sont partis comme ça.
 
 ## 4. Les chargements — aucun squelette
 
