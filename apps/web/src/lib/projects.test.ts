@@ -200,40 +200,71 @@ describe('formatDate', () => {
 });
 
 describe('browserProjectStorage', () => {
+  /**
+   * Un `window` minimal, posé puis retiré autour de l'assertion.
+   *
+   * `Object.defineProperty` plutôt qu'une affectation : la propriété globale
+   * `window` n'est pas déclarée dans l'environnement Node de Vitest, on la crée
+   * donc, et on remet l'état exact d'avant (souvent : rien). Un `@ts-expect-error`
+   * sur l'affectation ne suffisait pas — il masquait aussi les erreurs réelles
+   * du faux objet, ce que le compilateur signalait à juste titre.
+   */
+  function withWindow(windowValue: unknown, run: () => void): void {
+    const descriptor = Object.getOwnPropertyDescriptor(globalThis, 'window');
+    Object.defineProperty(globalThis, 'window', { configurable: true, value: windowValue });
+    try {
+      run();
+    } finally {
+      if (descriptor === undefined) {
+        delete (globalThis as { window?: unknown }).window;
+      } else {
+        Object.defineProperty(globalThis, 'window', descriptor);
+      }
+    }
+  }
+
   it('rend null et avale l’erreur quand le stockage est refusé', () => {
-    const original = globalThis.window;
-    // @ts-expect-error — on simule un navigateur en navigation privée.
-    globalThis.window = {
-      localStorage: {
-        getItem() {
-          throw new Error('refusé');
-        },
-        setItem() {
-          throw new Error('refusé');
+    withWindow(
+      {
+        localStorage: {
+          getItem() {
+            throw new Error('refusé');
+          },
+          setItem() {
+            throw new Error('refusé');
+          },
         },
       },
-    };
-    const storage = browserProjectStorage();
-    expect(storage.read(PROJECTS_STORAGE_KEY)).toBeNull();
-    expect(() => storage.write(PROJECTS_STORAGE_KEY, '[]')).not.toThrow();
-    // @ts-expect-error — remise en l'état.
-    globalThis.window = original;
+      () => {
+        const storage = browserProjectStorage();
+        expect(storage.read(PROJECTS_STORAGE_KEY)).toBeNull();
+        expect(() => storage.write(PROJECTS_STORAGE_KEY, '[]')).not.toThrow();
+      },
+    );
   });
 
   it('lit et écrit quand le stockage répond', () => {
-    const original = globalThis.window;
     const memory = new Map<string, string>();
-    // @ts-expect-error — un navigateur minimal suffit.
-    globalThis.window = {
-      localStorage: {
-        getItem: (key: string) => memory.get(key) ?? null,
-        setItem: (key: string, value: string) => memory.set(key, value),
+    withWindow(
+      {
+        localStorage: {
+          getItem: (key: string) => memory.get(key) ?? null,
+          setItem: (key: string, value: string) => {
+            memory.set(key, value);
+          },
+        },
       },
-    };
-    const storage = browserProjectStorage();
-    storage.write(PROJECTS_STORAGE_KEY, '[]');
-    expect(storage.read(PROJECTS_STORAGE_KEY)).toBe('[]');
-    // @ts-expect-error — remise en l'état.
-    globalThis.window = original;
+      () => {
+        const storage = browserProjectStorage();
+        storage.write(PROJECTS_STORAGE_KEY, '[]');
+        expect(storage.read(PROJECTS_STORAGE_KEY)).toBe('[]');
+      },
+    );
+  });
+
+  it('ne laisse pas de `window` derrière lui', () => {
+    // La preuve que la sonde des deux tests précédents ne fuit pas dans les
+    // suivants : un faux navigateur oublié ferait passer un test pour un autre.
+    expect(Object.getOwnPropertyDescriptor(globalThis, 'window')).toBeUndefined();
   });
 });

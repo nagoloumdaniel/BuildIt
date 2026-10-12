@@ -46,5 +46,9 @@ export function useSession(): SessionStore {
 /** Le brouillon courant, re-rendu à chaque changement. */
 export function useDraft(): DraftState {
   const store = useSession();
-  return useSyncExternalStore(store.subscribe, store.get, store.get);
+  // Le troisième argument est le snapshot **serveur** : React l'emploie pendant
+  // l'hydratation. Passer `store.get` — l'état courant, déjà enrichi par
+  // `attach` — faisait rendre au client une sélection absente du HTML, et React
+  // signalait une divergence d'hydratation.
+  return useSyncExternalStore(store.subscribe, store.get, store.getServer);
 }

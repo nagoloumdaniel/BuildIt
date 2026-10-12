@@ -37,12 +37,20 @@
   --pf-border-strong: #8c8780;
   --pf-text: #16181b;
   --pf-muted: #5e6168;
-  --pf-faint: #8a8e95;
+  /* 5,05:1 sur blanc, 4,84:1 sur le fond de page : ce jeton porte des
+     étiquettes de 11 px et des en-têtes de tableau, donc du texte réel. La
+     valeur précédente (3,29:1) échouait le seuil AA. */
+  --pf-faint: #6b6f76;
 
   /* --- Orange : l'action ------------------------------------------------ */
   --pf-accent: #c2490c;
   --pf-accent-hover: #a93f0a;
   --pf-accent-active: #8f3507;
+  /* L'orange sur son propre fond clair (`--pf-accent-soft`) tombe à 4,48:1 :
+     trop juste pour du texte de 11 px. Cette variante porte donc **le texte
+     posé sur un fond teinté** (bulle active, badge, étape franchie) — 5,02:1.
+     L'orange de marque reste celui des aplats et des bordures. */
+  --pf-accent-strong: #b6430a;
   --pf-accent-text: #ffffff;
   --pf-accent-soft: #fdf2ea;
   --pf-accent-soft-2: #f9e3d2;
@@ -68,13 +76,42 @@
   --pf-focus: #1d4ed8;
 
   /* --- Formes ----------------------------------------------------------- */
-  --pf-radius: 10px;
+  --pf-radius: 12px;
   --pf-radius-sm: 8px;
-  --pf-radius-lg: 16px;
+  --pf-radius-lg: 18px;
+  --pf-radius-xl: 26px;
   --pf-shadow-sm: 0 1px 2px rgb(22 24 27 / 6%);
   --pf-shadow: 0 1px 2px rgb(22 24 27 / 5%), 0 12px 28px -20px rgb(22 24 27 / 28%);
   --pf-shadow-lift: 0 2px 4px rgb(22 24 27 / 6%), 0 18px 36px -22px rgb(194 73 12 / 32%);
+  --pf-shadow-lg: 0 4px 10px rgb(22 24 27 / 6%), 0 32px 60px -32px rgb(22 24 27 / 34%);
   --pf-ring-accent: 0 0 0 3px rgb(194 73 12 / 14%);
+
+  /* --- Rythme ----------------------------------------------------------- */
+  /* Une seule courbe d'accélération pour tout le produit : c'est ce qui fait
+     qu'une interface paraît tenue plutôt qu'assemblée. */
+  --pf-ease: cubic-bezier(0.22, 1, 0.36, 1);
+  --pf-fast: 120ms var(--pf-ease);
+  --pf-slow: 220ms var(--pf-ease);
+  --pf-scrim: rgb(22 24 27 / 42%);
+
+  /* Le fichier du logo pour le thème clair. Le sombre le remplace plus bas,
+     dans le même bloc `[data-theme="dark"]` — une seule requête, celle du
+     thème affiché. */
+  --pf-logo-image: url("/brand/logo-on-light.webp");
+
+  /* Le fond n'est pas plat : la chaleur monte par le haut (orange) et l'acier
+     se pose en bas à droite. Les deux couleurs de la direction artistique,
+     une seule fois, très bas. */
+  --pf-bg-heat: radial-gradient(
+    110rem 42rem at 50% -22rem,
+    color-mix(in oklab, var(--pf-accent) 9%, transparent),
+    transparent 72%
+  );
+  --pf-bg-cool: radial-gradient(
+    70rem 34rem at 108% 12%,
+    color-mix(in oklab, var(--pf-steel) 7%, transparent),
+    transparent 70%
+  );
 
   /* --- Typographie ------------------------------------------------------ */
   --pf-sans: var(--font-pf-sans, "Inter"), ui-sans-serif, system-ui, sans-serif;
@@ -94,11 +131,15 @@
   --pf-border-strong: #606870;
   --pf-text: #eceef0;
   --pf-muted: #9aa2aa;
-  --pf-faint: #767e86;
+  --pf-faint: #868e96;
 
   --pf-accent: #ff8a3d;
   --pf-accent-hover: #ff9c58;
   --pf-accent-active: #f07a2c;
+  /* En sombre, l'orange sur son fond teinté monte à 7,29:1 : la variante
+     « forte » est la même couleur, pour que les composants n'aient qu'un nom
+     à connaître. */
+  --pf-accent-strong: #ff8a3d;
   --pf-accent-text: #1a0e04;
   --pf-accent-soft: #2a1710;
   --pf-accent-soft-2: #3a2013;
@@ -124,7 +165,23 @@
   --pf-shadow-sm: 0 1px 2px rgb(0 0 0 / 50%);
   --pf-shadow: 0 1px 2px rgb(0 0 0 / 55%), 0 14px 32px -20px rgb(0 0 0 / 80%);
   --pf-shadow-lift: 0 2px 4px rgb(0 0 0 / 55%), 0 20px 40px -22px rgb(255 138 61 / 22%);
+  --pf-shadow-lg: 0 4px 12px rgb(0 0 0 / 55%), 0 34px 64px -34px rgb(0 0 0 / 90%);
   --pf-ring-accent: 0 0 0 3px rgb(255 138 61 / 18%);
+  --pf-scrim: rgb(0 0 0 / 62%);
+  --pf-logo-image: url("/brand/logo-on-dark.webp");
+
+  /* En sombre, les deux halos sont plus bas et plus larges : la même intention,
+     sans le voile laiteux qu'un dégradé clair produit sur un fond noir. */
+  --pf-bg-heat: radial-gradient(
+    110rem 44rem at 50% -24rem,
+    color-mix(in oklab, var(--pf-accent) 13%, transparent),
+    transparent 70%
+  );
+  --pf-bg-cool: radial-gradient(
+    72rem 36rem at 106% 10%,
+    color-mix(in oklab, var(--pf-steel) 12%, transparent),
+    transparent 68%
+  );
 }
 
 /* `inline` : les utilitaires engendrés pointent sur les variables, donc le
@@ -177,21 +234,67 @@
     font-size: 15px;
     line-height: 1.55;
     -webkit-font-smoothing: antialiased;
-    font-feature-settings: "cv05" 1, "ss03" 1;
+    font-feature-settings:
+      "cv05" 1,
+      "ss03" 1;
     /* Le fond n'est pas une surface plate : une chaleur très basse monte du
-       haut de la page, posée une fois ici plutôt que répétée en décoration. */
-    background-image: radial-gradient(
-      120rem 40rem at 50% -20rem,
-      color-mix(in oklab, var(--pf-accent) 7%, transparent),
-      transparent 70%
-    );
+       haut de la page, et l'acier se pose en haut à droite. Les deux couleurs
+       de la direction artistique, posées une fois ici plutôt que répétées en
+       décoration sur chaque carte. */
     background-attachment: fixed;
+    background-image: var(--pf-bg-heat), var(--pf-bg-cool);
+  }
+
+  /* Cibles tactiles : le halo bleu du navigateur mobile n'appartient pas au
+     produit, et le focus clavier a déjà son anneau. */
+  html {
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  /* Une barre de défilement discrète, aux couleurs de la page. Sur un écran de
+     travail, elle est visible en permanence : autant qu'elle tienne le ton. */
+  * {
+    scrollbar-color: var(--pf-border-strong) transparent;
+    scrollbar-width: thin;
+  }
+
+  ::-webkit-scrollbar {
+    height: 10px;
+    width: 10px;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: var(--pf-border-strong);
+    background-clip: padding-box;
+    border: 3px solid transparent;
+    border-radius: 999px;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: var(--pf-muted);
+    background-clip: padding-box;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: transparent;
   }
 
   :focus-visible {
     outline: 2px solid var(--pf-focus);
     outline-offset: 2px;
     border-radius: 4px;
+  }
+
+  /* Les cases à cocher et les boutons radio portent la couleur d'action. Sans
+     cette règle, le navigateur les peint en bleu : la seule couleur de la page
+     qui ne vienne pas de la direction artistique. La cible monte aussi à 17 px
+     (24 px avec la marge de l'étiquette) — le minimum de WCAG 2.5.8. */
+  input[type="checkbox"],
+  input[type="radio"] {
+    accent-color: var(--pf-accent);
+    flex: none;
+    height: 1.0625rem;
+    width: 1.0625rem;
   }
 
   ::selection {
@@ -240,6 +343,14 @@
     box-shadow: var(--pf-shadow-sm);
   }
 
+  /* La carte qui porte l'action principale d'un écran : un filet chaud et une
+     ombre un peu plus haute — pas une couleur de fond, qui ferait croire à un
+     état alors que c'est une hiérarchie. */
+  .pf-card-hero {
+    border-color: color-mix(in oklab, var(--pf-accent) 34%, var(--pf-border));
+    box-shadow: var(--pf-shadow);
+  }
+
   .pf-card-pad {
     padding: 1.125rem 1.25rem;
   }
@@ -260,8 +371,15 @@
   .pf-card-head {
     align-items: flex-start;
     display: flex;
+    flex-wrap: wrap;
     gap: 0.875rem;
     justify-content: space-between;
+  }
+
+  .pf-card-actions {
+    margin-left: auto;
+    max-width: 100%;
+    min-width: 0;
   }
 
   /* --- Typographie ------------------------------------------------------ */
@@ -463,9 +581,23 @@
     box-shadow: var(--pf-shadow-sm);
     display: flex;
     gap: 0.125rem;
+    max-width: 100%;
     padding: 0.25rem;
     -webkit-backdrop-filter: blur(14px) saturate(140%);
     backdrop-filter: blur(14px) saturate(140%);
+  }
+
+  .pf-bubble-nav {
+    min-width: 0;
+  }
+
+  .pf-mobile-nav {
+    overflow: hidden;
+  }
+
+  .pf-mobile-nav .pf-bubbles {
+    justify-content: space-between;
+    width: 100%;
   }
 
   .pf-bubble {
@@ -488,6 +620,12 @@
     white-space: nowrap;
   }
 
+  .pf-mobile-nav .pf-bubble {
+    justify-content: center;
+    min-width: 2rem;
+    padding-inline: 0.35rem;
+  }
+
   .pf-bubble:hover {
     background: var(--pf-surface-2);
     color: var(--pf-text);
@@ -497,12 +635,25 @@
   .pf-bubble[aria-selected="true"] {
     background: var(--pf-accent-soft);
     border-color: var(--pf-accent-line);
-    color: var(--pf-accent);
+    box-shadow: inset 0 0 0 1px color-mix(in oklab, var(--pf-accent) 22%, transparent);
+    color: var(--pf-accent-strong);
+  }
+
+  /* Le point de position : la bulle active porte une pastille, pas seulement
+     une couleur. Sur un écran en niveaux de gris ou en daltonisme, la forme
+     reste lisible. */
+  .pf-bubble[aria-current="page"]::after,
+  .pf-bubble[aria-selected="true"]::after {
+    background: var(--pf-accent);
+    border-radius: 999px;
+    content: "";
+    height: 4px;
+    width: 4px;
   }
 
   [data-theme="dark"] .pf-bubble[aria-current="page"],
   [data-theme="dark"] .pf-bubble[aria-selected="true"] {
-    color: var(--pf-accent);
+    color: var(--pf-accent-strong);
   }
 
   /* --- Barre d'en-tête -------------------------------------------------- */
@@ -515,6 +666,23 @@
     position: sticky;
     top: 0;
     z-index: 40;
+  }
+
+  /* Le filet de l'en-tête reprend celui des pages : orange qui se refroidit en
+     acier. C'est ce qui relie l'en-tête collant au contenu qui défile dessous. */
+  .pf-topbar::after {
+    background: linear-gradient(
+      90deg,
+      color-mix(in oklab, var(--pf-accent) 60%, transparent),
+      color-mix(in oklab, var(--pf-steel) 45%, transparent) 42%,
+      transparent 78%
+    );
+    bottom: -1px;
+    content: "";
+    height: 1px;
+    left: 0;
+    position: absolute;
+    right: 0;
   }
 
   .pf-topbar-inner {
@@ -597,11 +765,28 @@
   .pf-step[data-state="done"] .pf-step-node {
     background: var(--pf-accent-soft);
     border-color: var(--pf-accent-line);
-    color: var(--pf-accent);
+    color: var(--pf-accent-strong);
   }
 
   .pf-step[data-state="done"] .pf-step-rail {
-    background: var(--pf-accent-line);
+    background: linear-gradient(90deg, var(--pf-accent-line), var(--pf-accent-line));
+  }
+
+  /* Le rail qui suit l'étape courante part de l'orange et retombe vers le
+     filet neutre : la progression se lit sans compter les pastilles. */
+  .pf-step[data-state="current"] .pf-step-rail {
+    background: linear-gradient(90deg, var(--pf-accent), var(--pf-border));
+  }
+
+  /* Revenir corriger une étape est le geste le plus fréquent : la pastille
+     franchie réagit, sans crier. */
+  .pf-step[data-state="done"] a:hover .pf-step-node {
+    background: var(--pf-accent-soft-2);
+    border-color: var(--pf-accent);
+  }
+
+  .pf-step[data-state="done"] a:hover .pf-step-label {
+    color: var(--pf-text);
   }
 
   .pf-step[data-state="current"] .pf-step-node {
@@ -640,10 +825,16 @@
     border-color: var(--pf-text);
   }
 
+  /* Un champ qui a le focus garde un **anneau** : le liseré chaud et son halo
+     disent où l'on est, et l'anneau du navigateur reste par-dessus — c'est lui
+     que lit un contrôle d'accessibilité, et lui qui survit à une feuille de
+     style partielle. Le supprimer faisait échouer le parcours clavier sur sept
+     champs, à juste titre. */
   .pf-input:focus {
     border-color: var(--pf-accent);
     box-shadow: var(--pf-ring-accent);
-    outline: none;
+    outline: 2px solid var(--pf-focus);
+    outline-offset: 1px;
   }
 
   .pf-input:disabled {
@@ -659,13 +850,10 @@
     margin-bottom: 0.35rem;
   }
 
-  /* Une case à cocher qui se voit, et dont la cible fait 24 px. */
-  .pf-check {
-    accent-color: var(--pf-accent);
-    height: 1.0625rem;
-    width: 1.0625rem;
-    flex: none;
-  }
+  /* Une case à cocher qui se voit, et dont la cible fait 24 px — la règle vit
+     dans la couche `base` (`input[type="checkbox"]`), pas derrière une classe :
+     les cases du produit sont des `<input>` nus, et une classe oubliée sur
+     l'une d'elles se voit tout de suite (accent bleu du navigateur). */
 
   /* --- Badges ----------------------------------------------------------- */
 
@@ -688,7 +876,7 @@
   .pf-badge-accent {
     background: var(--pf-accent-soft);
     border-color: var(--pf-accent-line);
-    color: var(--pf-accent);
+    color: var(--pf-accent-strong);
   }
 
   .pf-badge-steel {
@@ -747,7 +935,7 @@
   }
 
   .pf-choice:hover:not(:disabled) {
-    border-color: var(--pf-border-strong);
+    border-color: var(--pf-accent-line);
     box-shadow: var(--pf-shadow);
     transform: translateY(-1px);
   }
@@ -860,6 +1048,10 @@
     width: 4px;
   }
 
+  .pf-empty-state-actions > * {
+    max-width: 100%;
+  }
+
   .pf-dots > span:nth-child(2) {
     animation-delay: 150ms;
   }
@@ -931,18 +1123,454 @@
     width: 1px;
   }
 
-  /* Le logo suit le thème sans JavaScript : les deux fichiers sont dans le
-     document, un seul est affiché. Pas de bascule après hydratation, donc
-     pas de clignotement. */
-  .pf-logo-on-dark {
-    display: none;
+  /* --- En-tête de page -------------------------------------------------- */
+
+  /* Le filet de tête : l'orange qui se refroidit en acier. C'est la seule
+     décoration de la page, et elle dit exactement la même chose que la
+     palette — l'action d'un côté, la donnée de l'autre. */
+  .pf-page-head {
+    padding-bottom: 0.9rem;
+    position: relative;
   }
 
-  [data-theme="dark"] .pf-logo-on-light {
-    display: none;
+  .pf-page-head::after {
+    background: linear-gradient(
+      90deg,
+      var(--pf-accent) 0%,
+      var(--pf-accent-line) 20%,
+      var(--pf-steel-line) 56%,
+      transparent 100%
+    );
+    border-radius: 999px;
+    bottom: 0;
+    content: "";
+    height: 2px;
+    left: 0;
+    position: absolute;
+    right: 0;
   }
 
-  [data-theme="dark"] .pf-logo-on-dark {
+  .pf-page-head-actions {
+    align-items: center;
+    display: flex;
+    flex: none;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    justify-content: flex-end;
+  }
+
+  /* --- Héros ------------------------------------------------------------ */
+
+  /* Le bloc qui ouvre un écran sans action principale : une phrase, un geste.
+     Un dégradé très court vers la surface suffit — au-delà, c'est du décor. */
+  .pf-hero {
+    background: linear-gradient(
+      150deg,
+      color-mix(in oklab, var(--pf-accent) 7%, var(--pf-surface)) 0%,
+      var(--pf-surface) 46%,
+      color-mix(in oklab, var(--pf-steel) 6%, var(--pf-surface)) 100%
+    );
+    border: 1px solid var(--pf-border);
+    border-radius: var(--pf-radius-lg);
+    box-shadow: var(--pf-shadow-sm);
+    overflow: hidden;
+    padding: 1.5rem 1.35rem;
+    position: relative;
+  }
+
+  @media (min-width: 48rem) {
+    .pf-hero {
+      padding: 2rem 2rem 1.9rem;
+    }
+  }
+
+  /* Un liseré chaud, posé en haut plutôt qu'une ombre colorée : le héros reste
+     une carte, pas une bannière publicitaire. */
+  .pf-hero::before {
+    background: linear-gradient(90deg, var(--pf-accent), var(--pf-steel));
+    content: "";
+    height: 3px;
+    left: 0;
+    position: absolute;
+    right: 0;
+    top: 0;
+  }
+
+  .pf-hero-row {
+    align-items: center;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1.5rem;
+    justify-content: space-between;
+  }
+
+  .pf-illustration {
+    color: var(--pf-accent);
+    flex: none;
+    max-width: 100%;
+  }
+
+  /* --- Mise en page ----------------------------------------------------- */
+
+  .pf-stack {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  .pf-row {
+    align-items: center;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+
+  .pf-grid-2 {
+    display: grid;
+    gap: 0.875rem;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 18rem), 1fr));
+  }
+
+  /* --- Onglets segmentés ------------------------------------------------ */
+
+  /* Un seul contrôle, pas deux boutons qui se répondent : le fond commun dit
+     qu'ils vont ensemble, la pastille dit lequel est actif. */
+  .pf-tabs {
+    align-items: center;
+    background: var(--pf-surface-2);
+    border: 1px solid var(--pf-border);
+    border-radius: 999px;
+    display: inline-flex;
+    flex-wrap: wrap;
+    gap: 0.125rem;
+    max-width: 100%;
+    padding: 0.25rem;
+  }
+
+  .pf-tab {
+    align-items: center;
+    background: transparent;
+    border: 1px solid transparent;
+    border-radius: 999px;
+    color: var(--pf-muted);
+    cursor: pointer;
+    display: inline-flex;
+    font-family: inherit;
+    font-size: 0.8125rem;
+    font-weight: 560;
+    gap: 0.4rem;
+    min-height: 2rem;
+    padding: 0.25rem 0.8rem;
+    transition:
+      background-color var(--pf-fast),
+      border-color var(--pf-fast),
+      color var(--pf-fast);
+    white-space: nowrap;
+  }
+
+  .pf-tab:hover:not([aria-selected="true"]) {
+    color: var(--pf-text);
+  }
+
+  .pf-tab[aria-selected="true"] {
+    background: var(--pf-surface);
+    border-color: var(--pf-border);
+    box-shadow: var(--pf-shadow-sm);
+    color: var(--pf-text);
+  }
+
+  /* --- Lignes de liste -------------------------------------------------- */
+
+  /* Une ligne par élément, séparées par un filet : plus dense qu'une grille de
+     cartes, et la lecture verticale reste possible. */
+  .pf-rows {
+    display: flex;
+    flex-direction: column;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  .pf-row-item {
+    align-items: flex-start;
+    border-bottom: 1px solid var(--pf-border);
+    display: flex;
+    gap: 0.75rem;
+    padding: 0.8rem 0;
+  }
+
+  .pf-row-item:first-child {
+    padding-top: 0;
+  }
+
+  .pf-row-item:last-child {
+    border-bottom: 0;
+    padding-bottom: 0;
+  }
+
+  /* --- Tuile d'icône ---------------------------------------------------- */
+
+  .pf-icon-tile {
+    align-items: center;
+    background: var(--pf-surface-2);
+    border: 1px solid var(--pf-border);
+    border-radius: var(--pf-radius-sm);
+    color: var(--pf-muted);
+    display: inline-flex;
+    flex: none;
+    height: 2.25rem;
+    justify-content: center;
+    width: 2.25rem;
+  }
+
+  .pf-icon-tile-accent {
+    background: var(--pf-accent-soft);
+    border-color: var(--pf-accent-line);
+    color: var(--pf-accent);
+  }
+
+  .pf-icon-tile-steel {
+    background: var(--pf-steel-soft);
+    border-color: var(--pf-steel-line);
+    color: var(--pf-steel);
+  }
+
+  /* --- Mesure ----------------------------------------------------------- */
+
+  .pf-stat {
+    display: flex;
+    flex-direction: column;
+    gap: 0.1rem;
+    min-width: 0;
+  }
+
+  .pf-stat-value {
+    color: var(--pf-text);
+    font-family: var(--pf-mono);
+    font-size: 1.0625rem;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+  }
+
+  .pf-stat-label {
+    color: var(--pf-faint);
+    font-family: var(--pf-mono);
+    font-size: 0.6875rem;
+    text-transform: lowercase;
+  }
+
+  /* --- Encarts ---------------------------------------------------------- */
+
+  /* Un encart ne crie pas : il met en marge ce qu'on doit lire avant d'agir. */
+  .pf-callout {
+    background: var(--pf-accent-soft);
+    border: 1px solid var(--pf-accent-line);
+    border-left-width: 3px;
+    border-radius: var(--pf-radius-sm);
+    color: var(--pf-text);
+    font-size: 0.8125rem;
+    padding: 0.6rem 0.8rem;
+  }
+
+  .pf-callout-steel {
+    background: var(--pf-steel-soft);
+    border-color: var(--pf-steel-line);
+  }
+
+  /* --- Lien ------------------------------------------------------------- */
+
+  .pf-link {
+    color: var(--pf-accent);
+    text-decoration: underline;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 3px;
+  }
+
+  .pf-link:hover {
+    color: var(--pf-accent-hover);
+    text-decoration-thickness: 2px;
+  }
+
+  /* --- Cartes cliquables ------------------------------------------------ */
+
+  /* Une carte qui est un lien le dit au survol : elle se soulève d'un pixel et
+     son filet chauffe. Rien ne bouge au clavier — le focus a son anneau. */
+  .pf-card-link {
+    color: inherit;
     display: block;
+    text-decoration: none;
+    transition:
+      border-color var(--pf-fast),
+      box-shadow var(--pf-fast),
+      transform var(--pf-fast);
+  }
+
+  .pf-card-link:hover {
+    border-color: var(--pf-accent-line);
+    box-shadow: var(--pf-shadow);
+    transform: translateY(-2px);
+  }
+
+  /* --- Tables ----------------------------------------------------------- */
+
+  .pf-scroll-x {
+    max-width: 100%;
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+  }
+
+  .pf-table {
+    border-collapse: collapse;
+    font-size: 0.8125rem;
+    width: 100%;
+  }
+
+  .pf-table th {
+    border-bottom: 1px solid var(--pf-border-strong);
+    color: var(--pf-faint);
+    font-family: var(--pf-mono);
+    font-size: 0.6875rem;
+    font-weight: 500;
+    padding: 0.5rem 0.6rem;
+    text-align: left;
+  }
+
+  .pf-table td {
+    border-bottom: 1px solid var(--pf-border);
+    padding: 0.5rem 0.6rem;
+    vertical-align: top;
+  }
+
+  .pf-table tbody tr:hover {
+    background: var(--pf-surface-2);
+  }
+
+  /* --- Chargement de route --------------------------------------------- */
+
+  /* Ce que Next affiche entre deux écrans. Il n'imite aucune forme : il dit
+     qu'un travail est en cours et laisse la page suivante prendre sa place. */
+  .pf-route-loading {
+    align-items: center;
+    display: flex;
+    flex-direction: column;
+    gap: 0.85rem;
+    justify-content: center;
+    margin: 0 auto;
+    max-width: 22rem;
+    min-height: 42vh;
+    padding: 3rem 1.25rem;
+    text-align: center;
+  }
+
+  /* --- Barre de progression dans une carte ----------------------------- */
+
+  /* L'attente d'un geste lancé depuis une carte reste **dans** la carte : le
+     bouton ne se remplace pas par un écran, la carte grandit d'une ligne. */
+  .pf-card-progress {
+    border-top: 1px solid var(--pf-border);
+    margin-top: 0.9rem;
+    padding-top: 0.9rem;
+  }
+
+  /* --- Toasts ----------------------------------------------------------- */
+
+  /* Un retour d'action se pose en bas à droite, au-dessus du contenu, sans
+     déplacer la page : il ne prend jamais la place de ce qu'on est en train
+     de lire. La pile est ancrée, pas flottante au milieu. */
+  .pf-toasts {
+    bottom: calc(1rem + env(safe-area-inset-bottom, 0px));
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    list-style: none;
+    margin: 0;
+    max-width: min(26rem, calc(100vw - 2rem));
+    padding: 0;
+    pointer-events: none;
+    position: fixed;
+    right: 1rem;
+    z-index: 60;
+  }
+
+  .pf-toast {
+    align-items: flex-start;
+    animation: pf-fade-in 180ms var(--pf-ease);
+    background: var(--pf-surface);
+    border: 1px solid var(--pf-border);
+    border-left-width: 3px;
+    border-radius: var(--pf-radius);
+    box-shadow: var(--pf-shadow);
+    color: var(--pf-text);
+    display: flex;
+    font-size: 0.875rem;
+    gap: 0.55rem;
+    padding: 0.65rem 0.85rem;
+    pointer-events: auto;
+  }
+
+  .pf-toast-icon {
+    color: var(--pf-muted);
+    flex: none;
+    margin-top: 0.1rem;
+  }
+
+  .pf-toast-message {
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
+
+  .pf-toast[data-kind="info"] {
+    border-left-color: var(--pf-steel);
+  }
+
+  .pf-toast[data-kind="info"] .pf-toast-icon {
+    color: var(--pf-steel);
+  }
+
+  .pf-toast[data-kind="success"] {
+    border-left-color: var(--pf-ok);
+  }
+
+  .pf-toast[data-kind="success"] .pf-toast-icon {
+    color: var(--pf-ok);
+  }
+
+  /* Une erreur reste à l'écran plus longtemps qu'un succès : elle demande une
+     décision, pas seulement une lecture. Le fond la distingue sans la crier. */
+  .pf-toast[data-kind="error"] {
+    background: var(--pf-danger-soft);
+    border-color: var(--pf-danger-line);
+    border-left-color: var(--pf-danger);
+  }
+
+  .pf-toast[data-kind="error"] .pf-toast-icon {
+    color: var(--pf-danger);
+  }
+
+  /* Sur un écran étroit, la pile prend toute la largeur : deux colonnes de
+     contenu à 360 px ne laisseraient pas lire la phrase. */
+  @media (max-width: 30rem) {
+    .pf-toasts {
+      left: 1rem;
+      max-width: none;
+      right: 1rem;
+    }
+  }
+
+  /* --- Logo ------------------------------------------------------------- */
+
+  /* Le logo est une image de fond, pas un `<img>` : le navigateur ne
+     télécharge que le fichier du thème affiché, et le changement de thème
+     échange l'image par la même règle CSS qui échange les couleurs — aucune
+     bascule après hydratation, donc aucun clignotement. Les fichiers sont des
+     WebP préparés une fois (`scripts/build-brand-webp.py`), 18 ko au lieu de
+     170 ko de PNG. */
+  .pf-logo-mark {
+    background-image: var(--pf-logo-image);
+    background-position: center;
+    background-repeat: no-repeat;
+    background-size: contain;
+    display: inline-block;
+    flex: none;
   }
 }

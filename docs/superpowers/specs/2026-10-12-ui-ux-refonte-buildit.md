@@ -51,3 +51,20 @@ Tous les libellés ajoutés sont disponibles en français et anglais. Les chemin
 ## Limites de périmètre
 
 La refonte réutilise les primitives et données existantes. Elle n'ajoute pas de backend de persistance ni de nouvelle dépendance d'icônes si les SVG déjà présents couvrent le besoin.
+
+## Ce qui a été livré
+
+- **Jetons et direction artistique** (`apps/web/src/app/globals.css`) : orange d'action `#c2490c` / `#ff8a3d`, acier `#0d6e7b` / `#3fc6cf`, surfaces et états des deux thèmes, échelle de rayons et d'ombres, courbe d'accélération unique, deux halos de fond (chaud en haut, froid à droite). Contraste mesuré : `--pf-faint` remonte à 4,84:1 (fond) / 5,05:1 (surface) et une variante `--pf-accent-strong` (5,02:1) porte le texte orange sur fond teinté.
+- **Primitives** : `Card`, `CardHead`, `EmptyState` (illustration optionnelle), `ErrorState`, `IssueList` (refus dédupliqués), `Illustration` (`forge`, `lost`, `empty`), `Icon`, `Spinner`/`Dots`/`ProgressBar`/`LoadingLine`/`ProgressPanel`, `PathPicker`, `ProjectCard`, `TechIcon`, `Stepper`, `BubbleNav`, `AppShell`.
+- **Écrans** : accueil (deux derniers projets + lien vers la collection), `projects/` (collection complète, oubli unitaire et vidage confirmé), `open/` (explorateur natif, barre d'avancement dans la carte), `clone/` (parent choisi dans l'explorateur, avancement SSE réel, annulation honnête, destination inaccessible expliquée), les douze étapes de `create/` (bilingues, erreurs actionnables, progression réelle), `github/`, `repo/` (dossier choisi par `PathPicker`), `share/`, `graph/`.
+- **États de route** : `loading.tsx` (barre indéterminée, aucun squelette), `error.tsx` (réessayer / accueil, digest non traduit), `global-error.tsx` (styles inline, bilingue), `not-found.tsx`.
+- **Prestations** : logos WebP en image de fond (une seule requête par thème), `images.unoptimized` (le moteur d'images de Next exige `sharp`, absent), deux parcours E2E verts, captures de rendu (`e2e/shots.mjs`).
+
+## Défauts fermés pendant la vérification
+
+1. **Hydratation `#418` sur `create/target`, `create/preview`, `create/generate`** — `useSyncExternalStore` recevait `store.get` comme *snapshot serveur* : un composant hydraté après le branchement de `localStorage` rendait une sélection absente du HTML. `SessionStore.getServer()` porte désormais le brouillon d'avant branchement.
+2. **Logos cassés dans les deux thèmes** — toute requête `/_next/image` répondait 400 (`sharp` absent). Les logos sont servis en WebP, via une variable CSS par thème.
+3. **404 divergente** — le chemin demandé n'existe pas au rendu serveur ; il apparaît après le montage.
+4. **Champs sans anneau de focus** — `.pf-input:focus` supprimait l'`outline` du navigateur ; le liseré chaud s'y ajoute maintenant.
+5. **Clés React dupliquées** dans les listes de refus — regroupement des phrases identiques plutôt qu'une clé d'index.
+

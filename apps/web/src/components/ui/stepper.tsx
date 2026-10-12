@@ -38,15 +38,11 @@ export interface StepperProps {
   readonly compactLabel: string;
 }
 
-export function Stepper({
-  steps,
-  current,
-  ariaLabel,
-  compactLabel,
-}: StepperProps): ReactElement {
+export function Stepper({ steps, current, ariaLabel, compactLabel }: StepperProps): ReactElement {
   const total = steps.length;
-  const percent = total === 0 ? 0 : Math.round(((current + 1) / total) * 100);
-  const currentStep = steps[current];
+  const currentIndex = total === 0 ? 0 : Math.min(total - 1, Math.max(0, current));
+  const percent = total === 0 ? 0 : Math.round(((currentIndex + 1) / total) * 100);
+  const currentStep = steps[currentIndex];
 
   return (
     <nav aria-label={ariaLabel}>
@@ -56,13 +52,13 @@ export function Stepper({
           <p className="pf-eyebrow">{compactLabel}</p>
           <p className="pf-title-sm">{currentStep?.label ?? ''}</p>
         </div>
-        <ProgressBar className="mt-2" value={percent} />
+        <ProgressBar className="mt-2" label={compactLabel} value={percent} />
       </div>
 
       {/* Large : le rail. `ol` parce que l'ordre porte le sens. */}
       <ol className="pf-stepper hidden md:flex">
         {steps.map((step, index) => {
-          const state = index < current ? 'done' : index === current ? 'current' : 'todo';
+          const state = index < currentIndex ? 'done' : index === currentIndex ? 'current' : 'todo';
           const last = index === total - 1;
           const node = (
             <span className="pf-step-node">

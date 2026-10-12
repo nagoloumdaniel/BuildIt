@@ -25,6 +25,33 @@ describe('createSessionStore', () => {
     expect(createSessionStore(null).get()).toEqual(freshDraft());
   });
 
+  it('garde le snapshot serveur stable, quoi qu’il arrive à l’état courant', () => {
+    // C'est le contrat de l'hydratation : React relit le snapshot serveur pour
+    // comparer le HTML au premier rendu client. S'il changeait — parce qu'un
+    // brouillon a été relu ou modifié entre-temps — le composant qui s'hydrate
+    // rendrait une sélection absente du HTML, et React signalerait une
+    // divergence (`#418`), ce qui arrivait sur les écrans du parcours.
+    const storage = fakeStorage();
+    storage.setItem(
+      'pf-draft',
+      JSON.stringify({ ...freshDraft(), name: 'repris', targets: ['web'] }),
+    );
+    const session = createSessionStore(null);
+
+    const server = session.getServer();
+    expect(server).toEqual(freshDraft());
+
+    session.update((draft) => ({ ...draft, name: 'modifié' }));
+    session.attach(storage as unknown as Storage);
+
+    expect(session.getServer()).toBe(server);
+    expect(session.getServer().name).toBe('');
+    // Le branchement reprend le brouillon persisté sans écraser ce que
+    // l'application a changé en mémoire entre-temps.
+    expect(session.get().name).toBe('modifié');
+    expect(session.get().targets).toEqual(['web']);
+  });
+
   it('chaque changement est persisté : fermer l’onglet ne perd rien', () => {
     const storage = fakeStorage() as unknown as Storage;
     const session = createSessionStore(storage);

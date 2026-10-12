@@ -28,6 +28,19 @@ export type DraftChange = (draft: DraftState) => DraftState;
 export interface SessionStore {
   /** L'état courant. La référence ne change qu'au changement réel. */
   get(): DraftState;
+  /**
+   * L'état **du rendu serveur** : le brouillon d'avant tout branchement de
+   * stockage, et il ne change jamais.
+   *
+   * C'est le troisième argument de `useSyncExternalStore`, et il n'est pas
+   * décoratif : React s'en sert pour **l'hydratation**. Le serveur a rendu un
+   * brouillon vide ; si le composant qui s'hydrate lit l'état courant — déjà
+   * enrichi par `attach` — il rend une sélection que le HTML ne porte pas, et
+   * React signale une divergence (`#418`), exactement ce qui arrivait sur
+   * `/create/target`, `/create/preview` et `/create/generate` : la case cochée
+   * par le brouillon relu face à `aria-pressed="false"` dans le HTML.
+   */
+  getServer(): DraftState;
   update(change: DraftChange): DraftState;
   /** Repart d'un brouillon frais et l'oublie du navigateur. */
   reset(): DraftState;
@@ -68,6 +81,7 @@ export function createSessionStore(storage: Storage | null, initial?: DraftState
 
   return {
     get: () => state,
+    getServer: () => baseline,
     update(change) {
       const next = change(state);
       saveDraft(current, next);

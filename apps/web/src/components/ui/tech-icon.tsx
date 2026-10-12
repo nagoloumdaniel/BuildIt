@@ -49,8 +49,9 @@ export function TechIcon({ id, name, size = 20, className }: TechIconProps): Rea
   if (!hasBrand(id)) {
     return (
       <span
-        aria-hidden="true"
+        aria-label={label}
         className={className}
+        role="img"
         style={{
           alignItems: 'center',
           background: 'var(--pf-surface-2)',
@@ -75,15 +76,19 @@ export function TechIcon({ id, name, size = 20, className }: TechIconProps): Rea
 
   return (
     <svg
-      aria-hidden="true"
+      aria-label={label}
       className={className}
       focusable="false"
       height={size}
+      role="img"
       style={{ flex: 'none' }}
       viewBox="0 0 24 24"
       width={size}
       xmlns="http://www.w3.org/2000/svg"
     >
+      {/* Le `<title>` sert d'infobulle au survol ; `aria-label` est ce que lit
+          le lecteur d'écran. Sans lui, la grille de logos du projet était
+          annoncée comme une suite d'éléments vides. */}
       <title>{label}</title>
       <use href={`/tech-sprite.svg#t-${id}`} />
     </svg>

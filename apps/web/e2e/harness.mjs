@@ -67,8 +67,11 @@ export function check(condition, message) {
 export function watchFailures(page) {
   const failures = [];
   const record = (message) => {
-    failures.push(message);
-    console.log(`  ⚠ erreur de page : ${message}`);
+    // L'adresse est dans le message : une erreur de console sans l'écran qui
+    // l'a produite oblige à rejouer tout le parcours pour la situer.
+    const located = `${message} [${page.url()}]`;
+    failures.push(located);
+    console.log(`  ⚠ erreur de page : ${located}`);
   };
   page.on('pageerror', (error) => record(`erreur de page : ${String(error)}`));
   page.on('console', (message) => {
@@ -101,7 +104,26 @@ async function waitForServer() {
 
 export async function startServer(workspace) {
   const nextBin = join(APP_DIR, 'node_modules', 'next', 'dist', 'bin', 'next');
-  const child = spawn(process.execPath, [nextBin, 'start', '-H', '127.0.0.1', '-p', String(PORT)], {
+  /**
+   * La preuve tourne sur le **serveur de production** (`next start`), celui que
+   * `pf web` sert réellement. Deux échappatoires, pour le diagnostic seulement :
+   *
+   * - `PF_E2E_SERVER=dev` : `next dev`, où React détaille une erreur
+   *   d'hydratation au lieu du code minifié `#418` ;
+   * - `PF_E2E_EXTERNAL=1` : ne démarre rien, se contente d'attendre un serveur
+   *   déjà lancé sur `PF_E2E_PORT` — le serveur de développement est ainsi
+   *   **chaud** (toutes les routes compilées), ce que le parcours exige : ses
+   *   attentes de 5 s ne survivent pas à une première compilation.
+   *
+   * Aucune des deux n'est un mode de preuve : un parcours joué en développement
+   * ne dit rien du bundle distribué.
+   */
+  if (process.env['PF_E2E_EXTERNAL'] === '1') {
+    await waitForServer();
+    return { pid: undefined, kill: () => undefined };
+  }
+  const mode = process.env['PF_E2E_SERVER'] === 'dev' ? 'dev' : 'start';
+  const child = spawn(process.execPath, [nextBin, mode, '-H', '127.0.0.1', '-p', String(PORT)], {
     cwd: APP_DIR,
     env: { ...process.env, PF_WEB_WORKSPACE: workspace, HOSTNAME: '127.0.0.1', PORT: String(PORT) },
     stdio: 'ignore',

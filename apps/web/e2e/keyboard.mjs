@@ -62,7 +62,14 @@ const DESCRIBE = () => {
   };
 };
 
-/** Les arrêts de tabulation attendus dans `<main>`, dans l'ordre du DOM. */
+/**
+ * Les arrêts de tabulation attendus dans `<main>`, dans l'ordre du DOM.
+ *
+ * `index` est la **place dans le DOM**, y compris pour les éléments qui ne sont
+ * pas des arrêts de tabulation (`tabindex="-1"`). Elle sert d'ancrage : le
+ * parcours pose le focus sur le titre de l'écran, qui est une cible programmée
+ * — sans cette place, on ne saurait pas d'où repart la séquence.
+ */
 const FOCUSABLES = () => {
   const root = document.querySelector('main');
   if (root === null) {
@@ -70,13 +77,12 @@ const FOCUSABLES = () => {
   }
   const selector = 'a[href], button, input, select, textarea, [tabindex]';
   return Array.from(root.querySelectorAll(selector))
-    .filter(
-      (element) =>
-        element.tabIndex >= 0 && element.disabled !== true && element.getClientRects().length > 0,
-    )
-    .map((element) => {
+    .filter((element) => element.disabled !== true && element.getClientRects().length > 0)
+    .map((element, index) => {
       const label = element.getAttribute('aria-label') ?? element.textContent ?? '';
       return {
+        index,
+        tabbable: element.tabIndex >= 0,
         tag: element.tagName,
         id: element.id,
         type: element.getAttribute('type') ?? '',
@@ -160,15 +166,17 @@ export async function keyboardJourney(page, workspace) {
     // le remet au début au Tab suivant. Trois `<body>` **de suite** signalent en
     // revanche une vraie perte de focus, pas un simple passage de relais.
     let lost = 0;
+    let bodies = 0;
     for (let attempt = 0; attempt < max; attempt += 1) {
       await page.keyboard.press(shift ? 'Shift+Tab' : 'Tab');
       tabs += 1;
       const stop = await focused();
       if (stop.tag === 'BODY') {
         lost += 1;
+        bodies += 1;
         if (lost >= 3) {
           throw new Error(
-            `focus perdu sur <body> en cherchant ${label} (après ${attempt + 1} Tab). Arrêts : ${trail(seen.slice(-6))}`,
+            `focus perdu sur <body> en cherchant ${label} (après ${attempt + 1} Tab, ${bodies} sortie(s) du document). Arrêts : ${trail(seen.slice(-6))}`,
           );
         }
         continue;
@@ -184,8 +192,21 @@ export async function keyboardJourney(page, workspace) {
         return stop;
       }
     }
+    // Le détail complet, pas seulement la fin : un arrêt manquant se voit à sa
+    // place dans la séquence, pas dans les huit derniers. L'état du `<main>` au
+    // moment de l'échec dit si le contenu a disparu ou s'il est simplement hors
+    // de l'ordre de tabulation.
+    const state = await page.evaluate(() => {
+      const root = document.querySelector('main');
+      return {
+        focusables: root?.querySelectorAll('a[href], button, input, select, textarea, [tabindex]')
+          .length,
+        html: root?.innerHTML.length ?? 0,
+        title: document.querySelector('h1')?.textContent?.slice(0, 40) ?? '',
+      };
+    });
     throw new Error(
-      `${label} n'est pas atteignable au clavier en ${max} Tab. Arrêts : ${trail(seen.slice(-8))}`,
+      `${label} n'est pas atteignable au clavier en ${max} Tab (${seen.length} arrêt(s), ${bodies} sortie(s) du document). Séquence : ${trail(seen)} — au moment de l'échec : <main> ${state.focusables} élément(s) focusable(s), ${state.html} caractères, titre « ${state.title} ».`,
     );
   }
 
@@ -231,7 +252,16 @@ export async function keyboardJourney(page, workspace) {
     const expected = await page.evaluate(FOCUSABLES);
     const anchor = await focused();
     const anchorIndex = expected.findIndex((stop) => keyOf(stop) === keyOf(anchor));
-    const tail = expected.slice(anchorIndex + 1);
+    if (anchorIndex === -1) {
+      note(
+        `${label} : le focus n'est sur aucun élément de <main> identifiable (arrêt « ${keyOf(anchor)} »).`,
+      );
+      return;
+    }
+    // Ce qui **suit** l'arrêt courant dans le DOM, en ne gardant que les arrêts
+    // de tabulation : la cible programmée du titre (index négatif) sert
+    // d'ancre, elle n'est pas un arrêt attendu.
+    const tail = expected.slice(anchorIndex + 1).filter((stop) => stop.tabbable);
     const stops = [];
     let left = false;
     for (let attempt = 0; attempt <= tail.length + 3; attempt += 1) {
@@ -367,7 +397,7 @@ export async function keyboardJourney(page, workspace) {
   await tabUntil(
     (stop) => stop.tag === 'A' && stop.text.startsWith('Créer un projet'),
     'le lien « Créer un projet »',
-    { max: 20 },
+    { max: 40 },
   );
   await page.keyboard.press('Enter');
 
@@ -397,7 +427,7 @@ export async function keyboardJourney(page, workspace) {
   await tabUntil(
     (stop) => stop.tag === 'INPUT' && stop.id === 'pf-project-name',
     'le champ du nom de projet',
-    { max: 20 },
+    { max: 40 },
   );
   await page.keyboard.type(PROJECT);
   await page.waitForFunction(
@@ -421,7 +451,7 @@ export async function keyboardJourney(page, workspace) {
   await tabUntil(
     (stop) => stop.tag === 'BUTTON' && stop.text.startsWith('Web'),
     'la plateforme « Web »',
-    { max: 20 },
+    { max: 40 },
   );
   await page.keyboard.press('Enter');
   await page.waitForFunction(
@@ -467,7 +497,7 @@ export async function keyboardJourney(page, workspace) {
     (stop) => stop.tag === 'BUTTON' && stop.text.startsWith('SaaS'),
     'le profil « SaaS »',
     {
-      max: 20,
+      max: 40,
     },
   );
   await page.keyboard.press('Enter');
@@ -478,7 +508,7 @@ export async function keyboardJourney(page, workspace) {
   await tabUntil(
     (stop) => stop.tag === 'BUTTON' && stop.text.startsWith('Application unique'),
     'l’architecture « Application unique »',
-    { max: 20 },
+    { max: 40 },
   );
   await page.keyboard.press('Enter');
   await leaveStep(4, 'architecture');
@@ -507,7 +537,7 @@ export async function keyboardJourney(page, workspace) {
       await tabUntil(
         (stop) => stop.tag === 'INPUT' && stop.id === 'pf-stack-search',
         'le champ de recherche',
-        { max: 20 },
+        { max: 40 },
       );
     }
     await page.keyboard.press('Control+a');
@@ -588,8 +618,13 @@ export async function keyboardJourney(page, workspace) {
   await enterStep(8, 'infrastructure', '**/create/infrastructure', 'Infrastructure');
   await waitGone(page, 'Chargement des hébergeurs…');
   await checkOrder('infrastructure');
+  // Le budget de frappes n'est pas la preuve : la preuve est que la case est
+  // atteignable au clavier. `checkOrder` laisse le focus en fin de document, et
+  // la séquence repart alors du haut en traversant l'en-tête, le rail d'étapes,
+  // puis les raccourcis du pied de page — trois liens de plus qu'avant la
+  // refonte. Vu depuis le début du document, la case est le 18ᵉ arrêt.
   await tabUntil((stop) => stop.tag === 'INPUT' && stop.type === 'checkbox', 'la case « Docker »', {
-    max: 20,
+    max: 40,
   });
   await page.keyboard.press('Space');
   const docker = await page.evaluate(
@@ -635,7 +670,7 @@ export async function keyboardJourney(page, workspace) {
   await tabUntil(
     (stop) => stop.tag === 'BUTTON' && stop.text.includes('Générer le projet'),
     'le bouton « Générer le projet »',
-    { max: 20 },
+    { max: 40 },
   );
   await page.keyboard.press('Enter');
   await page

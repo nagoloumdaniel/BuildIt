@@ -93,7 +93,12 @@ export function CardHead({ eyebrow, icon, title, note, actions }: CardHeadProps)
         {note === undefined ? null : <p className="pf-hint mt-1">{note}</p>}
       </div>
       {actions === undefined ? null : (
-        <div className="flex flex-none items-center gap-2">{actions}</div>
+        <div
+          className="pf-card-actions flex w-full flex-wrap items-center gap-2 md:w-auto md:flex-none"
+          data-slot="card-actions"
+        >
+          {actions}
+        </div>
       )}
     </div>
   );

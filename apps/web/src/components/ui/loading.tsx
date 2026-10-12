@@ -1,4 +1,4 @@
-import type { ReactElement, ReactNode } from 'react';
+import { type ReactElement, type ReactNode, useId } from 'react';
 
 /**
  * Les états de chargement — **aucun squelette**.
@@ -29,9 +29,10 @@ export function Spinner({ size = 'md', label, className }: SpinnerProps): ReactE
   const sizeClass = size === 'sm' ? ' pf-spinner-sm' : size === 'lg' ? ' pf-spinner-lg' : '';
   return (
     <span
-      aria-label={label}
       className={`pf-spinner${sizeClass}${className === undefined ? '' : ` ${className}`}`}
-      role={label === undefined ? 'presentation' : 'img'}
+      {...(label === undefined
+        ? { 'aria-hidden': true }
+        : { 'aria-label': label, role: 'img' as const })}
     />
   );
 }
@@ -53,19 +54,28 @@ export function Dots({ className }: { className?: string }): ReactElement {
 export interface ProgressBarProps {
   /** De 0 à 100. Absent : barre indéterminée — on ne connaît pas l'avancement. */
   readonly value?: number | undefined;
+  readonly labelledBy?: string;
   readonly label?: string;
   readonly className?: string;
 }
 
-export function ProgressBar({ value, label, className }: ProgressBarProps): ReactElement {
+export function ProgressBar({
+  value,
+  labelledBy,
+  label,
+  className,
+}: ProgressBarProps): ReactElement {
   const determinate = typeof value === 'number' && Number.isFinite(value);
   const clamped = determinate ? Math.min(100, Math.max(0, Math.round(value))) : 0;
+  const accessibleLabel = labelledBy === undefined ? (label ?? 'Progression') : undefined;
   return (
     <div
-      aria-label={label}
+      aria-label={accessibleLabel}
+      aria-labelledby={labelledBy}
       aria-valuemax={determinate ? 100 : undefined}
       aria-valuemin={determinate ? 0 : undefined}
       aria-valuenow={determinate ? clamped : undefined}
+      aria-valuetext={determinate ? `${clamped}%` : undefined}
       className={`pf-bar${determinate ? '' : ' pf-bar-indeterminate'}${className === undefined ? '' : ` ${className}`}`}
       role="progressbar"
     >
@@ -124,10 +134,11 @@ export function ProgressPanel({
   className,
 }: ProgressPanelProps): ReactElement {
   const determinate = typeof value === 'number' && Number.isFinite(value);
+  const titleId = useId();
   return (
-    <div className={className} role="group">
+    <section className={className}>
       <div className="flex items-baseline justify-between gap-3">
-        <p className="pf-title-sm flex items-center gap-2">
+        <p className="pf-title-sm flex items-center gap-2" id={titleId}>
           <Spinner size="sm" />
           {title}
         </p>
@@ -137,7 +148,7 @@ export function ProgressPanel({
           </span>
         ) : null}
       </div>
-      <ProgressBar className="mt-2" value={value} />
+      <ProgressBar className="mt-2" labelledBy={titleId} value={value} />
       {phase === undefined && detail === undefined ? null : (
         <div className="mt-2 flex items-baseline justify-between gap-3">
           <p aria-live="polite" className="pf-hint" role="status">
@@ -146,6 +157,6 @@ export function ProgressPanel({
           {detail === undefined ? null : <span className="pf-mono pf-hint">{detail}</span>}
         </div>
       )}
-    </div>
+    </section>
   );
 }

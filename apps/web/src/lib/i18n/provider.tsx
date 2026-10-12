@@ -13,13 +13,13 @@ import {
 import {
   browserLocaleStorage,
   DEFAULT_LOCALE,
-  type Locale,
   LOCALES,
+  type Locale,
   preferredLocale,
   readLocale,
   writeLocale,
 } from './locale';
-import { type Messages, MESSAGES } from './messages';
+import { MESSAGES, type Messages } from './messages';
 
 /**
  * La langue, partagée par tous les écrans.
@@ -51,7 +51,9 @@ export function LocaleProvider({ children }: { children: ReactNode }): ReactElem
     const storage = browserLocaleStorage();
     const stored = storage.read('pf-locale');
     const resolved =
-      stored === null ? preferredLocale(navigator.languages ?? [navigator.language]) : readLocale(storage);
+      stored === null
+        ? preferredLocale(navigator.languages ?? [navigator.language])
+        : readLocale(storage);
     setLocaleState(resolved);
     setReady(true);
   }, []);
@@ -97,5 +99,5 @@ export function useLocale(): LocaleContextValue {
   );
 }
 
-export { LOCALES };
 export type { Locale };
+export { LOCALES };

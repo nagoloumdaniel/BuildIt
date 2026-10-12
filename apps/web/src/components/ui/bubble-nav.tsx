@@ -43,7 +43,7 @@ export function BubbleNav(): ReactElement {
   const t = useMessages();
 
   return (
-    <nav aria-label={t.nav.label}>
+    <nav aria-label={t.nav.label} className="pf-bubble-nav">
       <ul className="pf-bubbles m-0 list-none p-1">
         {DESTINATIONS.map((destination) => {
           const label = t.nav[destination.key];

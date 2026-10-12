@@ -2,7 +2,6 @@
 
 import Link from 'next/link';
 import { type ReactElement, type ReactNode, useEffect, useMemo, useRef } from 'react';
-import { useMessages } from '../../lib/i18n/provider';
 import {
   blockedReason,
   nextStep,
@@ -11,6 +10,7 @@ import {
   type StepId,
   stepIndex,
 } from '../../lib/flow';
+import { useMessages } from '../../lib/i18n/provider';
 import { Icon } from '../ui/icon';
 import { Stepper } from '../ui/stepper';
 import { useDraft, useSession } from './draft-provider';
@@ -138,7 +138,7 @@ export function StepShell({
       <Progress current={step} />
 
       <div className="pf-fade-in mt-5">
-        <header className="pf-card-head">
+        <header className="pf-page-head pf-card-head">
           <div className="min-w-0">
             <p className="pf-eyebrow">{t.common.step(stepIndex(step) + 1, STEP_ORDER.length)}</p>
             {/* `tabIndex={-1}` : le titre est une cible de focus programmée
@@ -148,9 +148,7 @@ export function StepShell({
             </h1>
             <p className="pf-subtitle mt-2">{description}</p>
           </div>
-          {actions === undefined ? null : (
-            <div className="flex flex-none items-center gap-2">{actions}</div>
-          )}
+          {actions === undefined ? null : <div className="pf-page-head-actions">{actions}</div>}
         </header>
 
         <div className="mt-6">{children}</div>
@@ -236,16 +234,12 @@ export function ScreenShell({
         </Link>
       )}
 
-      <header className={`pf-card-head${target === null ? '' : ' mt-3'}`}>
+      <header className={`pf-page-head pf-card-head${target === null ? '' : ' mt-3'}`}>
         <div className="min-w-0">
           <h1 className="pf-display">{title}</h1>
-          {description === undefined ? null : (
-            <p className="pf-subtitle mt-2">{description}</p>
-          )}
+          {description === undefined ? null : <p className="pf-subtitle mt-2">{description}</p>}
         </div>
-        {actions === undefined ? null : (
-          <div className="flex flex-none items-center gap-2">{actions}</div>
-        )}
+        {actions === undefined ? null : <div className="pf-page-head-actions">{actions}</div>}
       </header>
 
       <div className="pf-fade-in mt-6">{children}</div>

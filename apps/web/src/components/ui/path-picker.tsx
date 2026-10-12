@@ -70,16 +70,30 @@ export function PathPicker({
 
   useEffect(() => {
     let alive = true;
-    void canOpenNativePickerAction().then((can) => {
-      if (alive) {
-        setMode(can ? 'native' : 'manual');
-      }
-    });
-    void pickerHomeAction().then((path) => {
-      if (alive) {
-        setHome(path);
-      }
-    });
+    // Une action serveur qui rejette (réseau coupé, moteur arrêté) ne doit pas
+    // laisser le bouton désactivé à vie : on retombe sur la saisie, qui marche
+    // toujours, plutôt que sur un écran sans issue.
+    void canOpenNativePickerAction()
+      .then((can) => {
+        if (alive) {
+          setMode(can ? 'native' : 'manual');
+        }
+      })
+      .catch(() => {
+        if (alive) {
+          setMode('manual');
+        }
+      });
+    void pickerHomeAction()
+      .then((path) => {
+        if (alive) {
+          setHome(path);
+        }
+      })
+      .catch(() => {
+        // Le dossier de départ est un confort : sans lui, la boîte s'ouvre sur
+        // le dernier emplacement du système.
+      });
     return () => {
       alive = false;
     };

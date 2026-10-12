@@ -11,6 +11,21 @@
 const config = {
   // Le serveur de `pf web` est lancé en local : la sortie autonome suffit.
   output: 'standalone',
+  // Un outil de travail n'annonce pas sa pile dans chaque réponse.
+  poweredByHeader: false,
+  /**
+   * Aucun composant n'utilise `next/image` : le moteur d'images de Next exige
+   * `sharp`, qui n'est pas installé ici — toute requête `/_next/image` répondait
+   * 400 et le logo s'affichait cassé. Les deux logos sont des WebP préparés à
+   * leur taille d'affichage (`scripts/build-brand-webp.py`) et posés en image
+   * de fond, donc une seule requête par thème, sans dépendance native.
+   *
+   * `unoptimized` est laissé vrai pour qu'un `next/image` ajouté plus tard serve
+   * le fichier tel quel au lieu d'échouer en silence sur une 400.
+   */
+  images: {
+    unoptimized: true,
+  },
   // Les paquets du moteur sont des paquets workspace qui publient leur
   // **source** (`"import": "./src/index.ts"`) : sans cette liste, webpack les
   // prend pour des dépendances ordinaires de `node_modules` et bute sur du

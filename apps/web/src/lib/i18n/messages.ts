@@ -78,6 +78,18 @@ const FR_CORE = {
     projects: 'Projets',
     github: 'GitHub',
     repo: 'Dépôt',
+    graph: 'Graphe',
+  },
+
+  /**
+   * Le pied de page : ce qui reste utile une fois la page lue. La version est
+   * une valeur technique, la même dans les deux langues — elle n'est pas
+   * traduite, seulement affichée.
+   */
+  footer: {
+    navLabel: 'Raccourcis du pied de page',
+    licence: 'MIT',
+    version: '0.1.0',
   },
 
   picker: {
@@ -169,6 +181,13 @@ const EN_CORE: Widen<typeof FR_CORE> = {
     projects: 'Projects',
     github: 'GitHub',
     repo: 'Repository',
+    graph: 'Graph',
+  },
+
+  footer: {
+    navLabel: 'Footer shortcuts',
+    licence: 'MIT',
+    version: '0.1.0',
   },
 
   picker: {

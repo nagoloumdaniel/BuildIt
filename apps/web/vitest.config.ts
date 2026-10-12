@@ -1,5 +1,6 @@
 import { createRequire } from 'node:module';
 import { dirname, join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { defineConfig } from 'vitest/config';
 
 /**
@@ -20,12 +21,27 @@ import { defineConfig } from 'vitest/config';
  */
 const serverOnly = createRequire(import.meta.url).resolve('server-only');
 
+/**
+ * `next/font/google` n'existe qu'à la compilation : Next le remplace par un
+ * chargeur de police, et le fichier d'origine lève hors de Next. L'alias pointe
+ * donc sur le double de `src/test-support`, qui reproduit le seul contrat
+ * utilisé par `layout.tsx`. Sans lui, tout test montant le layout échouait à
+ * l'import — c'est un défaut d'outillage, pas un défaut d'écran.
+ */
+const here = dirname(fileURLToPath(import.meta.url));
+const nextFontGoogle = join(here, 'src/test-support/next-font-google.ts');
+
 export default defineConfig({
   // Le tsconfig impose `jsx: preserve` pour Next ; en dehors de Next, Vitest
   // doit transformer lui-même le JSX, on force donc le runtime automatique de
   // React (Vitest initialise déjà `oxc`, l'option `esbuild` serait ignorée).
   oxc: { jsx: { runtime: 'automatic' } },
-  resolve: { alias: { 'server-only': join(dirname(serverOnly), 'empty.js') } },
+  resolve: {
+    alias: {
+      'server-only': join(dirname(serverOnly), 'empty.js'),
+      'next/font/google': nextFontGoogle,
+    },
+  },
   test: {
     include: ['src/**/*.test.ts', 'src/**/*.test.tsx'],
     environment: 'node',
@@ -54,6 +70,22 @@ export default defineConfig({
        * désormais écrit ici et là-bas.
        */
       include: ['src/lib/**/*.ts'],
+      /**
+       * Ce qui est mesuré est l'**état d'UI pur** : brouillon, parcours, thème,
+       * liens, quantités. En sont exclus deux ensembles, pour deux raisons
+       * différentes :
+       *
+       * - `i18n/messages*.ts` : des **données**, pas de la logique. Leur parité
+       *   français / anglais est tenue par le typecheck (`Widen<typeof FR>` rend
+       *   une clé manquante en erreur de compilation) et prouvée par
+       *   `src/lib/i18n/messages.test.ts`. Les compter comme du code non couvert
+       *   faisait échouer la suite sur un chiffre, pas sur un défaut — trouvé en
+       *   vérification finale de la refonte UI/UX.
+       * - `i18n/provider.tsx` : de la glue React (un contexte, deux hooks). Ses
+       *   deux règles sont prouvées par les écrans eux-mêmes, qui le montent
+       *   réellement, et par `messages.test.ts` pour le défaut hors fournisseur.
+       */
+      exclude: ['src/lib/i18n/messages*.ts', 'src/lib/i18n/provider.tsx'],
       thresholds: { statements: 90, branches: 90, functions: 90, lines: 90 },
     },
   },

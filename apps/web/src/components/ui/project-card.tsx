@@ -4,6 +4,7 @@ import Link from 'next/link';
 import type { ReactElement } from 'react';
 import { useLocale, useMessages } from '../../lib/i18n/provider';
 import { formatBytes, formatDate, type StoredProject } from '../../lib/projects';
+import { Card, CardHead } from './card';
 import { Icon } from './icon';
 import { TechIcon } from './tech-icon';
 
@@ -54,26 +55,25 @@ export function ProjectCard({ project, onRedownload, onForget }: ProjectCardProp
   const hidden = project.technologies.length - shown.length;
 
   return (
-    <section className="pf-card pf-card-pad">
-      <div className="pf-card-head">
-        <div className="min-w-0">
-          <h3 className="pf-title-sm flex min-w-0 items-center gap-2">
-            <span aria-hidden="true" className="flex-none" style={{ color: 'var(--pf-accent)' }}>
-              <Icon name="package" size={18} />
-            </span>
-            <span className="truncate">{project.name}</span>
-          </h3>
-        </div>
-        <span className="pf-badge pf-badge-ok flex-none">
-          <Icon name="check" size={11} />
-          {t.projects.done}
-        </span>
-      </div>
+    <Card>
+      <CardHead
+        icon="package"
+        title={<span className="truncate">{project.name}</span>}
+        actions={
+          <span className="pf-badge pf-badge-ok flex-none">
+            <Icon name="check" size={11} />
+            {t.projects.done}
+          </span>
+        }
+      />
 
       {/* Les mesures : une rangée de badges qui passe à la ligne plutôt qu'un
           tableau — à 360 px, trois colonnes de valeurs ne tiennent pas. */}
       <div className="mt-2.5 flex flex-wrap items-center gap-1.5">
-        <span className="pf-badge" title={t.projects.generatedOn(formatDate(project.generatedAt, locale))}>
+        <span
+          className="pf-badge"
+          title={t.projects.generatedOn(formatDate(project.generatedAt, locale))}
+        >
           <Icon name="clock" size={11} />
           {formatDate(project.generatedAt, locale)}
         </span>
@@ -96,25 +96,33 @@ export function ProjectCard({ project, onRedownload, onForget }: ProjectCardProp
         </p>
       )}
 
+      {/* Les logos sont une **liste** : chacun est un élément, et le compte
+          des technologies masquées en est un aussi. Le nom accessible vient de
+          la langue courante. */}
       {shown.length === 0 ? null : (
-        <div
+        <ul
           aria-label={t.projects.techLabel}
-          className="mt-3 flex flex-wrap items-center gap-1.5"
-          role="group"
+          className="m-0 mt-3 flex list-none flex-wrap items-center gap-1.5 p-0"
         >
           {shown.map((id) => (
-            <TechIcon id={id} key={id} size={18} />
+            <li key={id}>
+              <TechIcon id={id} size={18} />
+            </li>
           ))}
           {hidden > 0 ? (
-            <span className="pf-badge" title={t.projects.moreTech(hidden)}>
-              +{hidden}
-            </span>
+            <li>
+              <span className="pf-badge" title={t.projects.moreTech(hidden)}>
+                +{hidden}
+              </span>
+            </li>
           ) : null}
-        </div>
+        </ul>
       )}
 
       <p className="pf-hint mt-3">{t.projects.locked}</p>
 
+      {/* Les gestes : tous de la même taille, icône **et** libellé, et ils
+          passent à la ligne au lieu de déborder à 360 px. */}
       <div className="mt-3 flex flex-wrap items-center gap-2">
         <Link className="pf-btn pf-btn-sm" href="/create/report">
           <Icon name="file" size={14} />
@@ -137,6 +145,6 @@ export function ProjectCard({ project, onRedownload, onForget }: ProjectCardProp
           </button>
         )}
       </div>
-    </section>
+    </Card>
   );
 }
