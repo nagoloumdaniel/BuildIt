@@ -488,7 +488,7 @@ async function bridgeJourney(webDir: string, apiDir: string): Promise<void> {
       apiDir,
       {},
       async () => {
-        expect(await status(), 'API démarrée').toContain('API joignable — ok');
+        expect(await status(), 'API démarrée').toContain('API joignable : ok');
       },
       API_PORT,
     );
