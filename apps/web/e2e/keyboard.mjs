@@ -107,6 +107,28 @@ function trail(stops) {
 }
 
 /** Attend qu'un texte de chargement ait disparu — sans supposer de délai fixe. */
+/**
+ * Écrit le projet dans un dossier par la **même** route que l'écran
+ * (`POST /api/generate`), avec le manifest que l'écran vient de mémoriser.
+ *
+ * Le choix du dossier passe par l'explorateur natif de Windows : une fenêtre
+ * du système, hors de la page, qu'aucun navigateur piloté ne peut cliquer. La
+ * preuve d'écriture contourne donc la seule boîte de dialogue, pas la règle :
+ * la route revalide le manifest et la destination comme pour un clic.
+ */
+async function writeThroughRoute(page, parent) {
+  return page.evaluate(async (target) => {
+    const projects = JSON.parse(window.localStorage.getItem('pf-projects') ?? '[]');
+    const manifest = projects[0]?.manifest;
+    const response = await fetch('/api/generate', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ manifest, parent: target, install: false }),
+    });
+    return { hasManifest: manifest !== undefined, stream: await response.text() };
+  }, parent);
+}
+
 async function waitGone(page, needle) {
   await page.waitForFunction(
     // `textContent` et non `innerText` : le rendu met les eyebrows en
@@ -645,9 +667,9 @@ export async function keyboardJourney(page, workspace) {
   await checkOrder('blueprint');
   await leaveStep(9, 'blueprint');
 
-  await enterStep(10, 'preview', '**/create/preview', 'Aperçu des fichiers');
+  await enterStep(10, 'preview', '**/create/preview', 'Architecture du projet');
   await page
-    .locator('ul[aria-label="Arborescence des fichiers à générer"]')
+    .locator('ul[aria-label="Architecture du projet : dossiers et fichiers générés"]')
     .waitFor({ state: 'visible', timeout: 30000 });
   await checkOrder('preview');
   await leaveStep(10, 'preview');
@@ -673,14 +695,33 @@ export async function keyboardJourney(page, workspace) {
     { max: 40 },
   );
   await page.keyboard.press('Enter');
-  await page
-    .getByRole('link', { name: 'Voir le rapport complet' })
-    .waitFor({ state: 'visible', timeout: 90000 });
-  console.log('  génération lancée à la touche Entrée, rapport annoncé sur place');
+  // Le bouton s'efface devant deux sorties : la carte ZIP s'atteint au clavier.
   await tabUntil(
-    (stop) => stop.tag === 'A' && stop.text.startsWith('Voir le rapport complet'),
-    'le lien « Voir le rapport complet »',
+    (stop) => stop.tag === 'BUTTON' && stop.text.includes('Générer le ZIP'),
+    'la sortie « Générer le ZIP »',
     { max: 10 },
+  );
+  const download = page.waitForEvent('download', { timeout: 90000 });
+  await page.keyboard.press('Enter');
+  const archive = await download;
+  check(
+    archive.suggestedFilename().endsWith('.zip'),
+    `Le téléchargement devrait être une archive .zip. Reçu : ${archive.suggestedFilename()}`,
+  );
+  await page.getByText('Génération terminée', { exact: false }).first().waitFor({
+    state: 'visible',
+    timeout: 30000,
+  });
+  console.log('  archive générée et téléchargée à la touche Entrée');
+  const written_ = await writeThroughRoute(page, workspace);
+  check(
+    written_.hasManifest && written_.stream.includes('"ok":true'),
+    `La route /api/generate devrait écrire le projet. Reçu : ${written_.stream.slice(-300)}`,
+  );
+  await tabUntil(
+    (stop) => stop.tag === 'A' && stop.text.trim().startsWith('Continuer'),
+    'le lien « Continuer »',
+    { max: 40 },
   );
   await page.keyboard.press('Enter');
   crossed.push('generate');

@@ -42,6 +42,28 @@ import { keyboardJourney } from './keyboard.mjs';
 const continueLink = (page) => page.getByRole('link', { name: 'Continuer' });
 
 /** Le parcours historique : souris autorisée, référence du §3. */
+/**
+ * Écrit le projet dans un dossier par la **même** route que l'écran
+ * (`POST /api/generate`), avec le manifest que l'écran vient de mémoriser.
+ *
+ * Le choix du dossier passe par l'explorateur natif de Windows : une fenêtre
+ * du système, hors de la page, qu'aucun navigateur piloté ne peut cliquer. La
+ * preuve d'écriture contourne donc la seule boîte de dialogue, pas la règle :
+ * la route revalide le manifest et la destination comme pour un clic.
+ */
+async function writeThroughRoute(page, parent) {
+  return page.evaluate(async (target) => {
+    const projects = JSON.parse(window.localStorage.getItem('pf-projects') ?? '[]');
+    const manifest = projects[0]?.manifest;
+    const response = await fetch('/api/generate', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ manifest, parent: target, install: false }),
+    });
+    return { hasManifest: manifest !== undefined, stream: await response.text() };
+  }, parent);
+}
+
 async function mouseJourney(page, workspace) {
   // 1. Le Dashboard annonce les trois chemins du §18bis.
   await page.goto(`${BASE}/`, { waitUntil: 'domcontentloaded' });
@@ -168,7 +190,9 @@ async function mouseJourney(page, workspace) {
 
   // 12. File Preview annonce les fichiers, sans écrire.
   await page.goto(`${BASE}/create/preview`, { waitUntil: 'domcontentloaded' });
-  const tree = page.locator('ul[aria-label="Arborescence des fichiers à générer"]');
+  const tree = page.locator(
+    'ul[aria-label="Architecture du projet : dossiers et fichiers générés"]',
+  );
   await tree.waitFor({ state: 'visible', timeout: 15000 });
   check(
     (await tree.innerText()).includes('package.json'),
@@ -176,15 +200,32 @@ async function mouseJourney(page, workspace) {
   );
   check((await readdir(workspace)).length === 0, 'L’aperçu ne doit rien écrire sur le disque.');
 
-  // 13. Generation Progress + 14. Generation Report : écriture réelle.
+  // 13. Generation : « Générer le projet » s'efface devant deux sorties.
   await page.goto(`${BASE}/create/generate`, { waitUntil: 'domcontentloaded' });
   const generate = page.getByRole('button', { name: /Générer le projet/ });
   await generate.waitFor({ state: 'visible', timeout: 20000 });
   await generate.click();
-  // Le rapport s'affiche sur place, et l'écran dédié s'ouvre par un lien.
-  const fullReport = page.getByRole('link', { name: 'Voir le rapport complet' });
-  await fullReport.waitFor({ state: 'visible', timeout: 60000 });
-  await fullReport.click();
+  // La sortie ZIP, de bout en bout : l'archive est réellement téléchargée.
+  const download = page.waitForEvent('download', { timeout: 90000 });
+  await page.getByRole('button', { name: /Générer le ZIP/ }).click();
+  const archive = await download;
+  check(
+    archive.suggestedFilename().endsWith('.zip'),
+    `Le téléchargement devrait être une archive .zip. Reçu : ${archive.suggestedFilename()}`,
+  );
+  await page.getByText('Génération terminée', { exact: false }).first().waitFor({
+    state: 'visible',
+    timeout: 30000,
+  });
+  // La sortie dossier : écrite par la route de l'écran, dans le dossier de test.
+  const written_ = await writeThroughRoute(page, workspace);
+  check(written_.hasManifest, 'La génération ZIP devrait mémoriser le manifest du projet.');
+  check(
+    written_.stream.includes('"type":"done"') && written_.stream.includes('"ok":true'),
+    `La route /api/generate devrait écrire le projet. Reçu : ${written_.stream.slice(-300)}`,
+  );
+  // 14. Report : « Continuer » y mène, il n'y a plus de second lien.
+  await page.getByRole('link', { name: /Continuer/ }).click();
   await page.waitForURL('**/create/report', { timeout: 30000 });
   const report = await page.locator('main').innerText();
   check(
@@ -197,9 +238,9 @@ async function mouseJourney(page, workspace) {
     `Le projet devrait être écrit sur le disque. Contenu : ${written.join(', ')}`,
   );
 
-  // Le thème clair/sombre : le cycle part de « système », dont le rendu peut
-  // déjà être clair — on vérifie donc le **libellé**, puis l'effet réel.
-  const theme = page.getByRole('button', { name: /Thème/ });
+  // Le thème : un seul bouton soleil/lune. Le départ suit le système, dont le
+  // rendu peut déjà être clair : on vérifie donc le **libellé**, puis l'effet réel.
+  const theme = page.getByRole('button', { name: /thème/i });
   const labelBefore = await theme.getAttribute('aria-label');
   await theme.click();
   check(

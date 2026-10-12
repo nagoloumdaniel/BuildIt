@@ -51,17 +51,23 @@ existe.**
 | `Illustration` | les trois dessins de la maison : `forge`, `lost`, `empty` |
 | `Logo`, `Wordmark` | le logo, qui suit le thème sans JavaScript (WebP en image de fond) |
 | `Card`, `CardHead` | une unité de décision délimitée |
-| `Stepper` | la progression du parcours (rail au large, barre au petit) |
+| `Stepper` | les douze numéros sur une seule ligne de progression qui se remplit, à toutes les largeurs |
 | `BubbleNav` | la navigation en pilules, dans sa bulle de l'en-tête |
 | `CopyButton`, `CommandLine`, `CommandSteps` | une valeur technique et sa copie, une marche à suivre |
 | `PickCard` | la carte qui **est** le geste : l'appuyer ouvre l'explorateur |
+| `OptionCard` | une technologie (Stack, Capacités, Hébergement) : coche de sélection, carte grisée et nom rouge si incompatible |
+| `InfoTip` | la bulle `!` : s'ouvre au clic, à Entrée ou au survol, jamais au simple focus ; peut porter des liens |
+| `DisclosureButton` | « Voir toutes les options » : un bouton repliable, chevron qui pivote |
+| `CATEGORY_ICONS` (`category-icon.ts`) | l'icône de chacune des 37 catégories, vérifiée à la compilation |
+| `ProjectExport`, `OutputProgress` | les deux sorties d'un projet (ZIP, dossier + installation) et leur unique barre d'avancement |
+| `ProjectArchitecture` | l'arbre commenté et repliable des fichiers générés (étape 10, `/projects/architecture`) |
 | `Spinner`, `Dots`, `ProgressBar`, `LoadingLine`, `ProgressPanel` | les attentes |
 | `EmptyState`, `ErrorState`, `IssueList`, `NoteList` | les vides, les arrêts et les refus |
 | `PathPicker` | choisir un dossier ou un fichier **dans l'explorateur système** |
 | `ProjectCard` | un projet déjà généré, sur l'accueil comme dans la collection |
-| `Toaster`, `ThemeToggle`, `LocaleToggle` | les retours d'action et les deux réglages |
+| `Toaster`, `ThemeToggle`, `LocaleToggle` | les retours d'action ; un bouton soleil/lune (défaut : le système) ; `FR`/`EN` sans icône |
 | `AppShell` | les bulles flottantes de l'en-tête, le pied, les liens d'évitement |
-| `ScreenShell`, `StepShell` (dans `components/wizard/shell.tsx`) | les deux cadres de page |
+| `ScreenShell`, `StepShell` (dans `components/wizard/shell.tsx`) | les deux cadres de page : icône de titre, bouton « Annuler » de l'étape |
 
 Les classes `pf-*` de `globals.css` restent disponibles : `pf-btn`,
 `pf-btn-primary`, `pf-btn-ghost`, `pf-btn-danger`, `pf-btn-sm`, `pf-btn-lg`,
@@ -72,7 +78,12 @@ Les classes `pf-*` de `globals.css` restent disponibles : `pf-btn`,
 `pf-scroll-x`, `pf-card-progress`, `pf-route-loading`, `pf-sr-only-focusable`,
 `pf-pod` (la bulle de l'en-tête, + `-identity`, `-action`), `pf-segmented`/
 `pf-segment`, `pf-command`/`pf-command-text`, `pf-steps-list`, `pf-footer`,
-`pf-empty-state`.
+`pf-empty-state`, `pf-option`, `pf-tip`, `pf-disclosure`, `pf-locale`, `pf-sr-only`.
+
+Les zones qui ont leur propriétaire ont leur feuille, importée par
+`globals.css` : `src/styles/journey.css` (stepper, glissement d'étape,
+annulation), `output.css` (sorties d'un projet), `architecture.css` (arbre
+commenté). Même règles que la feuille principale.
 
 Rien n'y est déclaré sans usage : une classe ou un jeton qui ne sert nulle part
 est du dessin mort, il part avec le reste. L'audit se fait en comparant les
@@ -137,6 +148,12 @@ globalement dans `globals.css`.
 bordure ou une ombre ; il ne décale jamais l'élément, ni d'un pixel. Un
 déplacement au survol fait trembler une grille entière quand la souris la
 traverse, et déplace la cible qu'on vise.
+
+Seule exception, parce qu'elle répond à un geste et non au survol : le
+changement d'étape. « Continuer » fait entrer l'étape suivante de droite à
+gauche, « Précédent » (ou un retour par le stepper) de gauche à droite, en
+220 ms. Rien sur un rechargement ; sous `prefers-reduced-motion`, un simple
+fondu.
 
 ## 8. Le plancher de qualité
 
