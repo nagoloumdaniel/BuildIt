@@ -107,7 +107,7 @@ describe('pf add', () => {
     const io = fakeIo({ cwd });
     expect(await run(['add', 'shadcn-ui', '--yes'], io)).toBe(0);
     expect(io.text().out).toContain('+ shadcn/ui → frontend.ui');
-    expect(io.text().out).toContain('+ tailwind — exigée par shadcn-ui');
+    expect(io.text().out).toContain('+ tailwind : exigée par shadcn-ui');
   });
 
   it.each([

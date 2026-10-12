@@ -39,9 +39,9 @@ function symbol(status: string): string {
  * ne fait que les mettre en page — aucune règle, aucun calcul.
  */
 export function formatReport(report: Report, title: string): string {
-  const lines: string[] = [`${title} — santé du projet : ${report.score}/100`, ''];
+  const lines: string[] = [`${title} · santé du projet : ${report.score}/100`, ''];
   for (const entry of report.checks) {
-    lines.push(`${symbol(entry.status)} ${entry.title} — ${entry.detail}`);
+    lines.push(`${symbol(entry.status)} ${entry.title} : ${entry.detail}`);
   }
   const fixes = report.open.filter((entry) => entry.fix !== undefined);
   if (fixes.length > 0) {
@@ -136,7 +136,7 @@ export async function doctor(args: readonly string[], io: Io): Promise<ExitCode>
     const plan = fixable.map((entry) => entry.fix).filter((fix) => fix !== undefined);
     io.out('');
     for (const fix of plan) {
-      io.out(`✎ ${fix.action === 'create' ? 'créer' : 'compléter'} ${fix.path} — ${fix.reason}`);
+      io.out(`✎ ${fix.action === 'create' ? 'créer' : 'compléter'} ${fix.path} : ${fix.reason}`);
     }
     const confirmed =
       io.interactive && (await io.prompter.confirm(`Appliquer ces ${plan.length} correction(s) ?`));

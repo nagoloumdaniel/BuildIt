@@ -15,7 +15,7 @@ où tourne le configurateur (\`pf web\`).
   --url <base>   Origine du configurateur (défaut http://127.0.0.1:${DEFAULT_PORT})
 
 Le fragment n'est jamais transmis au serveur : ni journal, ni requête, ni
-cookie. Ce n'est pas le partage d'un dépôt GitHub — pour cela, \`pf repo create\`.`;
+cookie. Ce n'est pas le partage d'un dépôt GitHub : pour cela, \`pf repo create\`.`;
 
 /** Le seul hôte que `pf web` sert (voir `commands/web.ts`). */
 const HOST = '127.0.0.1';

@@ -188,7 +188,7 @@ export async function resolveAbsoluteDestination(
       ok: false,
       reason: 'folder',
       issues: [
-        'Le nom du dossier n’accepte que lettres, chiffres, points, tirets et soulignés — et aucun séparateur de chemin.',
+        'Le nom du dossier n’accepte que lettres, chiffres, points, tirets et soulignés, et aucun séparateur de chemin.',
       ],
     };
   }

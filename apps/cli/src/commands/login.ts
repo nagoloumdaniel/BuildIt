@@ -117,7 +117,7 @@ export async function login(args: readonly string[], io: Io): Promise<ExitCode> 
   const scopes = values['public-only'] ? SCOPES.publicOnly : SCOPES.full;
   io.out('Permissions demandées :');
   for (const scope of scopes) {
-    io.out(`  ${scope} — ${SCOPE_REASONS[scope] ?? scope}`);
+    io.out(`  ${scope} : ${SCOPE_REASONS[scope] ?? scope}`);
   }
   const code = await requestDeviceCode(io.fetch, clientId, scopes);
   if (!code.ok) {

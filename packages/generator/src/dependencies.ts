@@ -31,7 +31,7 @@ const MESSAGES: Readonly<Record<DependencyIssueCode, string>> = {
   GEN_PACKAGE_ROLE_CONFLICT:
     '{package} est une dépendance de production pour {first} et de développement pour {second}. Il faut trancher avant de générer.',
   GEN_UNPINNED_DEPENDENCY:
-    'Aucune version connue pour {package}, demandé par {first}. Il sera installé en « * », donc à la dernière version publiée — la génération ne sera pas reproductible.',
+    'Aucune version connue pour {package}, demandé par {first}. Il sera installé en « * », donc à la dernière version publiée : la génération ne sera pas reproductible.',
 };
 
 const messageFor = createMessageFormatter(MESSAGES);

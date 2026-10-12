@@ -9,35 +9,42 @@ export const FR_WORKSPACE = {
   open: {
     title: 'Ouvrir un projet local',
     description:
-      'Reconnaissez un projet déjà sur cette machine : écosystème, gestionnaire de paquets, et la commande d’installation exacte — affichée avant d’être lancée.',
+      'Reconnaissez un projet déjà sur cette machine : écosystème, gestionnaire de paquets, et la commande d’installation exacte, affichée avant d’être lancée.',
     folderLabel: 'Dossier du projet',
     folderHint:
       'Seuls les fichiers qui nomment l’outillage sont lus : package.json, pyproject.toml, Cargo.toml…',
-    /* En hébergé, il n'y a pas de bureau à ouvrir : le champ de saisie est le
-       repli, et il dit pourquoi plutôt que de laisser croire à un oubli. */
-    hostedNote:
-      'L’explorateur s’ouvrirait sur le serveur, pas sur votre machine : saisissez le chemin du dossier.',
+    /* En hébergé, l'explorateur est celui du **navigateur** : il ouvre bien
+       l'explorateur de Windows, mais ne rend aucun chemin — assez pour
+       reconnaître le projet, pas pour l'installer. La phrase le dit au moment
+       où c'est utile, au lieu de proposer un champ de saisie de chemin. */
+    browserNote:
+      'Le dossier est lu dans votre navigateur : BuildIt reconnaît le projet, mais n’installe rien sur votre machine depuis cette page. La commande est affichée, à lancer dans votre terminal.',
+    noPickerNote:
+      'Ce navigateur ne sait pas ouvrir de dossier. Utilisez Chrome ou Edge, ou lancez BuildIt en local avec « pf web ».',
     pick: 'Choisir un dossier',
     picking: 'Explorateur ouvert…',
-    noFolder: 'Aucun dossier choisi.',
-    analyse: 'Analyser le dossier',
     analysing: 'Analyse du dossier…',
+    runYourself: 'À lancer dans votre terminal',
     /* Choisir, c'est demander : l'analyse part au choix du dossier. Ce bouton
        n'est donc pas « l'étape suivante » mais la reprise d'une analyse déjà
        faite — le dossier a pu changer sur le disque entre-temps. */
     reanalyse: 'Analyser à nouveau',
+    reanalyseFolder: 'Choisir un autre dossier',
+    pathWhat: 'le chemin du dossier',
     noFolderTitle: 'Aucun dossier choisi',
     noFolderBody:
       'Ouvrez l’explorateur de cette machine et désignez le dossier du projet : l’analyse démarre aussitôt, et ne lit que les fichiers d’outillage.',
     notRecognised: 'Dossier non reconnu',
     notRecognisedBody:
-      'Ce dossier ne porte aucun manifeste reconnu. Choisissez la racine du projet — celle qui contient package.json, pyproject.toml ou Cargo.toml.',
+      'Ce dossier ne porte aucun manifeste reconnu. Choisissez la racine du projet, celle qui contient package.json, pyproject.toml ou Cargo.toml.',
     detection: 'Détection',
     ecosystem: 'Écosystème',
     manager: 'Gestionnaire',
     notApplicable: 'non applicable',
     readFile: 'Fichier lu',
+    folderWhat: 'le nom du dossier',
     installCommand: 'Commande d’installation',
+    commandWhat: 'la commande',
     ignoreScripts: 'Installer sans exécuter les scripts du projet',
     confirm: 'J’ai lu la commande : lancer l’installation',
     install: 'Installer les dépendances',
@@ -50,13 +57,11 @@ export const FR_WORKSPACE = {
     trustNote:
       'L’installation exécute les scripts du projet avec vos droits sur cette machine. La case ci-dessus les désactive.',
     installDone: (command: string) => `Dépendances installées : ${command}.`,
-    installTitle: 'Installation',
     installFailed: 'L’installation a échoué',
     manualOnly: (command: string) =>
       `L’installation automatique de ce type de projet arrive en V1. Lancez vous-même : ${command}`,
     blockerBusy: 'Une opération est en cours.',
     blockerNoInspection: 'Analysez d’abord le dossier.',
-    blockerUnknown: 'Ce dossier n’est pas un projet reconnu : rien à installer.',
     blockerManual: 'L’installation automatique de ce type de projet arrive en V1.',
     blockerUnconfirmed: 'Cochez la confirmation : rien ne se lancera sans votre accord.',
   },
@@ -100,7 +105,7 @@ export const FR_WORKSPACE = {
     destination: 'Destination',
     repository: 'Dépôt',
     folder: 'Dossier',
-    folderFree: 'absent — le clone le créera.',
+    folderFree: 'absent : le clone le créera.',
     folderEmpty: 'existant et vide.',
     folderTaken: 'existant et non vide : refusé.',
     folderUnknown: 'inconnu.',
@@ -117,6 +122,7 @@ export const FR_WORKSPACE = {
     folderNameHint:
       'Un seul nom, sans séparateur de chemin. Le clone crée ce dossier dans le dossier parent choisi.',
     fullPath: 'Chemin complet qui sera écrit',
+    pathWhat: 'le chemin',
     fullPathUnknown: 'Choisissez le dossier parent pour voir le chemin complet.',
     /* Le repli de l'hébergé : un chemin absolu venu du navigateur y serait une
        écriture de fichier arbitraire sur le serveur. */
@@ -138,7 +144,7 @@ export const FR_WORKSPACE = {
        le dit au lieu de rester sur « Vérification… ». */
     checkFailedTitle: 'La vérification n’a pas abouti',
     checkFailedBody:
-      'Le serveur n’a pas répondu : le lien et le dossier n’ont pas été vérifiés. Rien n’a été cloné — réessayez.',
+      'Le serveur n’a pas répondu : le lien et le dossier n’ont pas été vérifiés. Rien n’a été cloné. Réessayez.',
     streamTimeout: (seconds: number) =>
       `Aucun événement reçu depuis ${seconds} secondes : le suivi est arrêté. Vérifiez le dossier de destination sur le disque avant de réessayer.`,
     streamNetwork:
@@ -166,29 +172,35 @@ export const EN_WORKSPACE: Widen<typeof FR_WORKSPACE> = {
   open: {
     title: 'Open a local project',
     description:
-      'Recognise a project already on this machine: ecosystem, package manager, and the exact install command — shown before it runs.',
+      'Recognise a project already on this machine: ecosystem, package manager, and the exact install command, shown before it runs.',
     folderLabel: 'Project folder',
     folderHint:
       'Only the files that name the tooling are read: package.json, pyproject.toml, Cargo.toml…',
-    hostedNote: 'The explorer would open on the server, not on your machine: type the folder path.',
+    browserNote:
+      'The folder is read inside your browser: BuildIt recognises the project, but installs nothing on your machine from this page. The command is shown, to run in your own terminal.',
+    noPickerNote:
+      'This browser cannot open a folder. Use Chrome or Edge, or run BuildIt locally with “pf web”.',
     pick: 'Choose a folder',
     picking: 'Explorer open…',
-    noFolder: 'No folder chosen.',
-    analyse: 'Analyse the folder',
     analysing: 'Analysing the folder…',
+    runYourself: 'To run in your own terminal',
     reanalyse: 'Analyse again',
+    reanalyseFolder: 'Choose another folder',
+    pathWhat: 'the folder path',
     noFolderTitle: 'No folder chosen',
     noFolderBody:
       'Open this machine’s explorer and point at the project folder: the analysis starts at once, and reads only the tooling files.',
     notRecognised: 'Folder not recognised',
     notRecognisedBody:
-      'This folder carries no recognised manifest. Choose the project root — the one holding package.json, pyproject.toml or Cargo.toml.',
+      'This folder carries no recognised manifest. Choose the project root, the one holding package.json, pyproject.toml or Cargo.toml.',
     detection: 'Detection',
     ecosystem: 'Ecosystem',
     manager: 'Package manager',
     notApplicable: 'not applicable',
     readFile: 'File read',
+    folderWhat: 'the folder name',
     installCommand: 'Install command',
+    commandWhat: 'the command',
     ignoreScripts: 'Install without running the project’s scripts',
     confirm: 'I read the command: run the install',
     install: 'Install dependencies',
@@ -198,13 +210,11 @@ export const EN_WORKSPACE: Widen<typeof FR_WORKSPACE> = {
     trustNote:
       'The install runs the project’s scripts with your rights on this machine. The box above disables them.',
     installDone: (command: string) => `Dependencies installed: ${command}.`,
-    installTitle: 'Install',
     installFailed: 'The install failed',
     manualOnly: (command: string) =>
       `Automatic install for this kind of project lands in V1. Run it yourself: ${command}`,
     blockerBusy: 'An operation is running.',
     blockerNoInspection: 'Analyse the folder first.',
-    blockerUnknown: 'This folder is not a recognised project: nothing to install.',
     blockerManual: 'Automatic install for this kind of project lands in V1.',
     blockerUnconfirmed: 'Tick the confirmation: nothing runs without your go-ahead.',
   },
@@ -245,7 +255,7 @@ export const EN_WORKSPACE: Widen<typeof FR_WORKSPACE> = {
     destination: 'Destination',
     repository: 'Repository',
     folder: 'Folder',
-    folderFree: 'absent — the clone will create it.',
+    folderFree: 'absent: the clone will create it.',
     folderEmpty: 'present and empty.',
     folderTaken: 'present and not empty: refused.',
     folderUnknown: 'unknown.',
@@ -260,6 +270,7 @@ export const EN_WORKSPACE: Widen<typeof FR_WORKSPACE> = {
     folderNameHint:
       'A single name, with no path separator. The clone creates this folder inside the chosen parent folder.',
     fullPath: 'Full path that will be written',
+    pathWhat: 'the path',
     fullPathUnknown: 'Choose the parent folder to see the full path.',
     hostedFallback: (root: string) =>
       `Hosted server: the clone runs on the server, not on your machine. The folder stays relative to the working root: ${root}. It must be absent or empty.`,
@@ -275,7 +286,7 @@ export const EN_WORKSPACE: Widen<typeof FR_WORKSPACE> = {
     streamFailedTitle: 'Clone tracking stopped',
     checkFailedTitle: 'The check did not complete',
     checkFailedBody:
-      'The server did not answer: the link and the folder were not checked. Nothing was cloned — try again.',
+      'The server did not answer: the link and the folder were not checked. Nothing was cloned. Try again.',
     streamTimeout: (seconds: number) =>
       `No event received for ${seconds} seconds: tracking is stopped. Check the destination folder on disk before trying again.`,
     streamNetwork:

@@ -38,7 +38,7 @@ function terminalPrompter(): Prompter {
     async select<T extends string>(message: string, choices: readonly Choice<T>[]): Promise<T> {
       process.stdout.write(`${message}\n`);
       choices.forEach((choice, index) => {
-        const hint = choice.hint === undefined ? '' : ` — ${choice.hint}`;
+        const hint = choice.hint === undefined ? '' : ` : ${choice.hint}`;
         const mark = choice.disabled === true ? ' (indisponible)' : '';
         process.stdout.write(`  ${index + 1}. ${choice.label}${mark}${hint}\n`);
       });

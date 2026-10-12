@@ -3,10 +3,12 @@ import { isAbsolute, normalize } from 'node:path';
 import type { CommandRunner } from '@buildit/exec';
 import {
   type Detection,
+  detectFromEntries,
   detectProject,
   formatCommand,
   install,
   installCommand,
+  type ProjectEntries,
 } from '@buildit/workspace';
 import { describeIssues } from '../github/session';
 
@@ -94,7 +96,7 @@ export function describeDetection(detection: Detection): string {
   if (detection.packageManager === undefined) {
     return `${detection.label} (${originOf(detection)})`;
   }
-  return `${detection.label} — ${detection.packageManager} (${originOf(detection)})`;
+  return `${detection.label} : ${detection.packageManager} (${originOf(detection)})`;
 }
 
 export function toProjectSummary(detection: Detection, directory: string): ProjectSummaryView {
@@ -135,6 +137,77 @@ export async function inspectProject(directory: string): Promise<ProjectInspecti
     return { ok: false, issues: describeIssues(detected.issues) };
   }
   return { ok: true, value: toProjectSummary(detected.value, directory) };
+}
+
+/**
+ * Les entrées que le **navigateur** a lues, telles qu'elles arrivent.
+ *
+ * En hébergé, le visiteur choisit son dossier dans l'explorateur de sa propre
+ * machine (File System Access API) : le serveur n'en verra jamais le chemin,
+ * seulement le nom du dossier, les noms des fichiers du premier niveau et le
+ * texte de `package.json`. C'est exactement ce que la règle de détection lit,
+ * donc c'est la **même** règle qui tourne — `detectFromEntries`.
+ *
+ * Tout est revalidé ici : ce JSON vient du client, donc quelqu'un peut
+ * l'écrire à la main. Les bornes ne protègent pas un disque (il n'y a aucun
+ * accès disque sur ce chemin) mais la mémoire du serveur.
+ */
+const MAX_NAMES = 600;
+const MAX_NAME_LENGTH = 300;
+const MAX_PACKAGE_JSON_LENGTH = 1_000_000;
+
+export interface PickedEntriesInput {
+  readonly name?: unknown;
+  readonly names?: unknown;
+  readonly packageJson?: unknown;
+}
+
+/** Le nom d'un dossier ou d'un fichier, réduit à ce qui peut s'afficher. */
+function cleanName(value: unknown): string | undefined {
+  if (typeof value !== 'string' || value === '' || value.length > MAX_NAME_LENGTH) {
+    return undefined;
+  }
+  // biome-ignore lint/suspicious/noControlCharactersInRegex: c'est précisément ce qu'on refuse
+  return /[\u0000-\u001f\u007f]/.test(value) ? undefined : value;
+}
+
+export function toProjectEntries(
+  input: PickedEntriesInput,
+): { readonly folder: string; readonly entries: ProjectEntries } | undefined {
+  const folder = cleanName(input.name);
+  if (folder === undefined || !Array.isArray(input.names)) {
+    return undefined;
+  }
+  const names = input.names
+    .map(cleanName)
+    .filter((name): name is string => name !== undefined)
+    .slice(0, MAX_NAMES);
+  const text = input.packageJson;
+  const packageJson =
+    typeof text === 'string' && text.length <= MAX_PACKAGE_JSON_LENGTH ? text : undefined;
+  return {
+    folder,
+    entries: { names, ...(packageJson === undefined ? {} : { packageJson }) },
+  };
+}
+
+/**
+ * Reconnaît le projet que le navigateur a désigné.
+ *
+ * Rien n'est lu, rien n'est écrit : la règle s'applique aux noms reçus. Le
+ * `directory` rendu est le **nom du dossier**, pas un chemin — l'écran ne doit
+ * pas faire croire qu'il connaît un emplacement qu'il ne connaît pas.
+ */
+export function inspectPickedEntries(input: PickedEntriesInput): ProjectInspectionView {
+  const parsed = toProjectEntries(input);
+  if (parsed === undefined) {
+    return { ok: false, issues: ['Le dossier choisi n’a pas pu être lu par le navigateur.'] };
+  }
+  const detected = detectFromEntries(parsed.entries, parsed.folder);
+  if (!detected.ok) {
+    return { ok: false, issues: describeIssues(detected.issues) };
+  }
+  return { ok: true, value: toProjectSummary(detected.value, parsed.folder) };
 }
 
 export interface InstallResultView {

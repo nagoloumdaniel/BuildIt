@@ -26,7 +26,7 @@ function describe(detection: Detection): string {
     return `${detection.label} (d’après ${detection.evidence})`;
   }
   const origin = detection.source === 'assumed' ? 'supposé' : `d’après ${detection.evidence}`;
-  return `${detection.label} — ${detection.packageManager} (${origin})`;
+  return `${detection.label} : ${detection.packageManager} (${origin})`;
 }
 
 /**
@@ -89,7 +89,7 @@ export async function offerInstall(io: Io, dir: string, flags: InstallFlags): Pr
       const withoutScripts = {
         value: 'safe',
         label: 'Installer sans scripts',
-        hint: `${formatCommand(safe)}${flags.untrusted ? ' — recommandé pour du code inconnu' : ''}`,
+        hint: `${formatCommand(safe)}${flags.untrusted ? ', recommandé pour du code inconnu' : ''}`,
       } as const;
       const choice = await io.prompter.select('Installer les dépendances ?', [
         ...(flags.untrusted ? [withoutScripts, withScripts] : [withScripts, withoutScripts]),

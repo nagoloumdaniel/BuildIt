@@ -36,16 +36,17 @@ beforeEach(() => {
 });
 
 describe('Dashboard — le menu d’accueil (§18bis)', () => {
-  it('annonce le produit et les trois chemins', () => {
+  it('ouvre sur les trois chemins, sans répéter le nom du produit', () => {
     const html = render();
 
-    expect(html).toContain('BuildIt');
     expect(html).toContain('Créer un projet');
     expect(html).toContain('Cloner un projet');
     expect(html).toContain('Ouvrir un projet local');
     expect(html).toContain('href="/create"');
     expect(html).toContain('href="/clone"');
-    expect(html).toContain('href="/open"');
+    // Volontairement absent : le nom et la promesse du produit sont dans
+    // l'en-tête de l'application, l'accueil n'a pas de titre à lui.
+    expect(html).not.toContain('pf-display');
   });
 
   it('dit qu’il n’y a rien à reprendre quand le brouillon est vierge', () => {

@@ -1,4 +1,4 @@
-import { readFile, stat } from 'node:fs/promises';
+import { readdir, readFile, stat } from 'node:fs/promises';
 import { join } from 'node:path';
 import { type CommandRunner, isTransientFailure, outputTail } from '@buildit/exec';
 import {
@@ -79,13 +79,25 @@ function issue(
   return hint === undefined ? base : { ...base, hint };
 }
 
-async function exists(path: string): Promise<boolean> {
-  try {
-    await stat(path);
-    return true;
-  } catch {
-    return false;
-  }
+/**
+ * Ce que la détection a besoin de savoir d'un dossier.
+ *
+ * Volontairement minuscule : les **noms** des fichiers de premier niveau, et le
+ * texte de `package.json` quand il y en a un. C'est tout ce que la règle lit —
+ * un verrou se reconnaît à son nom, un manifeste aussi. Le reste du dossier ne
+ * la concerne pas.
+ *
+ * Pourquoi un port plutôt qu'un chemin : la même règle doit valoir pour un
+ * dossier du disque (`pf web` en local, le CLI) **et** pour un dossier que le
+ * visiteur a désigné dans son navigateur, dont le serveur ne verra jamais le
+ * chemin — seulement ces quelques noms. Deux détections auraient divergé au
+ * premier verrou ajouté.
+ */
+export interface ProjectEntries {
+  /** Les noms des fichiers de premier niveau, sans chemin. */
+  readonly names: readonly string[];
+  /** Le texte de `package.json`, s'il y en a un et qu'il est lisible. */
+  readonly packageJson?: string;
 }
 
 /** Verrous, par ordre de priorité quand plusieurs coexistent. */
@@ -115,11 +127,12 @@ function parsePackageManagerField(value: unknown): [PackageManager, string] | un
   return isPackageManager(name) ? [name, version] : undefined;
 }
 
-async function detectNode(dir: string): Promise<Detection> {
+function detectNode(entries: ProjectEntries): Detection {
   const warnings: string[] = [];
+  const present = new Set(entries.names);
   let declared: [PackageManager, string] | undefined;
   try {
-    const pkg: unknown = JSON.parse(await readFile(join(dir, 'package.json'), 'utf8'));
+    const pkg: unknown = JSON.parse(entries.packageJson ?? '');
     declared =
       typeof pkg === 'object' && pkg !== null
         ? parsePackageManagerField((pkg as Record<string, unknown>)['packageManager'])
@@ -128,12 +141,7 @@ async function detectNode(dir: string): Promise<Detection> {
     warnings.push('package.json est illisible : le champ packageManager est ignoré.');
   }
 
-  const found: (readonly [string, PackageManager])[] = [];
-  for (const lockfile of LOCKFILES) {
-    if (await exists(join(dir, lockfile[0]))) {
-      found.push(lockfile);
-    }
-  }
+  const found = LOCKFILES.filter(([file]) => present.has(file));
 
   const base = { ecosystem: 'node', label: 'JavaScript / TypeScript' } as const;
   const version = declared === undefined ? {} : { packageManagerVersion: declared[1] };
@@ -178,17 +186,17 @@ const OTHERS: readonly {
   readonly file: string;
   readonly ecosystem: Ecosystem;
   readonly label: string;
-  readonly command: (dir: string) => Promise<string>;
+  readonly command: (present: ReadonlySet<string>) => string;
 }[] = [
   {
     file: 'pyproject.toml',
     ecosystem: 'python',
     label: 'Python',
-    command: async (dir) => {
-      if (await exists(join(dir, 'uv.lock'))) {
+    command: (present) => {
+      if (present.has('uv.lock')) {
         return 'uv sync';
       }
-      if (await exists(join(dir, 'poetry.lock'))) {
+      if (present.has('poetry.lock')) {
         return 'poetry install';
       }
       return 'pip install .';
@@ -198,20 +206,72 @@ const OTHERS: readonly {
     file: 'requirements.txt',
     ecosystem: 'python',
     label: 'Python',
-    command: async () => 'pip install -r requirements.txt',
+    command: () => 'pip install -r requirements.txt',
   },
-  { file: 'Cargo.toml', ecosystem: 'rust', label: 'Rust', command: async () => 'cargo fetch' },
-  { file: 'go.mod', ecosystem: 'go', label: 'Go', command: async () => 'go mod download' },
-  {
-    file: 'composer.json',
-    ecosystem: 'php',
-    label: 'PHP',
-    command: async () => 'composer install',
-  },
-  { file: 'Gemfile', ecosystem: 'ruby', label: 'Ruby', command: async () => 'bundle install' },
+  { file: 'Cargo.toml', ecosystem: 'rust', label: 'Rust', command: () => 'cargo fetch' },
+  { file: 'go.mod', ecosystem: 'go', label: 'Go', command: () => 'go mod download' },
+  { file: 'composer.json', ecosystem: 'php', label: 'PHP', command: () => 'composer install' },
+  { file: 'Gemfile', ecosystem: 'ruby', label: 'Ruby', command: () => 'bundle install' },
 ];
 
-/** Reconnaît le projet de `dir`. JavaScript d'abord : c'est le seul installé automatiquement. */
+/**
+ * Reconnaît un projet à partir de ses entrées. JavaScript d'abord : c'est le
+ * seul écosystème installé automatiquement.
+ *
+ * `label` ne sert qu'aux messages de refus — c'est le dossier tel que
+ * l'utilisateur l'a désigné : un chemin absolu en local, un simple nom de
+ * dossier quand il vient du navigateur.
+ */
+export function detectFromEntries(
+  entries: ProjectEntries,
+  label: string,
+): ParseResult<Detection, WorkspaceCode> {
+  const present = new Set(entries.names);
+  if (present.has('package.json')) {
+    return ok(detectNode(entries));
+  }
+  for (const other of OTHERS) {
+    if (present.has(other.file)) {
+      return ok({
+        ecosystem: other.ecosystem,
+        label: other.label,
+        source: 'manifest',
+        evidence: other.file,
+        manualCommand: other.command(present),
+        warnings: [],
+      });
+    }
+  }
+  return fail([
+    issue(
+      'WORKSPACE_UNKNOWN',
+      { value: label },
+      'Vérifiez le dossier ; pour un nouveau projet : pf create.',
+    ),
+  ]);
+}
+
+/** Les entrées d'un dossier du disque — le port de `detectFromEntries`, côté Node. */
+async function entriesOf(dir: string): Promise<ProjectEntries> {
+  let names: string[];
+  try {
+    const found = await readdir(dir, { withFileTypes: true });
+    names = found.filter((entry) => !entry.isDirectory()).map((entry) => entry.name);
+  } catch {
+    // Dossier illisible (droits) : aucune entrée, donc aucun manifeste reconnu.
+    return { names: [] };
+  }
+  if (!names.includes('package.json')) {
+    return { names };
+  }
+  try {
+    return { names, packageJson: await readFile(join(dir, 'package.json'), 'utf8') };
+  } catch {
+    return { names };
+  }
+}
+
+/** Reconnaît le projet de `dir`, sur le disque de cette machine. */
 export async function detectProject(dir: string): Promise<ParseResult<Detection, WorkspaceCode>> {
   let info: Awaited<ReturnType<typeof stat>>;
   try {
@@ -222,28 +282,7 @@ export async function detectProject(dir: string): Promise<ParseResult<Detection,
   if (!info.isDirectory()) {
     return fail([issue('WORKSPACE_NOT_A_DIRECTORY', { value: dir })]);
   }
-  if (await exists(join(dir, 'package.json'))) {
-    return ok(await detectNode(dir));
-  }
-  for (const other of OTHERS) {
-    if (await exists(join(dir, other.file))) {
-      return ok({
-        ecosystem: other.ecosystem,
-        label: other.label,
-        source: 'manifest',
-        evidence: other.file,
-        manualCommand: await other.command(dir),
-        warnings: [],
-      });
-    }
-  }
-  return fail([
-    issue(
-      'WORKSPACE_UNKNOWN',
-      { value: dir },
-      'Vérifiez le dossier ; pour un nouveau projet : pf create.',
-    ),
-  ]);
+  return detectFromEntries(await entriesOf(dir), dir);
 }
 
 export interface InstallOptions {

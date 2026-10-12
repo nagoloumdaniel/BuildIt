@@ -199,7 +199,14 @@ export function StepShell({
 }
 
 export interface ScreenShellProps {
-  readonly title: string;
+  /**
+   * Absent : l'écran n'a pas d'en-tête du tout.
+   *
+   * C'est le cas de l'accueil, dont le titre répétait le nom du produit déjà
+   * posé dans l'en-tête de l'application. Un titre vide aurait laissé le filet
+   * et l'espacement du bloc : il n'y a donc pas de bloc.
+   */
+  readonly title?: string;
   readonly description?: string;
   readonly children: ReactNode;
   /** Les actions de l'écran, à droite du titre. */
@@ -234,15 +241,17 @@ export function ScreenShell({
         </Link>
       )}
 
-      <header className={`pf-page-head pf-card-head${target === null ? '' : ' mt-3'}`}>
-        <div className="min-w-0">
-          <h1 className="pf-display">{title}</h1>
-          {description === undefined ? null : <p className="pf-subtitle mt-2">{description}</p>}
-        </div>
-        {actions === undefined ? null : <div className="pf-page-head-actions">{actions}</div>}
-      </header>
+      {title === undefined ? null : (
+        <header className={`pf-page-head pf-card-head${target === null ? '' : ' mt-3'}`}>
+          <div className="min-w-0">
+            <h1 className="pf-display">{title}</h1>
+            {description === undefined ? null : <p className="pf-subtitle mt-2">{description}</p>}
+          </div>
+          {actions === undefined ? null : <div className="pf-page-head-actions">{actions}</div>}
+        </header>
+      )}
 
-      <div className="pf-fade-in mt-6">{children}</div>
+      <div className={`pf-fade-in${title === undefined ? '' : ' mt-6'}`}>{children}</div>
     </main>
   );
 }

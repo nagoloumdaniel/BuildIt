@@ -1,6 +1,7 @@
 'use client';
 
 import type { ReactElement } from 'react';
+import { CommandLine } from '../../components/ui/copy';
 import { IssueList, NoteList } from '../../components/ui/empty-state';
 import { ErrorState } from '../../components/ui/error-state';
 import { Icon } from '../../components/ui/icon';
@@ -356,12 +357,7 @@ export function CloneView(props: CloneViewProps): ReactElement {
               {shownDirectory === '' ? (
                 <p className="pf-hint mt-1">{c.fullPathUnknown}</p>
               ) : (
-                <p
-                  className="pf-code mt-1"
-                  style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-all' }}
-                >
-                  {shownDirectory}
-                </p>
+                <CommandLine className="mt-1" value={shownDirectory} what={c.pathWhat} />
               )}
             </>
           ) : (
@@ -485,12 +481,7 @@ export function CloneView(props: CloneViewProps): ReactElement {
               {progress.detail === undefined ? null : (
                 <>
                   <p className="pf-eyebrow mt-3">{c.gitDetail}</p>
-                  <p
-                    className="pf-code mt-1"
-                    style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-all' }}
-                  >
-                    {progress.detail}
-                  </p>
+                  <CommandLine className="mt-1" value={progress.detail} what={c.gitDetail} />
                 </>
               )}
             </section>

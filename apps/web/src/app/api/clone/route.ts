@@ -140,7 +140,7 @@ export async function POST(request: NextRequest): Promise<Response> {
           ok: false,
           directory: '',
           issues: [
-            'Le clonage n’a pas pu être lancé. Rien n’a été laissé sur le disque — réessayez.',
+            'Le clonage n’a pas pu être lancé. Rien n’a été laissé sur le disque. Réessayez.',
           ],
           warnings: [],
           installed: false,

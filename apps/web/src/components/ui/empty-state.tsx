@@ -12,6 +12,12 @@ import { Illustration, type IllustrationName } from './illustration';
  *
  * Les deux partagent la même forme parce qu'ils occupent la même place et
  * répondent à la même question : « et maintenant ? ».
+ *
+ * Le centrage est porté par `.pf-empty-state` (dans `globals.css`) et non par
+ * un utilitaire : collé à une interpolation (`text-center${…}`), le nom de
+ * classe n'était pas repéré par l'analyseur de Tailwind, la règle n'était
+ * jamais engendrée, et le titre restait à gauche d'un bloc centré — un
+ * désalignement visible sur chaque écran vide.
  */
 
 export type EmptyTone = 'neutral' | 'danger';
@@ -44,7 +50,7 @@ export function EmptyState({
   const danger = tone === 'danger';
   return (
     <div
-      className={`pf-card pf-card-pad pf-empty-state text-center${className === undefined ? '' : ` ${className}`}`}
+      className={`pf-card pf-card-pad pf-empty-state${className === undefined ? '' : ` ${className}`}`}
       data-tone={tone}
       {...(danger
         ? { style: { borderColor: 'var(--pf-danger-line)', background: 'var(--pf-danger-soft)' } }

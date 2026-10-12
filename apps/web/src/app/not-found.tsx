@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { type ReactElement, useEffect, useState } from 'react';
+import { CommandLine } from '../components/ui/copy';
 import { Icon } from '../components/ui/icon';
 import { Illustration } from '../components/ui/illustration';
 import { useMessages } from '../lib/i18n/provider';
@@ -62,9 +63,7 @@ export default function NotFound(): ReactElement {
             <p className="pf-subtitle mt-3">{t.errors.notFoundBody}</p>
 
             {requested === null || requested === '' ? null : (
-              <p className="pf-code mt-4" style={{ wordBreak: 'break-all' }}>
-                {requested}
-              </p>
+              <CommandLine className="mt-4" value={requested} what={t.errors.notFoundPathWhat} />
             )}
           </div>
         </div>

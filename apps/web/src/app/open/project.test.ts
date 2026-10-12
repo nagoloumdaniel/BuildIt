@@ -135,7 +135,7 @@ describe('inspectProject — détecter, sans rien lancer', () => {
     expect(inspection.value.plainCommand).toBe('pnpm install');
     expect(inspection.value.safeCommand).toBe('pnpm install --ignore-scripts');
     expect(inspection.value.description).toBe(
-      'JavaScript / TypeScript — pnpm (d’après pnpm-lock.yaml)',
+      'JavaScript / TypeScript : pnpm (d’après pnpm-lock.yaml)',
     );
   });
 

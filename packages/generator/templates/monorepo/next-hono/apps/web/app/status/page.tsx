@@ -8,7 +8,7 @@ export default async function StatusPage() {
   let state: string;
   try {
     const health = await api.health();
-    state = `API joignable — ${health.status}`;
+    state = `API joignable : ${health.status}`;
   } catch (error) {
     state = `API injoignable : ${error instanceof Error ? error.message : String(error)}`;
   }

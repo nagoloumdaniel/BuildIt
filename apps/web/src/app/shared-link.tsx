@@ -45,20 +45,37 @@ export function SharedLink(): ReactElement {
       <label className="pf-label mt-2" htmlFor="pf-shared-link">
         {t.sharedLink.label}
       </label>
-      <div className="flex flex-wrap items-center gap-2">
+      {/* Le champ et son bouton sont **un** contrôle : ils restent sur la même
+          ligne, le champ prend la place qui reste (`min-w-0 flex-1`, sans quoi
+          un `pf-input` à 100 % pousse le bouton à la ligne suivante) et le
+          bouton garde sa largeur. */}
+      <div className="flex items-center gap-2">
         <input
           autoComplete="off"
-          className="pf-input pf-mono"
+          className="pf-input pf-mono min-w-0 flex-1"
           id="pf-shared-link"
           onChange={(event) => {
             setLink(event.target.value);
           }}
+          onKeyDown={(event) => {
+            // Entrée ouvre le lien : taper un lien puis viser un bouton est un
+            // geste de trop pour un champ qui n'a qu'une suite possible.
+            if (event.key === 'Enter') {
+              event.preventDefault();
+              open();
+            }
+          }}
           placeholder={t.sharedLink.placeholder}
           value={link}
         />
-        <button className="pf-btn" disabled={link.trim() === ''} onClick={open} type="button">
+        <button
+          className="pf-btn flex-none"
+          disabled={link.trim() === ''}
+          onClick={open}
+          type="button"
+        >
           <Icon name="arrowRight" />
-          {t.sharedLink.open}
+          <span className="hidden sm:inline">{t.sharedLink.open}</span>
         </button>
       </div>
       <IssueList className="mt-2" issues={issue === null ? [] : [issue]} />

@@ -88,7 +88,7 @@ async function create(args: readonly string[], io: Io): Promise<ExitCode> {
   const plan = `Créer le dépôt ${visibility} ${viewer.value.login}/${name} et y pousser ce projet ?`;
   if (!values.yes) {
     if (!io.interactive) {
-      io.out(`${plan} — relancez avec --yes pour confirmer. Rien n’a été créé.`);
+      io.out(`${plan} Relancez avec --yes pour confirmer. Rien n’a été créé.`);
       return EXIT.ok;
     }
     if (!(await io.prompter.confirm(plan))) {

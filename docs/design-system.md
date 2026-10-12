@@ -52,13 +52,15 @@ existe.**
 | `Logo`, `Wordmark` | le logo, qui suit le thème sans JavaScript (WebP en image de fond) |
 | `Card`, `CardHead` | une unité de décision délimitée |
 | `Stepper` | la progression du parcours (rail au large, barre au petit) |
-| `BubbleNav` | la navigation en pilules de l'en-tête |
+| `BubbleNav` | la navigation en pilules, dans sa bulle de l'en-tête |
+| `CopyButton`, `CommandLine`, `CommandSteps` | une valeur technique et sa copie, une marche à suivre |
+| `PickCard` | la carte qui **est** le geste : l'appuyer ouvre l'explorateur |
 | `Spinner`, `Dots`, `ProgressBar`, `LoadingLine`, `ProgressPanel` | les attentes |
 | `EmptyState`, `ErrorState`, `IssueList`, `NoteList` | les vides, les arrêts et les refus |
 | `PathPicker` | choisir un dossier ou un fichier **dans l'explorateur système** |
 | `ProjectCard` | un projet déjà généré, sur l'accueil comme dans la collection |
 | `Toaster`, `ThemeToggle`, `LocaleToggle` | les retours d'action et les deux réglages |
-| `AppShell` | en-tête collante, pied, liens d'évitement |
+| `AppShell` | les bulles flottantes de l'en-tête, le pied, les liens d'évitement |
 | `ScreenShell`, `StepShell` (dans `components/wizard/shell.tsx`) | les deux cadres de page |
 
 Les classes `pf-*` de `globals.css` restent disponibles : `pf-btn`,
@@ -67,7 +69,10 @@ Les classes `pf-*` de `globals.css` restent disponibles : `pf-btn`,
 `pf-choice`, `pf-grid`, `pf-badge` (+ `-accent`, `-ok`, `-danger`), `pf-input`,
 `pf-label`, `pf-code`, `pf-bubble`, `pf-tabs`/`pf-tab`, `pf-page-head`,
 `pf-rows`/`pf-row-item`, `pf-callout` (+ `-steel`), `pf-link`, `pf-table`,
-`pf-scroll-x`, `pf-card-progress`, `pf-route-loading`, `pf-sr-only-focusable`.
+`pf-scroll-x`, `pf-card-progress`, `pf-route-loading`, `pf-sr-only-focusable`,
+`pf-pod` (la bulle de l'en-tête, + `-identity`, `-action`), `pf-segmented`/
+`pf-segment`, `pf-command`/`pf-command-text`, `pf-steps-list`, `pf-footer`,
+`pf-empty-state`.
 
 Rien n'y est déclaré sans usage : une classe ou un jeton qui ne sert nulle part
 est du dessin mort, il part avec le reste. L'audit se fait en comparant les
@@ -91,14 +96,23 @@ attendre. **Jamais de pourcentage inventé** : sans mesure, `ProgressBar` sans
 
 ## 5. Les chemins de fichiers
 
-Un chemin ne se tape pas. `PathPicker` ouvre l'explorateur **de la machine**
-(PowerShell sous Windows, `osascript` sous macOS, `zenity` sous Linux) par une
-Server Action, et rend un chemin absolu. Le champ texte ne réapparaît qu'en
-mode hébergé, où l'explorateur serait celui du serveur — le composant le
-détecte seul et le dit.
+Un chemin ne se tape pas, **dans aucun mode**. Deux explorateurs, une seule
+intention :
+
+- **en local** (`pf web`), `PathPicker` et `pickFolderAction` ouvrent
+  l'explorateur *de la machine* (PowerShell sous Windows, `osascript` sous
+  macOS, `zenity` sous Linux) par une Server Action, et rendent un chemin
+  absolu ;
+- **en hébergé**, le serveur n'est pas sur la machine du visiteur : c'est son
+  navigateur qui ouvre l'explorateur (File System Access API,
+  `app/open/browser-picker.ts`). Il ne rend pas de chemin, seulement les noms
+  des fichiers du premier niveau et le texte de `package.json` : assez pour
+  reconnaître le projet par la **même** règle qu'en local
+  (`detectFromEntries`, dans `@buildit/workspace`), pas pour l'installer. Les
+  écrans le disent à cet endroit-là, et montrent la commande à copier.
 
 Le chemin rendu n'est pas pour autant cru : l'action qui suit le revalide
-(`resolveLocalDirectory`, `resolveAbsoluteDestination`).
+(`resolveLocalDirectory`, `resolveAbsoluteDestination`, `deletionTarget`).
 
 ## 6. Les deux langues
 
@@ -118,6 +132,11 @@ Court, et seulement en réponse à un geste : `pf-fade-in` à l'entrée d'un
 écran, 120–180 ms sur les survols et les états. Pas d'entrée en cascade par
 section, pas d'animation au défilement. `prefers-reduced-motion` est respecté
 globalement dans `globals.css`.
+
+**Rien ne se déplace sous le curseur.** Un survol change une couleur, une
+bordure ou une ombre ; il ne décale jamais l'élément, ni d'un pixel. Un
+déplacement au survol fait trembler une grille entière quand la souris la
+traverse, et déplace la cible qu'on vise.
 
 ## 8. Le plancher de qualité
 
@@ -140,5 +159,7 @@ Non négociable, sur chaque écran :
 - Pas de numéros `01 / 02 / 03` hors d'une vraie séquence — le parcours en
   est une, le reste non.
 - Pas de `→` collé au texte d'un lien : l'icône `arrowRight` existe.
+- Pas de tiret cadratin dans un texte affiché : deux-points quand la suite
+  explique, virgule quand elle apposait, point quand c'est une phrase de plus.
 - Pas de couleur de marque sortie d'un logo de technologie au milieu d'une
   grille : `TechIcon` suit `currentColor`.

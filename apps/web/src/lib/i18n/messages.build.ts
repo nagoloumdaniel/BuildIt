@@ -92,7 +92,7 @@ export const FR_BUILD = {
       descriptionIncomplete: 'Le résumé de ce qui sera généré, construit à partir de vos choix.',
       incompleteTitle: 'Le plan ne peut pas être construit',
       incompleteBody:
-        'Le brouillon est incomplet : il manque un choix à un écran précédent. Complétez-le, puis revenez sur cette page — rien n’a été écrit.',
+        'Le brouillon est incomplet : il manque un choix à un écran précédent. Complétez-le, puis revenez sur cette page. Rien n’a été écrit.',
       fixStack: 'Corriger mes choix',
       backHome: 'Retour au tableau de bord',
       catalogueIssue:
@@ -147,11 +147,11 @@ export const FR_BUILD = {
      */
     preview: {
       title: 'Aperçu des fichiers',
-      description: 'L’arborescence qui sera générée — sans rien écrire. Un dry-run du moteur.',
-      descriptionIncomplete: 'L’arborescence qui sera générée — sans rien écrire.',
+      description: 'L’arborescence qui sera générée, sans rien écrire. Un dry-run du moteur.',
+      descriptionIncomplete: 'L’arborescence qui sera générée, sans rien écrire.',
       incompleteTitle: 'Rien à prévisualiser',
       incompleteBody:
-        'Le brouillon est incomplet : il n’y a rien à prévisualiser. Complétez vos choix, puis revenez — rien n’a été écrit sur le disque.',
+        'Le brouillon est incomplet : il n’y a rien à prévisualiser. Complétez vos choix, puis revenez. Rien n’a été écrit sur le disque.',
       fixStack: 'Corriger mes choix',
       backHome: 'Retour au tableau de bord',
       loading: 'Calcul du plan…',
@@ -163,10 +163,10 @@ export const FR_BUILD = {
       treeLabel: 'Arborescence des fichiers à générer',
       planFailed: 'Le plan n’a pas pu être calculé.',
       folderNotes: {
-        apps: 'Les applications déployables du projet — une par cible (web, api…).',
+        apps: 'Les applications déployables du projet, une par cible (web, api…).',
         packages: 'Le code partagé entre applications : types, client API, composants communs.',
         src: 'Le code source de l’application.',
-        app: 'Les routes — un dossier par URL (App Router de Next.js).',
+        app: 'Les routes, un dossier par URL (App Router de Next.js).',
         components: 'Les composants d’interface réutilisés par plusieurs écrans.',
         lib: 'Les fonctions partagées : accès aux données, logique métier, utilitaires.',
         prisma: 'Le schéma de base de données et les migrations.',
@@ -176,7 +176,7 @@ export const FR_BUILD = {
         docs: 'La documentation du projet.',
         scripts: 'Les scripts d’installation, de build ou de maintenance du projet.',
         '.github': 'Les workflows d’intégration continue (CI) du dépôt.',
-        generated: 'Du code produit automatiquement — jamais à modifier à la main.',
+        generated: 'Du code produit automatiquement, jamais à modifier à la main.',
       },
     },
 
@@ -189,7 +189,7 @@ export const FR_BUILD = {
       description: 'Le projet est écrit sur cette machine, dans le dossier de travail affiché.',
       incompleteTitle: 'Rien ne sera écrit',
       incompleteBody:
-        'Le brouillon est incomplet : le moteur n’a pas de projet à écrire. Complétez vos choix, puis revenez — aucun fichier n’a été touché.',
+        'Le brouillon est incomplet : le moteur n’a pas de projet à écrire. Complétez vos choix, puis revenez. Aucun fichier n’a été touché.',
       fixStack: 'Corriger mes choix',
       backHome: 'Retour au tableau de bord',
       destination: 'Dossier de destination',
@@ -200,7 +200,7 @@ export const FR_BUILD = {
       buttonRunning: 'Génération…',
       viewReport: 'Voir le rapport complet',
       fatalTitle: 'La génération n’a pas pu être lancée',
-      fatalBody: 'Rien n’a été écrit — réessayez.',
+      fatalBody: 'Rien n’a été écrit. Réessayez.',
       refusedTitle: 'La génération a été refusée',
       refusedBody: 'Rien n’a été écrit.',
       refusedHint:
@@ -238,13 +238,15 @@ export const FR_BUILD = {
       refusedBadge: 'Refusé',
       refusalTitle: 'La génération a été refusée',
       refusalBody:
-        'Rien n’a été écrit. Corrigez les technologies ci-dessous, puis relancez la génération — le brouillon et les choix sont conservés.',
+        'Rien n’a été écrit. Corrigez les technologies ci-dessous, puis relancez la génération. Le brouillon et les choix sont conservés.',
       fixStack: 'Modifier les technologies',
       backHome: 'Retour au tableau de bord',
       technologiesTitle: 'Technologies choisies',
       none: 'Aucune technologie choisie.',
       filesCount: 'Fichiers écrits',
       weight: 'Poids',
+      directoryWhat: 'le dossier du projet',
+      commandWhat: 'la commande',
       stepsTitle: 'Étapes',
       noSteps: 'Aucune',
       warningsTitle: 'Avertissements',
@@ -330,7 +332,7 @@ export const EN_BUILD: Widen<typeof FR_BUILD> = {
       descriptionIncomplete: 'The summary of what will be generated, built from your choices.',
       incompleteTitle: 'The blueprint cannot be built',
       incompleteBody:
-        'The draft is incomplete: a choice is missing on an earlier screen. Complete it, then come back to this page — nothing has been written.',
+        'The draft is incomplete: a choice is missing on an earlier screen. Complete it, then come back to this page. Nothing has been written.',
       fixStack: 'Fix my choices',
       backHome: 'Back to the dashboard',
       catalogueIssue:
@@ -380,11 +382,11 @@ export const EN_BUILD: Widen<typeof FR_BUILD> = {
 
     preview: {
       title: 'File preview',
-      description: 'The tree that will be generated — writing nothing. An engine dry-run.',
-      descriptionIncomplete: 'The tree that will be generated — writing nothing.',
+      description: 'The tree that will be generated, writing nothing. An engine dry-run.',
+      descriptionIncomplete: 'The tree that will be generated, writing nothing.',
       incompleteTitle: 'Nothing to preview',
       incompleteBody:
-        'The draft is incomplete: there is nothing to preview. Complete your choices, then come back — nothing has been written to disk.',
+        'The draft is incomplete: there is nothing to preview. Complete your choices, then come back. Nothing has been written to disk.',
       fixStack: 'Fix my choices',
       backHome: 'Back to the dashboard',
       loading: 'Computing the plan…',
@@ -396,10 +398,10 @@ export const EN_BUILD: Widen<typeof FR_BUILD> = {
       treeLabel: 'File tree of the project to generate',
       planFailed: 'The plan could not be computed.',
       folderNotes: {
-        apps: 'The project’s deployable applications — one per target (web, api…).',
+        apps: 'The project’s deployable applications, one per target (web, api…).',
         packages: 'Code shared between applications: types, API client, common components.',
         src: 'The application source code.',
-        app: 'The routes — one folder per URL (Next.js App Router).',
+        app: 'The routes, one folder per URL (Next.js App Router).',
         components: 'Interface components reused by several screens.',
         lib: 'Shared functions: data access, business logic, utilities.',
         prisma: 'The database schema and the migrations.',
@@ -409,7 +411,7 @@ export const EN_BUILD: Widen<typeof FR_BUILD> = {
         docs: 'The project documentation.',
         scripts: 'Install, build or maintenance scripts for the project.',
         '.github': 'The repository’s continuous integration (CI) workflows.',
-        generated: 'Code produced automatically — never edit it by hand.',
+        generated: 'Code produced automatically, never edit it by hand.',
       },
     },
 
@@ -418,7 +420,7 @@ export const EN_BUILD: Widen<typeof FR_BUILD> = {
       description: 'The project is written on this machine, in the working folder shown below.',
       incompleteTitle: 'Nothing will be written',
       incompleteBody:
-        'The draft is incomplete: the engine has no project to write. Complete your choices, then come back — no file has been touched.',
+        'The draft is incomplete: the engine has no project to write. Complete your choices, then come back. No file has been touched.',
       fixStack: 'Fix my choices',
       backHome: 'Back to the dashboard',
       destination: 'Destination folder',
@@ -429,7 +431,7 @@ export const EN_BUILD: Widen<typeof FR_BUILD> = {
       buttonRunning: 'Generating…',
       viewReport: 'See the full report',
       fatalTitle: 'The generation could not be started',
-      fatalBody: 'Nothing was written — try again.',
+      fatalBody: 'Nothing was written. Try again.',
       refusedTitle: 'The generation was refused',
       refusedBody: 'Nothing was written.',
       refusedHint:
@@ -462,13 +464,15 @@ export const EN_BUILD: Widen<typeof FR_BUILD> = {
       refusedBadge: 'Refused',
       refusalTitle: 'The generation was refused',
       refusalBody:
-        'Nothing was written. Fix the technologies below, then run the generation again — the draft and your choices are kept.',
+        'Nothing was written. Fix the technologies below, then run the generation again. The draft and your choices are kept.',
       fixStack: 'Change the technologies',
       backHome: 'Back to the dashboard',
       technologiesTitle: 'Chosen technologies',
       none: 'No technology chosen.',
       filesCount: 'Files written',
       weight: 'Size',
+      directoryWhat: 'the project folder',
+      commandWhat: 'the command',
       stepsTitle: 'Steps',
       noSteps: 'None',
       warningsTitle: 'Warnings',

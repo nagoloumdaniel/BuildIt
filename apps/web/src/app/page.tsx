@@ -5,11 +5,10 @@ import { useEffect, useState } from 'react';
 import { useDraft, useSession } from '../components/wizard/draft-provider';
 import { ScreenShell } from '../components/wizard/shell';
 import { downloadZip } from '../lib/download-zip';
-import { useMessages } from '../lib/i18n/provider';
 import { browserProjectStorage, loadProjects, type StoredProject } from '../lib/projects';
 import { browserSessionStorage, type GenerationReport, loadReport } from './create/report/result';
 import { DashboardView } from './dashboard-view';
-import { useLocalProjectOpen } from './open/local-open';
+import { usePickHandoff } from './open/pick-handoff';
 import { SharedLink } from './shared-link';
 
 /**
@@ -24,14 +23,18 @@ import { SharedLink } from './shared-link';
  * Tant que la liste n'est pas lue, `DashboardView` reçoit `null` et dit qu'elle
  * lit — annoncer « aucun projet » puis afficher trois cartes serait un
  * mensonge, et un saut de mise en page.
+ *
+ * L'écran n'a **pas** de titre : le nom du produit est déjà dans l'en-tête, et
+ * un « BuildIt » de 32 px suivi de sa propre description répétait la seule
+ * chose que le visiteur voit déjà. La page s'ouvre donc sur les chemins — ce
+ * qu'on vient y faire.
  */
 export default function Home(): ReactElement {
-  const t = useMessages();
   const draft = useDraft();
   const session = useSession();
   const [report, setReport] = useState<GenerationReport | null>(null);
   const [projects, setProjects] = useState<readonly StoredProject[] | null>(null);
-  const openLocal = useLocalProjectOpen();
+  const openLocal = usePickHandoff();
 
   useEffect(() => {
     setReport(loadReport(browserSessionStorage()));
@@ -47,7 +50,7 @@ export default function Home(): ReactElement {
     report?.ok === true && report.zipBase64 !== undefined && report.directory === project.directory;
 
   return (
-    <ScreenShell back={null} description={t.dashboard.description} title={t.dashboard.title}>
+    <ScreenShell back={null}>
       <DashboardView
         draft={draft}
         isRedownloadable={isRedownloadable}

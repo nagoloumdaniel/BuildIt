@@ -46,7 +46,7 @@ const DASHBOARD: Preset = {
   id: 'dashboard',
   name: 'Dashboard',
   description:
-    'Espace d’administration protégé : indicateurs, graphique, tableau des utilisateurs, paramètres — sur des données réelles.',
+    'Espace d’administration protégé : indicateurs, graphique, tableau des utilisateurs, paramètres, sur des données réelles.',
   recipes: ['dashboard-admin'],
   manifest: (name) => ({
     manifestVersion: 1,

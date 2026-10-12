@@ -54,7 +54,7 @@ describe('pf clone', () => {
     expect(await run(['clone', 'octocat/Hello-World'], io)).toBe(0);
     expect(world.calls.some((call) => call.command === 'pnpm')).toBe(false);
     const out = io.text().out;
-    expect(out).toContain('Projet : JavaScript / TypeScript — pnpm (d’après pnpm-lock.yaml)');
+    expect(out).toContain('Projet : JavaScript / TypeScript : pnpm (d’après pnpm-lock.yaml)');
     expect(out).toContain('Code que vous n’avez pas écrit');
     expect(out).toContain('Rien n’a été installé. Pour installer : pnpm install');
     expect(out).toContain('cd Hello-World');
@@ -144,7 +144,7 @@ describe('pf clone', () => {
     });
     expect(await run(['clone'], io)).toBe(0);
     expect(io.offered[0]).toEqual([
-      { value: 'octocat/demo', label: 'octocat/demo', hint: 'privé — Démo' },
+      { value: 'octocat/demo', label: 'octocat/demo', hint: 'privé · Démo' },
     ]);
     expect(world.calls.find((call) => call.command === 'git')?.args).toContain(
       'https://github.com/octocat/demo.git',

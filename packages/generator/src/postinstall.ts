@@ -46,7 +46,7 @@ const MESSAGES: Readonly<Record<PostInstallCode, string>> = {
   GEN_GIT_NESTED:
     'Le dossier {value} est à l’intérieur d’un dépôt Git existant : aucun dépôt imbriqué n’a été créé, et rien n’a été commité.',
   GEN_VALIDATION_FAILED:
-    'Le projet généré échoue à « pnpm run {command} ». C’est un défaut du générateur, pas de votre projet — signalez-le. Fin de la sortie :\n{output}',
+    'Le projet généré échoue à « pnpm run {command} ». C’est un défaut du générateur, pas de votre projet : signalez-le. Fin de la sortie :\n{output}',
   GEN_COMMAND_UNAVAILABLE:
     'La commande « {command} » est introuvable. Installez-la puis relancez à partir de cette étape : les fichiers du projet sont en place.',
 };

@@ -22,6 +22,7 @@ Thumbs.db
 .mimosa/
 .v2c/
 .video_agent/
+.claude/
 
 # Templates recopiés dans le binaire du CLI à la construction
 apps/cli/templates/

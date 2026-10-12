@@ -85,7 +85,7 @@ export async function runGeneration(
       return EXIT.failure;
     }
     io.out(
-      `Aperçu — rien n'est écrit. ${planned.value.plan.files.length} fichiers dans ${shown}/ :`,
+      `Aperçu : rien n'est écrit. ${planned.value.plan.files.length} fichiers dans ${shown}/ :`,
     );
     io.out('');
     io.out(describePlan(planned.value.plan));

@@ -5,20 +5,29 @@ import type { ReactElement, ReactNode } from 'react';
 import { LocaleToggle } from '../../app/locale-toggle';
 import { ThemeToggle } from '../../app/theme-toggle';
 import { useMessages } from '../../lib/i18n/provider';
+import { REPO_URL } from '../../lib/links';
 import { BubbleNav } from './bubble-nav';
+import { Icon } from './icon';
 import { Wordmark } from './logo';
 
 /**
  * L'en-tête et le pied de page, partout.
  *
- * L'en-tête est collant : sur un parcours de douze écrans, revenir à l'accueil
- * ou changer de chemin ne doit pas demander de remonter. Il est translucide et
- * flouté plutôt qu'opaque — le contenu qui passe dessous dit qu'on a défilé,
- * ce qu'une barre pleine cache.
+ * L'en-tête n'est **pas** une barre : c'est une rangée de bulles posées au-dessus
+ * de la page. Une barre pleine derrière des bulles faisait deux fonds pour une
+ * seule rangée — l'un disait « barre », l'autre « pilule », et le contenu qui
+ * défilait disparaissait sous un bandeau au lieu de passer entre les bulles.
  *
- * Trois zones, dans cet ordre de lecture : l'identité (logo et nom), la
- * navigation (les bulles), les réglages (langue, thème). Les réglages sont à
- * droite parce qu'on les change une fois, pas à chaque écran.
+ * Quatre groupes, chacun dans sa bulle, dans l'ordre de lecture :
+ * l'identité, la navigation, les deux réglages (langue, thème), le code source.
+ * Un groupe par bulle, parce que les gestes qu'il contient se ressemblent :
+ * chercher une ressemblance entre « Projets » et « thème sombre » n'aurait pas
+ * de sens, et la frontière le dit mieux qu'un écart.
+ *
+ * Les espaces **entre** les bulles ne captent pas le clic
+ * (`pointer-events`, dans `globals.css`) : l'en-tête est collante, et une bande
+ * transparente de 56 px qui avale les clics sur toute la largeur serait un
+ * piège invisible.
  */
 export function AppShell({ children }: { children: ReactNode }): ReactElement {
   const t = useMessages();
@@ -32,26 +41,42 @@ export function AppShell({ children }: { children: ReactNode }): ReactElement {
         <div className="pf-topbar-inner">
           <Link
             aria-label={t.nav.home}
-            className="no-underline"
+            className="pf-pod pf-pod-identity no-underline"
             href="/"
             style={{ color: 'inherit' }}
           >
-            <Wordmark size={26} />
+            <Wordmark size={22} />
           </Link>
 
-          <div className="hidden md:block">
+          <div className="hidden md:flex md:min-w-0">
             <BubbleNav />
           </div>
 
-          <div className="flex items-center gap-1">
-            <LocaleToggle />
-            <ThemeToggle />
+          <div className="pf-topbar-settings">
+            <div className="pf-pod">
+              <LocaleToggle />
+            </div>
+            <div className="pf-pod">
+              <ThemeToggle />
+            </div>
+            {/* Le dépôt du produit, pas l'écran de connexion GitHub (qui est
+                dans la navigation) : d'où le libellé « code source ». */}
+            <a
+              aria-label={t.nav.source}
+              className="pf-pod pf-pod-action"
+              href={REPO_URL}
+              rel="noreferrer"
+              target="_blank"
+              title={t.nav.source}
+            >
+              <Icon name="github" size={16} />
+            </a>
           </div>
         </div>
 
-        {/* Sous 768 px, les bulles passent sous l'identité : elles gardent leur
-            place de rangée plutôt que de disparaître dans un menu. */}
-        <div className="pf-mobile-nav border-t border-border px-3 py-2 md:hidden">
+        {/* Sous 768 px, les bulles de navigation passent sous l'identité : elles
+            gardent leur place de rangée plutôt que de disparaître dans un menu. */}
+        <div className="pf-topbar-mobile md:hidden">
           <BubbleNav />
         </div>
       </header>
@@ -60,35 +85,30 @@ export function AppShell({ children }: { children: ReactNode }): ReactElement {
         {children}
       </div>
 
-      <footer className="mt-auto border-t border-border">
-        <div className="mx-auto flex max-w-[1120px] flex-wrap items-center justify-between gap-4 px-5 py-5 md:px-8">
+      {/* Le pied de page : trois blocs, pas un plan du site. Il s'aligne sur la
+          même colonne que les écrans (1120 px, mêmes gouttières), le filet le
+          sépare du contenu, et à l'étroit les blocs s'empilent à gauche plutôt
+          que de se répartir au hasard de l'espace restant. */}
+      <footer className="pf-footer">
+        <div className="pf-footer-inner">
           <div className="min-w-0">
             <Wordmark size={20} />
             <p className="pf-eyebrow mt-1.5">{t.common.tagline}</p>
           </div>
 
-          {/* Le pied de page n'est pas un plan du site : trois adresses, celles
-              qui servent quand on est déjà en bas de page. Les réglages
-              (langue, thème) restent dans l'en-tête, avec le reste. */}
-          <nav aria-label={t.footer.navLabel} className="pf-row">
-            <Link className="pf-link text-[0.8125rem]" href="/projects">
+          <nav aria-label={t.footer.navLabel} className="pf-footer-nav">
+            <Link className="pf-link" href="/projects">
               {t.nav.projects}
             </Link>
-            <span aria-hidden="true" className="text-faint">
-              ·
-            </span>
-            <Link className="pf-link text-[0.8125rem]" href="/graph">
+            <Link className="pf-link" href="/graph">
               {t.nav.graph}
             </Link>
-            <span aria-hidden="true" className="text-faint">
-              ·
-            </span>
-            <Link className="pf-link text-[0.8125rem]" href="/github">
-              {t.nav.github}
-            </Link>
+            <a className="pf-link" href={REPO_URL} rel="noreferrer" target="_blank">
+              {t.nav.source}
+            </a>
           </nav>
 
-          <p className="pf-eyebrow">
+          <p className="pf-eyebrow pf-footer-meta">
             {t.footer.licence} · v{t.footer.version}
           </p>
         </div>

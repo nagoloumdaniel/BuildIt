@@ -55,7 +55,7 @@ const PROJECT: NonNullable<CloneResultView['project']> = {
   warnings: [],
   plainCommand: 'pnpm install',
   safeCommand: 'pnpm install --ignore-scripts',
-  description: 'JavaScript / TypeScript — pnpm (d’après pnpm-lock.yaml)',
+  description: 'JavaScript / TypeScript : pnpm (d’après pnpm-lock.yaml)',
 };
 
 function render(overrides: Partial<CloneViewProps> = {}): string {
@@ -153,7 +153,7 @@ describe('CloneView — la destination en local', () => {
     expect(html).toContain('Destination');
     expect(html).toContain('C:\\Projets\\mon-app');
     expect(html).toContain('octocat/mon-app');
-    expect(html).toContain('absent — le clone le créera.');
+    expect(html).toContain('absent : le clone le créera.');
   });
 
   it('propose l’installation avec l’avertissement de confiance', () => {
@@ -335,7 +335,7 @@ describe('CloneView — le résultat, conservé après la fin', () => {
     });
 
     expect(html).toContain('Dépôt cloné dans C:\\Projets\\mon-app');
-    expect(html).toContain('Projet détecté : JavaScript / TypeScript — pnpm');
+    expect(html).toContain('Projet détecté : JavaScript / TypeScript : pnpm');
     expect(html).toContain('Commande d’installation : pnpm install --ignore-scripts.');
     expect(html).toContain('Dépendances installées.');
     expect(html).toContain('Aucun projet reconnu dans ce dossier.');

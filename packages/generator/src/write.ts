@@ -34,7 +34,7 @@ const MESSAGES: Readonly<Record<GenWriteCode, string>> = {
   GEN_PATH_TRAVERSAL:
     'Le chemin {value} traverse un lien symbolique. Un lien peut pointer n’importe où : l’écriture s’arrête plutôt que de suivre.',
   GEN_TARGET_NOT_EMPTY:
-    'Le dossier {value} n’est pas vide. La génération n’écrase jamais un projet existant — choisissez un dossier vide.',
+    'Le dossier {value} n’est pas vide. La génération n’écrase jamais un projet existant : choisissez un dossier vide.',
   GEN_WRITE_FAILED:
     'Échec à l’écriture de {value} : {reason}. Tout ce qui avait été écrit a été annulé, le dossier est revenu à son état initial.',
   GEN_ROLLBACK_FAILED:

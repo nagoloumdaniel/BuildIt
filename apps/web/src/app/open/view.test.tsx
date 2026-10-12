@@ -51,9 +51,11 @@ function controller(overrides: Partial<LocalOpenController> = {}): LocalOpenCont
     confirmed: false,
     installing: false,
     notice: null,
-    canPick: true,
+    mode: 'native',
+    runnable: true,
     pick: () => undefined,
     analyse: () => undefined,
+    reanalyse: () => undefined,
     clear: () => undefined,
     setIgnoreScripts: () => undefined,
     setConfirmed: () => undefined,
@@ -71,9 +73,9 @@ describe('OpenView — le dossier se choisit, il ne se tape pas (local)', () => 
     const html = render();
 
     expect(html).toContain('Choisir un dossier');
-    expect(html).toContain('Dossier du projet');
     expect(html).toContain('package.json');
-    expect(html).not.toMatch(/<input[^>]*id="pf-open-directory"/);
+    // Aucun champ de chemin, dans aucun mode : la carte entière est le geste.
+    expect(html).not.toMatch(/<input/);
   });
 
   it('invite à choisir un dossier tant qu’il n’y en a aucun', () => {
@@ -83,10 +85,33 @@ describe('OpenView — le dossier se choisit, il ne se tape pas (local)', () => 
     expect(html).toContain('l’analyse démarre aussitôt');
   });
 
-  it('explique le repli en hébergé au lieu de proposer un bouton mort', () => {
-    const html = render({ canPick: false });
+  it('en hébergé, l’explorateur est celui du navigateur — et le dit', () => {
+    const html = render({ mode: 'browser', runnable: false });
 
-    expect(html).toContain('L’explorateur s’ouvrirait sur le serveur');
+    expect(html).toContain('lu dans votre navigateur');
+    expect(html).not.toContain('saisissez le chemin');
+  });
+
+  it('ne promet pas d’explorateur quand le navigateur n’en a pas', () => {
+    const html = render({ mode: 'none' });
+
+    expect(html).toContain('Ce navigateur ne sait pas ouvrir de dossier');
+    expect(html).toContain('disabled');
+  });
+
+  it('en hébergé, la commande se copie au lieu d’être lancée', () => {
+    const html = render({
+      phase: 'ready',
+      directory: 'mon-app',
+      mode: 'browser',
+      runnable: false,
+      inspection: { ok: true, value: SUMMARY },
+    });
+
+    expect(html).toContain('pnpm install');
+    expect(html).toContain('À lancer dans votre terminal');
+    expect(html).not.toContain('J’ai lu la commande');
+    expect(html).not.toContain('Installer les dépendances');
   });
 });
 

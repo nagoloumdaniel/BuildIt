@@ -6,7 +6,7 @@ import { EXIT, type ExitCode, type Io } from '../io.js';
 export const KEY_USAGE = `Usage : pf key <set|status|clear>
 
   set     Enregistre la clé API LLM, lue sur l'entrée standard ou saisie masquée
-          (echo "$CLE" | pf key set) — jamais en argument
+          (echo "$CLE" | pf key set), jamais en argument
   status  Dit si une clé est enregistrée, sans jamais l'afficher
   clear   Supprime la clé`;
 
@@ -54,7 +54,7 @@ export async function key(args: readonly string[], io: Io): Promise<ExitCode> {
         return usageError(
           io,
           'La clé ne se passe jamais en argument : elle resterait dans l’historique du shell.',
-          'echo "$CLE" | pf key set — ou pf key set dans un terminal, saisie masquée.',
+          'echo "$CLE" | pf key set, ou pf key set dans un terminal, saisie masquée.',
         );
       }
       const value = (

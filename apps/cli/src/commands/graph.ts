@@ -63,7 +63,7 @@ export async function graph(args: readonly string[], io: Io): Promise<ExitCode> 
   const { technologies, additions, status, warnings } = resolution.value;
   const addedBy = new Map(additions.map((addition) => [addition.id, addition.requiredBy]));
   io.out(
-    `${manifest.name} — ${technologies.length} technologies, stack ${status === 'certified' ? 'certifiée' : 'expérimentale'}`,
+    `${manifest.name} : ${technologies.length} technologies, stack ${status === 'certified' ? 'certifiée' : 'expérimentale'}`,
   );
   io.out('');
   for (const id of technologies) {

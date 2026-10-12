@@ -20,13 +20,6 @@ export const FR_DASHBOARD = {
     cloneNote: 'Vos dépôts GitHub, ou n’importe quel lien Git. Installation proposée après.',
     openTitle: 'Ouvrir un projet local',
     openNote: 'Reconnaître un projet déjà sur cette machine et proposer l’installation.',
-    /* La carte du menu ouvre l'explorateur **directement** : ce lien n'est pas
-       l'étape suivante, c'est l'écran complet — relecture, saisie manuelle en
-       hébergé, installation. */
-    openFullScreen: 'Écran d’ouverture',
-    openHostedNote:
-      'L’explorateur s’ouvrirait sur le serveur, pas sur votre machine. Saisissez le dossier dans l’écran d’ouverture.',
-    openDetected: 'Projet reconnu',
     accountLabel: 'Compte et dépôt',
     githubTitle: 'Compte GitHub',
     githubNote: 'Se connecter, voir les permissions accordées, se déconnecter.',
@@ -78,6 +71,14 @@ export const FR_DASHBOARD = {
     download: 'Télécharger à nouveau',
     forget: 'Retirer de la liste',
     forgetAll: 'Vider la liste',
+    pathWhat: 'le chemin du projet',
+    delete: 'Supprimer du disque',
+    deleteConfirmTitle: 'Supprimer les fichiers de ce projet ?',
+    deleteConfirmBody:
+      'Le dossier et tout ce qu’il contient seront effacés de cette machine. Il n’y a pas de corbeille : c’est définitif.',
+    deleteConfirmAction: 'Oui, supprimer les fichiers',
+    deleting: 'Suppression des fichiers…',
+    deleted: (name: string) => `Projet supprimé : ${name}.`,
     forgetHint: 'Retirer un projet d’ici ne supprime aucun fichier sur le disque.',
     clearConfirmTitle: 'Vider la liste ?',
     clearConfirmBody:
@@ -101,10 +102,6 @@ export const EN_DASHBOARD: Widen<typeof FR_DASHBOARD> = {
     cloneNote: 'Your GitHub repositories, or any Git link. Install offered afterwards.',
     openTitle: 'Open a local project',
     openNote: 'Recognise a project already on this machine and offer to install it.',
-    openFullScreen: 'Open screen',
-    openHostedNote:
-      'The explorer would open on the server, not on your machine. Type the folder in the open screen.',
-    openDetected: 'Project recognised',
     accountLabel: 'Account and repository',
     githubTitle: 'GitHub account',
     githubNote: 'Sign in, review granted permissions, sign out.',
@@ -154,6 +151,14 @@ export const EN_DASHBOARD: Widen<typeof FR_DASHBOARD> = {
     download: 'Download again',
     forget: 'Remove from list',
     forgetAll: 'Clear the list',
+    pathWhat: 'the project path',
+    delete: 'Delete from disk',
+    deleteConfirmTitle: 'Delete this project’s files?',
+    deleteConfirmBody:
+      'The folder and everything in it will be erased from this machine. There is no recycle bin: this is final.',
+    deleteConfirmAction: 'Yes, delete the files',
+    deleting: 'Deleting the files…',
+    deleted: (name: string) => `Project deleted: ${name}.`,
     forgetHint: 'Removing a project from here deletes no file on disk.',
     clearConfirmTitle: 'Clear the list?',
     clearConfirmBody:

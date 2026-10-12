@@ -10,7 +10,7 @@ export const WEB_USAGE: string = `Usage : pf web [--port <n>] [--no-open]
 Sert le configurateur web déjà construit (pnpm build), ouvre le navigateur,
 et reste au premier plan : Ctrl-C arrête le serveur.
 
-Le serveur n'écoute que sur 127.0.0.1 — il reste sur cette machine.
+Le serveur n'écoute que sur 127.0.0.1 : il reste sur cette machine.
 
 Options :
   --port <n>   Port d'écoute (défaut 4173)
@@ -186,7 +186,7 @@ export async function web(args: readonly string[], io: Io): Promise<ExitCode> {
   }
 
   const url = `http://${HOST}:${port}`;
-  io.out(`Configurateur : ${url} — local uniquement, Ctrl-C pour arrêter.`);
+  io.out(`Configurateur : ${url} · local uniquement, Ctrl-C pour arrêter.`);
   const serving = serve(io, target, port);
   if (!values['no-open']) {
     await openBrowser(io, url);

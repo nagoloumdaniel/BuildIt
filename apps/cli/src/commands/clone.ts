@@ -40,7 +40,7 @@ async function pickRepository(io: Io, token: string | undefined): Promise<string
           label: repository.fullName,
           hint: [repository.private ? 'privé' : 'public', repository.description]
             .filter((part) => part !== '')
-            .join(' — '),
+            .join(' · '),
         })),
       );
     }

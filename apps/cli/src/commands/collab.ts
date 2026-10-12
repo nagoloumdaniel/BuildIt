@@ -90,7 +90,7 @@ export async function collab(args: readonly string[], io: Io): Promise<ExitCode>
   const question = `Retirer l’accès de ${username} à ${full} ?`;
   if (!values.yes) {
     if (!io.interactive) {
-      io.out(`${question} — relancez avec --yes pour confirmer. Rien n’a changé.`);
+      io.out(`${question} Relancez avec --yes pour confirmer. Rien n’a changé.`);
       return EXIT.ok;
     }
     if (!(await io.prompter.confirm(question))) {

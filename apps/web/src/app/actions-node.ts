@@ -27,6 +27,7 @@ import { sessionDeps } from './github/server-deps';
 import { type GithubStatusView, githubDisconnect, githubStatus } from './github/session';
 import {
   type InstallResultView,
+  inspectPickedEntries,
   inspectProject,
   installProject,
   type ProjectInspectionView,
@@ -214,6 +215,18 @@ export async function inspectProjectAction(directory: unknown): Promise<ProjectI
     return { ok: false, issues: resolved.issues };
   }
   return inspectProject(resolved.value);
+}
+
+/**
+ * Reconnaît un projet que le **navigateur** a ouvert (mode hébergé).
+ *
+ * Aucun accès disque : l'action applique la règle de détection aux noms de
+ * fichiers que le visiteur a laissé lire. C'est le seul chemin d'ouverture
+ * possible quand le serveur n'est pas sur la machine de l'utilisateur, et il
+ * n'ouvre aucune porte : rien n'est lu, rien n'est écrit, rien n'est lancé.
+ */
+export async function inspectPickedFolderAction(input: unknown): Promise<ProjectInspectionView> {
+  return inspectPickedEntries(inputRecord(input));
 }
 
 export async function installProjectAction(input: unknown): Promise<InstallResultView> {

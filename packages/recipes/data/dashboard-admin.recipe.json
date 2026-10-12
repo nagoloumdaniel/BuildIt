@@ -1,7 +1,7 @@
 {
   "id": "dashboard-admin",
   "name": "Tableau de bord d’administration",
-  "description": "Espace /dashboard protégé : indicateurs, graphique des inscriptions, tableau des utilisateurs (tri, recherche, pagination), paramètres du compte, page de connexion — sur les données réelles de Better Auth.",
+  "description": "Espace /dashboard protégé : indicateurs, graphique des inscriptions, tableau des utilisateurs (tri, recherche, pagination), paramètres du compte, page de connexion, sur les données réelles de Better Auth.",
   "for": ["better-auth"],
   "requires": ["next", "shadcn-ui", "tailwind", "prisma", "postgresql"],
   "packages": {

@@ -272,7 +272,7 @@ describe('formatReport — le rapport se lit', () => {
       { nameOf: () => undefined },
     );
     const text = formatReport(report, 'quai3');
-    expect(text).toContain('quai3 — santé du projet :');
+    expect(text).toContain('quai3 · santé du projet :');
     expect(text).toContain('✕ Variables d’environnement');
     expect(text).toContain('Corrections proposées :');
     expect(text).toContain('.env.example');

@@ -5,8 +5,7 @@ import { type DraftState, freshDraft } from '../lib/draft';
 import type { StoredProject } from '../lib/projects';
 import type { GenerationReport } from './create/report/result';
 import { DashboardView, type DashboardViewProps, LocalOpenCard } from './dashboard-view';
-import type { LocalOpenController } from './open/local-open';
-import type { ProjectSummaryView } from './open/project';
+import type { PickHandoff } from './open/pick-handoff';
 
 /** Le tableau de bord, rendu sans DOM : le brouillon et les listes sont fournis. */
 
@@ -45,39 +44,8 @@ const THIRD = project({
   generatedAt: '2025-12-01T09:00:00.000Z',
 });
 
-const SUMMARY: ProjectSummaryView = {
-  directory: 'C:\\projets\\mon-app',
-  label: 'JavaScript / TypeScript',
-  ecosystem: 'node',
-  packageManager: 'pnpm',
-  source: 'lockfile',
-  evidence: 'pnpm-lock.yaml',
-  origin: 'd’après pnpm-lock.yaml',
-  warnings: [],
-  plainCommand: 'pnpm install',
-  safeCommand: 'pnpm install --ignore-scripts',
-  description: 'JavaScript / TypeScript — pnpm (d’après pnpm-lock.yaml)',
-};
-
-function controller(overrides: Partial<LocalOpenController> = {}): LocalOpenController {
-  return {
-    phase: 'idle',
-    directory: '',
-    inspection: null,
-    installResult: null,
-    ignoreScripts: false,
-    confirmed: false,
-    installing: false,
-    notice: null,
-    canPick: true,
-    pick: () => undefined,
-    analyse: () => undefined,
-    clear: () => undefined,
-    setIgnoreScripts: () => undefined,
-    setConfirmed: () => undefined,
-    install: () => undefined,
-    ...overrides,
-  };
+function handoff(overrides: Partial<PickHandoff> = {}): PickHandoff {
+  return { mode: 'native', busy: false, notice: null, start: () => undefined, ...overrides };
 }
 
 function render(
@@ -89,24 +57,26 @@ function render(
   );
 }
 
-function renderCard(overrides: Partial<LocalOpenController> = {}): string {
-  return renderToStaticMarkup(createElement(LocalOpenCard, { controller: controller(overrides) }));
+function renderCard(overrides: Partial<PickHandoff> = {}): string {
+  return renderToStaticMarkup(createElement(LocalOpenCard, { handoff: handoff(overrides) }));
 }
 
 describe('Dashboard — le menu des chemins', () => {
   it('propose les trois chemins, dont l’ouverture locale', () => {
-    const html = render(freshDraft(), { openLocal: controller() });
+    const html = render(freshDraft(), { openLocal: handoff() });
 
     expect(html).toContain('Créer un projet');
     expect(html).toContain('Cloner un projet');
     expect(html).toContain('Ouvrir un projet local');
     expect(html).toContain('href="/create"');
     expect(html).toContain('href="/clone"');
-    expect(html).toContain('href="/open"');
+    // L'ouverture locale n'est pas un lien : la carte entière est le bouton
+    // qui ouvre l'explorateur, et c'est le dossier choisi qui mène à /open.
+    expect(html).toContain('<button');
   });
 
   it('mène au compte GitHub et au dépôt', () => {
-    const html = render(freshDraft(), { openLocal: controller() });
+    const html = render(freshDraft(), { openLocal: handoff() });
 
     expect(html).toContain('href="/github"');
     expect(html).toContain('href="/repo"');
@@ -216,51 +186,38 @@ describe('Dashboard — un projet généré n’est jamais un brouillon', () => 
   });
 });
 
-describe('LocalOpenCard — l’explorateur s’ouvre dans la carte', () => {
-  it('appuie pour ouvrir l’explorateur, sans page intermédiaire', () => {
+describe('LocalOpenCard — la carte est le bouton', () => {
+  it('ouvre l’explorateur sans bouton ni lien à viser dans la carte', () => {
     const html = renderCard();
 
     expect(html).toContain('Ouvrir un projet local');
-    expect(html).toContain('Choisir un dossier');
-    expect(html).toContain('Écran d’ouverture');
-    expect(html).toContain('href="/open"');
     expect(html).toContain('<button');
+    // Les deux cibles d'avant ont disparu : plus de « Choisir un dossier »
+    // dans la carte, plus de lien vers l'écran d'ouverture.
+    expect(html).not.toContain('Choisir un dossier');
+    expect(html).not.toContain('Écran d’ouverture');
+    expect(html).not.toContain('href="/open"');
   });
 
-  it('affiche une barre d’avancement dans la carte pendant l’analyse', () => {
-    const html = renderCard({ phase: 'inspecting', directory: 'C:\\projets\\mon-app' });
+  it('dit que l’explorateur est ouvert pendant qu’on attend le dossier', () => {
+    const html = renderCard({ busy: true });
 
-    expect(html).toContain('pf-card-progress');
-    expect(html).toContain('role="progressbar"');
-    expect(html).toContain('pf-bar-indeterminate');
-    expect(html).toContain('Analyse du dossier…');
-  });
-
-  it('montre le projet reconnu, sa commande et les gestes qui suivent', () => {
-    const html = renderCard({
-      phase: 'ready',
-      directory: SUMMARY.directory,
-      inspection: { ok: true, value: SUMMARY },
-    });
-
-    expect(html).toContain('Projet reconnu');
-    expect(html).toContain('JavaScript / TypeScript');
-    expect(html).toContain('Gestionnaire');
-    expect(html).toContain('pnpm install');
-    expect(html).toContain('J’ai lu la commande');
+    expect(html).toContain('pf-spinner');
+    expect(html).toContain('sur le bureau de cette machine');
+    expect(html).toContain('aria-busy="true"');
+    expect(html).toContain('disabled');
   });
 
   it('reste calme après une annulation', () => {
-    const html = renderCard({ phase: 'cancelled', notice: 'Aucun dossier choisi.' });
+    const html = renderCard({ notice: 'Aucun dossier choisi.' });
 
     expect(html).toContain('Aucun dossier choisi.');
     expect(html).not.toContain('role="alert"');
   });
 
-  it('explique le repli en hébergé au lieu d’un bouton mort', () => {
-    const html = renderCard({ canPick: false });
+  it('grise la carte quand aucun explorateur ne peut s’ouvrir', () => {
+    const html = renderCard({ mode: 'none' });
 
-    expect(html).toContain('L’explorateur s’ouvrirait sur le serveur');
     expect(html).toContain('disabled');
   });
 });

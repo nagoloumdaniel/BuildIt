@@ -107,7 +107,7 @@ describe('pf create', () => {
     const cwd = await temp();
     const io = fakeIo({ cwd });
     expect(await run(['create', 'demo', '--preset', 'api', '--dry-run'], io)).toBe(0);
-    expect(io.text().out).toContain("Aperçu — rien n'est écrit.");
+    expect(io.text().out).toContain("Aperçu : rien n'est écrit.");
     expect(io.text().out).toContain('package.json');
     expect(await readdir(cwd)).toEqual([]);
   });

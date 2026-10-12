@@ -57,7 +57,7 @@ const MESSAGES: Readonly<Record<(typeof OWN_CODES)[number], string>> = {
   GEN_INVALID_PROJECT_NAME:
     'Le nom de projet {value} n’est pas un nom de paquet valide (minuscules, chiffres, « . », « _ », « - »). Le manifest n’a pas été validé avant la génération.',
   GEN_SECRET_IN_ENV:
-    '{first} déclare « {value} » comme variable d’environnement. Ce n’est pas un nom de variable — une valeur ne doit jamais entrer dans un fichier généré.',
+    '{first} déclare « {value} » comme variable d’environnement. Ce n’est pas un nom de variable : une valeur ne doit jamais entrer dans un fichier généré.',
 };
 
 const messageFor = createMessageFormatter(MESSAGES);
@@ -317,7 +317,7 @@ function readme(
   recipes: readonly Recipe[],
 ): string {
   const stack = entries.map((entry) => `- ${entry.name}`).join('\n');
-  const applied = recipes.map((recipe) => `- ${recipe.name} — ${recipe.description}`).join('\n');
+  const applied = recipes.map((recipe) => `- ${recipe.name} : ${recipe.description}`).join('\n');
   const lines = [
     `# ${manifest.name}`,
     '',

@@ -11,7 +11,9 @@ import { Icon, type IconName } from './icon';
  *
  * Une pilule par destination, l'active en orange. Le repère n'est pas un
  * soulignement de 2 px qu'il faut chercher : la pastille entière change de
- * fond, ce qui se voit du coin de l'œil et survit au zoom à 200 %.
+ * fond **et** de contour, ce qui se voit du coin de l'œil, survit au zoom à
+ * 200 % et reste lisible sans couleur — c'est la forme du cadre qui le dit,
+ * pas une pastille ajoutée à côté du libellé.
  *
  * Sur mobile, les libellés tombent et il ne reste que les icônes — la rangée
  * tient alors dans la largeur sans défilement horizontal. L'`aria-label` de
@@ -44,7 +46,7 @@ export function BubbleNav(): ReactElement {
 
   return (
     <nav aria-label={t.nav.label} className="pf-bubble-nav">
-      <ul className="pf-bubbles m-0 list-none p-1">
+      <ul className="pf-pod pf-bubbles">
         {DESTINATIONS.map((destination) => {
           const label = t.nav[destination.key];
           const active = isCurrent(pathname, destination.href);

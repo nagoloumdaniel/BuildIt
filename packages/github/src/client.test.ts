@@ -157,7 +157,7 @@ describe('GitHubClient', () => {
       const result = await api.createRepository({ name: 'demo', private: false });
       expect(!result.ok && result.issues[0]?.code).toBe('GITHUB_INVALID');
       expect(!result.ok && result.issues[0]?.message).toContain(
-        'Validation Failed — name is too long',
+        'Validation Failed ; name is too long',
       );
     });
   });

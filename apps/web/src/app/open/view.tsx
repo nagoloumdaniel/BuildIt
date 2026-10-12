@@ -2,29 +2,29 @@
 
 import Link from 'next/link';
 import type { ReactElement } from 'react';
+import { CommandLine } from '../../components/ui/copy';
 import { EmptyState } from '../../components/ui/empty-state';
 import { ErrorState } from '../../components/ui/error-state';
 import { Icon } from '../../components/ui/icon';
-import { LoadingLine, ProgressPanel } from '../../components/ui/loading';
-import { PathPicker } from '../../components/ui/path-picker';
+import { ProgressPanel } from '../../components/ui/loading';
 import { ScreenShell } from '../../components/wizard/shell';
 import { useMessages } from '../../lib/i18n/provider';
 import { InstallPanel } from './install-panel';
 import type { LocalOpenController } from './local-open';
+import { PickCard } from './pick-card';
 
 /**
  * La vue de l'écran 23 — Open Local Project (§6.23).
  *
- * **Aucun champ « collez un chemin » en local** : le dossier se choisit dans
- * l'explorateur de la machine (`PathPicker`), et l'analyse part au choix du
- * dossier — choisir, c'est demander. Pendant la lecture du disque, une barre
- * d'avancement dit que ça travaille ; le résultat affiche l'écosystème, le
- * gestionnaire et la commande d'installation **exacte**, et rien ne se lance
- * sans un accord explicite.
+ * **Aucun champ « collez un chemin », dans aucun mode.** Le dossier se choisit
+ * dans l'explorateur : celui de la machine quand BuildIt tourne en local
+ * (`pf web`), celui du navigateur quand il est hébergé — dans les deux cas une
+ * vraie fenêtre de l'explorateur de Windows, et dans les deux cas l'analyse
+ * part au choix du dossier, parce que choisir, c'est demander.
  *
- * En hébergé, l'explorateur serait celui du serveur : `PathPicker` retombe sur
- * la saisie, et cet écran dit pourquoi (`t.open.hostedNote`) — le repli est
- * nommé, pas subi.
+ * Ce que le mode hébergé change est dit à l'endroit où ça compte : le dossier
+ * est lu dans le navigateur, donc BuildIt reconnaît le projet mais ne peut rien
+ * installer sur la machine du visiteur. La commande s'affiche et se copie.
  *
  * Le fil d'état vit dans `useLocalProjectOpen` : cet écran le rend, il ne le
  * réinvente pas. C'est ce qui garantit que la carte du menu d'accueil et cette
@@ -38,52 +38,62 @@ export interface OpenViewProps {
 export function OpenView({ controller }: OpenViewProps): ReactElement {
   const t = useMessages();
   const busy = controller.phase === 'inspecting' || controller.installing;
+  const picking = controller.phase === 'picking';
   const inspection = controller.inspection;
 
   return (
     <ScreenShell description={t.open.description} title={t.open.title}>
-      <section className="pf-card pf-card-pad">
-        <PathPicker
-          buttonLabel={t.open.pick}
-          disabled={busy}
-          hint={t.open.folderHint}
-          id="pf-open-directory"
-          kind="folder"
-          label={t.open.folderLabel}
-          onChange={(value) => controller.analyse(value)}
-          value={controller.directory}
-        />
+      <PickCard
+        busy={picking || controller.phase === 'inspecting'}
+        busyLabel={picking ? t.picker.openingHint : t.open.analysing}
+        disabled={controller.mode === 'none' || busy}
+        note={t.open.folderHint}
+        onPick={controller.pick}
+        title={controller.directory === '' ? t.open.pick : t.open.reanalyseFolder}
+      />
 
-        {controller.canPick === false ? (
-          <p className="pf-callout mt-3">{t.open.hostedNote}</p>
-        ) : null}
+      {controller.mode === 'browser' ? (
+        <p className="pf-callout pf-callout-steel mt-3">{t.open.browserNote}</p>
+      ) : null}
 
-        {controller.directory === '' ? null : (
-          <div className="mt-3 flex flex-wrap items-center gap-2">
+      {controller.mode === 'none' ? <p className="pf-callout mt-3">{t.open.noPickerNote}</p> : null}
+
+      {controller.directory === '' ? null : (
+        <div className="mt-3">
+          <p className="pf-label">{t.open.folderLabel}</p>
+          <CommandLine
+            className="mt-1"
+            value={controller.directory}
+            what={controller.mode === 'browser' ? t.open.folderWhat : t.open.pathWhat}
+          />
+          <div className="mt-2 flex flex-wrap items-center gap-2">
             <button
-              className="pf-btn"
+              className="pf-btn pf-btn-sm"
               disabled={busy}
-              onClick={() => controller.analyse(controller.directory)}
+              onClick={controller.reanalyse}
               type="button"
             >
-              <Icon name="refresh" size={15} />
+              <Icon name="refresh" size={14} />
               {t.open.reanalyse}
             </button>
+            <button
+              className="pf-btn pf-btn-ghost pf-btn-sm"
+              disabled={busy}
+              onClick={controller.clear}
+              type="button"
+            >
+              <Icon name="close" size={14} />
+              {t.picker.clear}
+            </button>
           </div>
-        )}
+        </div>
+      )}
 
-        {controller.phase === 'picking' ? (
-          <LoadingLine className="mt-3" size="sm">
-            {t.open.picking}
-          </LoadingLine>
-        ) : null}
-
-        {controller.notice === null ? null : (
-          <p aria-live="polite" className="pf-hint mt-2" role="status">
-            {controller.notice}
-          </p>
-        )}
-      </section>
+      {controller.notice === null ? null : (
+        <p aria-live="polite" className="pf-hint mt-3" role="status">
+          {controller.notice}
+        </p>
+      )}
 
       {controller.phase === 'idle' && controller.directory === '' ? (
         <EmptyState
@@ -104,13 +114,9 @@ export function OpenView({ controller }: OpenViewProps): ReactElement {
         <ErrorState
           actions={
             <>
-              <button
-                className="pf-btn"
-                onClick={() => controller.analyse(controller.directory)}
-                type="button"
-              >
-                <Icon name="refresh" size={15} />
-                {t.open.reanalyse}
+              <button className="pf-btn" onClick={controller.pick} type="button">
+                <Icon name="folderOpen" size={15} />
+                {t.open.pick}
               </button>
               <Link className="pf-btn pf-btn-ghost" href="/">
                 <Icon name="arrowLeft" size={15} />
@@ -136,6 +142,7 @@ export function OpenView({ controller }: OpenViewProps): ReactElement {
             onConfirmed={controller.setConfirmed}
             onIgnoreScripts={controller.setIgnoreScripts}
             onInstall={controller.install}
+            runnable={controller.runnable}
             summary={inspection.value}
           />
         </section>

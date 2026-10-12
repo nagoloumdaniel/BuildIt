@@ -1,6 +1,6 @@
 {
   "id": "resend-transactional",
-  "name": "Resend — emails transactionnels",
+  "name": "Resend : emails transactionnels",
   "description": "Client Resend et fonction d’envoi, clé lue dans l’environnement.",
   "for": ["resend"],
   "packages": {

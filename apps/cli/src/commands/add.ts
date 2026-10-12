@@ -24,8 +24,6 @@ interface Placement {
   readonly replaced?: string | undefined;
 }
 
-type Place = (manifest: Manifest, id: string) => Placement | string;
-
 /** Le manifest, avec un champ d'application remplacé — jamais un cast. */
 function withApp(manifest: Manifest, app: AppKey, field: AppField, id: string): Manifest {
   return { ...manifest, [app]: { ...manifest[app], [field]: id } };
@@ -188,7 +186,7 @@ export async function add(args: readonly string[], io: Io): Promise<ExitCode> {
   io.out(`+ ${entry.name} → ${placed.field}${replaced}`);
   for (const addition of resolution.value.additions) {
     if (addition.requiredBy === id) {
-      io.out(`+ ${addition.id} — exigée par ${id}, ajoutée à la génération`);
+      io.out(`+ ${addition.id} : exigée par ${id}, ajoutée à la génération`);
     }
   }
   printWarnings(io, resolution.value.warnings);

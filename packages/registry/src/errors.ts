@@ -53,7 +53,7 @@ const MESSAGES: Readonly<Record<RegistryIssueCode, string>> = {
   REGISTRY_SLUG_INVALID:
     'Identifiant invalide : {value}. Attendu des minuscules et des chiffres séparés par des tirets.',
   REGISTRY_ENV_NAME_INVALID:
-    "Nom de variable d'environnement invalide : {value}. Attendu des majuscules et des tirets bas, par exemple « DATABASE_URL » — un nom seul, jamais une valeur.",
+    "Nom de variable d'environnement invalide : {value}. Attendu des majuscules et des tirets bas, par exemple « DATABASE_URL » : un nom seul, jamais une valeur.",
   REGISTRY_DATE_INVALID:
     'Date de revue invalide : {value}. Attendu une date réelle au format AAAA-MM-JJ, pas dans le futur.',
   REGISTRY_TEMPLATE_PATH_INVALID:

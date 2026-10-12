@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import type { ReactElement } from 'react';
+import { CommandLine, CommandSteps } from '../../../components/ui/copy';
 import { IssueList, NoteList } from '../../../components/ui/empty-state';
 import { ErrorState } from '../../../components/ui/error-state';
 import { Icon } from '../../../components/ui/icon';
@@ -47,10 +48,11 @@ export function ReportBody({
         <span className={report.ok ? 'pf-badge pf-badge-ok' : 'pf-badge pf-badge-danger'}>
           {report.ok ? body.okBadge : body.refusedBadge}
         </span>
-        {report.directory === '' ? null : (
-          <span className="pf-mono break-all">{report.directory}</span>
-        )}
       </p>
+
+      {report.directory === '' ? null : (
+        <CommandLine className="mt-3" value={report.directory} what={body.directoryWhat} />
+      )}
 
       <dl className="pf-grid mt-4">
         <div className="pf-card pf-card-pad">
@@ -126,15 +128,11 @@ export function ReportBody({
         <section className="mt-5">
           <h3 className="pf-label">{body.installationTitle}</h3>
           <p className="pf-hint">{body.installationNote}</p>
-          <ol className="pf-mono mt-2 list-none space-y-1 p-0">
-            {installSteps({ directory: report.directory, docker, envVarNames }, t).map((step) => (
-              <li key={step.command}>
-                <span className="pf-hint not-italic">{step.label}</span>
-                <br />
-                <span className="break-all">{step.command}</span>
-              </li>
-            ))}
-          </ol>
+          <CommandSteps
+            className="mt-3"
+            steps={installSteps({ directory: report.directory, docker, envVarNames }, t)}
+            what={body.commandWhat}
+          />
 
           <div className="mt-4 flex flex-wrap items-center gap-3">
             {report.zipBase64 === undefined || onRedownload === undefined ? null : (

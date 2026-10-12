@@ -62,7 +62,7 @@ const BACKENDS: Partial<Record<NodeJS.Platform, Backend>> = {
   linux: {
     location: 'Secret Service (libsecret)',
     missing:
-      'secret-tool est introuvable — installez libsecret-tools (Debian/Ubuntu) ou libsecret (Fedora, Arch), avec un trousseau actif (GNOME Keyring, KWallet)',
+      'secret-tool est introuvable : installez libsecret-tools (Debian/Ubuntu) ou libsecret (Fedora, Arch), avec un trousseau actif (GNOME Keyring, KWallet)',
     get: ['secret-tool', ['lookup', 'service', SERVICE, 'account', ACCOUNT], undefined],
     set: (token) => [
       'secret-tool',

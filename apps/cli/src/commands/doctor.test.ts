@@ -33,7 +33,7 @@ describe('pf doctor', () => {
     const io = fakeIo({ cwd: root });
     expect(await doctor([], io)).toBe(1);
     const out = io.text().out;
-    expect(out).toContain('quai3 — santé du projet :');
+    expect(out).toContain('quai3 · santé du projet :');
     // Le détail nomme ce qui a été observé, pas seulement « KO ».
     expect(out).toContain('Variables d’environnement');
     expect(out).toContain('Corrections proposées :');
@@ -49,7 +49,7 @@ describe('pf doctor', () => {
     await writeFile(join(child, 'package.json'), PACKAGE, 'utf8');
     const io = fakeIo({ cwd: parent });
     expect(await doctor(['mon-projet'], io)).toBe(1);
-    expect(io.text().out).toContain('quai3 — santé du projet :');
+    expect(io.text().out).toContain('quai3 · santé du projet :');
   });
 
   it('rend le rapport en JSON, sans mise en page', async () => {

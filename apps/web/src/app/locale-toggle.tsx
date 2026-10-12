@@ -21,7 +21,7 @@ export function LocaleToggle(): ReactElement {
 
   return (
     <button
-      aria-label={`${t.a11y.localeToggle(LOCALE_LABELS[locale])} — ${LOCALE_LABELS[other]}`}
+      aria-label={`${t.a11y.localeToggle(LOCALE_LABELS[locale])} · ${LOCALE_LABELS[other]}`}
       className="pf-btn pf-btn-ghost pf-btn-sm"
       onClick={() => setLocale(other)}
       title={LOCALE_LABELS[other]}

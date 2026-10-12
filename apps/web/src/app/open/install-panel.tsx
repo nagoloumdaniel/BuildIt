@@ -1,6 +1,7 @@
 'use client';
 
 import { type ReactElement, useId } from 'react';
+import { CommandLine } from '../../components/ui/copy';
 import { NoteList } from '../../components/ui/empty-state';
 import { ErrorState } from '../../components/ui/error-state';
 import { Icon } from '../../components/ui/icon';
@@ -115,6 +116,14 @@ export interface InstallPanelProps {
   readonly onInstall: () => void;
   /** Le titre du bloc « détection » : la carte du menu en a déjà un. */
   readonly showDetectionLabel?: boolean;
+  /**
+   * Vrai quand BuildIt peut **lancer** l'installation : en local seulement.
+   *
+   * En hébergé, le dossier a été lu dans le navigateur du visiteur ; aucun
+   * serveur ne lancera `pnpm install` sur sa machine. Le panneau montre alors
+   * la commande, copiable, et le dit — plutôt qu'un bouton grisé sans issue.
+   */
+  readonly runnable?: boolean;
 }
 
 /**
@@ -133,6 +142,7 @@ export function InstallPanel({
   installing,
   onInstall,
   showDetectionLabel = true,
+  runnable = true,
 }: InstallPanelProps): ReactElement {
   const t = useMessages();
   const fieldId = useId();
@@ -144,10 +154,24 @@ export function InstallPanel({
       {showDetectionLabel ? <p className="pf-eyebrow">{t.open.detection}</p> : null}
       <DetectionSummary className="mt-1" summary={summary} />
 
-      {summary.manualCommand === undefined ? (
+      {!runnable ? (
         <>
           <p className="pf-label mt-4">{t.open.installCommand}</p>
-          <p className="pf-code">{command ?? '—'}</p>
+          <CommandLine
+            prompt
+            value={summary.manualCommand ?? command ?? '—'}
+            what={t.open.commandWhat}
+          />
+          <p className="pf-hint mt-2">{t.open.runYourself}</p>
+        </>
+      ) : summary.manualCommand === undefined ? (
+        <>
+          <p className="pf-label mt-4">{t.open.installCommand}</p>
+          {command === undefined ? (
+            <p className="pf-hint">{t.open.notApplicable}</p>
+          ) : (
+            <CommandLine prompt value={command} what={t.open.commandWhat} />
+          )}
           <p className="pf-hint mt-2">{t.open.trustNote}</p>
 
           <label className="pf-hint mt-3 flex items-center gap-2" htmlFor={`${fieldId}-ignore`}>

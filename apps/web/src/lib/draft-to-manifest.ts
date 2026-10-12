@@ -47,16 +47,6 @@ const APP_FIELDS: Readonly<Record<AppKey, readonly AppField[]>> = {
 const APP_KEYS: readonly AppKey[] = ['frontend', 'mobile', 'desktop', 'backend'];
 
 /**
- * Ce que le manifest sait exprimer : un emplacement par **rôle**, pas un par
- * catégorie du catalogue. Plusieurs catégories désignent le même rôle — un
- * langage vaut pour toutes les applications, une base de données n'en a qu'une.
- */
-type Slot =
-  | { readonly kind: 'app'; readonly field: AppField }
-  | { readonly kind: 'single'; readonly field: 'engine' | 'orm' | 'provider' }
-  | { readonly kind: 'list'; readonly field: 'services' | 'quality' | 'infra' };
-
-/**
  * Où va chaque catégorie : la table vit désormais dans le registry
  * (`@buildit/registry`, module `slots.ts`), avec celle que `pf add`
  * lisait de son côté. Deux copies tenues ensemble par un test finissent par

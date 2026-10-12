@@ -81,7 +81,7 @@ describe('OpenPage — le branchement', () => {
     const html = renderToStaticMarkup(createElement(OpenPage));
 
     expect(html).toContain('Ouvrir un projet local');
-    expect(html).toContain('Dossier du projet');
+    expect(html).toContain('Choisir un dossier');
     expect(html).toContain('href="/"');
   });
 });

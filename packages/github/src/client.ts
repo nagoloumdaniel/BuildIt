@@ -132,7 +132,7 @@ export class GitHubClient {
       str((json as Json | null)?.['message']),
       ...(Array.isArray(errors) ? errors.map((item) => str((item as Json)?.['message'])) : []),
     ].filter((reason) => reason !== '');
-    const detail = reasons.length === 0 ? `HTTP ${response.status}` : reasons.join(' — ');
+    const detail = reasons.length === 0 ? `HTTP ${response.status}` : reasons.join(' ; ');
     switch (response.status) {
       case 401:
         return fail([githubIssue('GITHUB_UNAUTHORIZED', '', 'Reconnectez-vous : pf login.')]);

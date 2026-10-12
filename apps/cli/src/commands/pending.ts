@@ -9,8 +9,8 @@ import { EXIT, type ExitCode, type Io } from '../io.js';
  * score, ses constats et ses corrections proposées.
  */
 export const PENDING: Readonly<Record<string, string>> = {
-  analyze: 'V1 — analyse d’un projet existant',
-  upgrade: 'V2 — mise à niveau d’un projet généré',
+  analyze: 'V1 : analyse d’un projet existant',
+  upgrade: 'V2 : mise à niveau d’un projet généré',
 };
 
 export function pending(command: string, io: Io): ExitCode {

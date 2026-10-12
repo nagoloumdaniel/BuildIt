@@ -417,6 +417,76 @@
     white-space: pre;
   }
 
+  /* --- Commandes copiables --------------------------------------------- */
+
+  /* Une commande affichée est une commande qu'on va taper : le bouton de copie
+     est posé **sur** la valeur, pas dans une barre d'actions lointaine.
+     Le bouton est aligné sur la première ligne de la commande (`align-items:
+     flex-start` plus la hauteur d'une ligne) : une commande longue qui passe à
+     la ligne ne le fait pas descendre au milieu de nulle part. */
+  .pf-command {
+    align-items: flex-start;
+    background: var(--pf-surface-2);
+    border: 1px solid var(--pf-border);
+    border-radius: var(--pf-radius-sm);
+    display: flex;
+    gap: 0.4rem;
+    padding: 0.3rem 0.3rem 0.3rem 0.65rem;
+  }
+
+  .pf-command-prompt {
+    color: var(--pf-faint);
+    flex: none;
+    font-family: var(--pf-mono);
+    font-size: 0.8125rem;
+    line-height: 2rem;
+    user-select: none;
+  }
+
+  .pf-command-text {
+    flex: 1 1 auto;
+    font-family: var(--pf-mono);
+    font-size: 0.8125rem;
+    line-height: 2rem;
+    min-width: 0;
+    overflow-wrap: anywhere;
+    white-space: pre-wrap;
+  }
+
+  /* Le retour de copie est un échange d'icône à taille constante : la bulle
+     garde sa largeur, la ligne ne saute pas. */
+  .pf-copy[data-copied="true"] {
+    color: var(--pf-ok);
+  }
+
+  /* --- Marche à suivre -------------------------------------------------- */
+
+  /* Les numéros vivent dans une gouttière en chasse fixe : ce sont des repères
+     de séquence, et les commandes restent alignées sur une seule colonne. */
+  .pf-steps-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  .pf-steps-item {
+    display: flex;
+    gap: 0.6rem;
+  }
+
+  .pf-steps-index {
+    color: var(--pf-faint);
+    flex: none;
+    font-family: var(--pf-mono);
+    font-size: 0.75rem;
+    line-height: 1.5rem;
+    text-align: right;
+    width: 1.25rem;
+  }
+
   .pf-hint {
     color: var(--pf-muted);
     font-size: 0.8125rem;
@@ -452,18 +522,13 @@
       background-color 120ms ease,
       border-color 120ms ease,
       color 120ms ease,
-      box-shadow 120ms ease,
-      transform 120ms ease;
+      box-shadow 120ms ease;
     white-space: nowrap;
   }
 
   .pf-btn:hover:not(:disabled):not([aria-disabled="true"]) {
     background: var(--pf-surface-2);
     border-color: var(--pf-text);
-  }
-
-  .pf-btn:active:not(:disabled):not([aria-disabled="true"]) {
-    transform: translateY(1px);
   }
 
   .pf-btn:disabled,
@@ -527,33 +592,74 @@
     min-width: 2rem;
   }
 
-  /* --- Navigation en bulles -------------------------------------------- */
+  /* --- Bulles flottantes de l'en-tête ---------------------------------- */
 
-  .pf-bubbles {
+  /* Une bulle est un **groupe** : l'identité, la navigation, un réglage, le
+     code source. Elle porte le fond, la frontière et le flou ; ce qu'elle
+     contient n'en porte aucun. C'est ce qui permet de poser les groupes
+     côte à côte sans qu'une barre vienne les réunir de force. */
+  .pf-pod {
     align-items: center;
-    background: color-mix(in oklab, var(--pf-surface) 72%, transparent);
+    background: color-mix(in oklab, var(--pf-surface) 76%, transparent);
     border: 1px solid var(--pf-border);
     border-radius: 999px;
     box-shadow: var(--pf-shadow-sm);
-    display: flex;
+    color: var(--pf-text);
+    display: inline-flex;
+    flex: none;
     gap: 0.125rem;
     max-width: 100%;
+    min-height: 2.5rem;
     padding: 0.25rem;
+    pointer-events: auto;
     -webkit-backdrop-filter: blur(14px) saturate(140%);
     backdrop-filter: blur(14px) saturate(140%);
   }
 
-  .pf-bubble-nav {
+  /* L'identité n'est pas un bouton : elle respire plus large que les pilules,
+     et son fond ne bouge pas au survol — seul le texte se réchauffe. */
+  .pf-pod-identity {
+    gap: 0.5rem;
+    padding: 0.25rem 0.85rem;
+    text-decoration: none;
+  }
+
+  .pf-pod-identity:hover {
+    border-color: var(--pf-accent-line);
+  }
+
+  /* Une bulle qui est elle-même l'action (le code source) : la cible fait
+     toute la bulle, pas un bouton de 2 rem posé au milieu. */
+  .pf-pod-action {
+    color: var(--pf-muted);
+    justify-content: center;
+    min-width: 2.5rem;
+    text-decoration: none;
+    transition:
+      border-color var(--pf-fast),
+      color var(--pf-fast);
+  }
+
+  .pf-pod-action:hover {
+    border-color: var(--pf-border-strong);
+    color: var(--pf-text);
+  }
+
+  .pf-bubbles {
+    list-style: none;
+    margin: 0;
     min-width: 0;
+    overflow-x: auto;
+    scrollbar-width: none;
   }
 
-  .pf-mobile-nav {
-    overflow: hidden;
+  .pf-bubbles::-webkit-scrollbar {
+    display: none;
   }
 
-  .pf-mobile-nav .pf-bubbles {
-    justify-content: space-between;
-    width: 100%;
+  .pf-bubble-nav {
+    display: flex;
+    min-width: 0;
   }
 
   .pf-bubble {
@@ -567,19 +673,15 @@
     font-size: 0.8125rem;
     font-weight: 560;
     gap: 0.4rem;
+    justify-content: center;
     min-height: 2rem;
     padding: 0.25rem 0.7rem;
     text-decoration: none;
     transition:
       background-color 140ms ease,
+      border-color 140ms ease,
       color 140ms ease;
     white-space: nowrap;
-  }
-
-  .pf-mobile-nav .pf-bubble {
-    justify-content: center;
-    min-width: 2rem;
-    padding-inline: 0.35rem;
   }
 
   .pf-bubble:hover {
@@ -587,24 +689,15 @@
     color: var(--pf-text);
   }
 
+  /* L'onglet courant : le fond, le contour et la graisse changent ensemble.
+     Trois signaux, dont deux sans couleur — il n'y a donc pas de pastille à
+     côté du libellé, qui ajoutait un point à lire sans rien dire de plus. */
   .pf-bubble[aria-current="page"],
   .pf-bubble[aria-selected="true"] {
     background: var(--pf-accent-soft);
     border-color: var(--pf-accent-line);
-    box-shadow: inset 0 0 0 1px color-mix(in oklab, var(--pf-accent) 22%, transparent);
     color: var(--pf-accent-strong);
-  }
-
-  /* Le point de position : la bulle active porte une pastille, pas seulement
-     une couleur. Sur un écran en niveaux de gris ou en daltonisme, la forme
-     reste lisible. */
-  .pf-bubble[aria-current="page"]::after,
-  .pf-bubble[aria-selected="true"]::after {
-    background: var(--pf-accent);
-    border-radius: 999px;
-    content: "";
-    height: 4px;
-    width: 4px;
+    font-weight: 620;
   }
 
   [data-theme="dark"] .pf-bubble[aria-current="page"],
@@ -612,48 +705,104 @@
     color: var(--pf-accent-strong);
   }
 
-  /* --- Barre d'en-tête -------------------------------------------------- */
+  /* --- Contrôle segmenté (le thème) ------------------------------------ */
 
+  /* Deux icônes, un état : le segment allumé est le thème **affiché**, pas ce
+     qu'un clic ferait. `data-auto` dit que ce thème vient du système — même
+     position, contour en pointillé, donc rien ne bouge quand on reprend ou
+     qu'on rend la main. */
+  .pf-segmented {
+    align-items: center;
+    display: inline-flex;
+    gap: 0.125rem;
+  }
+
+  .pf-segment {
+    align-items: center;
+    background: transparent;
+    border: 1px solid transparent;
+    border-radius: 999px;
+    color: var(--pf-muted);
+    cursor: pointer;
+    display: inline-flex;
+    justify-content: center;
+    min-height: 2rem;
+    min-width: 2rem;
+    padding: 0.25rem;
+    transition:
+      background-color var(--pf-fast),
+      border-color var(--pf-fast),
+      color var(--pf-fast);
+  }
+
+  .pf-segment:hover {
+    color: var(--pf-text);
+  }
+
+  .pf-segment[aria-pressed="true"] {
+    background: var(--pf-accent-soft);
+    border-color: var(--pf-accent-line);
+    color: var(--pf-accent-strong);
+  }
+
+  .pf-segment[data-auto="true"] {
+    border-style: dashed;
+  }
+
+  /* --- En-tête flottante ----------------------------------------------- */
+
+  /* Aucun fond, aucune frontière : les bulles sont le seul dessin de l'en-tête.
+     Elle reste collante — sur un parcours de douze écrans, revenir à l'accueil
+     ne doit pas demander de remonter — et laisse le contenu passer **entre**
+     les bulles plutôt que sous un bandeau. */
   .pf-topbar {
-    backdrop-filter: blur(16px) saturate(140%);
-    -webkit-backdrop-filter: blur(16px) saturate(140%);
-    background: color-mix(in oklab, var(--pf-bg) 82%, transparent);
-    border-bottom: 1px solid var(--pf-border);
+    pointer-events: none;
     position: sticky;
     top: 0;
     z-index: 40;
   }
 
-  /* Le filet de l'en-tête reprend celui des pages : orange qui se refroidit en
-     acier. C'est ce qui relie l'en-tête collant au contenu qui défile dessous. */
-  .pf-topbar::after {
-    background: linear-gradient(
-      90deg,
-      color-mix(in oklab, var(--pf-accent) 60%, transparent),
-      color-mix(in oklab, var(--pf-steel) 45%, transparent) 42%,
-      transparent 78%
-    );
-    bottom: -1px;
-    content: "";
-    height: 1px;
-    left: 0;
-    position: absolute;
-    right: 0;
-  }
-
   .pf-topbar-inner {
     align-items: center;
     display: flex;
-    gap: 1rem;
+    gap: 0.5rem;
     justify-content: space-between;
     margin: 0 auto;
     max-width: 1120px;
-    padding: 0.625rem 1.25rem;
+    padding: 0.75rem 1.25rem 0;
+  }
+
+  .pf-topbar-settings {
+    align-items: center;
+    display: flex;
+    flex: none;
+    gap: 0.5rem;
+  }
+
+  .pf-topbar-mobile {
+    margin: 0 auto;
+    max-width: 1120px;
+    padding: 0.5rem 1.25rem 0;
+  }
+
+  .pf-topbar-mobile .pf-bubble-nav,
+  .pf-topbar-mobile .pf-pod {
+    width: 100%;
+  }
+
+  .pf-topbar-mobile .pf-bubbles {
+    justify-content: space-between;
+  }
+
+  .pf-topbar-mobile .pf-bubble {
+    min-width: 2rem;
+    padding-inline: 0.45rem;
   }
 
   @media (min-width: 48rem) {
     .pf-topbar-inner {
-      padding: 0.75rem 2rem;
+      gap: 1rem;
+      padding: 1rem 2rem 0;
     }
   }
 
@@ -870,15 +1019,13 @@
     text-align: left;
     transition:
       border-color 140ms ease,
-      box-shadow 140ms ease,
-      transform 140ms ease;
+      box-shadow 140ms ease;
     width: 100%;
   }
 
   .pf-choice:hover:not(:disabled) {
     border-color: var(--pf-accent-line);
     box-shadow: var(--pf-shadow);
-    transform: translateY(-1px);
   }
 
   .pf-choice[aria-pressed="true"],
@@ -987,6 +1134,13 @@
     display: inline-block;
     height: 4px;
     width: 4px;
+  }
+
+  /* Le vide est centré : l'icône, le titre, la phrase et les gestes sur un
+     même axe. La règle vit ici plutôt que sur un utilitaire — c'est une
+     structure du composant, et elle ne dépend d'aucun analyseur de classes. */
+  .pf-empty-state {
+    text-align: center;
   }
 
   .pf-empty-state-actions > * {
@@ -1359,6 +1513,48 @@
       left: 1rem;
       max-width: none;
       right: 1rem;
+    }
+  }
+
+  /* --- Pied de page ----------------------------------------------------- */
+
+  /* Trois blocs sur une ligne au large, empilés à gauche à l'étroit. `mt-auto`
+     est posé par le gabarit : le pied reste en bas même sur un écran court. */
+  .pf-footer {
+    border-top: 1px solid var(--pf-border);
+    margin-top: auto;
+  }
+
+  .pf-footer-inner {
+    align-items: flex-start;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    margin: 0 auto;
+    max-width: 1120px;
+    padding: 1.25rem;
+  }
+
+  .pf-footer-nav {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.25rem 1.1rem;
+  }
+
+  .pf-footer-nav .pf-link {
+    font-size: 0.8125rem;
+  }
+
+  .pf-footer-meta {
+    white-space: nowrap;
+  }
+
+  @media (min-width: 48rem) {
+    .pf-footer-inner {
+      align-items: center;
+      flex-direction: row;
+      justify-content: space-between;
+      padding: 1.5rem 2rem;
     }
   }
 

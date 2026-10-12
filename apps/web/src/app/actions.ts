@@ -7,6 +7,7 @@ import type { Selection } from '@buildit/compatibility';
 import { generateProject } from '@buildit/generator';
 import { type Manifest, parseManifest } from '@buildit/manifest';
 import type { Category } from '@buildit/registry';
+import { type DeleteRefusal, deletionTarget } from '../lib/delete-project';
 import {
   dependencyGraph,
   type EnvVarView,
@@ -135,6 +136,15 @@ async function exists(path: string): Promise<boolean> {
   }
 }
 
+/** Ce qu'il y a au bout du chemin : un dossier, autre chose, ou rien. */
+async function directoryAt(path: string): Promise<'directory' | 'notADirectory' | 'missing'> {
+  try {
+    return (await stat(path)).isDirectory() ? 'directory' : 'notADirectory';
+  } catch {
+    return 'missing';
+  }
+}
+
 function refused(issues: readonly string[]): GenerationView {
   return { ok: false, directory: '', files: [], bytes: 0, warnings: [], steps: [], issues };
 }
@@ -244,4 +254,73 @@ export async function generateProjectAction(input: unknown): Promise<GenerationV
 /** Où l'UI écrit, pour l'afficher avant d'écrire quoi que ce soit. */
 export async function workspaceRootAction(): Promise<string> {
   return workspaceRoot();
+}
+
+export interface DeleteProjectView {
+  readonly ok: boolean;
+  /** Le dossier réellement supprimé, pour que l'écran dise lequel. */
+  readonly directory: string;
+  readonly issues: readonly string[];
+}
+
+/** Pourquoi un dossier n'est pas supprimable, dit en une phrase. */
+const DELETE_REFUSALS: Readonly<Record<DeleteRefusal, string>> = {
+  hosted: 'Rien n’est écrit sur le disque en mode hébergé : il n’y a pas de dossier à supprimer.',
+  empty: 'Aucun dossier n’a été indiqué.',
+  notInWorkspace:
+    'Ce dossier n’est pas dans le dossier de travail de BuildIt : il n’a pas été écrit ici, et rien ne sera supprimé.',
+  isWorkspace:
+    'C’est le dossier de travail lui-même, pas un projet. Supprimez-le vous-même si c’est votre intention.',
+  notADirectChild:
+    'Seul un projet posé directement dans le dossier de travail peut être supprimé d’ici.',
+};
+
+/**
+ * Supprime du disque un projet généré (§6.14).
+ *
+ * Le dossier n'est pas celui que le navigateur demande : c'est celui que la
+ * règle de `deletionTarget` accepte — un enfant direct du dossier de travail,
+ * celui-là même où `generateProjectAction` écrit. Tout le reste est refusé
+ * **nommément**, parce qu'un refus muet sur une suppression laisse croire que
+ * le fichier a disparu.
+ *
+ * `rm -r` est irréversible : il n'y a pas de corbeille ici. C'est l'écran qui
+ * porte la confirmation explicite, et l'action ne part jamais d'un seul clic.
+ */
+export async function deleteProjectAction(directory: unknown): Promise<DeleteProjectView> {
+  if (typeof directory !== 'string' || directory.trim() === '') {
+    return { ok: false, directory: '', issues: [DELETE_REFUSALS.empty] };
+  }
+
+  const target = deletionTarget(resolve(directory), workspaceRoot(), isHostedEnvironment());
+  if (!target.ok) {
+    return { ok: false, directory: '', issues: [DELETE_REFUSALS[target.reason]] };
+  }
+
+  const info = await directoryAt(target.directory);
+  if (info === 'missing') {
+    // Déjà parti : l'intention de l'utilisateur est satisfaite, ce n'est pas
+    // une panne. L'écran retirera la carte comme pour une suppression réussie.
+    return { ok: true, directory: target.directory, issues: [] };
+  }
+  if (info === 'notADirectory') {
+    return {
+      ok: false,
+      directory: '',
+      issues: [`Ce chemin n’est pas un dossier : ${target.directory}`],
+    };
+  }
+
+  try {
+    await rm(target.directory, { recursive: true, force: true });
+  } catch (error) {
+    return {
+      ok: false,
+      directory: '',
+      issues: [
+        `Le dossier n’a pas pu être supprimé : ${error instanceof Error ? error.message : String(error)}`,
+      ],
+    };
+  }
+  return { ok: true, directory: target.directory, issues: [] };
 }

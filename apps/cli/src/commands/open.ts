@@ -7,7 +7,7 @@ import { EXIT, type ExitCode, type Io } from '../io.js';
 export const OPEN_USAGE: string = `Usage : pf open <dossier> [--ignore-scripts] [--yes]
 
 Reconnaît un projet de la machine (écosystème, gestionnaire de paquets) et
-propose d'installer ses dépendances — la commande exacte est affichée avant.`;
+propose d'installer ses dépendances : la commande exacte est affichée avant.`;
 
 export const INSTALL_USAGE: string = `Usage : pf install [--ignore-scripts] [--yes]
 

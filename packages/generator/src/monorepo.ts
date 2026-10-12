@@ -202,11 +202,11 @@ function rootScripts(
 function applicationsSection(apps: ReadonlyMap<AppName, RegistryEntry[]>, shared: boolean): string {
   const lines = ['## Applications', ''];
   for (const [app, entries] of apps) {
-    lines.push(`- \`apps/${app}\` — ${entries.map((entry) => entry.name).join(', ')}`);
+    lines.push(`- \`apps/${app}\` : ${entries.map((entry) => entry.name).join(', ')}`);
   }
   if (shared) {
     lines.push(
-      '- `packages/shared` — le contrat entre le web et l’API : schémas Zod et client typé. L’API le respecte (test de contrat), le web le valide à la réception ; `/status` montre la liaison.',
+      '- `packages/shared` : le contrat entre le web et l’API : schémas Zod et client typé. L’API le respecte (test de contrat), le web le valide à la réception ; `/status` montre la liaison.',
     );
   }
   return `${lines.join('\n')}\n`;

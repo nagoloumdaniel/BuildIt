@@ -46,7 +46,7 @@ const MESSAGES: Readonly<Record<ManifestIssueCode, string>> = {
     "Le champ « {field} » n'existe pas dans un manifest. Vérifiez l'orthographe.",
   MANIFEST_TYPE_MISMATCH: 'Le champ « {field} » doit être {expected}, et non {actual}.',
   MANIFEST_NAME_INVALID:
-    'Nom de projet invalide : {value}. Attendu un nom de paquet npm — minuscules, chiffres, tirets, 214 caractères au plus.',
+    'Nom de projet invalide : {value}. Attendu un nom de paquet npm : minuscules, chiffres, tirets, 214 caractères au plus.',
   MANIFEST_TARGETS_EMPTY:
     'Aucune cible sélectionnée. Un projet vise au moins une plateforme : {expected}.',
   MANIFEST_ENUM_UNKNOWN: 'Valeur inconnue : {value}. Valeurs acceptées : {expected}.',

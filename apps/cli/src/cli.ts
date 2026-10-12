@@ -47,7 +47,7 @@ export const VERSION: string = (
   }
 ).version;
 
-export const HELP: string = `pf — BuildIt : décrire un projet, obtenir un projet prêt à développer.
+export const HELP: string = `pf, BuildIt : décrire un projet, obtenir un projet prêt à développer.
 
 Usage : pf [commande] [options]
 

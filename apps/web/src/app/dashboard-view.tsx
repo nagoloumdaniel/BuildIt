@@ -3,17 +3,16 @@
 import Link from 'next/link';
 import type { ReactElement } from 'react';
 import { EmptyState } from '../components/ui/empty-state';
-import { ErrorState } from '../components/ui/error-state';
 import { Icon } from '../components/ui/icon';
-import { LoadingLine, ProgressPanel, Spinner } from '../components/ui/loading';
+import { LoadingLine } from '../components/ui/loading';
 import { ProjectCard } from '../components/ui/project-card';
 import type { DraftState } from '../lib/draft';
 import { STEP_ORDER, type StepId } from '../lib/flow';
 import { useMessages } from '../lib/i18n/provider';
 import { recentProjects, type StoredProject } from '../lib/projects';
 import type { GenerationReport } from './create/report/result';
-import { DetectionSummary, InstallPanel } from './open/install-panel';
-import type { LocalOpenController } from './open/local-open';
+import { PickCard } from './open/pick-card';
+import type { PickHandoff } from './open/pick-handoff';
 
 /**
  * Le contenu de l'écran 1 — Dashboard (§6.1, §18bis), hors `page.tsx`.
@@ -100,8 +99,8 @@ export interface DashboardViewProps {
   /** Donné pour les projets dont l'archive est encore en main (session courante). */
   readonly isRedownloadable?: ((project: StoredProject) => boolean) | undefined;
   readonly onRedownloadProject?: ((project: StoredProject) => void) | undefined;
-  /** Le fil d'ouverture locale ; absent, la carte redevient un simple lien. */
-  readonly openLocal?: LocalOpenController | undefined;
+  /** Le choix du dossier ; absent, la carte redevient un simple lien. */
+  readonly openLocal?: PickHandoff | undefined;
 }
 
 export function DashboardView({
@@ -160,7 +159,7 @@ export function DashboardView({
             <span className="pf-choice-note">{t.dashboard.openNote}</span>
           </Link>
         ) : (
-          <LocalOpenCard controller={openLocal} />
+          <LocalOpenCard handoff={openLocal} />
         )}
       </nav>
 
@@ -300,121 +299,39 @@ export function DashboardView({
 }
 
 export interface LocalOpenCardProps {
-  readonly controller: LocalOpenController;
+  readonly handoff: PickHandoff;
 }
 
 /**
  * La carte « Ouvrir un projet local » du menu.
  *
- * L'appui **ouvre l'explorateur de la machine** : pas de page intermédiaire,
- * pas de champ « collez un chemin ». Dès le dossier choisi, une barre
- * d'avancement s'affiche **dans la carte** (`pf-card-progress`) pendant la
- * lecture du disque, puis le résultat arrive — nom, gestionnaire, commande
- * d'installation — avec les gestes qui suivent (confirmation, installation).
+ * **La carte est le bouton.** L'appuyer ouvre l'explorateur — celui de la
+ * machine en local, celui du navigateur en hébergé — et dès qu'un dossier est
+ * désigné, l'écran d'ouverture s'affiche avec l'analyse déjà en route.
  *
- * En hébergé, l'explorateur serait celui du serveur : la carte le dit et
- * renvoie vers l'écran complet, où la saisie du chemin est le repli assumé.
+ * Elle n'affiche ni détection, ni commande, ni installation : c'est l'écran
+ * d'ouverture qui les porte, une seule fois. Deux endroits pour la même
+ * information finissaient par diverger, et l'accueil se transformait en écran
+ * complet au milieu d'une grille de trois cartes.
  */
-export function LocalOpenCard({ controller }: LocalOpenCardProps): ReactElement {
+export function LocalOpenCard({ handoff }: LocalOpenCardProps): ReactElement {
   const t = useMessages();
-  const busy = controller.phase === 'inspecting' || controller.installing;
-  const picking = controller.phase === 'picking';
-  const summary = controller.inspection?.ok === true ? controller.inspection.value : null;
-  const failedInspection = controller.inspection?.ok === false ? controller.inspection : null;
-  /**
-   * Dès qu'un dossier est en jeu, la carte prend toute la largeur : une barre
-   * d'avancement et une commande d'installation dans une colonne d'un tiers
-   * d'écran seraient illisibles, et c'est **dans cette carte** que l'attente
-   * doit rester (pas dans un écran à part).
-   */
-  const expanded = controller.phase !== 'idle';
 
   return (
-    <section
-      aria-label={t.dashboard.openTitle}
-      className={`pf-choice cursor-default${expanded ? ' col-span-full' : ''}`}
-    >
-      <p className="pf-choice-name">
-        <span aria-hidden="true" style={{ color: 'var(--pf-accent)' }}>
-          <Icon name="folderOpen" size={16} />
-        </span>
-        {t.dashboard.openTitle}
-      </p>
-      <span className="pf-choice-note">{t.dashboard.openNote}</span>
-
-      {controller.canPick === false ? (
-        <p className="pf-callout mt-3">{t.dashboard.openHostedNote}</p>
-      ) : null}
-
-      <div className="mt-3 flex flex-wrap items-center gap-2">
-        <button
-          className="pf-btn pf-btn-primary"
-          disabled={busy || picking || controller.canPick === false}
-          onClick={controller.pick}
-          type="button"
-        >
-          {picking ? <Spinner size="sm" /> : <Icon name="folderOpen" size={15} />}
-          {picking ? t.open.picking : t.open.pick}
-        </button>
-        <Link className="pf-btn pf-btn-ghost pf-btn-sm" href="/open">
-          <Icon name="arrowRight" size={14} />
-          {t.dashboard.openFullScreen}
-        </Link>
-      </div>
-
-      {picking ? (
+    <div className="min-w-0">
+      <PickCard
+        busy={handoff.busy}
+        busyLabel={t.picker.openingHint}
+        disabled={handoff.mode === 'none'}
+        note={t.dashboard.openNote}
+        onPick={handoff.start}
+        title={t.dashboard.openTitle}
+      />
+      {handoff.notice === null ? null : (
         <p aria-live="polite" className="pf-hint mt-2" role="status">
-          {t.picker.openingHint}
-        </p>
-      ) : null}
-
-      {controller.notice === null ? null : (
-        <p aria-live="polite" className="pf-hint mt-2" role="status">
-          {controller.notice}
+          {handoff.notice}
         </p>
       )}
-
-      {controller.phase === 'inspecting' ? (
-        <div className="pf-card-progress">
-          <ProgressPanel detail={controller.directory} title={t.open.analysing} />
-        </div>
-      ) : null}
-
-      {summary === null ? null : (
-        <div className="pf-card-progress">
-          <p className="pf-eyebrow">{t.dashboard.openDetected}</p>
-          <DetectionSummary className="mt-1" summary={summary} />
-          <div className="mt-3">
-            <InstallPanel
-              confirmed={controller.confirmed}
-              ignoreScripts={controller.ignoreScripts}
-              installResult={controller.installResult}
-              installing={controller.installing}
-              onConfirmed={controller.setConfirmed}
-              onIgnoreScripts={controller.setIgnoreScripts}
-              onInstall={controller.install}
-              showDetectionLabel={false}
-              summary={summary}
-            />
-          </div>
-        </div>
-      )}
-
-      {failedInspection === null ? null : (
-        <div className="pf-card-progress">
-          <ErrorState
-            actions={
-              <button className="pf-btn" onClick={controller.pick} type="button">
-                <Icon name="folderOpen" size={15} />
-                {t.open.pick}
-              </button>
-            }
-            issues={failedInspection.issues}
-            illustration="lost"
-            title={t.open.notRecognised}
-          />
-        </div>
-      )}
-    </section>
+    </div>
   );
 }

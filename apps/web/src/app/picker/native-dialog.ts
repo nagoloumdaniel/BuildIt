@@ -139,7 +139,7 @@ function dialogCommand(
   const args = [
     '--file-selection',
     '--title',
-    kind === 'file' ? 'BuildIt — choisir un fichier' : 'BuildIt — choisir un dossier',
+    kind === 'file' ? 'BuildIt : choisir un fichier' : 'BuildIt : choisir un dossier',
   ];
   if (kind === 'folder') {
     args.push('--directory');

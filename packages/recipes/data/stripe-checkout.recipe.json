@@ -1,6 +1,6 @@
 {
   "id": "stripe-checkout",
-  "name": "Stripe — paiement Checkout",
+  "name": "Stripe : paiement Checkout",
   "description": "Session de paiement Stripe Checkout : un prix, une redirection.",
   "for": ["stripe"],
   "packages": {

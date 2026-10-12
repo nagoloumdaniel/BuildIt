@@ -27,7 +27,7 @@ export default async function OverviewPage() {
         ))}
       </div>
       <Card className="p-5">
-        <h2 className="font-medium">Inscriptions — 30 derniers jours</h2>
+        <h2 className="font-medium">Inscriptions sur 30 jours</h2>
         <SignupsChart data={data.signups} />
       </Card>
     </div>

@@ -19,9 +19,11 @@ import type { StoredProject } from '../../lib/projects';
  * la liste » — et l'absence de limite : ici, tous les projets, du plus récent
  * au plus ancien.
  *
- * Le vidage de la liste porte une confirmation **explicite** : c'est le seul
- * geste de cet écran qui efface quelque chose, et même s'il n'efface rien sur
- * le disque, un clic de trop ne doit pas pouvoir le déclencher.
+ * Le vidage de la liste porte une confirmation **explicite**, et la suppression
+ * d'un projet en porte une autre, dans sa carte : la première n'efface aucun
+ * fichier, la seconde les efface tous. Aucune des deux ne part d'un seul clic,
+ * et leurs libellés disent laquelle est laquelle — « Vider la liste » n'est pas
+ * « Supprimer du disque ».
  *
  * Next interdit tout export autre que `default` dans un `page.tsx` : la vue
  * testable et son tri vivent donc ici.
@@ -41,6 +43,10 @@ export interface ProjectsViewProps {
   readonly projects: readonly StoredProject[] | null;
   readonly onForget?: ((id: string) => void) | undefined;
   readonly onForgetAll?: (() => void) | undefined;
+  /** La suppression du dossier sur le disque — un autre geste que l'oubli. */
+  readonly onDelete?: ((project: StoredProject) => void) | undefined;
+  /** Le projet dont le dossier est en cours de suppression, s'il y en a un. */
+  readonly deletingId?: string | null;
   /** Donné pour les projets dont l'archive est encore en main (session courante). */
   readonly isRedownloadable?: ((project: StoredProject) => boolean) | undefined;
   readonly onRedownload?: ((project: StoredProject) => void) | undefined;
@@ -52,6 +58,8 @@ export function ProjectsView({
   projects,
   onForget,
   onForgetAll,
+  onDelete,
+  deletingId = null,
   isRedownloadable,
   onRedownload,
   confirmingClear = false,
@@ -89,6 +97,14 @@ export function ProjectsView({
             {ordered.map((project) => (
               <ProjectCard
                 key={project.id}
+                deleting={deletingId === project.id}
+                onDelete={
+                  onDelete === undefined
+                    ? undefined
+                    : () => {
+                        onDelete(project);
+                      }
+                }
                 onForget={
                   onForget === undefined
                     ? undefined
