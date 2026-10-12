@@ -8,7 +8,7 @@ import { useMessages } from '../../lib/i18n/provider';
 import { REPO_URL } from '../../lib/links';
 import { BubbleNav } from './bubble-nav';
 import { Icon } from './icon';
-import { Wordmark } from './logo';
+import { Logo, Wordmark } from './logo';
 
 /**
  * L'en-tête et le pied de page, partout.
@@ -85,32 +85,33 @@ export function AppShell({ children }: { children: ReactNode }): ReactElement {
         {children}
       </div>
 
-      {/* Le pied de page : trois blocs, pas un plan du site. Il s'aligne sur la
-          même colonne que les écrans (1120 px, mêmes gouttières), le filet le
-          sépare du contenu, et à l'étroit les blocs s'empilent à gauche plutôt
-          que de se répartir au hasard de l'espace restant. */}
+      {/* Le pied de page : une ligne, trois informations, rien de décoratif.
+          L'identité et la version à gauche (ce qu'on cite dans un ticket),
+          les trois adresses utiles au milieu, la licence à droite. Les liens
+          sont en gris et prennent la couleur du texte au survol : ils ne
+          disputent pas l'orange aux actions de la page. */}
       <footer className="pf-footer">
         <div className="pf-footer-inner">
-          <div className="min-w-0">
-            <Wordmark size={20} />
-            <p className="pf-eyebrow mt-1.5">{t.common.tagline}</p>
-          </div>
+          <p className="pf-footer-brand">
+            <Logo size={16} />
+            <span>{t.common.appName}</span>
+            <span className="pf-footer-version">v{t.footer.version}</span>
+          </p>
 
           <nav aria-label={t.footer.navLabel} className="pf-footer-nav">
-            <Link className="pf-link" href="/projects">
+            <Link className="pf-footer-link" href="/projects">
               {t.nav.projects}
             </Link>
-            <Link className="pf-link" href="/graph">
+            <Link className="pf-footer-link" href="/graph">
               {t.nav.graph}
             </Link>
-            <a className="pf-link" href={REPO_URL} rel="noreferrer" target="_blank">
+            <a className="pf-footer-link" href={REPO_URL} rel="noreferrer" target="_blank">
+              <Icon name="github" size={14} />
               {t.nav.source}
             </a>
           </nav>
 
-          <p className="pf-eyebrow pf-footer-meta">
-            {t.footer.licence} · v{t.footer.version}
-          </p>
+          <p className="pf-footer-meta">{t.footer.licenceLine}</p>
         </div>
       </footer>
     </>

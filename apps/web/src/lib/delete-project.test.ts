@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { deletionTarget } from './delete-project';
+import { deletionTarget, sameDirectory } from './delete-project';
 
 /**
  * La règle de suppression, éprouvée sur ce qui compte : ce qu'elle **refuse**.
@@ -90,5 +90,59 @@ describe('deletionTarget — ce qui est refusé, et pourquoi', () => {
   it('refuse la racine du disque', () => {
     expect(deletionTarget('C:\\', ROOT, false).ok).toBe(false);
     expect(deletionTarget('/', POSIX_ROOT, false).ok).toBe(false);
+  });
+});
+
+describe('deletionTarget — un projet écrit ailleurs, inscrit au registre', () => {
+  const ELSEWHERE = 'D:\\Projets\\mon-app';
+
+  it('accepte un dossier hors du dossier de travail s’il est au registre', () => {
+    expect(deletionTarget(ELSEWHERE, ROOT, false, [ELSEWHERE])).toEqual({
+      ok: true,
+      directory: ELSEWHERE,
+    });
+  });
+
+  it('compare le registre au chemin normalisé : barres et casse mises à part', () => {
+    expect(deletionTarget('d:/projets/MON-APP/', ROOT, false, [ELSEWHERE]).ok).toBe(true);
+  });
+
+  it('sans inscription, le même dossier reste refusé', () => {
+    expect(deletionTarget(ELSEWHERE, ROOT, false, ['D:\\Projets\\autre'])).toEqual({
+      ok: false,
+      reason: 'notInWorkspace',
+    });
+  });
+
+  it('un dossier contenu dans un projet inscrit n’est pas inscrit pour autant', () => {
+    expect(deletionTarget(`${ELSEWHERE}\\src`, ROOT, false, [ELSEWHERE]).ok).toBe(false);
+  });
+
+  it('le registre ne lève aucun refus commun', () => {
+    expect(deletionTarget(ELSEWHERE, ROOT, true, [ELSEWHERE])).toEqual({
+      ok: false,
+      reason: 'hosted',
+    });
+    expect(deletionTarget('', ROOT, false, [ELSEWHERE])).toEqual({ ok: false, reason: 'empty' });
+    expect(deletionTarget(ROOT, ROOT, false, [ROOT])).toEqual({ ok: false, reason: 'isWorkspace' });
+    expect(
+      deletionTarget('D:\\Projets\\..\\mon-app', ROOT, false, ['D:\\Projets\\..\\mon-app']),
+    ).toEqual({
+      ok: false,
+      reason: 'notInWorkspace',
+    });
+  });
+
+  it('même inscrite, la racine d’un disque n’est jamais supprimable', () => {
+    expect(deletionTarget('D:\\', ROOT, false, ['D:\\']).ok).toBe(false);
+    expect(deletionTarget('/', POSIX_ROOT, false, ['/']).ok).toBe(false);
+  });
+});
+
+describe('sameDirectory', () => {
+  it('ignore les barres, les séparateurs doublés et la casse', () => {
+    expect(sameDirectory('C:\\Users\\Moi\\app', 'c:/users/moi/app/')).toBe(true);
+    expect(sameDirectory('C:\\Users\\moi\\app', 'C:\\Users\\moi\\app2')).toBe(false);
+    expect(sameDirectory('C:\\a', 'C:\\a\\b')).toBe(false);
   });
 });

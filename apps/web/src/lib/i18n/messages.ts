@@ -1,6 +1,9 @@
 import { EN_ACCOUNT, FR_ACCOUNT } from './messages.account';
+import { EN_ARCHITECTURE, FR_ARCHITECTURE } from './messages.architecture';
 import { EN_BUILD, FR_BUILD } from './messages.build';
 import { EN_DASHBOARD, FR_DASHBOARD } from './messages.dashboard';
+import { EN_JOURNEY, FR_JOURNEY } from './messages.journey';
+import { EN_OUTPUT, FR_OUTPUT } from './messages.output';
 import { EN_WIZARD, FR_WIZARD } from './messages.wizard';
 import { EN_WORKSPACE, FR_WORKSPACE } from './messages.workspace';
 import type { Widen } from './widen';
@@ -65,7 +68,7 @@ const FR_CORE = {
     env: 'Environnement',
     infrastructure: 'Infrastructure',
     blueprint: 'Blueprint',
-    preview: 'Aperçu',
+    preview: 'Architecture',
     generate: 'Génération',
     report: 'Rapport',
   },
@@ -90,8 +93,8 @@ const FR_CORE = {
    */
   footer: {
     navLabel: 'Raccourcis du pied de page',
-    licence: 'MIT',
-    version: '0.1.0',
+    licenceLine: 'Logiciel libre, licence MIT',
+    version: '0.2.0',
   },
 
   picker: {
@@ -120,13 +123,62 @@ const FR_CORE = {
     offline: 'Le serveur ne répond pas. Vérifiez que « pf web » tourne toujours.',
   },
 
+  /**
+   * La carte d'une technologie et sa bulle de détails (`OptionCard`). La
+   * conséquence et la solution d'un refus sont choisies par le **code** du
+   * moteur : la phrase du moteur dit ce qui coince, celles-ci disent ce que ça
+   * change et quoi faire.
+   */
+  optionCard: {
+    recommended: 'Recommandé',
+    incompatible: 'Incompatible',
+    details: (name: string) => `Détails sur ${name}`,
+    stateSelected: 'Choisie pour ce projet.',
+    stateAvailable: 'Compatible avec vos choix actuels.',
+    conflictsWith: 'En conflit avec',
+    consequence: 'Conséquence',
+    solution: 'Solution',
+    alternatives: (names: string) => `Alternatives compatibles : ${names}.`,
+    docs: 'Documentation',
+    docsOf: (name: string) => `Documentation officielle de ${name}`,
+    advice: {
+      ecosystem: {
+        consequence:
+          'Le projet généré ne démarrerait pas : ces technologies ne s’exécutent pas dans le même moteur.',
+        solution: 'Choisissez une alternative du même écosystème, ou changez de framework.',
+      },
+      exclusive: {
+        consequence: 'Le projet n’en câble qu’une : les deux se disputeraient le même rôle.',
+        solution: (names: string) =>
+          `Retirez ${names} pour choisir celle-ci, ou gardez votre choix actuel.`,
+      },
+      conflict: {
+        consequence:
+          'Les deux outils se marcheraient dessus : fichiers de configuration, verrou ou commandes en double.',
+        solution: (names: string) =>
+          `Gardez-en un seul : retirez ${names}, ou renoncez à celle-ci.`,
+      },
+      target: {
+        consequence: 'Elle ne fonctionne sur aucune des plateformes choisies.',
+        solution:
+          'Ajoutez la plateforme qu’elle vise à l’étape Plateformes, ou choisissez une alternative.',
+      },
+      engine: {
+        consequence: 'Aucune version du runtime ne satisfait les deux contraintes à la fois.',
+        solution: 'Choisissez une alternative, ou une autre version de l’outil en conflit.',
+      },
+      other: {
+        consequence: 'La génération serait refusée avec cette combinaison.',
+        solution: 'Choisissez une alternative compatible.',
+      },
+    },
+  },
+
   a11y: {
     progress: 'Progression du parcours',
     stepNavigation: 'Navigation de l’étape',
     copyWhat: (what: string) => `Copier ${what}`,
     themeSet: (name: string) => `Passer au thème ${name}`,
-    themeRelease: (name: string) => `Thème ${name} : revenir au thème du système`,
-    themeAuto: (name: string) => `Thème ${name}, suivi du système : le forcer`,
     localeToggle: (current: string) => `Langue : ${current}`,
     loading: 'Chargement en cours',
   },
@@ -174,7 +226,7 @@ const EN_CORE: Widen<typeof FR_CORE> = {
     env: 'Environment',
     infrastructure: 'Infrastructure',
     blueprint: 'Blueprint',
-    preview: 'Preview',
+    preview: 'Architecture',
     generate: 'Generate',
     report: 'Report',
   },
@@ -194,8 +246,8 @@ const EN_CORE: Widen<typeof FR_CORE> = {
 
   footer: {
     navLabel: 'Footer shortcuts',
-    licence: 'MIT',
-    version: '0.1.0',
+    licenceLine: 'Open source, MIT licence',
+    version: '0.2.0',
   },
 
   picker: {
@@ -222,13 +274,54 @@ const EN_CORE: Widen<typeof FR_CORE> = {
     offline: 'The server is not answering. Check that “pf web” is still running.',
   },
 
+  optionCard: {
+    recommended: 'Recommended',
+    incompatible: 'Incompatible',
+    details: (name: string) => `Details about ${name}`,
+    stateSelected: 'Chosen for this project.',
+    stateAvailable: 'Compatible with your current choices.',
+    conflictsWith: 'Conflicts with',
+    consequence: 'Consequence',
+    solution: 'Solution',
+    alternatives: (names: string) => `Compatible alternatives: ${names}.`,
+    docs: 'Documentation',
+    docsOf: (name: string) => `${name} official documentation`,
+    advice: {
+      ecosystem: {
+        consequence:
+          'The generated project would not start: these technologies do not run in the same engine.',
+        solution: 'Pick an alternative from the same ecosystem, or change framework.',
+      },
+      exclusive: {
+        consequence: 'The project wires only one: both would compete for the same role.',
+        solution: (names: string) =>
+          `Remove ${names} to pick this one, or keep your current choice.`,
+      },
+      conflict: {
+        consequence:
+          'The two tools would step on each other: duplicate config files, lockfile or commands.',
+        solution: (names: string) => `Keep only one: remove ${names}, or drop this one.`,
+      },
+      target: {
+        consequence: 'It runs on none of the chosen platforms.',
+        solution: 'Add the platform it targets at the Platforms step, or pick an alternative.',
+      },
+      engine: {
+        consequence: 'No runtime version satisfies both constraints at once.',
+        solution: 'Pick an alternative, or another version of the conflicting tool.',
+      },
+      other: {
+        consequence: 'Generation would be refused with this combination.',
+        solution: 'Pick a compatible alternative.',
+      },
+    },
+  },
+
   a11y: {
     progress: 'Path progress',
     stepNavigation: 'Step navigation',
     copyWhat: (what: string) => `Copy ${what}`,
     themeSet: (name: string) => `Switch to the ${name} theme`,
-    themeRelease: (name: string) => `${name} theme: go back to the system theme`,
-    themeAuto: (name: string) => `${name} theme, following the system: force it`,
     localeToggle: (current: string) => `Language: ${current}`,
     loading: 'Loading',
   },
@@ -249,6 +342,9 @@ export const FR = {
   ...FR_WIZARD,
   ...FR_BUILD,
   ...FR_ACCOUNT,
+  ...FR_JOURNEY,
+  ...FR_OUTPUT,
+  ...FR_ARCHITECTURE,
 };
 
 /** La forme du dictionnaire : le français fait foi. */
@@ -261,6 +357,9 @@ export const EN: Messages = {
   ...EN_WIZARD,
   ...EN_BUILD,
   ...EN_ACCOUNT,
+  ...EN_JOURNEY,
+  ...EN_OUTPUT,
+  ...EN_ARCHITECTURE,
 };
 
 export const MESSAGES: Readonly<Record<'fr' | 'en', Messages>> = { fr: FR, en: EN };

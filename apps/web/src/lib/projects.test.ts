@@ -1,10 +1,12 @@
 import { describe, expect, it } from 'vitest';
 import {
+  attachRepository,
   browserProjectStorage,
   forgetAllProjects,
   forgetProject,
   formatBytes,
   formatDate,
+  isGithubUrl,
   loadProjects,
   PROJECTS_STORAGE_KEY,
   type ProjectStorage,
@@ -266,5 +268,75 @@ describe('browserProjectStorage', () => {
     // La preuve que la sonde des deux tests précédents ne fuit pas dans les
     // suivants : un faux navigateur oublié ferait passer un test pour un autre.
     expect(Object.getOwnPropertyDescriptor(globalThis, 'window')).toBeUndefined();
+  });
+});
+
+describe('le manifest et le dépôt d’un projet', () => {
+  const MANIFEST = {
+    manifestVersion: 1,
+    name: 'mon-app',
+    targets: ['web'],
+    architecture: 'single-app',
+    frontend: { framework: 'next', language: 'typescript' },
+  };
+
+  it('relit un manifest valide, et lui seul', () => {
+    const valid = fakeStorage(JSON.stringify([{ ...project(), manifest: MANIFEST }]));
+    const forged = fakeStorage(
+      JSON.stringify([{ ...project(), manifest: { ...MANIFEST, name: '../../etc' } }]),
+    );
+
+    expect(loadProjects(valid)[0]?.manifest?.name).toBe('mon-app');
+    // Un manifest trafiqué dans le stockage ne passe pas le schéma : il
+    // disparaît, le projet reste listé.
+    expect(loadProjects(forged)[0]?.manifest).toBeUndefined();
+    expect(loadProjects(forged)).toHaveLength(1);
+  });
+
+  it.each([
+    ['https://github.com/octocat/mon-app', true],
+    ['https://github.com/octocat/mon-app.git', true],
+    ['http://github.com/octocat/mon-app', false],
+    ['https://github.com/settings', false],
+    ['https://github.com/octocat/mon-app/issues', false],
+    ['https://gitlab.com/octocat/mon-app', false],
+    ['javascript:alert(1)', false],
+    ['pas une adresse', false],
+    [42, false],
+  ] as const)('isGithubUrl(%s) = %s', (value, expected) => {
+    expect(isGithubUrl(value)).toBe(expected);
+  });
+
+  it('retient l’adresse du dépôt pour le projet du même dossier', () => {
+    const storage = fakeStorage(
+      JSON.stringify([project(), project({ id: 'b', directory: 'D:autre' })]),
+    );
+    const next = attachRepository(
+      storage,
+      project().directory,
+      'https://github.com/octocat/mon-app',
+    );
+
+    expect(next[0]?.repositoryUrl).toBe('https://github.com/octocat/mon-app');
+    expect(next[1]?.repositoryUrl).toBeUndefined();
+    expect(loadProjects(storage)[0]?.repositoryUrl).toBe('https://github.com/octocat/mon-app');
+  });
+
+  it('refuse une adresse qui n’est pas celle d’un dépôt, ou un projet sans dossier', () => {
+    const storage = fakeStorage(JSON.stringify([project()]));
+
+    expect(
+      attachRepository(storage, project().directory, 'https://evil.example/x')[0]?.repositoryUrl,
+    ).toBeUndefined();
+    expect(
+      attachRepository(storage, '', 'https://github.com/a/b')[0]?.repositoryUrl,
+    ).toBeUndefined();
+  });
+
+  it('une adresse invalide relue du stockage est ignorée', () => {
+    const storage = fakeStorage(
+      JSON.stringify([{ ...project(), repositoryUrl: 'https://evil.example/x' }]),
+    );
+    expect(loadProjects(storage)[0]?.repositoryUrl).toBeUndefined();
   });
 });

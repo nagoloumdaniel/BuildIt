@@ -237,11 +237,19 @@ describe('toggleExclusive — une catégorie exclusive remplace, jamais ne cumul
     ['react', 'frontend'],
     ['vitest', 'testing'],
     ['playwright', 'testing'],
+    ['python', 'language'],
+    ['postgresql', 'database'],
+    ['mysql', 'database'],
   ]);
 
-  it('choisir un second langage retire le premier', () => {
-    expect(toggleExclusive(['typescript'], 'javascript', 'language', categoryOf)).toEqual([
-      'javascript',
+  it('choisir une seconde base retire la première', () => {
+    expect(toggleExclusive(['postgresql'], 'mysql', 'database', categoryOf)).toEqual(['mysql']);
+  });
+
+  it('un second langage s’ajoute : TypeScript au front, Python à l’API', () => {
+    expect(toggleExclusive(['typescript'], 'python', 'language', categoryOf)).toEqual([
+      'typescript',
+      'python',
     ]);
   });
 
@@ -262,9 +270,10 @@ describe('toggleExclusive — une catégorie exclusive remplace, jamais ne cumul
   });
 
   it('ne touche jamais une sélection d’une autre catégorie', () => {
-    expect(toggleExclusive(['typescript', 'vitest'], 'javascript', 'language', categoryOf)).toEqual(
-      ['vitest', 'javascript'],
-    );
+    expect(toggleExclusive(['react', 'vitest'], 'next', 'frontend', categoryOf)).toEqual([
+      'vitest',
+      'next',
+    ]);
   });
 
   it('première sélection d’une catégorie exclusive : rien à remplacer', () => {

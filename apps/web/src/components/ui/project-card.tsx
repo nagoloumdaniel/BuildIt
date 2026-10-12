@@ -2,12 +2,15 @@
 
 import Link from 'next/link';
 import { type ReactElement, useState } from 'react';
+import type { GenerationView } from '../../app/actions';
 import { useLocale, useMessages } from '../../lib/i18n/provider';
 import { formatBytes, formatDate, type StoredProject } from '../../lib/projects';
 import { Card, CardHead } from './card';
 import { CopyButton } from './copy';
+import { DisclosureButton } from './disclosure-button';
 import { Icon } from './icon';
 import { ProgressBar } from './loading';
+import { ProjectExport } from './project-export';
 import { TechIcon } from './tech-icon';
 
 /**
@@ -40,12 +43,11 @@ export const MAX_TECH_LOGOS = 6;
 export interface ProjectCardProps {
   readonly project: StoredProject;
   /**
-   * Le re-téléchargement n'est proposé que si l'archive est **réellement** en
-   * main (rapport de la session courante). Sans elle, le bouton promettrait un
-   * fichier que rien ne peut produire : le geste disparaît plutôt que de
-   * mentir.
+   * Une sortie réussie depuis la carte (archive ou dossier). Absent : la carte
+   * ne propose pas l'export — c'est le cas de l'accueil, qui montre les deux
+   * derniers projets sans multiplier les gestes.
    */
-  readonly onRedownload?: (() => void) | undefined;
+  readonly onExported?: ((result: GenerationView) => void) | undefined;
   /** Donné : la carte porte « Retirer de la liste » (écran Projets). */
   readonly onForget?: (() => void) | undefined;
   /**
@@ -61,7 +63,7 @@ export interface ProjectCardProps {
 
 export function ProjectCard({
   project,
-  onRedownload,
+  onExported,
   onForget,
   onDelete,
   deleting = false,
@@ -69,6 +71,8 @@ export function ProjectCard({
   const t = useMessages();
   const { locale } = useLocale();
   const [confirming, setConfirming] = useState(false);
+  const [exporting, setExporting] = useState(false);
+  const manifest = project.manifest;
   const shown = project.technologies.slice(0, MAX_TECH_LOGOS);
   const hidden = project.technologies.length - shown.length;
   // Sans dossier (mode hébergé : rien n'a été écrit), il n'y a rien à
@@ -149,21 +153,47 @@ export function ProjectCard({
       <p className="pf-hint mt-3">{t.projects.locked}</p>
 
       {/* Les gestes : tous de la même taille, icône **et** libellé, et ils
-          passent à la ligne au lieu de déborder à 360 px. */}
+          passent à la ligne au lieu de déborder à 360 px. Un seul geste par
+          destination : l'architecture, GitHub (ouvrir s'il existe, connecter
+          sinon), l'export ; puis, en retrait, retirer et supprimer. */}
+      {manifest === undefined ? <p className="pf-hint mt-3">{t.projects.legacy}</p> : null}
       <div className="mt-3 flex flex-wrap items-center gap-2">
-        <Link className="pf-btn pf-btn-sm" href="/create/report">
-          <Icon name="file" size={14} />
-          {t.projects.report}
-        </Link>
-        <Link className="pf-btn pf-btn-sm" href="/repo">
-          <Icon name="github" size={14} />
-          {t.projects.connectGithub}
-        </Link>
-        {onRedownload === undefined ? null : (
-          <button className="pf-btn pf-btn-sm" onClick={onRedownload} type="button">
-            <Icon name="download" size={14} />
-            {t.projects.download}
-          </button>
+        {manifest === undefined ? null : (
+          <Link
+            className="pf-btn pf-btn-sm"
+            href={`/projects/architecture?id=${encodeURIComponent(project.id)}`}
+          >
+            <Icon name="folderTree" size={14} />
+            {t.projects.architecture}
+          </Link>
+        )}
+        {project.repositoryUrl === undefined ? (
+          project.directory === '' ? null : (
+            <Link className="pf-btn pf-btn-sm" href="/repo">
+              <Icon name="github" size={14} />
+              {t.projects.connectGithub}
+            </Link>
+          )
+        ) : (
+          <a
+            className="pf-btn pf-btn-sm"
+            href={project.repositoryUrl}
+            rel="noopener noreferrer"
+            target="_blank"
+          >
+            <Icon name="github" size={14} />
+            {t.projects.openGithub}
+            <Icon name="externalLink" size={12} />
+          </a>
+        )}
+        {manifest === undefined || onExported === undefined ? null : (
+          <DisclosureButton
+            className="pf-btn-sm"
+            expanded={exporting}
+            lessLabel={t.projects.exportLess}
+            moreLabel={t.projects.exportMore}
+            onToggle={() => setExporting((value) => !value)}
+          />
         )}
         {onForget === undefined ? null : (
           <button className="pf-btn pf-btn-sm" onClick={onForget} type="button">
@@ -183,6 +213,17 @@ export function ProjectCard({
           </button>
         )}
       </div>
+
+      {exporting && manifest !== undefined && onExported !== undefined ? (
+        <div className="pf-card-progress">
+          <ProjectExport
+            initiallyOpen
+            manifest={manifest}
+            onGenerated={onExported}
+            projectName={project.name}
+          />
+        </div>
+      ) : null}
 
       {/* La confirmation reste **dans** la carte : on voit encore le nom et le
           dossier qu'on s'apprête à effacer, ce qu'une fenêtre modale cacherait

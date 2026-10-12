@@ -4,18 +4,22 @@
  * Une Server Action qui supprime récursivement le dossier que le navigateur
  * lui désigne est une suppression de fichier arbitraire : le JSON vient du
  * client, donc n'importe qui peut l'écrire à la main. La règle tenue ici est
- * donc volontairement étroite, et elle est la **même** que celle de l'écriture
- * (`generateProjectAction`) : le configurateur écrit dans `~/buildit/<nom>`,
- * il ne supprime rien d'autre.
+ * donc volontairement étroite, et elle suit l'écriture : le configurateur ne
+ * supprime que ce qu'il a lui-même écrit.
  *
- * Trois conditions, toutes nécessaires :
- * - le chemin est un **enfant direct** du dossier de travail — pas le dossier
- *   de travail lui-même, pas un petit-enfant, pas un chemin qui remonte ;
- * - il ne contient ni `..` ni segment vide une fois résolu ;
- * - il porte un nom, donc le dossier existe en tant que nom (l'existence
- *   réelle est vérifiée par l'appelant, qui a accès au disque).
+ * Après les refus communs (mode hébergé, chemin vide, segment `..` ou `.`,
+ * dossier de travail lui-même), deux façons d'être accepté :
+ * - le chemin est un **enfant direct** du dossier de travail, là où
+ *   `generateProjectAction` écrit `~/buildit/<nom>` ;
+ * - ou il figure au **registre** des dossiers que BuildIt a générés ailleurs
+ *   (`lib/output-registry.ts`). Depuis que l'utilisateur choisit le dossier
+ *   parent dans l'explorateur, un projet peut vivre n'importe où, et seul le
+ *   serveur, qui l'a écrit, peut en témoigner : le registre vit sur son disque,
+ *   le navigateur ne peut pas y ajouter une ligne.
  *
- * Le module ne touche pas à `fs` : il se teste sans écrire un seul fichier.
+ * L'existence réelle du dossier est vérifiée par l'appelant, qui a accès au
+ * disque. Le module ne touche pas à `fs` : il se teste sans écrire un seul
+ * fichier.
  */
 
 export type DeleteRefusal =
@@ -52,18 +56,39 @@ function segments(path: string): readonly string[] {
 }
 
 /**
+ * Deux suites de segments désignent-elles le même dossier ?
+ *
+ * La comparaison ignore la casse : Windows ne la distingue pas, et exiger
+ * `C:\Users` quand le navigateur renvoie `c:\users` refuserait un dossier
+ * parfaitement légitime.
+ */
+function sameSegments(left: readonly string[], right: readonly string[]): boolean {
+  return (
+    left.length === right.length &&
+    left.every((part, index) => part.toLowerCase() === (right[index] ?? '').toLowerCase())
+  );
+}
+
+/** Vrai quand `a` et `b` désignent le même dossier, barres et casse mises à part. */
+export function sameDirectory(a: string, b: string): boolean {
+  return sameSegments(segments(a), segments(b));
+}
+
+/**
  * Le dossier est-il supprimable, et sous quelle forme ?
  *
  * `workspaceRoot` est le dossier de travail **résolu** par le serveur : il ne
- * vient jamais du client. La comparaison est faite sur les segments plutôt que
- * sur les chaînes, parce qu'un `C:\Users\x\buildit` et un
- * `C:/Users/x/buildit/` désignent le même dossier et qu'un `startsWith` sur
- * les chaînes laisserait passer `~/buildit-autre`.
+ * vient jamais du client. `registered` est le registre relu par le serveur sur
+ * son propre disque, jamais une liste envoyée par le navigateur. La comparaison
+ * est faite sur les segments plutôt que sur les chaînes, parce qu'un
+ * `C:\Users\x\buildit` et un `C:/Users/x/buildit/` désignent le même dossier et
+ * qu'un `startsWith` sur les chaînes laisserait passer `~/buildit-autre`.
  */
 export function deletionTarget(
   directory: unknown,
   workspaceRoot: string,
   hosted: boolean,
+  registered: readonly string[] = [],
 ): DeletionTarget | DeletionRefused {
   if (hosted) {
     return { ok: false, reason: 'hosted' };
@@ -78,20 +103,21 @@ export function deletionTarget(
   if (target.some((part) => part === '..' || part === '.')) {
     return { ok: false, reason: 'notInWorkspace' };
   }
-  if (target.length === root.length) {
+  if (sameSegments(target, root)) {
     return { ok: false, reason: 'isWorkspace' };
+  }
+  // Le registre passe avant la règle de l'enfant direct, mais jamais pour la
+  // racine d'un disque : un `C:\` ou un `/` ne peut pas avoir été généré, et
+  // un registre altéré à la main ne doit pas suffire à le vider.
+  if (target.length >= 2 && registered.some((entry) => sameSegments(segments(entry), target))) {
+    return { ok: true, directory };
+  }
+  const inside = target.length > root.length && sameSegments(root, target.slice(0, root.length));
+  if (!inside) {
+    return { ok: false, reason: 'notInWorkspace' };
   }
   if (target.length !== root.length + 1) {
     return { ok: false, reason: 'notADirectChild' };
-  }
-  // La comparaison ignore la casse : Windows ne la distingue pas, et exiger
-  // `C:\Users` quand le navigateur renvoie `c:\users` refuserait un dossier
-  // parfaitement légitime.
-  const sameRoot = root.every(
-    (part, index) => part.toLowerCase() === (target[index] ?? '').toLowerCase(),
-  );
-  if (!sameRoot) {
-    return { ok: false, reason: 'notInWorkspace' };
   }
 
   return { ok: true, directory };

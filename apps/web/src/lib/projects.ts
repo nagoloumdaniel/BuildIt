@@ -17,6 +17,8 @@
  * le porte, pas la reprise de parcours.
  */
 
+import { type Manifest, parseManifest } from '@buildit/manifest';
+
 export const PROJECTS_STORAGE_KEY = 'pf-projects';
 
 /** Au-delà, les plus anciens tombent : une liste sans fin n'est pas consultée. */
@@ -34,6 +36,23 @@ export interface StoredProject {
   readonly generatedAt: string;
   /** Les technologies retenues, pour afficher leurs logos dans la liste. */
   readonly technologies: readonly string[];
+  /**
+   * Le manifest qui a produit le projet.
+   *
+   * C'est lui qui permet de **refaire** quelque chose d'un projet déjà généré :
+   * télécharger l'archive, l'écrire dans un autre dossier, montrer son
+   * architecture. Quelques centaines d'octets de JSON, pas l'archive : le
+   * moteur reproduit le même projet à partir des mêmes choix (§9). Absent
+   * pour un projet généré avant cette version — l'écran le dit au lieu de
+   * proposer un geste qui ne pourrait pas aboutir.
+   */
+  readonly manifest?: Manifest;
+  /**
+   * L'adresse du dépôt GitHub associé, quand il a été créé ou retrouvé par
+   * BuildIt. Jamais construite à partir du nom du projet : une URL supposée
+   * mènerait à la page d'un inconnu ou à une 404.
+   */
+  readonly repositoryUrl?: string;
 }
 
 export interface ProjectStorage {
@@ -75,6 +94,10 @@ function parseProject(value: unknown): StoredProject | undefined {
   const technologies = Array.isArray(raw['technologies'])
     ? raw['technologies'].filter((item): item is string => typeof item === 'string')
     : [];
+  // Le manifest relu passe par le schéma : un objet trafiqué dans le stockage
+  // n'atteindra jamais le moteur sous une forme qu'il n'aurait pas acceptée.
+  const manifest = raw['manifest'] === undefined ? undefined : parseManifest(raw['manifest']);
+  const repositoryUrl = isGithubUrl(raw['repositoryUrl']) ? raw['repositoryUrl'] : undefined;
   return {
     id,
     name,
@@ -83,7 +106,51 @@ function parseProject(value: unknown): StoredProject | undefined {
     bytes: typeof raw['bytes'] === 'number' ? raw['bytes'] : 0,
     generatedAt,
     technologies,
+    ...(manifest?.ok === true ? { manifest: manifest.value } : {}),
+    ...(repositoryUrl === undefined ? {} : { repositoryUrl }),
   };
+}
+
+/**
+ * Une adresse de dépôt GitHub réelle : `https://github.com/<propriétaire>/<dépôt>`.
+ *
+ * Tout le reste est refusé — y compris une adresse GitHub qui ne désigne pas un
+ * dépôt (`https://github.com/settings`) : le bouton « Ouvrir sur GitHub » ne
+ * doit mener qu'au dépôt du projet.
+ */
+export function isGithubUrl(value: unknown): value is string {
+  if (typeof value !== 'string') {
+    return false;
+  }
+  try {
+    const url = new URL(value);
+    const parts = url.pathname.split('/').filter((part) => part !== '');
+    return (
+      url.protocol === 'https:' &&
+      url.hostname === 'github.com' &&
+      parts.length === 2 &&
+      parts.every((part) => /^[A-Za-z0-9._-]+$/.test(part))
+    );
+  } catch {
+    return false;
+  }
+}
+
+/** Retient l'adresse du dépôt GitHub d'un projet, une fois qu'elle est connue. */
+export function attachRepository(
+  storage: ProjectStorage,
+  directory: string,
+  url: string,
+): readonly StoredProject[] {
+  const projects = loadProjects(storage);
+  if (!isGithubUrl(url) || directory === '') {
+    return projects;
+  }
+  const next = projects.map((project) =>
+    project.directory === directory ? { ...project, repositoryUrl: url } : project,
+  );
+  save(storage, next);
+  return next;
 }
 
 export function loadProjects(storage: ProjectStorage): readonly StoredProject[] {

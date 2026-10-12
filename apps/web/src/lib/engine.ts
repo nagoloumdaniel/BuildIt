@@ -32,12 +32,28 @@ import { type Category, loadCatalogue, type Registry } from '@buildit/registry';
  *   ici, c'est l'utilisateur qui lit.
  */
 
+/** Une technologie nommée, avec sa documentation officielle quand le registry la connaît. */
+export interface TechnologyRef {
+  id: string;
+  label: string;
+  docs?: string;
+}
+
 export interface OptionView {
   id: string;
   label: string;
   category: string;
   state: 'selected' | 'available' | 'blocked';
   reason?: string;
+  /** La documentation officielle (`docs` de la fiche, vérifiée par le registry). */
+  docs?: string;
+  /**
+   * Le code du refus, pour que l'écran choisisse l'explication et la solution
+   * dans sa langue. Jamais affiché tel quel.
+   */
+  code?: string;
+  /** Les **autres** technologies en cause dans le refus, avec leur documentation. */
+  conflicts?: TechnologyRef[];
 }
 
 export interface ResolutionView {
@@ -103,15 +119,30 @@ export async function stackOptions(
   category: Category,
   selection: Selection,
 ): Promise<OptionView[]> {
-  return optionsFor(category, selection, getRegistry()).map((option) => ({
-    id: option.entry.id,
-    label: option.entry.name,
-    category: option.entry.category,
-    state: option.state,
-    // `exactOptionalPropertyTypes` interdit d'écrire `reason: undefined` : la
-    // clé est absente quand il n'y a rien à dire, sinon elle porte la raison.
-    ...(option.reason === undefined ? {} : { reason: option.reason }),
-  }));
+  const registry = getRegistry();
+  return optionsFor(category, selection, registry).map((option) => {
+    const conflicts = (option.blocking?.path ?? [])
+      .filter((id): id is string => typeof id === 'string' && id !== option.entry.id)
+      .map((id) => registry.get(id))
+      .filter((entry) => entry !== undefined)
+      .map((entry) => ({
+        id: entry.id,
+        label: entry.name,
+        ...(entry.docs === undefined ? {} : { docs: entry.docs }),
+      }));
+    return {
+      id: option.entry.id,
+      label: option.entry.name,
+      category: option.entry.category,
+      state: option.state,
+      // `exactOptionalPropertyTypes` interdit d'écrire `reason: undefined` : la
+      // clé est absente quand il n'y a rien à dire, sinon elle porte la raison.
+      ...(option.reason === undefined ? {} : { reason: option.reason }),
+      ...(option.entry.docs === undefined ? {} : { docs: option.entry.docs }),
+      ...(option.blocking === undefined ? {} : { code: option.blocking.code }),
+      ...(conflicts.length === 0 ? {} : { conflicts }),
+    };
+  });
 }
 
 /**

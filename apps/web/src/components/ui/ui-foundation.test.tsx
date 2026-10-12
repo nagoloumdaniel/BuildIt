@@ -41,7 +41,7 @@ describe('UI foundation', () => {
     expect(html).not.toContain('aria-valuenow');
   });
 
-  it('names compact stepper progress with its current position', () => {
+  it('tells the stepper position to screen readers and keeps step names out of sight', () => {
     const html = renderToStaticMarkup(
       <Stepper
         ariaLabel="Parcours"
@@ -54,8 +54,11 @@ describe('UI foundation', () => {
       />,
     );
 
-    expect(html).toContain('role="progressbar"');
-    expect(html).toContain('aria-label="Étape 1 sur 2"');
+    expect(html).toContain('<p class="pf-journey-sr">Étape 1 sur 2</p>');
+    expect(html).toContain('aria-current="step"');
+    expect(html).toContain('<span class="pf-journey-sr">Type</span>');
+    // Upcoming steps are not links: jumping ahead would skip blocking checks.
+    expect(html).not.toContain('href="/create/type"');
   });
 
   it('associates panel progress with its visible title', () => {

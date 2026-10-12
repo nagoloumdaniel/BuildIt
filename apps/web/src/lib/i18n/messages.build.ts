@@ -17,7 +17,6 @@ import type { Widen } from './widen';
 export const FR_BUILD = {
   build: {
     /** Le statut d'une génération en cours, partagé par la page et la barre. */
-    generating: 'Génération en cours…',
 
     /**
      * Écran 7 — Environment & Secrets : noms de variables uniquement, où poser
@@ -102,7 +101,6 @@ export const FR_BUILD = {
       statusExperimental:
         'Sélection expérimentale : le moteur l’accepte, mais aucun preset ne la certifie.',
       graphLink: 'Voir le graphe de dépendances',
-      previewLink: 'Aperçu des fichiers',
       shareButton: 'Créer un lien de partage',
       shareHintBefore:
         'Le lien de partage en lecture seule (§20) porte la configuration dans son fragment d’URL : elle ne part vers aucun serveur, et il fonctionne partout où',
@@ -141,86 +139,15 @@ export const FR_BUILD = {
     },
 
     /**
-     * Écran 10 — File Preview : le dry-run, l'arborescence et la phrase de
-     * chaque dossier racine. Un dossier absent de la table reste muet — jamais
-     * une excuse inventée.
-     */
-    preview: {
-      title: 'Aperçu des fichiers',
-      description: 'L’arborescence qui sera générée, sans rien écrire. Un dry-run du moteur.',
-      descriptionIncomplete: 'L’arborescence qui sera générée, sans rien écrire.',
-      incompleteTitle: 'Rien à prévisualiser',
-      incompleteBody:
-        'Le brouillon est incomplet : il n’y a rien à prévisualiser. Complétez vos choix, puis revenez. Rien n’a été écrit sur le disque.',
-      fixStack: 'Corriger mes choix',
-      backHome: 'Retour au tableau de bord',
-      loading: 'Calcul du plan…',
-      dryRun: 'Dry-run',
-      files: (count: number) => `${count} fichier${count > 1 ? 's' : ''}`,
-      hint: 'Le plan expose les chemins, pas le contenu des fichiers : rien n’est affiché ici qui ne vienne réellement du moteur.',
-      warningsTitle: 'Avertissements du plan',
-      treeTitle: 'Arborescence',
-      treeLabel: 'Arborescence des fichiers à générer',
-      planFailed: 'Le plan n’a pas pu être calculé.',
-      folderNotes: {
-        apps: 'Les applications déployables du projet, une par cible (web, api…).',
-        packages: 'Le code partagé entre applications : types, client API, composants communs.',
-        src: 'Le code source de l’application.',
-        app: 'Les routes, un dossier par URL (App Router de Next.js).',
-        components: 'Les composants d’interface réutilisés par plusieurs écrans.',
-        lib: 'Les fonctions partagées : accès aux données, logique métier, utilitaires.',
-        prisma: 'Le schéma de base de données et les migrations.',
-        public: 'Les fichiers servis tels quels : images, polices, favicon.',
-        e2e: 'Les tests qui pilotent l’application dans un vrai navigateur.',
-        tests: 'Les tests automatisés du projet.',
-        docs: 'La documentation du projet.',
-        scripts: 'Les scripts d’installation, de build ou de maintenance du projet.',
-        '.github': 'Les workflows d’intégration continue (CI) du dépôt.',
-        generated: 'Du code produit automatiquement, jamais à modifier à la main.',
-      },
-    },
-
-    /**
      * Écran 11 — Generation Progress : le dossier montré avant d'écrire, le
      * lancement, le refus, et le vocabulaire des étapes du pipeline.
      */
     generate: {
       title: 'Générer le projet',
-      description: 'Le projet est écrit sur cette machine, dans le dossier de travail affiché.',
       incompleteTitle: 'Rien ne sera écrit',
       incompleteBody:
         'Le brouillon est incomplet : le moteur n’a pas de projet à écrire. Complétez vos choix, puis revenez. Aucun fichier n’a été touché.',
       fixStack: 'Corriger mes choix',
-      backHome: 'Retour au tableau de bord',
-      destination: 'Dossier de destination',
-      resolvingRoot: 'Résolution de la racine de travail…',
-      destinationHint:
-        'Rien n’est écrit avant votre clic. Un dossier du même nom déjà présent fait refuser la génération : aucun fichier existant n’est écrasé.',
-      button: 'Générer le projet',
-      buttonRunning: 'Génération…',
-      viewReport: 'Voir le rapport complet',
-      fatalTitle: 'La génération n’a pas pu être lancée',
-      fatalBody: 'Rien n’a été écrit. Réessayez.',
-      refusedTitle: 'La génération a été refusée',
-      refusedBody: 'Rien n’a été écrit.',
-      refusedHint:
-        'Un dossier déjà présent n’est jamais écrasé : si le problème vient de là, changez le nom à l’écran « Créer un projet ». Si le problème vient des technologies choisies, corrigez-les ci-dessous.',
-      technologiesTitle: 'Technologies choisies',
-      none: 'Aucune technologie choisie.',
-      writtenDirectory: 'Projet écrit dans',
-      writtenRest: (count: number, size: string) =>
-        ` : ${count} fichier${count > 1 ? 's' : ''}, ${size}.`,
-      progressDone: 'Génération terminée.',
-      progressLabel: 'Avancement de la génération',
-      stepDone: 'Terminé',
-      stepPending: 'En attente',
-      steps: {
-        plan: 'Planification',
-        write: 'Écriture des fichiers',
-        install: 'Installation des dépendances',
-        git: 'Dépôt Git',
-        validate: 'Validation',
-      },
     },
 
     /**
@@ -240,15 +167,12 @@ export const FR_BUILD = {
       refusalBody:
         'Rien n’a été écrit. Corrigez les technologies ci-dessous, puis relancez la génération. Le brouillon et les choix sont conservés.',
       fixStack: 'Modifier les technologies',
-      backHome: 'Retour au tableau de bord',
       technologiesTitle: 'Technologies choisies',
       none: 'Aucune technologie choisie.',
       filesCount: 'Fichiers écrits',
       weight: 'Poids',
       directoryWhat: 'le dossier du projet',
       commandWhat: 'la commande',
-      stepsTitle: 'Étapes',
-      noSteps: 'Aucune',
       warningsTitle: 'Avertissements',
       issuesTitle: 'Problèmes',
       installationTitle: 'Installation',
@@ -256,8 +180,6 @@ export const FR_BUILD = {
         'Le projet est terminé : ces écrans ne le modifient plus. Pour le reprendre, suivez les commandes ci-dessous.',
       download: 'Télécharger à nouveau',
       connectGithub: 'Connecter à GitHub',
-      filesTitle: 'Fichiers',
-      noFiles: 'Aucun fichier écrit.',
       install: {
         open: 'Ouvrir le projet',
         services: 'Démarrer les services',
@@ -272,8 +194,6 @@ export const FR_BUILD = {
 
 export const EN_BUILD: Widen<typeof FR_BUILD> = {
   build: {
-    generating: 'Generating…',
-
     env: {
       title: 'Environment & secrets',
       description:
@@ -342,7 +262,6 @@ export const EN_BUILD: Widen<typeof FR_BUILD> = {
       statusExperimental:
         'Experimental selection: the engine accepts it, but no preset certifies it.',
       graphLink: 'See the dependency graph',
-      previewLink: 'File preview',
       shareButton: 'Create a share link',
       shareHintBefore:
         'The read-only share link (§20) carries the configuration in its URL fragment: it never leaves for a server, and it works wherever',
@@ -380,78 +299,12 @@ export const EN_BUILD: Widen<typeof FR_BUILD> = {
       },
     },
 
-    preview: {
-      title: 'File preview',
-      description: 'The tree that will be generated, writing nothing. An engine dry-run.',
-      descriptionIncomplete: 'The tree that will be generated, writing nothing.',
-      incompleteTitle: 'Nothing to preview',
-      incompleteBody:
-        'The draft is incomplete: there is nothing to preview. Complete your choices, then come back. Nothing has been written to disk.',
-      fixStack: 'Fix my choices',
-      backHome: 'Back to the dashboard',
-      loading: 'Computing the plan…',
-      dryRun: 'Dry-run',
-      files: (count: number) => `${count} file${count > 1 ? 's' : ''}`,
-      hint: 'The plan exposes paths, not file contents: nothing is shown here that does not truly come from the engine.',
-      warningsTitle: 'Plan warnings',
-      treeTitle: 'File tree',
-      treeLabel: 'File tree of the project to generate',
-      planFailed: 'The plan could not be computed.',
-      folderNotes: {
-        apps: 'The project’s deployable applications, one per target (web, api…).',
-        packages: 'Code shared between applications: types, API client, common components.',
-        src: 'The application source code.',
-        app: 'The routes, one folder per URL (Next.js App Router).',
-        components: 'Interface components reused by several screens.',
-        lib: 'Shared functions: data access, business logic, utilities.',
-        prisma: 'The database schema and the migrations.',
-        public: 'Files served as-is: images, fonts, favicon.',
-        e2e: 'Tests that drive the application in a real browser.',
-        tests: 'The project’s automated tests.',
-        docs: 'The project documentation.',
-        scripts: 'Install, build or maintenance scripts for the project.',
-        '.github': 'The repository’s continuous integration (CI) workflows.',
-        generated: 'Code produced automatically, never edit it by hand.',
-      },
-    },
-
     generate: {
       title: 'Generate the project',
-      description: 'The project is written on this machine, in the working folder shown below.',
       incompleteTitle: 'Nothing will be written',
       incompleteBody:
         'The draft is incomplete: the engine has no project to write. Complete your choices, then come back. No file has been touched.',
       fixStack: 'Fix my choices',
-      backHome: 'Back to the dashboard',
-      destination: 'Destination folder',
-      resolvingRoot: 'Resolving the working root…',
-      destinationHint:
-        'Nothing is written before you click. A folder with the same name already present makes the generation refuse: no existing file is overwritten.',
-      button: 'Generate the project',
-      buttonRunning: 'Generating…',
-      viewReport: 'See the full report',
-      fatalTitle: 'The generation could not be started',
-      fatalBody: 'Nothing was written. Try again.',
-      refusedTitle: 'The generation was refused',
-      refusedBody: 'Nothing was written.',
-      refusedHint:
-        'An existing folder is never overwritten: if that is the cause, change the name on the “Create a project” screen. If the technologies are the cause, fix them below.',
-      technologiesTitle: 'Chosen technologies',
-      none: 'No technology chosen.',
-      writtenDirectory: 'Project written to',
-      writtenRest: (count: number, size: string) =>
-        `: ${count} file${count > 1 ? 's' : ''}, ${size}.`,
-      progressDone: 'Generation finished.',
-      progressLabel: 'Generation progress',
-      stepDone: 'Done',
-      stepPending: 'Pending',
-      steps: {
-        plan: 'Planning',
-        write: 'Writing files',
-        install: 'Installing dependencies',
-        git: 'Git repository',
-        validate: 'Validation',
-      },
     },
 
     report: {
@@ -466,15 +319,12 @@ export const EN_BUILD: Widen<typeof FR_BUILD> = {
       refusalBody:
         'Nothing was written. Fix the technologies below, then run the generation again. The draft and your choices are kept.',
       fixStack: 'Change the technologies',
-      backHome: 'Back to the dashboard',
       technologiesTitle: 'Chosen technologies',
       none: 'No technology chosen.',
       filesCount: 'Files written',
       weight: 'Size',
       directoryWhat: 'the project folder',
       commandWhat: 'the command',
-      stepsTitle: 'Steps',
-      noSteps: 'None',
       warningsTitle: 'Warnings',
       issuesTitle: 'Problems',
       installationTitle: 'Installation',
@@ -482,8 +332,6 @@ export const EN_BUILD: Widen<typeof FR_BUILD> = {
         'The project is finished: these screens no longer change it. To pick it up, follow the commands below.',
       download: 'Download again',
       connectGithub: 'Connect to GitHub',
-      filesTitle: 'Files',
-      noFiles: 'No file written.',
       install: {
         open: 'Open the project',
         services: 'Start the services',

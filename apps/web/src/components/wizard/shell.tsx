@@ -1,7 +1,18 @@
 'use client';
 
 import Link from 'next/link';
-import { type ReactElement, type ReactNode, useEffect, useMemo, useRef } from 'react';
+import { useRouter } from 'next/navigation';
+import {
+  type KeyboardEvent,
+  type ReactElement,
+  type ReactNode,
+  type RefObject,
+  useEffect,
+  useId,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 import {
   blockedReason,
   nextStep,
@@ -11,7 +22,9 @@ import {
   stepIndex,
 } from '../../lib/flow';
 import { useMessages } from '../../lib/i18n/provider';
-import { Icon } from '../ui/icon';
+import { hasChoices } from '../../lib/journey-cancel';
+import { type SlideDirection, slideDirection, stepMemory } from '../../lib/journey-transition';
+import { Icon, type IconName } from '../ui/icon';
 import { Stepper } from '../ui/stepper';
 import { useDraft, useSession } from './draft-provider';
 
@@ -32,7 +45,7 @@ export function stepHref(step: StepId): string {
  * Exportée séparément du cadre : certains tests la rendent seule, et l'écran
  * Report la montre une dernière fois sans son cadre de navigation.
  */
-export function Progress({ current }: { current: StepId }): ReactElement {
+export function Progress({ current, from }: { current: StepId; from?: number }): ReactElement {
   const t = useMessages();
   const index = stepIndex(current);
   const steps = useMemo(
@@ -45,8 +58,111 @@ export function Progress({ current }: { current: StepId }): ReactElement {
       compactLabel={t.common.step(index + 1, STEP_ORDER.length)}
       current={index}
       steps={steps}
+      {...(from === undefined ? {} : { from })}
     />
   );
+}
+
+/**
+ * L'icône de chaque étape, à gauche de son titre.
+ *
+ * Le stepper ne montre plus que des numéros : c'est le titre, et l'icône qui
+ * l'accompagne, qui disent où l'on est. Une table et non un choix par écran :
+ * douze écrans qui choisissent chacun finiraient par se répéter.
+ */
+export const STEP_ICONS: Readonly<Record<StepId, IconName>> = {
+  create: 'pencil',
+  target: 'globe',
+  type: 'grid',
+  architecture: 'gitBranch',
+  stack: 'layers',
+  capabilities: 'zap',
+  env: 'key',
+  infrastructure: 'cloud',
+  blueprint: 'fileText',
+  preview: 'folderTree',
+  generate: 'hammer',
+  report: 'checkCircle',
+};
+
+/**
+ * Le titre d'écran et son icône.
+ *
+ * Une grille à deux colonnes plutôt qu'une ligne : quand le titre passe à la
+ * ligne sur un téléphone, la seconde ligne repart sous la première, pas sous
+ * l'icône. L'icône est décorative : le titre dit déjà tout.
+ */
+function PageTitle({
+  icon,
+  title,
+  titleRef,
+}: {
+  icon: IconName | undefined;
+  title: string;
+  titleRef?: RefObject<HTMLHeadingElement | null>;
+}): ReactElement {
+  return (
+    <div
+      className={
+        icon === undefined ? 'pf-journey-title pf-journey-title-plain' : 'pf-journey-title'
+      }
+    >
+      {icon === undefined ? null : (
+        // `pf-display` donne à l'icône la taille du titre : elle grandit et
+        // rétrécit avec lui, sans recopier son échelle ici.
+        <span className="pf-journey-title-icon pf-display">
+          <Icon name={icon} size={24} />
+        </span>
+      )}
+      {titleRef === undefined ? (
+        <h1 className="pf-display">{title}</h1>
+      ) : (
+        // `tabIndex={-1}` : le titre est une cible de focus programmée (entrée
+        // dans l'étape), jamais un arrêt de tabulation de plus.
+        <h1 className="pf-display" ref={titleRef} tabIndex={-1}>
+          {title}
+        </h1>
+      )}
+    </div>
+  );
+}
+
+/**
+ * Comment l'écran entre : le sens du glissement, et l'étape d'où le stepper
+ * repart.
+ *
+ * Lu **une fois**, au premier rendu : un nouveau rendu sans changement
+ * d'étape (une case cochée) ne rejoue rien. Le serveur ne lit jamais la
+ * mémoire : partagée entre toutes les requêtes, elle y mentirait, et un
+ * accès direct doit s'afficher immobile.
+ */
+interface Entry {
+  readonly direction: SlideDirection;
+  readonly from?: number;
+}
+
+function readEntry(index: number): Entry {
+  if (typeof window === 'undefined') {
+    return { direction: 'none' };
+  }
+  const trace = stepMemory.read();
+  const direction = slideDirection(trace, index, Date.now());
+  return direction === 'none' || trace === null ? { direction } : { direction, from: trace.index };
+}
+
+/**
+ * Le départ vers l'accueil après une annulation.
+ *
+ * Monté seulement au moment de partir : `useRouter` exige le routeur de Next,
+ * et le cadre se rend aussi sans lui (tests, rendu statique). Le prendre dans
+ * le cadre lui-même ferait tomber tout rendu hors application.
+ */
+function GoHome(): null {
+  const router = useRouter();
+  useEffect(() => {
+    router.push('/');
+  }, [router]);
+  return null;
 }
 
 /**
@@ -104,12 +220,25 @@ export function StepShell({
   const session = useSession();
   const titleRef = useRef<HTMLHeadingElement>(null);
   const focusHandled = useRef(false);
+  const index = stepIndex(step);
+  const [entry] = useState(() => readEntry(index));
   const previous = previousStep(step);
   const next = nextStep(step);
   // La condition évaluée est celle de l'étape **affichée**, jamais celle que le
   // brouillon portait avant qu'on arrive ici.
   const reason = blockedReason({ ...draft, step });
   const ready = reason === undefined;
+
+  // L'annulation : `confirming` ouvre l'encart, `leaving` monte le départ.
+  // La `ref` double l'état parce que l'effet de reprise ci-dessous doit la
+  // lire **tout de suite** : un état ne serait vu qu'au rendu suivant.
+  const [confirming, setConfirming] = useState(false);
+  const [leaving, setLeaving] = useState(false);
+  const leavingRef = useRef(false);
+  const cancelRef = useRef<HTMLButtonElement>(null);
+  const keepRef = useRef<HTMLButtonElement>(null);
+  const restoreFocus = useRef(false);
+  const panelId = useId();
 
   // Le focus ne se rattrape pas après coup (8F.1) : il est posé ici, à l'entrée
   // de l'écran. La `ref` garde le premier passage d'un montage unique — le mode
@@ -126,32 +255,138 @@ export function StepShell({
     titleRef.current?.focus();
   }, []);
 
-  // La reprise (§3) repart de l'écran quitté : le brouillon retient l'étape.
+  // La mémoire du sens de glissement : l'écran suivant saura d'où l'on vient.
   useEffect(() => {
-    if (draft.step !== step) {
+    stepMemory.enter(index);
+    return () => stepMemory.leave(index, Date.now());
+  }, [index]);
+
+  // La reprise (§3) repart de l'écran quitté : le brouillon retient l'étape.
+  // Sauf pendant un départ : le brouillon vient d'être remis à neuf, et lui
+  // réécrire l'étape quittée ferait reprendre un parcours annulé.
+  useEffect(() => {
+    if (!leavingRef.current && draft.step !== step) {
       session.update((current) => ({ ...current, step }));
     }
   }, [draft.step, step, session]);
 
+  // L'encart ouvert reçoit le focus sur le geste **sûr** (garder ses choix) :
+  // un Entrée de trop ne doit rien effacer. Fermé, le focus revient au bouton
+  // qui l'a ouvert, pas au début de la page.
+  useEffect(() => {
+    if (confirming) {
+      keepRef.current?.focus();
+    } else if (restoreFocus.current) {
+      restoreFocus.current = false;
+      cancelRef.current?.focus();
+    }
+  }, [confirming]);
+
+  const leave = (): void => {
+    leavingRef.current = true;
+    // Le prochain parcours part de rien : pas de glissement hérité de celui-ci.
+    stepMemory.clear();
+    session.reset();
+    setLeaving(true);
+  };
+
+  const requestCancel = (): void => {
+    if (confirming) {
+      return;
+    }
+    // Un brouillon vierge n'a rien à perdre : pas de question pour rien.
+    if (hasChoices(draft)) {
+      setConfirming(true);
+    } else {
+      leave();
+    }
+  };
+
+  const keepGoing = (): void => {
+    restoreFocus.current = true;
+    setConfirming(false);
+  };
+
+  const onPanelKey = (event: KeyboardEvent<HTMLDivElement>): void => {
+    if (event.key === 'Escape') {
+      event.stopPropagation();
+      keepGoing();
+    }
+  };
+
+  // Un projet généré n'a plus rien à annuler (§6.14).
+  const cancelButton = hidePrevious ? null : (
+    <button
+      aria-controls={confirming ? panelId : undefined}
+      aria-expanded={confirming}
+      aria-label={t.journey.cancel.label}
+      className="pf-btn pf-btn-ghost pf-btn-sm"
+      onClick={requestCancel}
+      ref={cancelRef}
+      type="button"
+    >
+      <Icon name="close" size={14} />
+      {t.journey.cancel.button}
+    </button>
+  );
+
   return (
     <main className="pf-shell">
-      <Progress current={step} />
+      {leaving ? <GoHome /> : null}
+      <Progress current={step} {...(entry.from === undefined ? {} : { from: entry.from })} />
 
-      <div className="pf-fade-in mt-5">
-        <header className="pf-page-head pf-card-head">
-          <div className="min-w-0">
-            <p className="pf-eyebrow">{t.common.step(stepIndex(step) + 1, STEP_ORDER.length)}</p>
-            {/* `tabIndex={-1}` : le titre est une cible de focus programmée
-                (entrée dans l'étape), jamais un arrêt de tabulation de plus. */}
-            <h1 className="pf-display mt-1" ref={titleRef} tabIndex={-1}>
-              {title}
-            </h1>
+      {/* Seul le contenu glisse : le stepper reste en place et son rail se
+          remplit pendant ce temps. */}
+      <div className="pf-journey-viewport mt-5">
+        <div className="pf-journey-stage" data-slide={entry.direction}>
+          <header className="pf-page-head">
+            <p className="pf-eyebrow">{t.common.step(index + 1, STEP_ORDER.length)}</p>
+            <div className="pf-journey-head mt-1">
+              <PageTitle icon={STEP_ICONS[step]} title={title} titleRef={titleRef} />
+              {actions === undefined && cancelButton === null ? null : (
+                <div className="pf-page-head-actions">
+                  {actions}
+                  {cancelButton}
+                </div>
+              )}
+            </div>
             <p className="pf-subtitle mt-2">{description}</p>
-          </div>
-          {actions === undefined ? null : <div className="pf-page-head-actions">{actions}</div>}
-        </header>
+          </header>
 
-        <div className="mt-6">{children}</div>
+          {confirming ? (
+            <div
+              aria-describedby={`${panelId}-body`}
+              aria-labelledby={`${panelId}-title`}
+              className="pf-journey-confirm mt-4"
+              id={panelId}
+              onKeyDown={onPanelKey}
+              role="alertdialog"
+            >
+              <p className="pf-title-sm" id={`${panelId}-title`}>
+                {t.journey.cancel.title}
+              </p>
+              <p className="pf-hint mt-1" id={`${panelId}-body`}>
+                {t.journey.cancel.body}
+              </p>
+              <div className="pf-journey-confirm-actions mt-3">
+                <button
+                  className="pf-btn pf-btn-sm"
+                  onClick={keepGoing}
+                  ref={keepRef}
+                  type="button"
+                >
+                  {t.journey.cancel.keep}
+                </button>
+                <button className="pf-btn pf-btn-danger pf-btn-sm" onClick={leave} type="button">
+                  <Icon name="trash" size={14} />
+                  {t.journey.cancel.confirm}
+                </button>
+              </div>
+            </div>
+          ) : null}
+
+          <div className="mt-6">{children}</div>
+        </div>
       </div>
 
       <nav
@@ -218,6 +453,8 @@ export interface ScreenShellProps {
   readonly back?: { readonly href: string; readonly label: string } | null;
   /** Resserre la colonne : un écran de lecture, pas une grille. */
   readonly narrow?: boolean;
+  /** L'icône du titre, rendue comme celle des étapes. */
+  readonly icon?: IconName;
 }
 
 /** Le cadre des écrans hors parcours : accueil, GitHub, graphe, aperçu. */
@@ -228,6 +465,7 @@ export function ScreenShell({
   actions,
   back,
   narrow = false,
+  icon,
 }: ScreenShellProps): ReactElement {
   const t = useMessages();
   const target = back === undefined ? { href: '/', label: t.common.backHome } : back;
@@ -244,7 +482,7 @@ export function ScreenShell({
       {title === undefined ? null : (
         <header className={`pf-page-head pf-card-head${target === null ? '' : ' mt-3'}`}>
           <div className="min-w-0">
-            <h1 className="pf-display">{title}</h1>
+            <PageTitle icon={icon} title={title} />
             {description === undefined ? null : <p className="pf-subtitle mt-2">{description}</p>}
           </div>
           {actions === undefined ? null : <div className="pf-page-head-actions">{actions}</div>}
