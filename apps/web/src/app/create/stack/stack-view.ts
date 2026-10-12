@@ -1,4 +1,5 @@
 import type { Category } from '@buildit/registry';
+import type { Messages } from '../../../lib/i18n/messages';
 
 /**
  * La logique du Stack Builder (§5, §6.6), hors JSX.
@@ -45,72 +46,31 @@ export interface CategoryBlock {
 /** Le plafond du §5 : jamais plus de quatre propositions à la fois. */
 export const GUIDED_MAX = 4;
 
-/** Ce qu'on dit d'une option bloquée que le moteur n'a pas su expliquer. */
-const FALLBACK_REASON = 'Incompatible avec la sélection en cours.';
-
 /**
  * La raison affichée sous une option, ou `undefined` si elle est utilisable.
  *
  * Un blocage sans raison reste un blocage : l'écran ne montre jamais un bouton
- * grisé muet (§5, §12 — un refus dit pourquoi).
+ * grisé muet (§5, §12 — un refus dit pourquoi). `fallback` vient du dictionnaire
+ * de la langue courante : ce module ne connaît aucune phrase.
  */
-export function optionReason(option: StackOption): string | undefined {
+export function optionReason(option: StackOption, fallback: string): string | undefined {
   if (option.state !== 'blocked') {
     return undefined;
   }
   const reason = option.reason?.trim();
-  return reason === undefined || reason === '' ? FALLBACK_REASON : reason;
+  return reason === undefined || reason === '' ? fallback : reason;
 }
 
 /**
- * Les libellés français des catégories du §7.
+ * Le libellé d'une catégorie du §7, dans la langue courante.
  *
- * Table **complète** : ajouter une catégorie au registry casse la compilation
- * ici, et force à écrire son libellé — même logique que les cibles du §4 dans
- * `target/page.tsx`.
+ * La table vit au dictionnaire (`wizard.stack.categories`) et couvre les 37
+ * catégories du registry : `satisfies Record<Category, string>` y fait du
+ * libellé manquant une erreur de compilation — même garde-fou que les cibles
+ * du §4.
  */
-export const CATEGORY_LABELS: Readonly<Record<Category, string>> = {
-  frontend: 'Frontend',
-  language: 'Langage',
-  styling: 'Styles',
-  ui: 'Bibliothèque d’interface',
-  backend: 'Backend',
-  database: 'Base de données',
-  orm: 'ORM / ODM',
-  authentication: 'Authentification',
-  authorization: 'Autorisation',
-  state: 'État client',
-  'data-fetching': 'Récupération de données',
-  forms: 'Formulaires',
-  validation: 'Validation',
-  api: 'API',
-  build: 'Outils de build',
-  'package-manager': 'Gestionnaire de paquets',
-  monorepo: 'Monorepo',
-  testing: 'Tests',
-  linting: 'Lint',
-  formatting: 'Formatage',
-  'git-hooks': 'Crochets Git',
-  containers: 'Conteneurs',
-  'dev-environment': 'Environnement de développement',
-  'ci-cd': 'CI/CD',
-  hosting: 'Hébergement',
-  storage: 'Stockage',
-  cache: 'Cache',
-  queue: 'File d’attente',
-  search: 'Recherche',
-  email: 'E-mail',
-  payments: 'Paiements',
-  observability: 'Observabilité',
-  analytics: 'Analytique',
-  security: 'Sécurité',
-  ai: 'IA',
-  cms: 'CMS',
-  ecommerce: 'E-commerce',
-};
-
-export function categoryLabel(category: Category): string {
-  return CATEGORY_LABELS[category];
+export function categoryLabel(t: Messages, category: Category): string {
+  return t.wizard.stack.categories[category];
 }
 
 /** Minuscules, sans accents, sans espaces autour : la forme de comparaison. */

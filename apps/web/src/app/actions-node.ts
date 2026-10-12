@@ -3,6 +3,7 @@
 import { type CommandRunner, nodeCommandRunner } from '@buildit/exec';
 import { isHostedEnvironment } from '../lib/hosting';
 import {
+  type CloneDestinationMode,
   type ClonePlace,
   type ClonePreviewView,
   type CloneResultView,
@@ -159,6 +160,19 @@ export async function clonePreviewAction(
   parent?: unknown,
 ): Promise<ClonePreviewView> {
   return (await planClone(link, folder, clonePlace(parent))).view;
+}
+
+/**
+ * Le mode de destination que l'écran doit proposer — `parent` en local (un
+ * dossier absolu choisi dans l'explorateur), `root` en hébergé (un dossier
+ * relatif à la racine de travail).
+ *
+ * C'est le **serveur** qui tranche : un écran qui déciderait seul à partir
+ * d'une variable publique se tromperait dès qu'un hébergeur change de
+ * convention, et laisserait passer un chemin absolu venu du navigateur.
+ */
+export async function cloneDestinationModeAction(): Promise<CloneDestinationMode> {
+  return isHostedEnvironment() ? 'root' : 'parent';
 }
 
 /**

@@ -2,7 +2,15 @@
 
 import { Badge, Button, Field, StatusMessage } from '@buildit/ui';
 import type { ReactElement } from 'react';
+import { Card, CardHead } from '../../components/ui/card';
+import { IssueList } from '../../components/ui/empty-state';
+import { ErrorState } from '../../components/ui/error-state';
+import { Icon } from '../../components/ui/icon';
+import { LoadingLine } from '../../components/ui/loading';
+import { PathPicker } from '../../components/ui/path-picker';
 import { ScreenShell } from '../../components/wizard/shell';
+import type { Messages } from '../../lib/i18n/messages';
+import { useMessages } from '../../lib/i18n/provider';
 import type { AccessView, RepositoryStatusView, RoleView } from './sharing';
 
 /**
@@ -11,7 +19,22 @@ import type { AccessView, RepositoryStatusView, RoleView } from './sharing';
  * Règle structurante : **le partage n'existe que via un dépôt GitHub**. Sans
  * dépôt, le bouton « Partager le projet » est grisé et dit pourquoi ; c'est le
  * même refus que celui du serveur, pas une reformulation d'écran.
+ *
+ * Tous les textes viennent du dictionnaire. Ne restent affichés tels quels que
+ * ce qui n'est pas traduisible : le contenu du moteur (les refus), les
+ * identifiants GitHub (noms de dépôts, URLs, slugs de rôle) et le contenu du
+ * brouillon.
  */
+
+export interface SharePanelProps {
+  readonly link: string | null;
+  readonly note: string | null;
+  readonly busy: boolean;
+  /** Pourquoi le lien ne peut pas être créé — `null` quand le brouillon est prêt. */
+  readonly blocked: string | null;
+  readonly onCreate: () => void;
+  readonly onCopy: () => void;
+}
 
 export interface RepoViewProps {
   readonly directory: string;
@@ -31,20 +54,42 @@ export interface RepoViewProps {
   readonly onDescription: (value: string) => void;
   readonly busy: boolean;
   readonly message?: string | undefined;
+  /** Ce que fait l'opération en cours — un indicateur nomme toujours son travail. */
+  readonly pendingLabel?: string | null;
+  /** Le lien de configuration en lecture seule (§20), quand l'écran le propose. */
+  readonly share?: SharePanelProps | undefined;
   readonly onInspect: () => void;
   readonly onCreate: () => void;
   readonly onInvite: () => void;
   readonly onRemove: (login: string) => void;
 }
 
-/** Pourquoi « Partager le projet » est grisé — `undefined` quand il est actif. */
-export function shareBlocker(status: RepositoryStatusView | null): string | undefined {
-  if (status === null || !status.ok) {
-    return 'Lisez d’abord l’état du dépôt.';
+/** Les libellés de rôle du dictionnaire ; un slug inconnu garde celui du serveur. */
+function roleText(
+  values: Readonly<Record<string, string>>,
+  role: string,
+  fallback: string,
+): string {
+  return values[role] ?? fallback;
+}
+
+function visibilityLabel(visibility: RepositoryStatusView['visibility'], t: Messages): string {
+  switch (visibility) {
+    case 'private':
+      return t.repo.visibilityPrivate;
+    case 'public':
+      return t.repo.visibilityPublic;
+    default:
+      return t.repo.visibilityUnknown;
   }
-  return status.github
-    ? undefined
-    : 'Le partage passe par un dépôt GitHub : créez-le d’abord. Seul le lien de configuration en lecture seule restera possible (Phase 9).';
+}
+
+/** Pourquoi « Partager le projet » est grisé — `undefined` quand il est actif. */
+export function shareBlocker(status: RepositoryStatusView | null, t: Messages): string | undefined {
+  if (status === null || !status.ok) {
+    return t.repo.blockers.readFirst;
+  }
+  return status.github ? undefined : t.repo.blockers.shareNoRepo;
 }
 
 /** Pourquoi « Créer le dépôt » est grisé. */
@@ -52,17 +97,18 @@ export function createBlocker(
   status: RepositoryStatusView | null,
   name: string,
   busy: boolean,
+  t: Messages,
 ): string | undefined {
   if (busy) {
-    return 'Une opération est en cours.';
+    return t.repo.blockers.busy;
   }
   if (status === null || !status.ok) {
-    return 'Lisez d’abord l’état du dépôt.';
+    return t.repo.blockers.readFirst;
   }
   if (status.github) {
-    return 'Ce projet a déjà un dépôt GitHub.';
+    return t.repo.blockers.alreadyRepo;
   }
-  return name.trim() === '' ? 'Choisissez un nom de dépôt.' : undefined;
+  return name.trim() === '' ? t.repo.blockers.nameMissing : undefined;
 }
 
 /** Pourquoi « Partager le projet » (l'invitation) est grisé. */
@@ -70,29 +116,20 @@ export function inviteBlocker(
   status: RepositoryStatusView | null,
   username: string,
   busy: boolean,
+  t: Messages,
 ): string | undefined {
-  const share = shareBlocker(status);
+  const share = shareBlocker(status, t);
   if (share !== undefined) {
     return share;
   }
   if (busy) {
-    return 'Une opération est en cours.';
+    return t.repo.blockers.busy;
   }
-  return username.trim() === '' ? 'Indiquez un nom d’utilisateur GitHub.' : undefined;
-}
-
-function visibilityLabel(visibility: RepositoryStatusView['visibility']): string {
-  switch (visibility) {
-    case 'private':
-      return 'privé';
-    case 'public':
-      return 'public';
-    default:
-      return 'visibilité inconnue';
-  }
+  return username.trim() === '' ? t.repo.blockers.usernameMissing : undefined;
 }
 
 export function RepoView(props: RepoViewProps): ReactElement {
+  const t = useMessages();
   const {
     directory,
     status,
@@ -105,193 +142,222 @@ export function RepoView(props: RepoViewProps): ReactElement {
     description,
     busy,
     message,
+    pendingLabel,
+    share,
   } = props;
-  const share = shareBlocker(status);
-  const create = createBlocker(status, name, busy);
-  const invite = inviteBlocker(status, username, busy);
+  const shareBlockerReason = shareBlocker(status, t);
+  const create = createBlocker(status, name, busy, t);
+  const invite = inviteBlocker(status, username, busy, t);
   const selectedRole = roles.find((item) => item.role === role);
 
   return (
-    <ScreenShell
-      title="Dépôt & partage"
-      description="L’état du dépôt GitHub du projet, sa création si besoin, et les accès : les droits sont ceux de GitHub, BuildIt n’a pas de comptes."
-    >
+    <ScreenShell description={t.repo.description} title={t.repo.title}>
       {message === undefined || message === '' ? null : (
         <StatusMessage className="mb-3">{message}</StatusMessage>
       )}
+      {pendingLabel === undefined || pendingLabel === null ? null : (
+        <LoadingLine className="mb-3">{pendingLabel}</LoadingLine>
+      )}
 
-      <section className="pf-card pf-card-pad">
-        <Field id="pf-repo-directory" label="Dossier du projet">
-          <input
-            id="pf-repo-directory"
-            className="pf-input pf-mono"
-            autoComplete="off"
-            spellCheck={false}
-            placeholder="C:\projets\mon-projet"
-            value={directory}
-            onChange={(event) => props.onDirectory(event.target.value)}
-          />
-        </Field>
+      <Card>
+        <PathPicker
+          disabled={busy}
+          hint={t.repo.directoryHint}
+          id="pf-repo-directory"
+          kind="folder"
+          label={t.repo.directoryLabel}
+          onChange={props.onDirectory}
+          placeholder={t.repo.directoryPlaceholder}
+          value={directory}
+        />
         <Button className="mt-3" disabled={busy} onClick={props.onInspect} variant="primary">
-          Lire l’état du dépôt
+          <Icon name="search" />
+          {t.repo.inspect}
         </Button>
-      </section>
+      </Card>
 
-      {status === null ? null : (
-        <section className="pf-card pf-card-pad mt-3">
-          <p className="pf-eyebrow">Dépôt</p>
-          {status.issues.map((issue) => (
-            <StatusMessage key={issue} tone="error" className="mt-1">
-              {issue}
-            </StatusMessage>
-          ))}
-
-          {status.ok && status.github ? (
+      {status === null ? null : !status.ok ? (
+        <ErrorState
+          actions={
             <>
-              <p className="mt-1">
-                <a href={status.url} target="_blank" rel="noreferrer">
+              <Button disabled={busy} onClick={props.onInspect} variant="primary">
+                <Icon name="refresh" />
+                {t.common.retry}
+              </Button>
+              <a className="pf-btn" href="/">
+                <Icon name="home" />
+                {t.common.backHome}
+              </a>
+            </>
+          }
+          body={t.repo.readFailedBody}
+          className="mt-3"
+          issues={status.issues}
+          title={t.repo.readFailedTitle}
+        />
+      ) : (
+        <Card className="mt-3">
+          <p className="pf-eyebrow flex items-center gap-2">
+            <Icon name="gitBranch" size={14} />
+            {t.repo.repositoryEyebrow}
+          </p>
+
+          {status.github ? (
+            <>
+              <p className="pf-title-sm mt-1 flex flex-wrap items-center gap-2">
+                <a href={status.url} rel="noreferrer" target="_blank">
                   {status.url}
                 </a>
-                <Badge className="ml-2">{visibilityLabel(status.visibility)}</Badge>
+                <Badge className="ml-2">{visibilityLabel(status.visibility, t)}</Badge>
               </p>
               <StatusMessage className="mt-1">
-                Dépôt local : {status.origin}. Le lien est copiable et le dépôt est{' '}
-                {status.visibility === 'private' ? 'privé' : 'accessible'}.
+                {t.repo.localRepo(status.origin ?? '', visibilityLabel(status.visibility, t))}
               </StatusMessage>
             </>
-          ) : null}
-
-          {status.ok && !status.github ? (
+          ) : (
             <>
               <StatusMessage className="mt-1">
-                {status.isRepository
-                  ? 'Ce dépôt Git n’a pas d’origine GitHub : le partage passe par GitHub.'
-                  : 'Ce projet n’est pas encore un dépôt Git : le premier commit sera créé avant la création du dépôt.'}
+                {status.isRepository ? t.repo.noOrigin : t.repo.notRepository}
               </StatusMessage>
-              <Field id="pf-repo-name" label="Nom du dépôt" labelClassName="mt-4">
+
+              <Field id="pf-repo-name" label={t.repo.nameLabel} labelClassName="mt-4">
                 <input
-                  id="pf-repo-name"
-                  className="pf-input pf-mono"
                   autoComplete="off"
-                  spellCheck={false}
-                  placeholder={status.proposedName}
-                  value={name}
+                  className="pf-input pf-mono"
+                  id="pf-repo-name"
                   onChange={(event) => props.onName(event.target.value)}
+                  placeholder={status.proposedName}
+                  spellCheck={false}
+                  value={name}
                 />
               </Field>
 
               <fieldset className="mt-4">
-                <legend className="pf-label">Visibilité</legend>
+                <legend className="pf-label">{t.repo.visibilityLegend}</legend>
                 <div className="pf-grid">
                   <button
-                    type="button"
-                    className="pf-choice"
                     aria-pressed={isPrivate}
+                    className="pf-choice"
                     onClick={() => props.onIsPrivate(true)}
+                    type="button"
                   >
-                    <span className="pf-choice-name">Privé</span>
-                    <span className="pf-choice-note">
-                      Recommandé : seuls les collaborateurs invités y accèdent.
+                    <span className="pf-choice-name">
+                      <Icon name="lock" size={14} />
+                      {t.repo.privateChoice}
                     </span>
+                    <span className="pf-choice-note">{t.repo.privateNote}</span>
                   </button>
                   <button
-                    type="button"
-                    className="pf-choice"
                     aria-pressed={!isPrivate}
+                    className="pf-choice"
                     onClick={() => props.onIsPrivate(false)}
+                    type="button"
                   >
-                    <span className="pf-choice-name">Public</span>
-                    <span className="pf-choice-note">Visible par tout le monde sur GitHub.</span>
+                    <span className="pf-choice-name">
+                      <Icon name="globe" size={14} />
+                      {t.repo.publicChoice}
+                    </span>
+                    <span className="pf-choice-note">{t.repo.publicNote}</span>
                   </button>
                 </div>
               </fieldset>
 
-              <Field
-                id="pf-repo-description"
-                label="Description (facultative)"
-                labelClassName="mt-4"
-              >
+              <Field id="pf-repo-description" label={t.repo.descriptionLabel} labelClassName="mt-4">
                 <input
-                  id="pf-repo-description"
-                  className="pf-input"
                   autoComplete="off"
-                  value={description}
+                  className="pf-input"
+                  id="pf-repo-description"
                   onChange={(event) => props.onDescription(event.target.value)}
+                  value={description}
                 />
               </Field>
 
-              <div className="mt-3 flex items-center gap-3">
+              <div className="mt-3 flex flex-wrap items-center gap-3">
                 <Button disabled={create !== undefined} onClick={props.onCreate} variant="primary">
-                  Créer le dépôt et pousser le code
+                  <Icon name="gitBranch" />
+                  {t.repo.createRepo}
                 </Button>
                 {create === undefined ? null : <StatusMessage>{create}</StatusMessage>}
               </div>
             </>
-          ) : null}
-        </section>
+          )}
+        </Card>
       )}
 
-      <section className="pf-card pf-card-pad mt-3">
-        <p className="pf-eyebrow">Partager le projet</p>
-        {share === undefined ? null : (
-          <div className="mt-2 flex items-center gap-3">
+      <Card className="mt-3">
+        <p className="pf-eyebrow flex items-center gap-2">
+          <Icon name="users" size={14} />
+          {t.repo.shareSection}
+        </p>
+
+        {shareBlockerReason === undefined ? null : (
+          <div className="mt-2 flex flex-wrap items-center gap-3">
             <Button disabled variant="primary">
-              Partager le projet
+              <Icon name="users" />
+              {t.repo.shareProject}
             </Button>
-            <StatusMessage>{share}</StatusMessage>
+            <StatusMessage>{shareBlockerReason}</StatusMessage>
           </div>
         )}
 
-        {share === undefined ? (
+        {shareBlockerReason === undefined ? (
           <>
             <div className="mt-2 flex flex-wrap items-end gap-3">
               <span>
-                <Field id="pf-repo-username" label="Nom d’utilisateur GitHub">
+                <Field id="pf-repo-username" label={t.repo.usernameLabel}>
                   <input
-                    id="pf-repo-username"
-                    className="pf-input"
                     autoComplete="off"
-                    spellCheck={false}
-                    placeholder="octocat"
-                    value={username}
+                    className="pf-input"
+                    id="pf-repo-username"
                     onChange={(event) => props.onUsername(event.target.value)}
+                    placeholder={t.repo.usernamePlaceholder}
+                    spellCheck={false}
+                    value={username}
                   />
                 </Field>
               </span>
               <span>
-                <Field id="pf-repo-role" label="Rôle">
+                <Field id="pf-repo-role" label={t.repo.roleLabel}>
                   <select
-                    id="pf-repo-role"
                     className="pf-input"
-                    value={role}
+                    disabled={roles.length === 0}
+                    id="pf-repo-role"
                     onChange={(event) => props.onRole(event.target.value)}
+                    value={role}
                   >
-                    {roles.map((item) => (
-                      <option key={item.role} value={item.role}>
-                        {item.label} ({item.role})
-                      </option>
-                    ))}
+                    {roles.length === 0 ? (
+                      <option value={role}>{t.repo.rolesLoading}</option>
+                    ) : (
+                      roles.map((item) => (
+                        <option key={item.role} value={item.role}>
+                          {roleText(t.repo.roleNames, item.role, item.label)} ({item.role})
+                        </option>
+                      ))
+                    )}
                   </select>
                 </Field>
               </span>
               <Button disabled={invite !== undefined} onClick={props.onInvite} variant="primary">
-                Partager le projet
+                <Icon name="users" />
+                {t.repo.shareProject}
               </Button>
               {invite === undefined ? null : <StatusMessage>{invite}</StatusMessage>}
             </div>
             {selectedRole === undefined ? null : (
-              <StatusMessage className="mt-2">{selectedRole.note}</StatusMessage>
+              <StatusMessage className="mt-2">
+                {roleText(t.repo.roleNotes, selectedRole.role, selectedRole.note)}
+              </StatusMessage>
             )}
 
             {access === null ? null : (
               <div className="mt-4">
-                <p className="pf-label">Collaborateurs</p>
+                <p className="pf-label">{t.repo.collaborators}</p>
                 {access.collaborators.length === 0 ? (
-                  <StatusMessage>Personne d’autre n’a accès à ce dépôt.</StatusMessage>
+                  <StatusMessage>{t.repo.noCollaborators}</StatusMessage>
                 ) : (
-                  <ul className="mt-1">
+                  <ul className="pf-rows mt-1">
                     {access.collaborators.map((person) => (
-                      <li key={person.login} className="flex items-center gap-3">
+                      <li className="pf-row-item flex-wrap" key={person.login}>
                         <span className="pf-mono">{person.login}</span>
                         <Badge>{person.role}</Badge>
                         <Button
@@ -299,7 +365,8 @@ export function RepoView(props: RepoViewProps): ReactElement {
                           onClick={() => props.onRemove(person.login)}
                           variant="ghost"
                         >
-                          Retirer
+                          <Icon name="trash" size={14} />
+                          {t.repo.remove}
                         </Button>
                       </li>
                     ))}
@@ -308,10 +375,10 @@ export function RepoView(props: RepoViewProps): ReactElement {
 
                 {access.invitations.length === 0 ? null : (
                   <>
-                    <p className="pf-label mt-4">Invitations en attente</p>
-                    <ul className="mt-1">
+                    <p className="pf-label mt-4">{t.repo.invitations}</p>
+                    <ul className="pf-rows mt-1">
                       {access.invitations.map((person) => (
-                        <li key={person.login} className="flex items-center gap-3">
+                        <li className="pf-row-item flex-wrap" key={person.login}>
                           <span className="pf-mono">{person.login}</span>
                           <Badge>{person.role}</Badge>
                           <Button
@@ -319,7 +386,8 @@ export function RepoView(props: RepoViewProps): ReactElement {
                             onClick={() => props.onRemove(person.login)}
                             variant="ghost"
                           >
-                            Annuler
+                            <Icon name="close" size={14} />
+                            {t.repo.cancelInvite}
                           </Button>
                         </li>
                       ))}
@@ -327,16 +395,67 @@ export function RepoView(props: RepoViewProps): ReactElement {
                   </>
                 )}
 
-                {access.issues.map((issue) => (
-                  <StatusMessage key={issue} className="mt-2">
-                    {issue}
-                  </StatusMessage>
-                ))}
+                <IssueList className="mt-2" issues={access.issues} title={t.repo.issuesTitle} />
               </div>
             )}
           </>
         ) : null}
-      </section>
+      </Card>
+
+      {share === undefined ? null : (
+        <Card className="mt-3">
+          <CardHead icon="link" note={t.repo.shareLinkNote} title={t.repo.shareLinkTitle} />
+          {share.blocked === null ? null : (
+            <>
+              <StatusMessage className="mt-2" tone="error">
+                {share.blocked}
+              </StatusMessage>
+              <div className="mt-2">
+                <a className="pf-btn" href="/create/blueprint">
+                  <Icon name="arrowRight" />
+                  {t.repo.shareLinkResume}
+                </a>
+              </div>
+            </>
+          )}
+          <div className="mt-3 flex flex-wrap items-center gap-2">
+            <Button
+              disabled={share.busy || share.blocked !== null}
+              onClick={share.onCreate}
+              variant="primary"
+            >
+              <Icon name="link" />
+              {t.repo.shareLinkCreate}
+            </Button>
+            {share.link === null ? null : (
+              <Button disabled={share.busy} onClick={share.onCopy}>
+                <Icon name="copy" />
+                {t.repo.shareLinkCopy}
+              </Button>
+            )}
+          </div>
+          {share.busy ? (
+            <LoadingLine className="mt-2">{t.repo.shareLinkCreating}</LoadingLine>
+          ) : null}
+          {share.link === null ? null : (
+            <div className="mt-3">
+              <label className="pf-label" htmlFor="pf-repo-share-link">
+                {t.repo.shareLinkLabel}
+              </label>
+              <input
+                className="pf-input pf-mono"
+                id="pf-repo-share-link"
+                onFocus={(event) => event.currentTarget.select()}
+                readOnly
+                value={share.link}
+              />
+              {share.note === null ? null : (
+                <StatusMessage className="mt-1">{share.note}</StatusMessage>
+              )}
+            </div>
+          )}
+        </Card>
+      )}
     </ScreenShell>
   );
 }

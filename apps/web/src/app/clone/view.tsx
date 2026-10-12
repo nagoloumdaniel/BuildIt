@@ -1,53 +1,110 @@
 'use client';
 
 import type { ReactElement } from 'react';
+import { IssueList, NoteList } from '../../components/ui/empty-state';
+import { ErrorState } from '../../components/ui/error-state';
+import { Icon } from '../../components/ui/icon';
+import { LoadingLine, ProgressPanel } from '../../components/ui/loading';
+import { PathPicker } from '../../components/ui/path-picker';
 import { ScreenShell } from '../../components/wizard/shell';
+import type { Messages } from '../../lib/i18n/messages';
+import { useMessages } from '../../lib/i18n/provider';
 import type { RepositoryView } from '../github/repositories';
-import type { ClonePreviewView, CloneResultView } from './clone';
+import type { CloneStreamFailure } from './client';
+import type { CloneDestinationMode, ClonePreviewView, CloneResultView } from './clone';
+import type { ClonePhase, CloneProgress } from './progress';
 
 /**
  * La vue de l'écran 22 — Clone Project (§6.22, §18bis).
  *
- * Deux onglets : *Mes dépôts* (le compte connecté) et *Depuis un lien*. Le
- * dossier de destination est relatif à la racine de travail du serveur — un
- * chemin absolu n'est pas accepté — et un clone n'écrase jamais rien : le
- * bloquant est vérifié avant, puis revérifié par `packages/git`.
+ * Deux onglets : *Mes dépôts* (le compte connecté) et *Depuis un lien*.
+ *
+ * La destination n'est plus un dossier « relatif à une racine de travail » que
+ * personne ne voyait : en **local**, l'écran fait choisir un dossier parent
+ * **absolu** dans l'explorateur de la machine, affiche le chemin complet qui
+ * sera écrit, et laisse éditer le seul nom du sous-dossier. En **hébergé**, le
+ * repli relatif reste la règle — un chemin absolu venu du navigateur y serait
+ * une écriture de fichier arbitraire sur le serveur — et l'écran le dit.
+ *
+ * L'avancement affiché est celui de git, poussé par `POST /api/clone`. La phase
+ * ne recule jamais ; le détail brut est en chasse fixe ; et parce que le suivi
+ * peut s'arrêter (annulation, liaison perdue, serveur muet), aucune barre ne
+ * tourne sans fin.
  */
 
 export type CloneTab = 'mine' | 'link';
 
+/** Où en est l'écran : c'est ce qui décide du bouton, de la barre et des avis. */
+export type CloneRunStatus =
+  | 'idle'
+  | 'checking'
+  | 'cloning'
+  | 'done'
+  | 'cancelled'
+  | 'failed'
+  /** Le serveur n'a pas répondu à la vérification — rien n'a été cloné. */
+  | 'unavailable';
+
+/** Le dictionnaire de la section clone — passé aux fonctions pures, testables. */
+export type CloneMessages = Messages['clone'];
+
 export interface CloneViewProps {
   readonly tab: CloneTab;
   readonly onTab: (tab: CloneTab) => void;
+  readonly destinationMode: CloneDestinationMode;
+  /** La racine de travail du serveur — le repli de l'hébergé. */
   readonly root: string;
   readonly connected: boolean;
   readonly repositories: readonly RepositoryView[];
+  readonly repositoriesLoading: boolean;
   readonly repositoryIssues: readonly string[];
   readonly query: string;
   readonly onQuery: (value: string) => void;
   readonly link: string;
   readonly onLink: (value: string) => void;
+  /** Le nom du sous-dossier (local) ou le dossier relatif (hébergé). */
   readonly folder: string;
   readonly onFolder: (value: string) => void;
+  /** Le dossier parent absolu choisi dans l'explorateur — vide en hébergé. */
+  readonly parent: string;
+  readonly onParent: (value: string) => void;
   readonly install: boolean;
   readonly onInstall: (value: boolean) => void;
   readonly ignoreScripts: boolean;
   readonly onIgnoreScripts: (value: boolean) => void;
   readonly preview: ClonePreviewView | null;
   readonly result: CloneResultView | null;
-  readonly busy: boolean;
+  readonly status: CloneRunStatus;
+  readonly progress: CloneProgress | null;
+  readonly failure: CloneStreamFailure | null;
   readonly onPreview: () => void;
   readonly onClone: () => void;
+  readonly onCancel: () => void;
   readonly onPick: (repository: RepositoryView) => void;
 }
 
+export interface CloneBlockerState {
+  readonly busy: boolean;
+  readonly destinationMode: CloneDestinationMode;
+  readonly parent: string;
+}
+
 /** Ce qui reste bloquant juste avant de cloner — `undefined` quand on peut y aller. */
-export function cloneBlocker(preview: ClonePreviewView | null, busy: boolean): string | undefined {
-  if (busy) {
-    return 'Une opération est en cours.';
+export function cloneBlocker(
+  preview: ClonePreviewView | null,
+  state: CloneBlockerState,
+  t: CloneMessages,
+): string | undefined {
+  if (state.busy) {
+    return t.blockerBusy;
+  }
+  // En local, le parent est un chemin choisi : sans lui, il n'y a pas de
+  // destination à vérifier, et le dire vaut mieux que « vérifiez d'abord ».
+  if (state.destinationMode === 'parent' && state.parent.trim() === '') {
+    return t.blockerNoParent;
   }
   if (preview === null) {
-    return 'Vérifiez d’abord le lien et le dossier de destination.';
+    return t.blockerNoPreview;
   }
   return preview.ok ? undefined : preview.issues.join(' ');
 }
@@ -69,86 +126,151 @@ export function matchingRepositories(
 }
 
 /** L'état de la destination, en une phrase. */
-export function destinationLabel(destination: ClonePreviewView['destination']): string {
+export function destinationLabel(
+  destination: ClonePreviewView['destination'],
+  t: CloneMessages,
+): string {
   switch (destination) {
     case 'free':
-      return 'absent — le clone le créera.';
+      return t.folderFree;
     case 'empty':
-      return 'existant et vide.';
+      return t.folderEmpty;
     case 'taken':
-      return 'existant et non vide : refusé.';
+      return t.folderTaken;
     default:
-      return 'inconnu.';
+      return t.folderUnknown;
   }
 }
 
+/** La phase en clair — celle que l'écran affiche, jamais son identifiant. */
+export function phaseLabel(phase: ClonePhase, t: CloneMessages): string {
+  switch (phase) {
+    case 'starting':
+      return t.phaseStarting;
+    case 'counting':
+      return t.phaseCounting;
+    case 'compressing':
+      return t.phaseCompressing;
+    case 'receiving':
+      return t.phaseReceiving;
+    case 'resolving':
+      return t.phaseResolving;
+    case 'checkout':
+      return t.phaseCheckout;
+    case 'installing':
+      return t.phaseInstalling;
+    default:
+      return t.phaseDone;
+  }
+}
+
+/**
+ * Le chemin complet tel qu'il sera écrit, composé pour l'affichage.
+ *
+ * Le serveur reste seul juge (c'est `preview.directory` qui fait foi) : ceci
+ * n'est qu'une aide avant la vérification, avec le séparateur du parent déjà
+ * choisi.
+ */
+export function composedDirectory(parent: string, folder: string): string {
+  const base = parent.trim().replace(/[\\/]+$/, '');
+  if (base === '') {
+    return '';
+  }
+  const name = folder.trim();
+  if (name === '') {
+    return base;
+  }
+  return `${base}${base.includes('\\') ? '\\' : '/'}${name}`;
+}
+
+/** La phrase qui raconte pourquoi le suivi s'est arrêté. */
+export function failureMessage(failure: CloneStreamFailure, t: CloneMessages): string {
+  switch (failure.reason) {
+    case 'timeout':
+      return t.streamTimeout(failure.seconds);
+    case 'network':
+      return t.streamNetwork;
+    case 'http':
+      return t.streamHttp(failure.status);
+    case 'malformed':
+      return t.streamMalformed;
+    default:
+      return t.streamIncomplete;
+  }
+}
+
+/** Les refus bruts du moteur, affichés tels quels sous le message traduit. */
+function Refusals({ issues }: { readonly issues: readonly string[] }): ReactElement | null {
+  return <IssueList className="mt-2" issues={issues} />;
+}
+
 export function CloneView(props: CloneViewProps): ReactElement {
-  const {
-    tab,
-    root,
-    connected,
-    repositories,
-    repositoryIssues,
-    query,
-    link,
-    folder,
-    install,
-    ignoreScripts,
-    preview,
-    result,
-    busy,
-  } = props;
-  const blocker = cloneBlocker(preview, busy);
-  const visible = matchingRepositories(repositories, query);
+  const t = useMessages();
+  const c = t.clone;
+  const { preview, result, status, progress, destinationMode } = props;
+  const busy = status === 'checking' || status === 'cloning';
+  const cloning = status === 'cloning';
+  const blocker = cloneBlocker(preview, { busy, destinationMode, parent: props.parent }, c);
+  const visible = matchingRepositories(props.repositories, props.query);
+  const linkRefusal = preview !== null && preview.problem === 'link' ? preview : null;
+  const parentRefusal = preview !== null && preview.problem === 'parent' ? preview : null;
+  // Un parent vide n'est pas « pas accessible » : rien n'a encore été choisi.
+  // L'encart de faute ne s'affiche que pour un dossier réellement refusé.
+  const unreachableParent =
+    parentRefusal !== null && props.parent.trim() !== '' ? parentRefusal : null;
+  const shownDirectory =
+    preview !== null && preview.directory !== ''
+      ? preview.directory
+      : composedDirectory(props.parent, props.folder);
+  const refusal =
+    status === 'failed' && props.failure !== null ? failureMessage(props.failure, c) : null;
 
   return (
-    <ScreenShell
-      title="Cloner un projet"
-      description="Clonez un de vos dépôts GitHub ou n’importe quel lien Git. Le dossier de destination doit être absent ou vide : un clone n’écrase rien."
-    >
-      <div
-        className="flex flex-wrap items-center gap-2"
-        role="tablist"
-        aria-label="Source du dépôt"
-      >
+    <ScreenShell title={c.title} description={c.description}>
+      <div className="pf-tabs" role="tablist" aria-label={c.sourceLabel}>
         <button
           type="button"
           role="tab"
-          className={tab === 'mine' ? 'pf-btn pf-btn-primary' : 'pf-btn'}
-          aria-selected={tab === 'mine'}
+          className="pf-tab"
+          aria-selected={props.tab === 'mine'}
           onClick={() => props.onTab('mine')}
         >
-          Mes dépôts
+          <Icon name="list" size={14} />
+          {c.tabMine}
         </button>
         <button
           type="button"
           role="tab"
-          className={tab === 'link' ? 'pf-btn pf-btn-primary' : 'pf-btn'}
-          aria-selected={tab === 'link'}
+          className="pf-tab"
+          aria-selected={props.tab === 'link'}
           onClick={() => props.onTab('link')}
         >
-          Depuis un lien
+          <Icon name="link" size={14} />
+          {c.tabLink}
         </button>
       </div>
 
-      {tab === 'mine' ? (
+      {props.tab === 'mine' ? (
         <section className="pf-card pf-card-pad mt-3">
-          {connected ? (
+          {props.repositoriesLoading ? (
+            <LoadingLine className="mb-3">{c.loadingRepositories}</LoadingLine>
+          ) : null}
+          {props.connected ? (
             <>
               <label className="pf-label" htmlFor="pf-clone-search">
-                Rechercher un dépôt
+                {c.searchLabel}
               </label>
               <input
                 id="pf-clone-search"
                 className="pf-input"
                 autoComplete="off"
                 spellCheck={false}
-                placeholder="nom ou description"
-                value={query}
+                placeholder={c.searchPlaceholder}
+                value={props.query}
                 onChange={(event) => props.onQuery(event.target.value)}
               />
               {visible.length === 0 ? (
-                <p className="pf-hint mt-3">Aucun dépôt ne correspond à « {query} ».</p>
+                <p className="pf-hint mt-3">{c.noMatch(props.query)}</p>
               ) : (
                 <div className="pf-grid mt-3">
                   {visible.map((repository) => (
@@ -159,15 +281,14 @@ export function CloneView(props: CloneViewProps): ReactElement {
                       onClick={() => props.onPick(repository)}
                     >
                       <span className="pf-choice-name">
+                        <Icon name={repository.private ? 'lock' : 'gitBranch'} size={14} />
                         {repository.fullName}
                         <span className="pf-badge ml-2">
-                          {repository.private ? 'privé' : 'public'}
+                          {repository.private ? c.private : c.public}
                         </span>
                       </span>
                       <span className="pf-choice-note">
-                        {repository.description === ''
-                          ? 'Choisir ce dépôt'
-                          : repository.description}
+                        {repository.description === '' ? c.pickRepository : repository.description}
                       </span>
                     </button>
                   ))}
@@ -176,17 +297,11 @@ export function CloneView(props: CloneViewProps): ReactElement {
             </>
           ) : (
             <>
-              <p className="pf-hint">
-                Connectez-vous à GitHub pour retrouver vos dépôts. Un dépôt public se clone aussi
-                par son lien, sans connexion.
-              </p>
-              {repositoryIssues.map((issue) => (
-                <p key={issue} className="pf-hint mt-2">
-                  {issue}
-                </p>
-              ))}
+              <p className="pf-hint">{c.notConnected}</p>
+              <Refusals issues={props.repositoryIssues} />
               <a className="pf-btn pf-btn-primary mt-3" href="/github">
-                Connecter un compte GitHub
+                <Icon name="github" />
+                {c.connect}
               </a>
             </>
           )}
@@ -194,70 +309,117 @@ export function CloneView(props: CloneViewProps): ReactElement {
       ) : (
         <section className="pf-card pf-card-pad mt-3">
           <label className="pf-label" htmlFor="pf-clone-link">
-            Lien du dépôt
+            {c.linkLabel}
           </label>
           <input
             id="pf-clone-link"
             className="pf-input pf-mono"
             autoComplete="off"
             spellCheck={false}
-            placeholder="https://github.com/propriétaire/dépôt, git@…, propriétaire/dépôt"
-            value={link}
+            placeholder={c.linkPlaceholder}
+            value={props.link}
             onChange={(event) => props.onLink(event.target.value)}
           />
+          {linkRefusal === null ? null : <Refusals issues={linkRefusal.issues} />}
 
-          <label className="pf-label mt-4" htmlFor="pf-clone-folder">
-            Dossier de destination
-          </label>
-          <input
-            id="pf-clone-folder"
-            className="pf-input pf-mono"
-            autoComplete="off"
-            spellCheck={false}
-            placeholder="mon-projet"
-            value={folder}
-            onChange={(event) => props.onFolder(event.target.value)}
-          />
-          <p className="pf-hint mt-1">
-            Relatif à la racine de travail : <span className="pf-mono">{root}</span>. Laissé vide,
-            le nom du dépôt est utilisé. Le dossier doit être absent ou vide.
-          </p>
+          {destinationMode === 'parent' ? (
+            <>
+              {unreachableParent === null ? (
+                <div className="mt-4">
+                  <PathPicker
+                    id="pf-clone-parent"
+                    label={c.parentLabel}
+                    buttonLabel={c.pickParent}
+                    hint={c.destinationHint}
+                    kind="folder"
+                    value={props.parent}
+                    onChange={props.onParent}
+                  />
+                </div>
+              ) : null}
+
+              <label className="pf-label mt-4" htmlFor="pf-clone-folder">
+                {c.folderNameLabel}
+              </label>
+              <input
+                id="pf-clone-folder"
+                className="pf-input pf-mono"
+                autoComplete="off"
+                spellCheck={false}
+                placeholder={c.folderNamePlaceholder}
+                value={props.folder}
+                onChange={(event) => props.onFolder(event.target.value)}
+              />
+              <p className="pf-hint mt-1">{c.folderNameHint}</p>
+
+              <p className="pf-label mt-4">{c.fullPath}</p>
+              {shownDirectory === '' ? (
+                <p className="pf-hint mt-1">{c.fullPathUnknown}</p>
+              ) : (
+                <p
+                  className="pf-code mt-1"
+                  style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-all' }}
+                >
+                  {shownDirectory}
+                </p>
+              )}
+            </>
+          ) : (
+            <>
+              <label className="pf-label mt-4" htmlFor="pf-clone-folder">
+                {c.destinationLabel}
+              </label>
+              <input
+                id="pf-clone-folder"
+                className="pf-input pf-mono"
+                autoComplete="off"
+                spellCheck={false}
+                placeholder={c.folderNamePlaceholder}
+                value={props.folder}
+                onChange={(event) => props.onFolder(event.target.value)}
+              />
+              <p className="pf-callout pf-callout-steel mt-2">{c.hostedFallback(props.root)}</p>
+            </>
+          )}
 
           <fieldset className="mt-4">
-            <legend className="pf-label">Après le clone</legend>
+            <legend className="pf-label">{c.afterClone}</legend>
             <label className="pf-hint flex items-center gap-2" htmlFor="pf-clone-install">
               <input
                 id="pf-clone-install"
                 type="checkbox"
-                checked={install}
+                checked={props.install}
                 onChange={(event) => props.onInstall(event.target.checked)}
               />
-              Installer les dépendances
+              {c.installAfter}
             </label>
-            {install ? (
+            {props.install ? (
               <label className="pf-hint mt-2 flex items-center gap-2" htmlFor="pf-clone-ignore">
                 <input
                   id="pf-clone-ignore"
                   type="checkbox"
-                  checked={ignoreScripts}
+                  checked={props.ignoreScripts}
                   onChange={(event) => props.onIgnoreScripts(event.target.checked)}
                 />
-                Installer sans exécuter les scripts du projet (recommandé)
+                {c.ignoreScripts}
               </label>
             ) : null}
-            <p className="pf-hint mt-2">
-              Un dépôt cloné n’est pas du code de confiance : ses scripts d’installation s’exécutent
-              sur cette machine. La commande exacte est affichée avant d’être lancée.
-            </p>
+            <p className="pf-callout mt-2">{c.untrusted}</p>
           </fieldset>
         </section>
       )}
 
-      {tab === 'link' ? (
+      {props.tab === 'link' ? (
         <section className="mt-3">
-          <div className="flex items-center gap-3">
-            <button type="button" className="pf-btn" disabled={busy} onClick={props.onPreview}>
-              Vérifier le lien et le dossier
+          <div className="flex flex-wrap items-center gap-2">
+            <button
+              type="button"
+              className="pf-btn"
+              disabled={busy || (destinationMode === 'parent' && props.parent.trim() === '')}
+              onClick={props.onPreview}
+            >
+              <Icon name="search" />
+              {status === 'checking' ? c.checking : c.check}
             </button>
             <button
               type="button"
@@ -265,69 +427,157 @@ export function CloneView(props: CloneViewProps): ReactElement {
               disabled={blocker !== undefined}
               onClick={props.onClone}
             >
-              Cloner
+              <Icon name="download" />
+              {c.clone}
             </button>
+            {cloning ? (
+              <button type="button" className="pf-btn pf-btn-ghost" onClick={props.onCancel}>
+                <Icon name="close" />
+                {t.common.cancel}
+              </button>
+            ) : null}
             {blocker === undefined ? null : (
-              <span className="pf-error" role="status">
+              <span className="pf-error flex items-center gap-1.5" role="status">
+                <Icon name="warning" size={14} />
                 {blocker}
               </span>
             )}
           </div>
 
-          {preview === null ? null : (
-            <div className="pf-card pf-card-pad mt-3">
-              <p className="pf-eyebrow">Destination</p>
-              <p className="mt-1">
-                <span className="pf-mono">
-                  {preview.directory === '' ? '—' : preview.directory}
-                </span>
+          {unreachableParent === null ? null : (
+            <ErrorState
+              className="mt-3"
+              illustration="lost"
+              title={c.destinationUnavailable}
+              body={c.destinationUnavailableBody}
+              issues={unreachableParent.issues}
+              actions={
+                <PathPicker
+                  id="pf-clone-parent-retry"
+                  label={c.parentLabel}
+                  buttonLabel={c.pickOtherFolder}
+                  kind="folder"
+                  value={props.parent}
+                  onChange={props.onParent}
+                />
+              }
+            />
+          )}
+
+          {cloning ? (
+            <ProgressPanel
+              className="mt-3"
+              title={c.cloning}
+              phase={progress === null ? c.phaseStarting : phaseLabel(progress.phase, c)}
+              value={progress?.percent}
+              detail={progress?.detail}
+            />
+          ) : null}
+
+          {!cloning && progress !== null ? (
+            <section className="pf-card pf-card-pad mt-3">
+              <p className="pf-eyebrow">{c.reachedPhase}</p>
+              <p className="pf-title-sm mt-1 flex items-center gap-2">
+                <Icon name={progress.phase === 'done' ? 'check' : 'clock'} size={16} />
+                {phaseLabel(progress.phase, c)}
+                <span className="pf-mono">{progress.percent} %</span>
+              </p>
+              {progress.detail === undefined ? null : (
+                <>
+                  <p className="pf-eyebrow mt-3">{c.gitDetail}</p>
+                  <p
+                    className="pf-code mt-1"
+                    style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-all' }}
+                  >
+                    {progress.detail}
+                  </p>
+                </>
+              )}
+            </section>
+          ) : null}
+
+          {status === 'cancelled' ? (
+            <section className="pf-card pf-card-pad mt-3" role="status">
+              <p className="pf-title-sm flex items-center gap-2">
+                <Icon name="warning" size={16} />
+                {c.cancelledTitle}
+              </p>
+              <NoteList className="mt-2" notes={[c.cancelledBody]} />
+            </section>
+          ) : null}
+
+          {refusal === null ? null : (
+            <ErrorState
+              className="mt-3"
+              title={c.streamFailedTitle}
+              body={refusal}
+              illustration="lost"
+            />
+          )}
+
+          {status === 'unavailable' ? (
+            <ErrorState
+              className="mt-3"
+              title={c.checkFailedTitle}
+              body={c.checkFailedBody}
+              illustration="lost"
+            />
+          ) : null}
+
+          {preview === null || linkRefusal !== null || parentRefusal !== null ? null : (
+            <section className="pf-card pf-card-pad mt-3">
+              <p className="pf-eyebrow">{c.destination}</p>
+              <p
+                className="pf-mono mt-1"
+                style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-all' }}
+              >
+                {preview.directory === '' ? '—' : preview.directory}
               </p>
               {preview.label === '' ? null : (
                 <p className="pf-hint mt-1">
-                  Dépôt : <span className="pf-mono">{preview.label}</span> ({preview.protocol}://
-                  {preview.host})
+                  {c.repository} : <span className="pf-mono">{preview.label}</span> (
+                  {preview.protocol}://{preview.host})
                 </p>
               )}
-              <p className="pf-hint mt-1">Dossier : {destinationLabel(preview.destination)}</p>
-              {preview.issues.map((issue) => (
-                <p key={issue} className="pf-error mt-2">
-                  {issue}
-                </p>
-              ))}
-            </div>
+              <p className="pf-hint mt-1">
+                {c.folder} : {destinationLabel(preview.destination, c)}
+              </p>
+              <Refusals issues={preview.issues} />
+            </section>
           )}
 
           {result === null ? null : (
-            <div className="pf-card pf-card-pad mt-3">
-              <p className="pf-eyebrow">Résultat</p>
+            <section className="pf-card pf-card-pad mt-3">
+              <p className="pf-eyebrow">{c.result}</p>
               {result.ok ? (
-                <p className="mt-1">
-                  Dépôt cloné dans <span className="pf-mono">{result.directory}</span>.
+                <p className="pf-title-sm mt-1 flex items-center gap-2">
+                  <span aria-hidden="true" style={{ color: 'var(--pf-ok)' }}>
+                    <Icon name="check" size={16} />
+                  </span>
+                  {c.cloned(result.directory)}
                 </p>
               ) : (
-                result.issues.map((issue) => (
-                  <p key={issue} className="pf-error mt-1">
-                    {issue}
+                <>
+                  <p className="pf-title-sm mt-1 flex items-center gap-2">
+                    <span aria-hidden="true" style={{ color: 'var(--pf-danger)' }}>
+                      <Icon name="warning" size={16} />
+                    </span>
+                    {c.resultFailed}
                   </p>
-                ))
+                  <Refusals issues={result.issues} />
+                </>
               )}
               {result.project === undefined ? null : (
                 <p className="pf-hint mt-2">
-                  Projet détecté : {result.project.description}.
+                  {c.detected(result.project.description)}
                   {result.installCommand === undefined
                     ? ''
-                    : ` Commande d’installation : ${result.installCommand}.`}
+                    : ` ${c.installCommand(result.installCommand)}`}
                 </p>
               )}
-              {result.ok && result.installed ? (
-                <p className="pf-hint mt-1">Dépendances installées.</p>
-              ) : null}
-              {result.warnings.map((warning) => (
-                <p key={warning} className="pf-hint mt-1">
-                  {warning}
-                </p>
-              ))}
-            </div>
+              {result.ok && result.installed ? <p className="pf-hint mt-1">{c.installed}</p> : null}
+              <NoteList className="mt-2" notes={result.warnings} />
+            </section>
           )}
         </section>
       ) : null}

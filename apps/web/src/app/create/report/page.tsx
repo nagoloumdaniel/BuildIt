@@ -2,9 +2,12 @@
 
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
+import { Icon } from '../../../components/ui/icon';
+import { LoadingLine } from '../../../components/ui/loading';
 import { useDraft } from '../../../components/wizard/draft-provider';
 import { StepShell } from '../../../components/wizard/shell';
 import { downloadZip } from '../../../lib/download-zip';
+import { useMessages } from '../../../lib/i18n/provider';
 import { ReportBody } from './ReportBody';
 import { browserSessionStorage, type GenerationReport, loadReport } from './result';
 
@@ -20,6 +23,7 @@ import { browserSessionStorage, type GenerationReport, loadReport } from './resu
  * `nextStep('report')` est `null` : pas de « Continuer » après le rapport.
  */
 export default function ReportPage() {
+  const t = useMessages();
   const draft = useDraft();
   const [report, setReport] = useState<GenerationReport | null>(null);
   const [ready, setReady] = useState(false);
@@ -32,19 +36,18 @@ export default function ReportPage() {
   return (
     <StepShell
       step="report"
-      title="Rapport de génération"
-      description="Ce qui a été écrit, les étapes terminées, les avertissements et les erreurs éventuelles."
+      title={t.build.report.title}
+      description={t.build.report.description}
       hidePrevious={report?.ok === true}
     >
       {!ready ? (
-        <p className="pf-hint" role="status">
-          Lecture du rapport…
-        </p>
+        <LoadingLine>{t.build.report.loading}</LoadingLine>
       ) : report === null ? (
         <div>
-          <p className="pf-hint">Aucun rapport de génération dans cette session.</p>
+          <p className="pf-hint">{t.build.report.missing}</p>
           <Link className="pf-btn mt-3" href="/create/generate">
-            Aller à la génération
+            <Icon name="arrowRight" />
+            {t.build.report.missingAction}
           </Link>
         </div>
       ) : (

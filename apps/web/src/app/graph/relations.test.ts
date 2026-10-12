@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { EN, FR } from '../../lib/i18n/messages';
 import {
   describeEdge,
   graphText,
@@ -16,6 +17,9 @@ import {
  * dessin** : l'ordre ne dépend pas de l'ordre d'arrivée des nœuds, et chaque
  * relation a une phrase et une ligne de tableau. Ces fonctions sont pures, donc
  * l'accessibilité du rendu se prouve ici, pas à l'œil.
+ *
+ * Les mots viennent du dictionnaire : c'est lui qui est passé, dans les deux
+ * langues — un graphe anglais ne doit pas garder les phrases françaises.
  */
 
 const NODES: readonly RelationNode[] = [
@@ -33,13 +37,18 @@ const LABELS = new Map(NODES.map((node) => [node.id, node.label]));
 
 describe('les libellés du graphe', () => {
   it('nomme les deux natures d’arête en clair', () => {
-    expect(relationLabel('requires')).toBe('exige');
-    expect(relationLabel('compatibleWith')).toBe('compatible avec');
+    expect(relationLabel('requires', FR.graph)).toBe('exige');
+    expect(relationLabel('compatibleWith', FR.graph)).toBe('compatible avec');
   });
 
   it('distingue un nœud choisi d’un nœud ajouté par le moteur', () => {
-    expect(stateLabel('selected')).toBe('Choisi');
-    expect(stateLabel('added')).toBe('Ajouté par le moteur');
+    expect(stateLabel('selected', FR.graph)).toBe('Choisi');
+    expect(stateLabel('added', FR.graph)).toBe('Ajouté par le moteur');
+  });
+
+  it('suit la langue du dictionnaire passé', () => {
+    expect(relationLabel('requires', EN.graph)).toBe('requires');
+    expect(stateLabel('added', EN.graph)).toBe('Added by the engine');
   });
 });
 
@@ -73,7 +82,7 @@ describe('describeEdge — une phrase complète pour chaque relation', () => {
     if (edge === undefined) {
       throw new Error('arête absente');
     }
-    expect(describeEdge(edge, LABELS)).toBe('Next.js exige TypeScript.');
+    expect(describeEdge(edge, LABELS, FR.graph)).toBe('Next.js exige TypeScript.');
   });
 
   it('rend « A compatible avec B. »', () => {
@@ -81,30 +90,35 @@ describe('describeEdge — une phrase complète pour chaque relation', () => {
     if (edge === undefined) {
       throw new Error('arête absente');
     }
-    expect(describeEdge(edge, LABELS)).toBe('Next.js compatible avec PostgreSQL.');
+    expect(describeEdge(edge, LABELS, FR.graph)).toBe('Next.js compatible avec PostgreSQL.');
   });
 
   it('retombe sur l’identifiant quand le catalogue ne nomme pas le nœud', () => {
     const edge: RelationEdge = { from: 'inconnu', to: 'next', kind: 'requires' };
-    expect(describeEdge(edge, LABELS)).toBe('inconnu exige Next.js.');
+    expect(describeEdge(edge, LABELS, FR.graph)).toBe('inconnu exige Next.js.');
+  });
+
+  it('rend la phrase anglaise avec le dictionnaire anglais', () => {
+    const edge: RelationEdge = { from: 'next', to: 'typescript', kind: 'compatibleWith' };
+    expect(describeEdge(edge, LABELS, EN.graph)).toBe('Next.js compatible with TypeScript.');
   });
 });
 
 describe('graphText — l’équivalent textuel complet', () => {
   it('nomme chaque nœud avec son état et chaque arête', () => {
-    const lines = graphText(NODES, EDGES, LABELS);
+    const lines = graphText(NODES, EDGES, LABELS, FR.graph);
     const text = lines.join('\n');
 
     for (const node of NODES) {
       expect(text).toContain(node.label);
-      expect(text).toContain(stateLabel(node.state));
+      expect(text).toContain(stateLabel(node.state, FR.graph));
     }
     expect(text).toContain('Next.js exige TypeScript.');
     expect(text).toContain('Next.js compatible avec PostgreSQL.');
   });
 
   it('un graphe vide ne produit aucune ligne', () => {
-    expect(graphText([], [], LABELS)).toEqual([]);
+    expect(graphText([], [], LABELS, FR.graph)).toEqual([]);
   });
 });
 

@@ -2,12 +2,8 @@ import { type Manifest, parseManifest, TARGETS } from '@buildit/manifest';
 import { getPreset } from '@buildit/presets';
 import { loadCatalogue, type Registry } from '@buildit/registry';
 import { describe, expect, it } from 'vitest';
-import {
-  ARCHITECTURE_LABELS,
-  blueprintView,
-  manifestTechnologyIds,
-  TARGET_LABELS,
-} from './summary';
+import { FR } from '../../../lib/i18n/messages';
+import { blueprintView, manifestTechnologyIds } from './summary';
 
 /**
  * Le résumé du Blueprint (§6.10) ne recopie aucune liste de technologies : les
@@ -42,11 +38,11 @@ function saasManifest(): Manifest {
 
 describe('les tables de libellés sont complètes', () => {
   it('couvre les cinq plateformes du manifest', () => {
-    expect(Object.keys(TARGET_LABELS).sort()).toEqual([...TARGETS].sort());
+    expect(Object.keys(FR.build.blueprint.targetLabels).sort()).toEqual([...TARGETS].sort());
   });
 
   it('couvre toutes les architectures du manifest', () => {
-    expect(Object.keys(ARCHITECTURE_LABELS).sort()).toEqual(
+    expect(Object.keys(FR.build.blueprint.architectureLabels).sort()).toEqual(
       [
         'event-driven',
         'microservices',
@@ -126,7 +122,7 @@ describe('manifestTechnologyIds — la sélection envoyée au moteur', () => {
 
 describe('blueprintView — le résumé lisible', () => {
   it('rend le manifest SaaS avec les vrais noms du catalogue', () => {
-    const view = blueprintView(saasManifest(), catalogueLabels());
+    const view = blueprintView(saasManifest(), catalogueLabels(), FR);
 
     expect(view.name).toBe('mon-projet');
     expect(view.headline).toContain('Next.js');
@@ -167,7 +163,7 @@ describe('blueprintView — le résumé lisible', () => {
       ['postgresql', 'PostgreSQL'],
       ['stripe', 'Stripe'],
     ]);
-    expect(blueprintView(manifest, labels).headline).toBe('Next.js + PostgreSQL + Stripe');
+    expect(blueprintView(manifest, labels, FR).headline).toBe('Next.js + PostgreSQL + Stripe');
   });
 
   it('un identifiant non nommé reste lisible — son slug est affiché, rien n’est inventé', () => {
@@ -179,7 +175,7 @@ describe('blueprintView — le résumé lisible', () => {
       frontend: { framework: 'next', language: 'typescript' },
       services: ['stripe'],
     };
-    const view = blueprintView(manifest, new Map([['next', 'Next.js']]));
+    const view = blueprintView(manifest, new Map([['next', 'Next.js']]), FR);
     expect(view.headline).toContain('stripe');
     const services = view.rows.find((row) => row.role === 'Services');
     expect(services?.values).toEqual([{ id: 'stripe', label: 'stripe' }]);
@@ -202,7 +198,7 @@ describe('blueprintView — le résumé lisible', () => {
         id.toUpperCase(),
       ]),
     );
-    const headline = blueprintView(manifest, labels).headline;
+    const headline = blueprintView(manifest, labels, FR).headline;
     expect(headline.endsWith('…')).toBe(true);
     expect(headline).toContain('NEXT');
     expect(headline).not.toContain('FFF');
@@ -215,14 +211,14 @@ describe('blueprintView — le résumé lisible', () => {
       targets: ['api'],
       architecture: 'serverless',
     };
-    const view = blueprintView(manifest, new Map());
+    const view = blueprintView(manifest, new Map(), FR);
     expect(view.headline).toBe('');
     expect(view.rows.map((row) => row.role)).toEqual(['Plateformes', 'Architecture']);
   });
 
   it('rend le graphe de dépendances de la même sélection que le manifest', () => {
     const manifest = saasManifest();
-    expect(blueprintView(manifest, catalogueLabels()).technologyIds).toEqual(
+    expect(blueprintView(manifest, catalogueLabels(), FR).technologyIds).toEqual(
       manifestTechnologyIds(manifest),
     );
   });

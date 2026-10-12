@@ -20,6 +20,13 @@ export const FR_DASHBOARD = {
     cloneNote: 'Vos dépôts GitHub, ou n’importe quel lien Git. Installation proposée après.',
     openTitle: 'Ouvrir un projet local',
     openNote: 'Reconnaître un projet déjà sur cette machine et proposer l’installation.',
+    /* La carte du menu ouvre l'explorateur **directement** : ce lien n'est pas
+       l'étape suivante, c'est l'écran complet — relecture, saisie manuelle en
+       hébergé, installation. */
+    openFullScreen: 'Écran d’ouverture',
+    openHostedNote:
+      'L’explorateur s’ouvrirait sur le serveur, pas sur votre machine. Saisissez le dossier dans l’écran d’ouverture.',
+    openDetected: 'Projet reconnu',
     accountLabel: 'Compte et dépôt',
     githubTitle: 'Compte GitHub',
     githubNote: 'Se connecter, voir les permissions accordées, se déconnecter.',
@@ -28,7 +35,24 @@ export const FR_DASHBOARD = {
     projectsTitle: 'Projets créés',
     projectsEmpty: 'Aucun projet généré pour l’instant. Le premier apparaîtra ici.',
     projectsAll: 'Voir tous les projets',
+    projectDone:
+      'Ce projet est généré : il ne se modifie plus depuis BuildIt. Connectez-le à GitHub, consultez sa documentation d’installation, ou téléchargez-le à nouveau.',
+    projectReport: 'Voir le rapport & la doc d’installation',
     draftTitle: 'Brouillon en cours',
+    draftStep: {
+      create: 'nom du projet',
+      target: 'plateformes cibles',
+      type: 'type de projet',
+      architecture: 'architecture',
+      stack: 'stack technique',
+      capabilities: 'capacités',
+      env: 'environnement & secrets',
+      infrastructure: 'infrastructure',
+      blueprint: 'blueprint',
+      preview: 'aperçu des fichiers',
+      generate: 'génération',
+      report: 'rapport',
+    },
     draftEmpty:
       'Aucun brouillon en cours. Choisissez un chemin : tout est conservé au fur et à mesure.',
     draftEmptyAfterProject:
@@ -44,6 +68,7 @@ export const FR_DASHBOARD = {
     description: 'Tous les projets générés depuis ce navigateur, du plus récent au plus ancien.',
     empty: 'Aucun projet généré pour l’instant.',
     emptyAction: 'Créer un premier projet',
+    loading: 'Lecture des projets enregistrés…',
     done: 'Terminé',
     locked: 'Ce projet est généré : il ne se modifie plus depuis BuildIt.',
     generatedOn: (date: string) => `Généré le ${date}`,
@@ -54,6 +79,14 @@ export const FR_DASHBOARD = {
     forget: 'Retirer de la liste',
     forgetAll: 'Vider la liste',
     forgetHint: 'Retirer un projet d’ici ne supprime aucun fichier sur le disque.',
+    clearConfirmTitle: 'Vider la liste ?',
+    clearConfirmBody:
+      'Les projets restent sur le disque : seule cette liste sera oubliée. Un projet régénéré y reviendra.',
+    clearConfirmAction: 'Oui, vider la liste',
+    sizeOf: (size: string) => `Poids : ${size}`,
+    techLabel: 'Technologies',
+    moreTech: (count: number) =>
+      `${count} autre${count > 1 ? 's' : ''} technologie${count > 1 ? 's' : ''}`,
   },
 } as const;
 
@@ -68,6 +101,10 @@ export const EN_DASHBOARD: Widen<typeof FR_DASHBOARD> = {
     cloneNote: 'Your GitHub repositories, or any Git link. Install offered afterwards.',
     openTitle: 'Open a local project',
     openNote: 'Recognise a project already on this machine and offer to install it.',
+    openFullScreen: 'Open screen',
+    openHostedNote:
+      'The explorer would open on the server, not on your machine. Type the folder in the open screen.',
+    openDetected: 'Project recognised',
     accountLabel: 'Account and repository',
     githubTitle: 'GitHub account',
     githubNote: 'Sign in, review granted permissions, sign out.',
@@ -76,7 +113,24 @@ export const EN_DASHBOARD: Widen<typeof FR_DASHBOARD> = {
     projectsTitle: 'Projects created',
     projectsEmpty: 'No project generated yet. The first one will show up here.',
     projectsAll: 'See all projects',
+    projectDone:
+      'This project is generated: BuildIt no longer edits it. Connect it to GitHub, read its install documentation, or download it again.',
+    projectReport: 'See the report & the install documentation',
     draftTitle: 'Draft in progress',
+    draftStep: {
+      create: 'project name',
+      target: 'target platforms',
+      type: 'project type',
+      architecture: 'architecture',
+      stack: 'technical stack',
+      capabilities: 'capabilities',
+      env: 'environment & secrets',
+      infrastructure: 'infrastructure',
+      blueprint: 'blueprint',
+      preview: 'file preview',
+      generate: 'generation',
+      report: 'report',
+    },
     draftEmpty: 'No draft in progress. Pick a path: everything is kept as you go.',
     draftEmptyAfterProject: 'Nothing to resume. Pick a path above to start another project.',
     draftLastScreen: (label: string) => `Last screen: ${label}.`,
@@ -90,6 +144,7 @@ export const EN_DASHBOARD: Widen<typeof FR_DASHBOARD> = {
     description: 'Every project generated from this browser, newest first.',
     empty: 'No project generated yet.',
     emptyAction: 'Create a first project',
+    loading: 'Reading saved projects…',
     done: 'Done',
     locked: 'This project is generated: BuildIt no longer edits it.',
     generatedOn: (date: string) => `Generated on ${date}`,
@@ -100,5 +155,12 @@ export const EN_DASHBOARD: Widen<typeof FR_DASHBOARD> = {
     forget: 'Remove from list',
     forgetAll: 'Clear the list',
     forgetHint: 'Removing a project from here deletes no file on disk.',
+    clearConfirmTitle: 'Clear the list?',
+    clearConfirmBody:
+      'The projects stay on disk: only this list is forgotten. A regenerated project comes back to it.',
+    clearConfirmAction: 'Yes, clear the list',
+    sizeOf: (size: string) => `Size: ${size}`,
+    techLabel: 'Technologies',
+    moreTech: (count: number) => `${count} more technolog${count > 1 ? 'ies' : 'y'}`,
   },
 };

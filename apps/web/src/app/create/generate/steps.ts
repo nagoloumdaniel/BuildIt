@@ -5,23 +5,18 @@
  * seul coup. L'écran ne peut donc pas prétendre à un avancement temps réel ; il
  * montre ce qui est **en attente**, puis les étapes réellement terminées que
  * l'action renvoie. Ces fonctions traduisent ce que le moteur a fait — jamais
- * ce qu'il n'a pas fait.
+ * ce qu'il n'a pas fait, et dans la langue courante : les libellés des étapes
+ * et le poids viennent du dictionnaire, pas d'ici.
  */
 
+import { formatBytes } from '../../../lib/projects';
+
 /**
- * Les étapes du pipeline du §22, dites en clair.
- *
- * Table **ouverte** : `generateProjectAction` peut renvoyer une étape qu'on
- * n'avait pas prévue (le moteur évolue), et `stepLabel` la montre alors telle
- * quelle plutôt que de la masquer.
+ * Le poids écrit, dans la langue courante : « 1,5 ko » en français, « 1.5 kB »
+ * en anglais. Ré-exporté de `lib/projects.ts` — une seule table d'unités pour
+ * tout le configurateur, donc deux écrans ne peuvent pas diverger.
  */
-export const STEP_LABELS: Readonly<Record<string, string>> = {
-  plan: 'Planification',
-  write: 'Écriture des fichiers',
-  install: 'Installation des dépendances',
-  git: 'Dépôt Git',
-  validate: 'Validation',
-};
+export { formatBytes };
 
 /**
  * Ce que `generateProjectAction` exécute réellement.
@@ -32,8 +27,15 @@ export const STEP_LABELS: Readonly<Record<string, string>> = {
  */
 export const GENERATION_STEPS: readonly string[] = ['plan', 'write'];
 
-export function stepLabel(step: string): string {
-  return STEP_LABELS[step] ?? step;
+/**
+ * Le nom d'une étape du §22, dans la langue courante.
+ *
+ * Table **ouverte** : `generateProjectAction` peut renvoyer une étape qu'on
+ * n'avait pas prévue (le moteur évolue), et `labels` peut ne pas la connaître —
+ * elle est alors montrée telle quelle plutôt que de disparaître.
+ */
+export function stepLabel(step: string, labels: Readonly<Record<string, string>>): string {
+  return labels[step] ?? step;
 }
 
 export interface ProgressStep {
@@ -49,6 +51,7 @@ export interface ProgressStep {
 export function progressStates(
   completed: readonly string[],
   expected: readonly string[],
+  labels: Readonly<Record<string, string>>,
 ): readonly ProgressStep[] {
   const done = new Set(completed);
   const steps = [...expected];
@@ -57,24 +60,7 @@ export function progressStates(
       steps.push(step);
     }
   }
-  return steps.map((step) => ({ step, label: stepLabel(step), done: done.has(step) }));
-}
-
-const UNITS = ['o', 'ko', 'Mo', 'Go'] as const;
-
-/** Le poids écrit, en français : 1 536 octets → « 1,5 ko ». */
-export function formatBytes(bytes: number): string {
-  if (!Number.isFinite(bytes) || bytes <= 0) {
-    return '0 o';
-  }
-  let value = bytes;
-  let unit = 0;
-  while (value >= 1024 && unit < UNITS.length - 1) {
-    value /= 1024;
-    unit += 1;
-  }
-  const text = unit === 0 ? String(Math.round(value)) : value.toFixed(1).replace('.', ',');
-  return `${text} ${UNITS[unit] ?? 'o'}`;
+  return steps.map((step) => ({ step, label: stepLabel(step, labels), done: done.has(step) }));
 }
 
 /**

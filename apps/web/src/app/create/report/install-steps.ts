@@ -1,3 +1,5 @@
+import type { Messages } from '../../../lib/i18n/messages';
+
 /**
  * Les commandes d'installation du projet généré (§6.14).
  *
@@ -8,6 +10,9 @@
  * marche à suivre. Aucun autre choix du Stack Builder n'ajoute d'étape ici :
  * un projet généré est déjà prêt à l'emploi par construction (§22), ces
  * commandes ne font que l'amorcer.
+ *
+ * Les libellés viennent du dictionnaire (`build.report.install`) : les
+ * **commandes**, elles, ne se traduisent pas — elles se tapent telles quelles.
  */
 
 export interface InstallStep {
@@ -22,26 +27,27 @@ export interface InstallGuideInput {
 }
 
 /** `cd` seulement si une destination est connue — absente en mode hébergé. */
-export function installSteps(input: InstallGuideInput): readonly InstallStep[] {
+export function installSteps(input: InstallGuideInput, t: Messages): readonly InstallStep[] {
+  const labels = t.build.report.install;
   const steps: InstallStep[] = [];
 
   if (input.directory !== '') {
-    steps.push({ label: 'Ouvrir le projet', command: `cd ${input.directory}` });
+    steps.push({ label: labels.open, command: `cd ${input.directory}` });
   }
 
   if (input.docker) {
-    steps.push({ label: 'Démarrer les services', command: 'docker compose up -d' });
+    steps.push({ label: labels.services, command: 'docker compose up -d' });
   }
 
   if (input.envVarNames.length > 0) {
     steps.push({
-      label: `Renseigner ${input.envVarNames.length > 1 ? 'les variables' : 'la variable'} d’environnement (${input.envVarNames.join(', ')})`,
+      label: labels.env(input.envVarNames.length, input.envVarNames.join(', ')),
       command: 'cp .env.example .env',
     });
   }
 
-  steps.push({ label: 'Installer les dépendances', command: 'pnpm install' });
-  steps.push({ label: 'Démarrer en développement', command: 'pnpm dev' });
+  steps.push({ label: labels.install, command: 'pnpm install' });
+  steps.push({ label: labels.dev, command: 'pnpm dev' });
 
   return steps;
 }

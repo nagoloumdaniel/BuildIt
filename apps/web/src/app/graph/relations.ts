@@ -6,6 +6,10 @@
  * exigence. Ces fonctions traduisent ces faits, dans un ordre stable, et
  * produisent l'équivalent textuel complet : le graphe doit rester lisible sans
  * le voir, sans librairie de graphe et sans dépendance.
+ *
+ * Les **mots** ne sont pas ici : ils viennent du dictionnaire (`t.graph`), pour
+ * que le même graphe se lise en français comme en anglais. Ce module ne porte
+ * que la structure — ordre, mise en page, assemblage des phrases.
  */
 
 export interface RelationNode {
@@ -21,22 +25,31 @@ export interface RelationEdge {
   readonly kind: 'requires' | 'compatibleWith';
 }
 
-export const RELATION_LABELS: Readonly<Record<RelationEdge['kind'], string>> = {
-  requires: 'exige',
-  compatibleWith: 'compatible avec',
-};
-
-export const STATE_LABELS: Readonly<Record<RelationNode['state'], string>> = {
-  selected: 'Choisi',
-  added: 'Ajouté par le moteur',
-};
-
-export function relationLabel(kind: RelationEdge['kind']): string {
-  return RELATION_LABELS[kind];
+/**
+ * Ce que le graphe emprunte au dictionnaire pour se dire.
+ *
+ * La forme est volontairement explicite (`requires: string`) plutôt qu'un
+ * `Record<…>` : `t.graph` la satisfait clé par clé, sans cast.
+ */
+export interface GraphWording {
+  readonly relationLabels: {
+    readonly requires: string;
+    readonly compatibleWith: string;
+  };
+  readonly stateLabels: {
+    readonly selected: string;
+    readonly added: string;
+  };
+  readonly describeNode: (label: string, category: string, state: string) => string;
+  readonly describeEdge: (from: string, relation: string, to: string) => string;
 }
 
-export function stateLabel(state: RelationNode['state']): string {
-  return STATE_LABELS[state];
+export function relationLabel(kind: RelationEdge['kind'], wording: GraphWording): string {
+  return wording.relationLabels[kind];
+}
+
+export function stateLabel(state: RelationNode['state'], wording: GraphWording): string {
+  return wording.stateLabels[state];
 }
 
 /** Tri par identifiant : le rendu ne dépend pas de l'ordre de résolution. */
@@ -60,13 +73,21 @@ function labelOf(id: string, labels: ReadonlyMap<string, string>): string {
 }
 
 /** « A exige B. » — une phrase, jamais un pictogramme seul. */
-export function describeEdge(edge: RelationEdge, labels: ReadonlyMap<string, string>): string {
-  return `${labelOf(edge.from, labels)} ${relationLabel(edge.kind)} ${labelOf(edge.to, labels)}.`;
+export function describeEdge(
+  edge: RelationEdge,
+  labels: ReadonlyMap<string, string>,
+  wording: GraphWording,
+): string {
+  return wording.describeEdge(
+    labelOf(edge.from, labels),
+    relationLabel(edge.kind, wording),
+    labelOf(edge.to, labels),
+  );
 }
 
 /** « Next.js (frontend, Choisi) » — la ligne de l'équivalent textuel. */
-export function describeNode(node: RelationNode): string {
-  return `${node.label} (${node.category}, ${stateLabel(node.state)})`;
+export function describeNode(node: RelationNode, wording: GraphWording): string {
+  return wording.describeNode(node.label, node.category, stateLabel(node.state, wording));
 }
 
 /**
@@ -77,9 +98,10 @@ export function graphText(
   nodes: readonly RelationNode[],
   edges: readonly RelationEdge[],
   labels: ReadonlyMap<string, string>,
+  wording: GraphWording,
 ): readonly string[] {
-  const lines: string[] = sortedNodes(nodes).map(describeNode);
-  lines.push(...sortedEdges(edges).map((edge) => describeEdge(edge, labels)));
+  const lines: string[] = sortedNodes(nodes).map((node) => describeNode(node, wording));
+  lines.push(...sortedEdges(edges).map((edge) => describeEdge(edge, labels, wording)));
   return lines;
 }
 

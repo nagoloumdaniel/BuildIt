@@ -13,6 +13,10 @@ export const FR_WORKSPACE = {
     folderLabel: 'Dossier du projet',
     folderHint:
       'Seuls les fichiers qui nomment l’outillage sont lus : package.json, pyproject.toml, Cargo.toml…',
+    /* En hébergé, il n'y a pas de bureau à ouvrir : le champ de saisie est le
+       repli, et il dit pourquoi plutôt que de laisser croire à un oubli. */
+    hostedNote:
+      'L’explorateur s’ouvrirait sur le serveur, pas sur votre machine : saisissez le chemin du dossier.',
     pick: 'Choisir un dossier',
     picking: 'Explorateur ouvert…',
     noFolder: 'Aucun dossier choisi.',
@@ -26,6 +30,8 @@ export const FR_WORKSPACE = {
     noFolderBody:
       'Ouvrez l’explorateur de cette machine et désignez le dossier du projet : l’analyse démarre aussitôt, et ne lit que les fichiers d’outillage.',
     notRecognised: 'Dossier non reconnu',
+    notRecognisedBody:
+      'Ce dossier ne porte aucun manifeste reconnu. Choisissez la racine du projet — celle qui contient package.json, pyproject.toml ou Cargo.toml.',
     detection: 'Détection',
     ecosystem: 'Écosystème',
     manager: 'Gestionnaire',
@@ -72,6 +78,11 @@ export const FR_WORKSPACE = {
       'Connectez-vous à GitHub pour retrouver vos dépôts. Un dépôt public se clone aussi par son lien, sans connexion.',
     connect: 'Connecter un compte GitHub',
     linkLabel: 'Lien du dépôt',
+    /* L'exemple est une **forme** d'adresse : il suit la langue de l'écran
+       (`propriétaire/dépôt` / `owner/repository`), mais reste un exemple, pas
+       une phrase. */
+    linkPlaceholder: 'https://github.com/propriétaire/dépôt, git@…, propriétaire/dépôt',
+    folderNamePlaceholder: 'mon-projet',
     destinationLabel: 'Dossier de destination',
     destinationHint:
       'Le dossier doit être absent ou vide. Choisissez où le dépôt atterrit : le clone y crée un sous-dossier au nom du dépôt.',
@@ -99,6 +110,47 @@ export const FR_WORKSPACE = {
     detected: (description: string) => `Projet détecté : ${description}.`,
     blockerBusy: 'Une opération est en cours.',
     blockerNoPreview: 'Vérifiez d’abord le lien et le dossier de destination.',
+    /* En local, le parent est un dossier absolu choisi dans l'explorateur : sans
+       lui, il n'y a rien à vérifier. */
+    blockerNoParent: 'Choisissez d’abord le dossier où cloner.',
+    folderNameLabel: 'Nom du sous-dossier',
+    folderNameHint:
+      'Un seul nom, sans séparateur de chemin. Le clone crée ce dossier dans le dossier parent choisi.',
+    fullPath: 'Chemin complet qui sera écrit',
+    fullPathUnknown: 'Choisissez le dossier parent pour voir le chemin complet.',
+    /* Le repli de l'hébergé : un chemin absolu venu du navigateur y serait une
+       écriture de fichier arbitraire sur le serveur. */
+    hostedFallback: (root: string) =>
+      `Serveur hébergé : le clone s’exécute sur le serveur, pas sur votre machine. Le dossier reste relatif à la racine de travail : ${root}. Il doit être absent ou vide.`,
+    pickOtherFolder: 'Choisir un autre dossier',
+    destinationUnavailable: 'Dossier pas accessible',
+    destinationUnavailableBody:
+      'Ce dossier n’existe pas, ou ce compte n’a pas le droit d’y écrire. Choisissez-en un autre : le clone créera le sous-dossier du dépôt à l’intérieur.',
+    reachedPhase: 'Dernière phase atteinte',
+    gitDetail: 'Sortie brute de git',
+    /* L'annulation arrête **le suivi**, pas le clone : le dire exactement, et ne
+       jamais laisser croire que le disque est propre. */
+    cancelledTitle: 'Suivi interrompu',
+    cancelledBody:
+      'L’avancement n’est plus suivi : le clonage peut continuer côté serveur, et le dossier de destination peut rester incomplet. Vérifiez-le avant de l’utiliser.',
+    streamFailedTitle: 'Le suivi du clone s’est arrêté',
+    /* La vérification est une Server Action : si elle ne répond pas, l'écran
+       le dit au lieu de rester sur « Vérification… ». */
+    checkFailedTitle: 'La vérification n’a pas abouti',
+    checkFailedBody:
+      'Le serveur n’a pas répondu : le lien et le dossier n’ont pas été vérifiés. Rien n’a été cloné — réessayez.',
+    streamTimeout: (seconds: number) =>
+      `Aucun événement reçu depuis ${seconds} secondes : le suivi est arrêté. Vérifiez le dossier de destination sur le disque avant de réessayer.`,
+    streamNetwork:
+      'La liaison avec le serveur a été perdue : le suivi est arrêté. Le clonage peut continuer côté serveur, et le dossier peut rester incomplet.',
+    streamHttp: (status: number) =>
+      `Le serveur a refusé la requête (HTTP ${status}) : rien n’a été cloné.`,
+    streamMalformed:
+      'Réponse d’avancement illisible : le suivi est arrêté. Vérifiez le dossier de destination sur le disque.',
+    streamIncomplete:
+      'Le serveur a fermé le flux avant la fin : le suivi est arrêté. Le dossier de destination peut être incomplet.',
+    resultFailed: 'Le clone n’a pas été effectué',
+    installCommand: (command: string) => `Commande d’installation : ${command}.`,
     phaseCounting: 'Comptage des objets',
     phaseCompressing: 'Compression',
     phaseReceiving: 'Réception des objets',
@@ -118,12 +170,21 @@ export const EN_WORKSPACE: Widen<typeof FR_WORKSPACE> = {
     folderLabel: 'Project folder',
     folderHint:
       'Only the files that name the tooling are read: package.json, pyproject.toml, Cargo.toml…',
+    hostedNote: 'The explorer would open on the server, not on your machine: type the folder path.',
     pick: 'Choose a folder',
     picking: 'Explorer open…',
     noFolder: 'No folder chosen.',
     analyse: 'Analyse the folder',
     analysing: 'Analysing the folder…',
+    reanalyse: 'Analyse again',
+    noFolderTitle: 'No folder chosen',
+    noFolderBody:
+      'Open this machine’s explorer and point at the project folder: the analysis starts at once, and reads only the tooling files.',
+    notRecognised: 'Folder not recognised',
+    notRecognisedBody:
+      'This folder carries no recognised manifest. Choose the project root — the one holding package.json, pyproject.toml or Cargo.toml.',
     detection: 'Detection',
+    ecosystem: 'Ecosystem',
     manager: 'Package manager',
     notApplicable: 'not applicable',
     readFile: 'File read',
@@ -132,8 +193,13 @@ export const EN_WORKSPACE: Widen<typeof FR_WORKSPACE> = {
     confirm: 'I read the command: run the install',
     install: 'Install dependencies',
     installing: 'Installing dependencies…',
+    installNoMeasure:
+      'The package manager publishes no progress: the bar says it is working, not how much is left.',
+    trustNote:
+      'The install runs the project’s scripts with your rights on this machine. The box above disables them.',
     installDone: (command: string) => `Dependencies installed: ${command}.`,
     installTitle: 'Install',
+    installFailed: 'The install failed',
     manualOnly: (command: string) =>
       `Automatic install for this kind of project lands in V1. Run it yourself: ${command}`,
     blockerBusy: 'An operation is running.',
@@ -160,6 +226,8 @@ export const EN_WORKSPACE: Widen<typeof FR_WORKSPACE> = {
       'Sign in to GitHub to find your repositories. A public repository also clones from its link, without signing in.',
     connect: 'Connect a GitHub account',
     linkLabel: 'Repository link',
+    linkPlaceholder: 'https://github.com/owner/repository, git@…, owner/repository',
+    folderNamePlaceholder: 'my-project',
     destinationLabel: 'Destination folder',
     destinationHint:
       'The folder must be absent or empty. Choose where the repository lands: the clone creates a subfolder named after it.',
@@ -187,6 +255,39 @@ export const EN_WORKSPACE: Widen<typeof FR_WORKSPACE> = {
     detected: (description: string) => `Project detected: ${description}.`,
     blockerBusy: 'An operation is running.',
     blockerNoPreview: 'Check the link and the destination folder first.',
+    blockerNoParent: 'Choose where to clone first.',
+    folderNameLabel: 'Subfolder name',
+    folderNameHint:
+      'A single name, with no path separator. The clone creates this folder inside the chosen parent folder.',
+    fullPath: 'Full path that will be written',
+    fullPathUnknown: 'Choose the parent folder to see the full path.',
+    hostedFallback: (root: string) =>
+      `Hosted server: the clone runs on the server, not on your machine. The folder stays relative to the working root: ${root}. It must be absent or empty.`,
+    pickOtherFolder: 'Choose another folder',
+    destinationUnavailable: 'Folder not reachable',
+    destinationUnavailableBody:
+      'This folder does not exist, or this account may not write to it. Choose another one: the clone will create the repository subfolder inside it.',
+    reachedPhase: 'Last phase reached',
+    gitDetail: 'Raw git output',
+    cancelledTitle: 'Tracking stopped',
+    cancelledBody:
+      'Progress is no longer tracked: the clone may keep running on the server, and the destination folder may stay incomplete. Check it before using it.',
+    streamFailedTitle: 'Clone tracking stopped',
+    checkFailedTitle: 'The check did not complete',
+    checkFailedBody:
+      'The server did not answer: the link and the folder were not checked. Nothing was cloned — try again.',
+    streamTimeout: (seconds: number) =>
+      `No event received for ${seconds} seconds: tracking is stopped. Check the destination folder on disk before trying again.`,
+    streamNetwork:
+      'The connection to the server was lost: tracking is stopped. The clone may keep running on the server, and the folder may stay incomplete.',
+    streamHttp: (status: number) =>
+      `The server refused the request (HTTP ${status}): nothing was cloned.`,
+    streamMalformed:
+      'Unreadable progress response: tracking is stopped. Check the destination folder on disk.',
+    streamIncomplete:
+      'The server closed the stream before the end: tracking is stopped. The destination folder may be incomplete.',
+    resultFailed: 'The clone was not performed',
+    installCommand: (command: string) => `Install command: ${command}.`,
     phaseCounting: 'Counting objects',
     phaseCompressing: 'Compressing',
     phaseReceiving: 'Receiving objects',

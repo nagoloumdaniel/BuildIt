@@ -2,6 +2,7 @@
 
 import type { ReactElement } from 'react';
 import type { OptionView } from '../../../lib/engine';
+import { useMessages } from '../../../lib/i18n/provider';
 
 export interface CapabilityOptionsProps {
   readonly options: readonly OptionView[];
@@ -18,8 +19,10 @@ export interface CapabilityOptionsProps {
  * compatibilité la ferait diverger du CLI.
  */
 export function CapabilityOptions({ options, onToggle }: CapabilityOptionsProps): ReactElement {
+  const t = useMessages();
+
   if (options.length === 0) {
-    return <p className="pf-hint">Aucune option dans cette famille pour l’instant.</p>;
+    return <p className="pf-hint">{t.wizard.capabilities.emptyFamily}</p>;
   }
 
   return (
@@ -40,12 +43,18 @@ export function CapabilityOptions({ options, onToggle }: CapabilityOptionsProps)
           >
             <span className="pf-choice-name">
               {option.label}
-              {selected ? <span className="pf-badge pf-badge-accent ml-2">Choisie</span> : null}
+              {selected ? (
+                <span className="pf-badge pf-badge-accent ml-2">
+                  {t.wizard.capabilities.chosenBadge}
+                </span>
+              ) : null}
             </span>
-            <span className="pf-choice-note pf-mono">{option.id}</span>
+            <span className="pf-choice-note pf-mono break-all">{option.id}</span>
             {blocked ? (
               <span className="pf-error">
-                <span className="pf-badge pf-badge-danger mr-1">Indisponible</span>
+                <span className="pf-badge pf-badge-danger mr-1">
+                  {t.wizard.capabilities.blockedBadge}
+                </span>
                 {option.reason}
               </span>
             ) : null}

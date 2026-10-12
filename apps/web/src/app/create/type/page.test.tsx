@@ -2,14 +2,9 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
 import { DraftProvider } from '../../../components/wizard/draft-provider';
 import { freshDraft } from '../../../lib/draft';
+import { FR } from '../../../lib/i18n/messages';
 import TypePage from './page';
-import {
-  PROJECT_TYPES,
-  ProjectTypeChoices,
-  recommendedTypes,
-  TYPE_NOTES,
-  withType,
-} from './profiles';
+import { PROJECT_TYPES, ProjectTypeChoices, recommendedTypes, withType } from './profiles';
 
 /**
  * Vitest tourne sans DOM : on prouve le contrat par `renderToStaticMarkup`.
@@ -24,9 +19,12 @@ function rendered(html: string): number {
 
 describe('profils du §6.4', () => {
   it('décrit chaque profil et l’orientation qu’il donne aux écrans suivants', () => {
-    expect(Object.keys(TYPE_NOTES).sort()).toEqual([...PROJECT_TYPES].sort());
+    // La table vit au dictionnaire : ajouter un profil sans sa phrase casse le
+    // typecheck au point d'usage (`t.wizard.types.labels[type]`).
+    const notes = FR.wizard.types.labels;
+    expect(Object.keys(notes).sort()).toEqual([...PROJECT_TYPES].sort());
     for (const type of PROJECT_TYPES) {
-      const note = TYPE_NOTES[type];
+      const note = notes[type];
       expect(note.label.length).toBeGreaterThan(0);
       expect(note.note.length).toBeGreaterThan(0);
       expect(note.guides.length).toBeGreaterThan(0);

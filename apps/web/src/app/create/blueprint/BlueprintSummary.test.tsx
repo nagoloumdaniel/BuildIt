@@ -23,7 +23,7 @@ const VIEW: BlueprintView = {
 /** Le résumé est pur : il reçoit sa vue, il ne lit ni le brouillon ni le moteur. */
 describe('BlueprintSummary', () => {
   it('affiche le nom, la phrase lisible et chaque rôle', () => {
-    const html = renderToStaticMarkup(BlueprintSummary({ view: VIEW }));
+    const html = renderToStaticMarkup(<BlueprintSummary view={VIEW} />);
 
     expect(html).toContain('mon-projet');
     expect(html).toContain('Next.js + PostgreSQL + Stripe');
@@ -34,7 +34,7 @@ describe('BlueprintSummary', () => {
   });
 
   it('sans phrase d’en-tête, n’affiche pas de paragraphe vide', () => {
-    const html = renderToStaticMarkup(BlueprintSummary({ view: { ...VIEW, headline: '' } }));
+    const html = renderToStaticMarkup(<BlueprintSummary view={{ ...VIEW, headline: '' }} />);
     expect(html).not.toContain('pf-subtitle');
   });
 });

@@ -1,7 +1,8 @@
-import type { Architecture, Manifest, Target } from '@buildit/manifest';
+import type { Manifest } from '@buildit/manifest';
+import type { Messages } from '../../../lib/i18n/messages';
 
 /**
- * Le Project Blueprint (§6.10) : le manifest canonique, en français.
+ * Le Project Blueprint (§6.10) : le manifest canonique, en clair.
  *
  * Ce module ne construit **pas** la sélection — `draftToManifest`
  * (`src/lib/draft-to-manifest.ts`) le fait, et c'est lui qui fait foi. Il ne
@@ -10,29 +11,11 @@ import type { Architecture, Manifest, Target } from '@buildit/manifest';
  * identifiant que personne ne nomme s'affiche tel quel — jamais remplacé par un
  * nom inventé.
  *
- * Les deux tables ci-dessous sont **complètes** : ajouter une plateforme ou une
- * architecture au manifest casse le typecheck ici, et force à écrire le mot que
- * l'utilisateur lira. C'est une décision produit, pas un détail.
+ * Les rôles et les libellés de plateforme/architecture vivent au dictionnaire
+ * (`build.blueprint`), où chaque entrée est une clé : ajouter une plateforme ou
+ * une architecture au manifest sans écrire son mot casse le typecheck au point
+ * d'usage. C'est une décision produit, pas un détail.
  */
-
-/** Les plateformes du §4, dites en clair. */
-export const TARGET_LABELS: Readonly<Record<Target, string>> = {
-  web: 'Web',
-  mobile: 'Mobile',
-  desktop: 'Ordinateur',
-  api: 'API',
-  library: 'Bibliothèque',
-};
-
-/** Les formes d'architecture du §7.23, dites en clair. */
-export const ARCHITECTURE_LABELS: Readonly<Record<Architecture, string>> = {
-  'single-app': 'Application unique',
-  monorepo: 'Monorepo',
-  'modular-monolith': 'Monolithe modulaire',
-  microservices: 'Microservices',
-  serverless: 'Serverless',
-  'event-driven': 'Événementiel',
-};
 
 export interface SummaryItem {
   readonly id: string;
@@ -157,63 +140,73 @@ function headlineOf(manifest: Manifest, labels: ReadonlyMap<string, string>): st
 export function blueprintView(
   manifest: Manifest,
   labels: ReadonlyMap<string, string>,
+  t: Messages,
 ): BlueprintView {
+  const roles = t.build.blueprint.roles;
   const rows: SummaryRow[] = [
     {
-      role: 'Plateformes',
-      values: manifest.targets.map((target) => ({ id: target, label: TARGET_LABELS[target] })),
+      role: roles.targets,
+      values: manifest.targets.map((target) => ({
+        id: target,
+        label: t.build.blueprint.targetLabels[target],
+      })),
     },
     {
-      role: 'Architecture',
-      values: [{ id: manifest.architecture, label: ARCHITECTURE_LABELS[manifest.architecture] }],
+      role: roles.architecture,
+      values: [
+        {
+          id: manifest.architecture,
+          label: t.build.blueprint.architectureLabels[manifest.architecture],
+        },
+      ],
     },
   ];
 
   if (manifest.frontend !== undefined) {
     const app = manifest.frontend;
     rows.push({
-      role: 'Application web',
+      role: roles.web,
       values: items([app.framework, app.language, app.styling, app.ui], labels),
     });
   }
   if (manifest.mobile !== undefined) {
     const app = manifest.mobile;
     rows.push({
-      role: 'Application mobile',
+      role: roles.mobile,
       values: items([app.framework, app.language, app.styling], labels),
     });
   }
   if (manifest.desktop !== undefined) {
     rows.push({
-      role: 'Application de bureau',
+      role: roles.desktop,
       values: items([manifest.desktop.framework], labels),
     });
   }
   if (manifest.backend !== undefined) {
     const app = manifest.backend;
     rows.push({
-      role: 'Backend',
+      role: roles.backend,
       values: items([app.framework, app.language], labels),
     });
   }
   if (manifest.database !== undefined) {
     const database = manifest.database;
     rows.push({
-      role: 'Base de données',
+      role: roles.database,
       values: items([database.engine, database.orm], labels),
     });
   }
   if (manifest.auth !== undefined) {
-    rows.push({ role: 'Authentification', values: items([manifest.auth.provider], labels) });
+    rows.push({ role: roles.auth, values: items([manifest.auth.provider], labels) });
   }
   if (manifest.services !== undefined && manifest.services.length > 0) {
-    rows.push({ role: 'Services', values: items(manifest.services, labels) });
+    rows.push({ role: roles.services, values: items(manifest.services, labels) });
   }
   if (manifest.quality !== undefined && manifest.quality.length > 0) {
-    rows.push({ role: 'Qualité', values: items(manifest.quality, labels) });
+    rows.push({ role: roles.quality, values: items(manifest.quality, labels) });
   }
   if (manifest.infra !== undefined && manifest.infra.length > 0) {
-    rows.push({ role: 'Infrastructure', values: items(manifest.infra, labels) });
+    rows.push({ role: roles.infra, values: items(manifest.infra, labels) });
   }
 
   return {

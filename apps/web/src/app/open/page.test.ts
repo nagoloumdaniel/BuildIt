@@ -1,169 +1,87 @@
 import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
-import type { ProjectInspectionView } from './project';
-import { installBlocker, OpenView, type OpenViewProps, plannedCommand } from './view';
+import { MESSAGES } from '../../lib/i18n/messages';
+import { blockerText, installBlocker, plannedCommand } from './install-panel';
+import { pickOutcomePhase } from './local-open';
+import OpenPage from './page';
+import type { ProjectSummaryView } from './project';
 
-/** La vue de l'écran 23, rendue sans DOM. */
+/** Le contrat de l'écran 23, sans DOM : les décisions, puis le branchement. */
 
-const INSPECTION: ProjectInspectionView = {
-  ok: true,
-  value: {
-    directory: 'C:\\projets\\mon-app',
-    label: 'JavaScript / TypeScript',
-    ecosystem: 'node',
-    packageManager: 'pnpm',
-    source: 'lockfile',
-    evidence: 'pnpm-lock.yaml',
-    origin: 'd’après pnpm-lock.yaml',
-    warnings: [],
-    plainCommand: 'pnpm install',
-    safeCommand: 'pnpm install --ignore-scripts',
-    description: 'JavaScript / TypeScript — pnpm (d’après pnpm-lock.yaml)',
-  },
+const SUMMARY: ProjectSummaryView = {
+  directory: 'C:\\projets\\mon-app',
+  label: 'JavaScript / TypeScript',
+  ecosystem: 'node',
+  packageManager: 'pnpm',
+  source: 'lockfile',
+  evidence: 'pnpm-lock.yaml',
+  origin: 'd’après pnpm-lock.yaml',
+  warnings: [],
+  plainCommand: 'pnpm install',
+  safeCommand: 'pnpm install --ignore-scripts',
+  description: 'JavaScript / TypeScript — pnpm (d’après pnpm-lock.yaml)',
 };
 
-const PYTHON: ProjectInspectionView = {
-  ok: true,
-  value: {
-    directory: 'C:\\projets\\mon-app',
-    label: 'Python',
-    ecosystem: 'python',
-    source: 'manifest',
-    evidence: 'pyproject.toml',
-    origin: 'd’après pyproject.toml',
-    warnings: [],
-    manualCommand: 'uv sync',
-    description: 'Python (d’après pyproject.toml)',
-  },
+const PYTHON: ProjectSummaryView = {
+  ...SUMMARY,
+  label: 'Python',
+  ecosystem: 'python',
+  source: 'manifest',
+  evidence: 'pyproject.toml',
+  origin: 'd’après pyproject.toml',
+  description: 'Python (d’après pyproject.toml)',
+  manualCommand: 'uv sync',
 };
-
-function render(overrides: Partial<OpenViewProps> = {}): string {
-  return renderToStaticMarkup(
-    createElement(OpenView, {
-      directory: '',
-      onDirectory: () => undefined,
-      inspection: null,
-      installResult: null,
-      ignoreScripts: false,
-      onIgnoreScripts: () => undefined,
-      confirmed: false,
-      onConfirmed: () => undefined,
-      busy: false,
-      onInspect: () => undefined,
-      onInstall: () => undefined,
-      ...overrides,
-    }),
-  );
-}
 
 describe('plannedCommand — la commande affichée est celle qui sera lancée', () => {
   it('suit le choix « sans scripts »', () => {
-    expect(plannedCommand(INSPECTION, false)).toBe('pnpm install');
-    expect(plannedCommand(INSPECTION, true)).toBe('pnpm install --ignore-scripts');
+    expect(plannedCommand(SUMMARY, false)).toBe('pnpm install');
+    expect(plannedCommand(SUMMARY, true)).toBe('pnpm install --ignore-scripts');
   });
 
   it('ne rend rien sans détection exploitable', () => {
     expect(plannedCommand(null, false)).toBeUndefined();
-    expect(plannedCommand({ ok: false, issues: ['non'] }, false)).toBeUndefined();
   });
 });
 
 describe('installBlocker — rien ne se lance sans accord', () => {
-  it('dit la raison, puis rien quand tout est réuni', () => {
-    expect(installBlocker(null, false, false)).toContain('Analysez d’abord');
-    expect(installBlocker({ ok: false, issues: ['non reconnu'] }, false, false)).toContain(
-      'pas un projet reconnu',
-    );
-    expect(installBlocker(INSPECTION, false, false)).toContain('Cochez la confirmation');
-    expect(installBlocker(INSPECTION, true, false)).toBeUndefined();
-    expect(installBlocker(INSPECTION, true, true)).toContain('en cours');
+  it('dit la raison, dans l’ordre de lecture, puis rien quand tout est réuni', () => {
+    expect(installBlocker(null, false, false)).toBe('noInspection');
+    expect(installBlocker(SUMMARY, false, false)).toBe('unconfirmed');
+    expect(installBlocker(SUMMARY, true, false)).toBeUndefined();
+    expect(installBlocker(SUMMARY, true, true)).toBe('busy');
   });
 
   it('refuse d’automatiser un écosystème non JavaScript', () => {
-    expect(installBlocker(PYTHON, true, false)).toContain('V1');
+    expect(installBlocker(PYTHON, true, false)).toBe('manual');
+  });
+
+  it('rend la phrase française du blocage', () => {
+    const t = MESSAGES.fr;
+
+    expect(blockerText(t, 'noInspection')).toContain('Analysez d’abord');
+    expect(blockerText(t, 'manual')).toContain('V1');
+    expect(blockerText(t, 'unconfirmed')).toContain('Cochez la confirmation');
+    expect(blockerText(t, 'busy')).toContain('en cours');
   });
 });
 
-describe('OpenView — la détection', () => {
-  it('affiche le dossier, l’origine et la commande exacte avant de lancer', () => {
-    const html = render({ directory: 'C:\\projets\\mon-app', inspection: INSPECTION });
-
-    expect(html).toContain('C:\\projets\\mon-app');
-    expect(html).toContain('JavaScript / TypeScript');
-    expect(html).toContain('pnpm');
-    expect(html).toContain('d’après pnpm-lock.yaml');
-    expect(html).toContain('pnpm install');
-    expect(html).toContain('J’ai lu la commande');
-  });
-
-  it('grise « Installer » tant que la confirmation n’est pas cochée', () => {
-    const html = render({ inspection: INSPECTION, confirmed: false });
-
-    expect(html).toContain('disabled');
-    expect(html).toContain('Cochez la confirmation');
-  });
-
-  it('affiche les avertissements du gestionnaire', () => {
-    const html = render({
-      inspection: {
-        ok: true,
-        value: {
-          ...INSPECTION.value,
-          warnings: ['Ni verrou ni champ packageManager : npm est une supposition.'],
-        },
-      },
-    });
-
-    expect(html).toContain('npm est une supposition');
-  });
-
-  it('dit ce qui bloque quand le dossier n’est pas un projet reconnu', () => {
-    const html = render({
-      inspection: { ok: false, issues: ['Aucun projet reconnu dans C:\\vide.'] },
-    });
-
-    expect(html).toContain('Aucun projet reconnu');
-    expect(html).not.toContain('Installer les dépendances');
-  });
-
-  it('propose la commande manuelle pour un écosystème non automatisé', () => {
-    const html = render({ inspection: PYTHON });
-
-    expect(html).toContain('uv sync');
-    expect(html).toContain('arrive en V1');
+describe('pickOutcomePhase — une annulation n’est pas une panne', () => {
+  it('distingue le dossier choisi, l’annulation, l’absence de bureau et l’échec', () => {
+    expect(pickOutcomePhase({ ok: true, path: 'C:\\projets\\mon-app' })).toBe('ready');
+    expect(pickOutcomePhase({ ok: false, reason: 'cancelled' })).toBe('cancelled');
+    expect(pickOutcomePhase({ ok: false, reason: 'unsupported' })).toBe('unavailable');
+    expect(pickOutcomePhase({ ok: false, reason: 'failed' })).toBe('failed');
   });
 });
 
-describe('OpenView — le résultat', () => {
-  it('annonce l’installation réussie avec la commande lancée', () => {
-    const html = render({
-      inspection: INSPECTION,
-      installResult: {
-        ok: true,
-        directory: 'C:\\projets\\mon-app',
-        command: 'pnpm install --ignore-scripts',
-        issues: [],
-        retryable: false,
-      },
-    });
+describe('OpenPage — le branchement', () => {
+  it('monte l’écran d’ouverture avec son titre et son retour', () => {
+    const html = renderToStaticMarkup(createElement(OpenPage));
 
-    expect(html).toContain('Dépendances installées');
-    expect(html).toContain('pnpm install --ignore-scripts');
-  });
-
-  it('rend l’échec tel quel', () => {
-    const html = render({
-      inspection: INSPECTION,
-      installResult: {
-        ok: false,
-        directory: 'C:\\projets\\mon-app',
-        command: 'pnpm install',
-        issues: ['« pnpm install » a échoué.'],
-        retryable: true,
-      },
-    });
-
-    expect(html).toContain('a échoué');
+    expect(html).toContain('Ouvrir un projet local');
+    expect(html).toContain('Dossier du projet');
+    expect(html).toContain('href="/"');
   });
 });

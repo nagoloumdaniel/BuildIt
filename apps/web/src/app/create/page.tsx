@@ -1,25 +1,21 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { Icon } from '../../components/ui/icon';
 import { useDraft, useSession } from '../../components/wizard/draft-provider';
 import { StepShell } from '../../components/wizard/shell';
+import { useMessages } from '../../lib/i18n/provider';
 import { loadPresetsAction } from '../actions';
 
-/** Les deux modes du §5 : peu d'options, ou tout le catalogue. */
-const MODES = [
-  {
-    value: 'guided' as const,
-    label: 'Guidé',
-    note: 'Deux à quatre choix recommandés par étape. Le reste reste accessible.',
-  },
-  {
-    value: 'expert' as const,
-    label: 'Expert',
-    note: 'Tout le catalogue, avec recherche et filtres, et les incompatibilités expliquées.',
-  },
-];
-
+/**
+ * Écran 1 — Create Project (§6.2).
+ *
+ * Le nom et le mode de configuration sont les deux seules décisions de cet
+ * écran. Les deux modes du §5 sont décrits ici, en clair : « Guidé » n'est pas
+ * « Expert » avec moins d'options, c'est deux façons de parcourir le catalogue.
+ */
 export default function CreatePage() {
+  const t = useMessages();
   const draft = useDraft();
   const session = useSession();
   // Les presets certifiés viennent du serveur (§8) : le client ne connaît que
@@ -38,36 +34,43 @@ export default function CreatePage() {
     };
   }, []);
 
+  // Les deux modes du §5 : peu d'options, ou tout le catalogue.
+  const modes = [
+    {
+      value: 'guided' as const,
+      label: t.wizard.name.modeGuided,
+      note: t.wizard.name.modeGuidedNote,
+    },
+    {
+      value: 'expert' as const,
+      label: t.wizard.name.modeExpert,
+      note: t.wizard.name.modeExpertNote,
+    },
+  ];
+
   return (
-    <StepShell
-      step="create"
-      title="Créer un projet"
-      description="Nommez le projet et choisissez comment vous voulez le configurer. Tout est conservé au fur et à mesure."
-    >
+    <StepShell step="create" title={t.wizard.name.title} description={t.wizard.name.description}>
       <label className="pf-label" htmlFor="pf-project-name">
-        Nom du projet
+        {t.wizard.name.label}
       </label>
       <input
         id="pf-project-name"
         className="pf-input"
         autoComplete="off"
         spellCheck={false}
-        placeholder="mon-projet"
+        placeholder={t.wizard.namePlaceholder}
         value={draft.name}
         onChange={(event) => {
           const name = event.target.value;
           session.update((current) => ({ ...current, name }));
         }}
       />
-      <p className="pf-hint mt-1">
-        Minuscules, chiffres, points, tirets et soulignés. Ce nom devient le dossier et
-        l’identifiant du projet.
-      </p>
+      <p className="pf-hint mt-1">{t.wizard.name.hint}</p>
 
       <fieldset className="mt-6">
-        <legend className="pf-label">Mode de configuration</legend>
+        <legend className="pf-label">{t.wizard.name.modeLegend}</legend>
         <div className="pf-grid">
-          {MODES.map((mode) => (
+          {modes.map((mode) => (
             <button
               key={mode.value}
               type="button"
@@ -82,16 +85,17 @@ export default function CreatePage() {
         </div>
       </fieldset>
 
-      <div className="mt-6 flex items-center gap-3">
+      <div className="mt-6 flex flex-wrap items-center gap-3">
         <button type="button" className="pf-btn pf-btn-ghost" onClick={() => session.reset()}>
-          Repartir de zéro
+          <Icon name="refresh" />
+          {t.wizard.name.reset}
         </button>
-        <span className="pf-hint">Le brouillon se reprend tout seul si vous fermez l’onglet.</span>
+        <span className="pf-hint min-w-0">{t.wizard.name.draftNote}</span>
       </div>
 
       {presets.length === 0 ? null : (
         <p className="pf-hint mt-4">
-          Presets certifiés disponibles : {presets.map((preset) => preset.name).join(', ')}.
+          {t.wizard.name.presets(presets.map((preset) => preset.name).join(', '))}
         </p>
       )}
     </StepShell>

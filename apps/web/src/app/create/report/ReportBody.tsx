@@ -1,5 +1,9 @@
 import Link from 'next/link';
 import type { ReactElement } from 'react';
+import { IssueList, NoteList } from '../../../components/ui/empty-state';
+import { ErrorState } from '../../../components/ui/error-state';
+import { Icon } from '../../../components/ui/icon';
+import { useLocale } from '../../../lib/i18n/provider';
 import { formatBytes, stepLabel } from '../generate/steps';
 import { installSteps } from './install-steps';
 import type { GenerationReport } from './result';
@@ -15,12 +19,15 @@ export interface ReportBodyProps {
 }
 
 /**
- * Le rapport du §6.14 — un composant **pur** : il reçoit son rapport, il ne
- * relit rien. Il dit d'abord si la génération a réussi, puis ce qui a été écrit,
- * puis ce qui doit alerter : avertissements, puis problèmes.
+ * Le rapport du §6.14 — il reçoit son rapport et ne relit rien : ni le
+ * brouillon, ni le moteur. Seule la langue vient du contexte (`useLocale`),
+ * parce que le poids et les libellés d'étape en dépendent.
  *
- * Un refus n'affiche pas une liste de fichiers vide comme si c'était un succès :
- * « Aucun fichier écrit » est une phrase, pas une case blanche.
+ * Il dit d'abord si la génération a réussi, puis ce qui a été écrit, puis ce
+ * qui doit alerter : avertissements, puis problèmes. Un refus n'affiche pas une
+ * liste de fichiers vide comme si c'était un succès : « Aucun fichier écrit »
+ * est une phrase, pas une case blanche — et il propose de corriger les
+ * technologies sans perdre le brouillon.
  */
 export function ReportBody({
   report,
@@ -29,75 +36,83 @@ export function ReportBody({
   envVarNames,
   onRedownload,
 }: ReportBodyProps): ReactElement {
+  const { t, locale } = useLocale();
+  const body = t.build.report;
+  const stepLabels = t.build.generate.steps;
+  const steps = report.steps;
+
   return (
     <div>
       <p className="flex flex-wrap items-center gap-2">
         <span className={report.ok ? 'pf-badge pf-badge-ok' : 'pf-badge pf-badge-danger'}>
-          {report.ok ? 'Réussi' : 'Refusé'}
+          {report.ok ? body.okBadge : body.refusedBadge}
         </span>
-        {report.directory === '' ? null : <span className="pf-mono">{report.directory}</span>}
+        {report.directory === '' ? null : (
+          <span className="pf-mono break-all">{report.directory}</span>
+        )}
       </p>
 
       <dl className="pf-grid mt-4">
         <div className="pf-card pf-card-pad">
-          <dt className="pf-eyebrow">Fichiers écrits</dt>
+          <dt className="pf-eyebrow">{body.filesCount}</dt>
           <dd>{report.files.length}</dd>
         </div>
         <div className="pf-card pf-card-pad">
-          <dt className="pf-eyebrow">Poids</dt>
-          <dd>{formatBytes(report.bytes)}</dd>
+          <dt className="pf-eyebrow">{body.weight}</dt>
+          <dd>{formatBytes(report.bytes, locale)}</dd>
         </div>
         <div className="pf-card pf-card-pad">
-          <dt className="pf-eyebrow">Étapes</dt>
+          <dt className="pf-eyebrow">{body.stepsTitle}</dt>
           <dd>
-            {report.steps.length === 0
-              ? 'Aucune'
-              : report.steps.map((step) => stepLabel(step)).join(', ')}
+            {steps.length === 0
+              ? body.noSteps
+              : steps.map((step) => stepLabel(step, stepLabels)).join(', ')}
           </dd>
         </div>
       </dl>
 
       {report.warnings.length === 0 ? null : (
         <section className="mt-5">
-          <h3 className="pf-label">Avertissements</h3>
-          <ul className="mt-1 list-disc pl-5">
-            {report.warnings.map((warning) => (
-              <li key={warning}>{warning}</li>
-            ))}
-          </ul>
+          <h3 className="pf-label">{body.warningsTitle}</h3>
+          <NoteList className="mt-1" notes={report.warnings} />
         </section>
       )}
 
-      {report.issues.length === 0 ? null : (
+      {!report.ok || report.issues.length === 0 ? null : (
         <section className="mt-5">
-          <h3 className="pf-label">Problèmes</h3>
-          <ul className="pf-error mt-1 list-disc pl-5">
-            {report.issues.map((issue) => (
-              <li key={issue}>{issue}</li>
-            ))}
-          </ul>
+          <h3 className="pf-label">{body.issuesTitle}</h3>
+          <IssueList className="mt-1" issues={report.issues} />
         </section>
       )}
 
       {report.ok ? null : (
         <section className="mt-5">
-          <div className="flex flex-wrap items-center gap-3">
-            <Link className="pf-btn" href="/create/stack">
-              Modifier les technologies
-            </Link>
-            <Link className="pf-btn pf-btn-ghost" href="/">
-              Retour au tableau de bord
-            </Link>
-          </div>
+          <ErrorState
+            title={body.refusalTitle}
+            body={body.refusalBody}
+            issues={report.issues}
+            actions={
+              <>
+                <Link className="pf-btn" href="/create/stack">
+                  <Icon name="layers" />
+                  {body.fixStack}
+                </Link>
+                <Link className="pf-btn pf-btn-ghost" href="/">
+                  <Icon name="home" />
+                  {body.backHome}
+                </Link>
+              </>
+            }
+          />
 
-          <div className="mt-3">
-            <p className="pf-label">Technologies choisies</p>
+          <div className="mt-3 min-w-0">
+            <p className="pf-label">{body.technologiesTitle}</p>
             {technologies.length === 0 ? (
-              <p className="pf-hint">Aucune technologie choisie.</p>
+              <p className="pf-hint">{body.none}</p>
             ) : (
-              <p className="flex flex-wrap items-center gap-2 mt-1">
+              <p className="mt-1 flex flex-wrap items-center gap-2">
                 {technologies.map((id) => (
-                  <span key={id} className="pf-badge pf-mono">
+                  <span key={id} className="pf-badge pf-mono break-all">
                     {id}
                   </span>
                 ))}
@@ -109,17 +124,14 @@ export function ReportBody({
 
       {!report.ok ? null : (
         <section className="mt-5">
-          <h3 className="pf-label">Installation</h3>
-          <p className="pf-hint">
-            Le projet est terminé : ces écrans ne le modifient plus. Pour le reprendre, suivez les
-            commandes ci-dessous.
-          </p>
+          <h3 className="pf-label">{body.installationTitle}</h3>
+          <p className="pf-hint">{body.installationNote}</p>
           <ol className="pf-mono mt-2 list-none space-y-1 p-0">
-            {installSteps({ directory: report.directory, docker, envVarNames }).map((step) => (
+            {installSteps({ directory: report.directory, docker, envVarNames }, t).map((step) => (
               <li key={step.command}>
                 <span className="pf-hint not-italic">{step.label}</span>
                 <br />
-                {step.command}
+                <span className="break-all">{step.command}</span>
               </li>
             ))}
           </ol>
@@ -127,29 +139,34 @@ export function ReportBody({
           <div className="mt-4 flex flex-wrap items-center gap-3">
             {report.zipBase64 === undefined || onRedownload === undefined ? null : (
               <button type="button" className="pf-btn" onClick={onRedownload}>
-                Télécharger à nouveau
+                <Icon name="download" />
+                {body.download}
               </button>
             )}
             {report.directory === '' ? null : (
               <Link className="pf-btn" href="/repo">
-                Connecter à GitHub
+                <Icon name="github" />
+                {body.connectGithub}
               </Link>
             )}
             <Link className="pf-btn pf-btn-ghost" href="/">
-              Retour au tableau de bord
+              <Icon name="home" />
+              {body.backHome}
             </Link>
           </div>
         </section>
       )}
 
       <section className="mt-5">
-        <h3 className="pf-label">Fichiers</h3>
+        <h3 className="pf-label">{body.filesTitle}</h3>
         {report.files.length === 0 ? (
-          <p className="pf-hint">Aucun fichier écrit.</p>
+          <p className="pf-hint">{body.noFiles}</p>
         ) : (
           <ul className="pf-mono mt-1 list-none p-0">
             {report.files.map((file) => (
-              <li key={file}>{file}</li>
+              <li key={file} className="break-all">
+                {file}
+              </li>
             ))}
           </ul>
         )}

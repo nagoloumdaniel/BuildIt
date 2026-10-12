@@ -1,7 +1,7 @@
 import { CATEGORIES } from '@buildit/registry';
 import { describe, expect, it } from 'vitest';
+import { FR } from '../../../lib/i18n/messages';
 import {
-  CATEGORY_LABELS,
   type CategoryBlock,
   categoryLabel,
   categoryProgress,
@@ -167,12 +167,16 @@ describe('filterCatalogue', () => {
 });
 
 describe('optionReason', () => {
+  const fallback = FR.wizard.stack.blockedFallback;
+
   it('dit toujours pourquoi une option est bloquée', () => {
-    expect(optionReason(option('x', 'blocked'))).toBe('Incompatible avec la sélection en cours.');
-    expect(optionReason(option('x', 'blocked', { reason: 'Ne sort pas sur mobile.' }))).toBe(
-      'Ne sort pas sur mobile.',
+    expect(optionReason(option('x', 'blocked'), fallback)).toBe(
+      'Incompatible avec la sélection en cours.',
     );
-    expect(optionReason(option('x', 'available'))).toBeUndefined();
+    expect(
+      optionReason(option('x', 'blocked', { reason: 'Ne sort pas sur mobile.' }), fallback),
+    ).toBe('Ne sort pas sur mobile.');
+    expect(optionReason(option('x', 'available'), fallback)).toBeUndefined();
   });
 });
 
@@ -211,10 +215,13 @@ describe('defaultCategory', () => {
 });
 
 describe('libellés de catégories', () => {
-  it('donne un libellé français à chaque catégorie du registry', () => {
+  it('donne un libellé, jamais un slug nu, à chaque catégorie du registry', () => {
+    // La table vit au dictionnaire : elle est donc traduite, et complète
+    // (`satisfies Record<Category, string>` au dictionnaire, vérifié au rendu).
     for (const category of CATEGORIES) {
-      expect(CATEGORY_LABELS[category].length).toBeGreaterThan(0);
-      expect(categoryLabel(category)).toBe(CATEGORY_LABELS[category]);
+      const label = categoryLabel(FR, category);
+      expect(label.length).toBeGreaterThan(0);
+      expect(label).not.toBe(category);
     }
   });
 });

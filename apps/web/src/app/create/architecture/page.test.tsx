@@ -3,9 +3,9 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
 import { DraftProvider } from '../../../components/wizard/draft-provider';
 import { freshDraft } from '../../../lib/draft';
+import { FR } from '../../../lib/i18n/messages';
 import { PROJECT_TYPES } from '../type/profiles';
 import {
-  ARCHITECTURE_NOTES,
   ArchitectureChoices,
   defaultArchitecture,
   recommendedArchitectures,
@@ -22,9 +22,10 @@ describe('les architectures réelles du manifest (§6.5)', () => {
   it('décrit chacune et donne son impact : complexité ET coût d’exploitation', () => {
     // Table complète : ajouter une architecture au manifest casse ici, et force
     // à écrire sa phrase — même garde-fou que l'écran cible.
-    expect(Object.keys(ARCHITECTURE_NOTES).sort()).toEqual([...ARCHITECTURES].sort());
+    const notes = FR.wizard.architecture.labels;
+    expect(Object.keys(notes).sort()).toEqual([...ARCHITECTURES].sort());
     for (const architecture of ARCHITECTURES) {
-      const note = ARCHITECTURE_NOTES[architecture];
+      const note = notes[architecture];
       expect(note.label.length).toBeGreaterThan(0);
       expect(note.note.length).toBeGreaterThan(0);
       expect(note.complexity.length).toBeGreaterThan(0);

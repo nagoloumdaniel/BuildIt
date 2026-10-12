@@ -2,13 +2,19 @@
 
 import Link from 'next/link';
 import { useEffect, useMemo, useState } from 'react';
+import { ErrorState } from '../../../components/ui/error-state';
+import { Icon } from '../../../components/ui/icon';
+import { Spinner } from '../../../components/ui/loading';
 import { useDraft } from '../../../components/wizard/draft-provider';
 import { StepShell } from '../../../components/wizard/shell';
 import { downloadZip } from '../../../lib/download-zip';
 import { draftToManifest } from '../../../lib/draft-to-manifest';
+import { useLocale } from '../../../lib/i18n/provider';
+import { browserProjectStorage } from '../../../lib/projects';
 import { type GenerationView, generateProjectAction, workspaceRootAction } from '../../actions';
 import { browserSessionStorage, saveReport } from '../report/result';
 import { PipelineProgress } from './PipelineProgress';
+import { rememberGeneratedProject } from './remember';
 import { formatBytes, GENERATION_STEPS, progressStates, targetDirectory } from './steps';
 
 /**
@@ -21,15 +27,21 @@ import { formatBytes, GENERATION_STEPS, progressStates, targetDirectory } from '
  * Report (§6.14) par `sessionStorage`.
  *
  * Un dossier existant fait refuser la génération : c'est dit ici avant le clic,
- * et le refus est affiché tel quel après.
+ * et le refus est affiché tel quel après, sans quitter l'écran — le brouillon
+ * reste entier, donc corriger ne coûte rien.
+ *
+ * Au succès seulement, le projet rejoint la **mémoire des projets générés**
+ * (`rememberGeneratedProject`) : un projet écrit sur le disque n'est plus un
+ * brouillon, et la reprise de parcours ne doit plus le présenter comme tel.
  */
 export default function GeneratePage() {
+  const { t: messages, locale } = useLocale();
   const draft = useDraft();
   const manifest = useMemo(() => draftToManifest(draft), [draft]);
   const [root, setRoot] = useState<string | null>(null);
   const [running, setRunning] = useState(false);
   const [report, setReport] = useState<GenerationView | null>(null);
-  const [fatal, setFatal] = useState<string | null>(null);
+  const [fatal, setFatal] = useState(false);
 
   useEffect(() => {
     let alive = true;
@@ -53,19 +65,23 @@ export default function GeneratePage() {
     () => (root === null || !manifest.ok ? null : targetDirectory(root, manifest.value.name)),
     [root, manifest],
   );
+  const steps = messages.build.generate.steps;
 
   async function run(): Promise<void> {
     if (!manifest.ok) {
       return;
     }
     setRunning(true);
-    setFatal(null);
+    setFatal(false);
     setReport(null);
     try {
       const result = await generateProjectAction(manifest.value);
       // Le rapport est enregistré même en cas de refus : l'écran Report doit
       // pouvoir dire le refus, pas seulement un succès.
       saveReport(browserSessionStorage(), result);
+      // Et la mémoire des projets n'est écrite qu'au succès : un refus n'a
+      // produit aucun projet, il n'a rien à y faire.
+      rememberGeneratedProject(browserProjectStorage(), draft, result);
       setReport(result);
       // Mode hébergé (Phase 12) : rien n'est écrit sur le serveur au-delà de
       // la requête — le projet est proposé en téléchargement, ici, tout de
@@ -74,7 +90,7 @@ export default function GeneratePage() {
         downloadZip(result.zipBase64, manifest.value.name);
       }
     } catch {
-      setFatal('La génération n’a pas pu être lancée. Rien n’a été écrit — réessayez.');
+      setFatal(true);
     } finally {
       setRunning(false);
     }
@@ -84,19 +100,26 @@ export default function GeneratePage() {
     return (
       <StepShell
         step="generate"
-        title="Générer le projet"
-        description="Le projet est écrit sur cette machine, dans le dossier de travail affiché."
+        title={messages.build.generate.title}
+        description={messages.build.generate.description}
       >
-        <div className="pf-card pf-card-pad">
-          <p className="pf-error" role="status">
-            Le brouillon est incomplet : rien ne sera écrit.
-          </p>
-          <ul className="mt-2 list-disc pl-5">
-            {manifest.issues.map((issue) => (
-              <li key={issue.message}>{issue.message}</li>
-            ))}
-          </ul>
-        </div>
+        <ErrorState
+          title={messages.build.generate.incompleteTitle}
+          body={messages.build.generate.incompleteBody}
+          issues={manifest.issues.map((issue) => issue.message)}
+          actions={
+            <>
+              <Link className="pf-btn" href="/create/stack">
+                <Icon name="layers" />
+                {messages.build.generate.fixStack}
+              </Link>
+              <Link className="pf-btn pf-btn-ghost" href="/">
+                <Icon name="home" />
+                {messages.build.generate.backHome}
+              </Link>
+            </>
+          }
+        />
       </StepShell>
     );
   }
@@ -104,16 +127,20 @@ export default function GeneratePage() {
   return (
     <StepShell
       step="generate"
-      title="Générer le projet"
-      description="Le projet est écrit sur cette machine, dans le dossier de travail affiché."
+      title={messages.build.generate.title}
+      description={messages.build.generate.description}
     >
       <section className="pf-card pf-card-pad">
-        <h2 className="pf-label">Dossier de destination</h2>
-        <p className="pf-mono">{directory ?? 'Résolution de la racine de travail…'}</p>
-        <p className="pf-hint mt-1">
-          Rien n’est écrit avant votre clic. Un dossier du même nom déjà présent fait refuser la
-          génération : aucun fichier existant n’est écrasé.
-        </p>
+        <h2 className="pf-label">{messages.build.generate.destination}</h2>
+        {directory === null ? (
+          <p className="pf-mono flex items-center gap-2">
+            <Spinner size="sm" />
+            {messages.build.generate.resolvingRoot}
+          </p>
+        ) : (
+          <p className="pf-mono break-all">{directory}</p>
+        )}
+        <p className="pf-hint mt-1">{messages.build.generate.destinationHint}</p>
       </section>
 
       <div className="mt-4 flex flex-wrap items-center gap-3">
@@ -125,83 +152,98 @@ export default function GeneratePage() {
             void run();
           }}
         >
-          {running ? 'Génération…' : 'Générer le projet'}
+          <Icon name="hammer" />
+          {running ? messages.build.generate.buttonRunning : messages.build.generate.button}
         </button>
         {report === null ? null : (
           <Link className="pf-btn" href="/create/report">
-            Voir le rapport complet
+            <Icon name="file" />
+            {messages.build.generate.viewReport}
           </Link>
         )}
       </div>
 
-      {fatal === null ? null : (
-        <div className="mt-3">
-          <p className="pf-error" role="status">
-            {fatal}
-          </p>
-          <div className="mt-3 flex flex-wrap items-center gap-3">
-            <Link className="pf-btn" href="/create/stack">
-              Modifier les technologies
-            </Link>
-            <Link className="pf-btn pf-btn-ghost" href="/">
-              Retour au tableau de bord
-            </Link>
-          </div>
-        </div>
+      {!fatal ? null : (
+        <ErrorState
+          className="mt-3"
+          title={messages.build.generate.fatalTitle}
+          body={messages.build.generate.fatalBody}
+          actions={
+            <>
+              <button
+                type="button"
+                className="pf-btn"
+                onClick={() => {
+                  void run();
+                }}
+              >
+                <Icon name="refresh" />
+                {messages.common.retry}
+              </button>
+              <Link className="pf-btn pf-btn-ghost" href="/">
+                <Icon name="home" />
+                {messages.build.generate.backHome}
+              </Link>
+            </>
+          }
+        />
       )}
 
       {running ? (
         <div className="mt-4">
-          <PipelineProgress steps={progressStates([], GENERATION_STEPS)} running />
+          <PipelineProgress steps={progressStates([], GENERATION_STEPS, steps)} running />
         </div>
       ) : null}
 
       {report === null ? null : (
         <div className="mt-4">
-          <PipelineProgress
-            steps={progressStates(report.steps, GENERATION_STEPS)}
-            running={false}
-          />
+          {/* Un refus peut n'avoir exécuté aucune étape (dossier déjà pris) :
+              on ne montre alors pas une barre à 0 % annoncée « terminée ». */}
+          {report.ok || report.steps.length > 0 ? (
+            <PipelineProgress
+              steps={progressStates(report.steps, GENERATION_STEPS, steps)}
+              running={false}
+            />
+          ) : null}
 
           {report.ok ? (
             <p className="mt-3" role="status">
-              Projet écrit dans <span className="pf-mono">{report.directory}</span> :{' '}
-              {report.files.length} fichier{report.files.length > 1 ? 's' : ''},{' '}
-              {formatBytes(report.bytes)}.
+              {messages.build.generate.writtenDirectory}{' '}
+              <span className="pf-mono break-all">{report.directory}</span>
+              {messages.build.generate.writtenRest(
+                report.files.length,
+                formatBytes(report.bytes, locale),
+              )}
             </p>
           ) : (
             <div className="mt-3">
-              <p className="pf-error" role="status">
-                La génération a été refusée — rien n’a été écrit.
-              </p>
-              <ul className="pf-error mt-1 list-disc pl-5">
-                {report.issues.map((issue) => (
-                  <li key={issue}>{issue}</li>
-                ))}
-              </ul>
-              <p className="pf-hint mt-2">
-                Un dossier déjà présent n’est jamais écrasé : si le problème vient de là, changez le
-                nom à l’écran « Créer un projet ». Si le problème vient des technologies choisies,
-                corrigez-les ci-dessous.
-              </p>
-
-              <div className="mt-3 flex flex-wrap items-center gap-3">
-                <Link className="pf-btn" href="/create/stack">
-                  Modifier les technologies
-                </Link>
-                <Link className="pf-btn pf-btn-ghost" href="/">
-                  Retour au tableau de bord
-                </Link>
-              </div>
+              <ErrorState
+                title={messages.build.generate.refusedTitle}
+                body={messages.build.generate.refusedBody}
+                issues={report.issues}
+                actions={
+                  <>
+                    <Link className="pf-btn" href="/create/stack">
+                      <Icon name="layers" />
+                      {messages.build.generate.fixStack}
+                    </Link>
+                    <Link className="pf-btn pf-btn-ghost" href="/">
+                      <Icon name="home" />
+                      {messages.build.generate.backHome}
+                    </Link>
+                  </>
+                }
+              />
+              <p className="pf-hint mt-2">{messages.build.generate.refusedHint}</p>
 
               <div className="mt-3">
-                <p className="pf-label">Technologies choisies</p>
+                <p className="pf-label">{messages.build.generate.technologiesTitle}</p>
                 {draft.technologies.length === 0 ? (
-                  <p className="pf-hint">Aucune technologie choisie.</p>
+                  <p className="pf-hint">{messages.build.generate.none}</p>
                 ) : (
-                  <p className="flex flex-wrap items-center gap-2 mt-1">
+                  <p className="mt-1 flex flex-wrap items-center gap-2">
                     {draft.technologies.map((id) => (
-                      <span key={id} className="pf-badge pf-mono">
+                      <span key={id} className="pf-badge pf-mono break-all">
                         {id}
                       </span>
                     ))}

@@ -2,8 +2,13 @@
 
 import type { Category } from '@buildit/registry';
 import { useEffect, useMemo, useState } from 'react';
+import { EmptyState } from '../../../components/ui/empty-state';
+import { ErrorState } from '../../../components/ui/error-state';
+import { Icon } from '../../../components/ui/icon';
+import { LoadingLine } from '../../../components/ui/loading';
 import { useDraft, useSession } from '../../../components/wizard/draft-provider';
 import { StepShell } from '../../../components/wizard/shell';
+import { useMessages } from '../../../lib/i18n/provider';
 import { toggle, toggleExclusive } from '../../../lib/session';
 import { checkSelectionAction } from '../../actions';
 import { loadStackBlocksAction } from './actions';
@@ -20,7 +25,7 @@ import {
 } from './stack-view';
 
 /**
- * L'écran Stack Builder (§6, 6e écran ; §5 pour le progressive disclosure).
+ * L'écran Stack Builder (§6, 5e écran ; §5 pour le progressive disclosure).
  *
  * Le chemin est celui de tous les écrans : le composant client ne connaît que
  * `actions.ts`, jamais l'adaptateur moteur (`lib/engine.ts` porte `server-only`).
@@ -35,29 +40,11 @@ import {
  *   l'étape est `resolution.issues.length === 0` (`lib/flow.ts`).
  *
  * Toute la logique de §5 est dans `stack-view.ts` : ce fichier ne fait que
- * câbler le store, appeler les Server Actions et rendre.
+ * câbler le store, appeler les Server Actions et rendre. Les libellés viennent
+ * tous du dictionnaire (`useMessages`) — y compris les 37 catégories.
  */
-
-/** Les deux modes du §5 — même vocabulaire que l'écran « Créer un projet ». */
-const MODES = [
-  {
-    value: 'guided',
-    label: 'Guidé',
-    note: 'Deux à quatre choix recommandés par catégorie, le reste à portée d’un clic.',
-  },
-  {
-    value: 'expert',
-    label: 'Expert',
-    note: 'Tout le catalogue, recherche globale et filtre de compatibilité.',
-  },
-] as const;
-
-/** « 1 option » / « 3 options » — l'écran ne dit jamais « 1 options ». */
-function countLabel(count: number, singular: string, plural: string): string {
-  return `${count} ${count > 1 ? plural : singular}`;
-}
-
 export default function StackPage() {
+  const t = useMessages();
   const draft = useDraft();
   const session = useSession();
 
@@ -67,6 +54,9 @@ export default function StackPage() {
   const [expanded, setExpanded] = useState<readonly string[]>([]);
   const [query, setQuery] = useState('');
   const [compatibleOnly, setCompatibleOnly] = useState(false);
+  // Relancer la vérification du moteur sans quitter l'écran : c'est l'action de
+  // récupération d'un refus de compatibilité, et elle ne touche pas la sélection.
+  const [attempt, setAttempt] = useState(0);
 
   // Le brouillon ne porte que `targets` et `technologies` : c'est la sélection
   // que le moteur revalide. `useMemo` sur les deux tableaux garde la référence
@@ -96,6 +86,7 @@ export default function StackPage() {
     };
   }, [selection]);
 
+  // biome-ignore lint/correctness/useExhaustiveDependencies: `attempt` est la clé de relance : elle ne sert qu'à rejouer la vérification après un refus, sans toucher à la sélection.
   useEffect(() => {
     let alive = true;
     void checkSelectionAction(selection).then((resolution) => {
@@ -109,7 +100,7 @@ export default function StackPage() {
     return () => {
       alive = false;
     };
-  }, [selection, session]);
+  }, [selection, session, attempt]);
 
   // Qui appartient à quelle catégorie, pour `toggleExclusive` (§12) — reconstruit
   // à chaque rendu depuis les blocs déjà chargés, jamais depuis un second
@@ -152,17 +143,25 @@ export default function StackPage() {
   const results = filterCatalogue(blocks, { query, compatibleOnly: filtered });
   const chosen = selectedCount(blocks);
   const resolution = draft.resolution;
+  const modes = [
+    {
+      value: 'guided' as const,
+      label: t.wizard.stack.modeGuided,
+      note: t.wizard.stack.modeGuidedNote,
+    },
+    {
+      value: 'expert' as const,
+      label: t.wizard.stack.modeExpert,
+      note: t.wizard.stack.modeExpertNote,
+    },
+  ];
 
   return (
-    <StepShell
-      step="stack"
-      title="Stack Builder"
-      description="Choisissez vos technologies par catégorie. La compatibilité est revérifiée à chaque changement, et ce qui bloque est expliqué."
-    >
+    <StepShell step="stack" title={t.wizard.stack.title} description={t.wizard.stack.description}>
       <fieldset>
-        <legend className="pf-label">Mode de configuration</legend>
+        <legend className="pf-label">{t.wizard.stack.modeLegend}</legend>
         <div className="pf-grid">
-          {MODES.map((mode) => (
+          {modes.map((mode) => (
             <button
               key={mode.value}
               type="button"
@@ -181,33 +180,40 @@ export default function StackPage() {
 
       <div className="mt-4 flex flex-wrap items-center gap-2">
         {resolution === undefined ? (
-          <span className="pf-badge">Compatibilité en cours</span>
+          <span className="pf-badge">{t.wizard.stack.checking}</span>
         ) : resolution.issues.length === 0 ? (
           <span className="pf-badge pf-badge-ok">
             {resolution.status === 'certified'
-              ? 'Combinaison certifiée'
-              : 'Combinaison expérimentale'}
+              ? t.wizard.stack.certified
+              : t.wizard.stack.experimental}
           </span>
         ) : (
           <span className="pf-badge pf-badge-danger">
-            {countLabel(resolution.issues.length, 'point à corriger', 'points à corriger')}
+            {t.wizard.stack.issues(resolution.issues.length)}
           </span>
         )}
-        <span className="pf-hint">
-          {chosen === 0
-            ? 'Aucune technologie choisie : le mode guidé propose les plus courantes.'
-            : countLabel(chosen, 'technologie choisie', 'technologies choisies')}
+        <span className="pf-hint min-w-0">
+          {chosen === 0 ? t.wizard.stack.chosenNone : t.wizard.stack.chosenCount(chosen)}
         </span>
       </div>
 
       {resolution === undefined || resolution.issues.length === 0 ? null : (
-        <ul className="mt-2" aria-label="Ce qui empêche de continuer">
-          {resolution.issues.map((issue) => (
-            <li key={issue} className="pf-error">
-              {issue}
-            </li>
-          ))}
-        </ul>
+        <ErrorState
+          className="mt-3"
+          title={t.wizard.stack.issuesTitle}
+          body={t.wizard.stack.issuesBody}
+          issues={resolution.issues}
+          actions={
+            <button
+              type="button"
+              className="pf-btn"
+              onClick={() => setAttempt((value) => value + 1)}
+            >
+              <Icon name="refresh" />
+              {t.common.retry}
+            </button>
+          }
+        />
       )}
 
       <ExpertToolbar
@@ -218,24 +224,21 @@ export default function StackPage() {
         showCompatibleOnly={draft.mode === 'expert'}
       />
 
-      {loading ? <p className="pf-hint mt-4">Chargement du catalogue…</p> : null}
+      {loading ? <LoadingLine className="mt-4">{t.wizard.stack.loading}</LoadingLine> : null}
       {!loading && blocks.length === 0 ? (
-        <p className="pf-hint mt-4">
-          Le catalogue ne contient aucune fiche exploitable : il n’y a rien à choisir pour
-          l’instant.
-        </p>
+        <EmptyState className="mt-4" icon="search" title={t.wizard.stack.emptyCatalogue} />
       ) : null}
 
       {searching ? (
-        <section className="mt-4" aria-label="Résultats de recherche">
-          <p className="pf-eyebrow">Résultats pour « {query.trim()} »</p>
+        <section className="mt-4" aria-label={t.wizard.stack.resultsLabel}>
+          <p className="pf-eyebrow">{t.wizard.stack.resultsFor(query.trim())}</p>
           {results.blocks.length === 0 ? (
-            <p className="pf-hint mt-2">Aucune technologie ne correspond à cette recherche.</p>
+            <p className="pf-hint mt-2">{t.wizard.stack.noMatch}</p>
           ) : null}
           {results.blocks.map((block) => (
             <div key={block.category} className="pf-card pf-card-pad mt-3">
               <p className="pf-label">
-                {categoryLabel(block.category)}
+                {categoryLabel(t, block.category)}
                 <span className="pf-badge ml-2">{block.options.length}</span>
               </p>
               <div className="pf-grid mt-2">
@@ -251,14 +254,7 @@ export default function StackPage() {
             </div>
           ))}
           {results.hiddenBlocked > 0 ? (
-            <p className="pf-hint mt-2">
-              {countLabel(
-                results.hiddenBlocked,
-                'option incompatible masquée',
-                'options incompatibles masquées',
-              )}{' '}
-              par le filtre « compatible seulement ».
-            </p>
+            <p className="pf-hint mt-2">{t.wizard.stack.hiddenByFilter(results.hiddenBlocked)}</p>
           ) : null}
         </section>
       ) : (
@@ -270,12 +266,12 @@ export default function StackPage() {
           {activeBlock === undefined ? null : (
             <div className="pf-card pf-card-pad mt-3">
               <header className="flex flex-wrap items-start justify-between gap-3">
-                <div>
-                  <h2 className="pf-label">{categoryLabel(activeBlock.category)}</h2>
+                <div className="min-w-0">
+                  <h2 className="pf-label">{categoryLabel(t, activeBlock.category)}</h2>
                   <p className="pf-hint">
                     {draft.mode === 'expert'
-                      ? 'Tout le catalogue de cette catégorie, incompatibles comprises.'
-                      : 'Les choix recommandés d’abord, puis les incompatibles expliquées.'}
+                      ? t.wizard.stack.expertNote
+                      : t.wizard.stack.guidedNote}
                   </p>
                 </div>
                 <span className="pf-badge">
@@ -306,20 +302,16 @@ export default function StackPage() {
                   className="pf-btn pf-btn-ghost mt-3"
                   onClick={() => setExpanded((list) => toggle(list, activeBlock.category))}
                 >
+                  <Icon name={expandedHere ? 'arrowLeft' : 'list'} />
                   {expandedHere
-                    ? 'Revenir aux recommandations'
-                    : `Voir toutes les options (${guided.hidden.length})`}
+                    ? t.wizard.stack.showRecommended
+                    : t.wizard.stack.showAll(guided.hidden.length)}
                 </button>
               ) : null}
 
               {draft.mode === 'expert' && expertOptions.hiddenBlocked > 0 ? (
                 <p className="pf-hint mt-3">
-                  {countLabel(
-                    expertOptions.hiddenBlocked,
-                    'option incompatible masquée',
-                    'options incompatibles masquées',
-                  )}{' '}
-                  par le filtre « compatible seulement ».
+                  {t.wizard.stack.hiddenByFilter(expertOptions.hiddenBlocked)}
                 </p>
               ) : null}
             </div>

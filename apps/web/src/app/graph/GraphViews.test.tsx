@@ -1,3 +1,4 @@
+import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
 import { GraphDiagram } from './GraphDiagram';
@@ -17,21 +18,28 @@ const LABELS = new Map(NODES.map((node) => [node.id, node.label]));
  * Le graphe doit être lisible **sans le voir** : les tableaux sont l'équivalent
  * textuel complet (§6.11), le dessin n'ajoute qu'une vue. Ces tests vérifient
  * les deux, sans navigateur.
+ *
+ * Les composants lisent leur texte dans le dictionnaire (`useMessages()`) : ils
+ * sont donc rendus comme des éléments, pas appelés comme des fonctions — hors
+ * fournisseur, le dictionnaire rend le français, ce qui est le cas ici.
  */
 describe('GraphNodesTable', () => {
   it('dit, pour chaque nœud, s’il est choisi ou ajouté', () => {
-    const html = renderToStaticMarkup(GraphNodesTable({ nodes: NODES }));
+    const html = renderToStaticMarkup(createElement(GraphNodesTable, { nodes: NODES }));
     expect(html).toContain('Next.js');
     expect(html).toContain('Choisi');
     expect(html).toContain('TypeScript');
     expect(html).toContain('Ajouté par le moteur');
     expect(html).toContain('scope="col"');
+    expect(html).toContain('class="pf-table"');
   });
 });
 
 describe('GraphEdgesTable', () => {
   it('nomme la nature de chaque relation', () => {
-    const html = renderToStaticMarkup(GraphEdgesTable({ edges: EDGES, labels: LABELS }));
+    const html = renderToStaticMarkup(
+      createElement(GraphEdgesTable, { edges: EDGES, labels: LABELS }),
+    );
     expect(html).toContain('Next.js');
     expect(html).toContain('TypeScript');
     expect(html).toContain('exige');
@@ -39,7 +47,7 @@ describe('GraphEdgesTable', () => {
 
   it('nomme aussi les compatibilités', () => {
     const html = renderToStaticMarkup(
-      GraphEdgesTable({
+      createElement(GraphEdgesTable, {
         edges: [{ from: 'next', to: 'typescript', kind: 'compatibleWith' }],
         labels: LABELS,
       }),
@@ -48,7 +56,9 @@ describe('GraphEdgesTable', () => {
   });
 
   it('sans relation, le dit au lieu de rendre un tableau muet', () => {
-    const html = renderToStaticMarkup(GraphEdgesTable({ edges: [], labels: LABELS }));
+    const html = renderToStaticMarkup(
+      createElement(GraphEdgesTable, { edges: [], labels: LABELS }),
+    );
     expect(html).toContain('Aucune relation déclarée');
   });
 });
@@ -56,7 +66,7 @@ describe('GraphEdgesTable', () => {
 describe('GraphDiagram', () => {
   it('décrit le graphe pour les lecteurs d’écran', () => {
     const html = renderToStaticMarkup(
-      GraphDiagram({ layout: layoutGraph(NODES, EDGES), labels: LABELS }),
+      createElement(GraphDiagram, { layout: layoutGraph(NODES, EDGES), labels: LABELS }),
     );
     expect(html).toContain('role="img"');
     expect(html).toContain('Next.js exige TypeScript.');

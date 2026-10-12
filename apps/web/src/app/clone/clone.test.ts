@@ -6,7 +6,13 @@ import { parseRemote } from '@buildit/git';
 import { afterEach, describe, expect, it } from 'vitest';
 import { clonePreviewAction, cloneProjectAction } from '../actions-node';
 import { cloneProject, planClone } from './clone';
-import { defaultFolder, destinationState, resolveDestination } from './destination';
+import {
+  defaultFolder,
+  destinationState,
+  resolveAbsoluteDestination,
+  resolveDestination,
+  webWorkspaceRoot,
+} from './destination';
 
 /**
  * Le clone, contre un **faux runner** : aucune commande Git réelle n'est lancée.
@@ -51,10 +57,11 @@ async function tempRoot(): Promise<string> {
 
 afterEach(async () => {
   delete process.env['PF_WEB_WORKSPACE'];
+  delete process.env['PF_HOSTED'];
   await Promise.all(created.splice(0).map((path) => rm(path, { recursive: true, force: true })));
 });
 
-describe('resolveDestination — un dossier relatif, et rien d’autre', () => {
+describe('resolveDestination — le repli relatif, seul admis en hébergé', () => {
   it('accepte un dossier simple ou imbriqué, sous la racine', async () => {
     const root = await tempRoot();
     expect(resolveDestination('mon-projet', root)).toEqual({
@@ -69,7 +76,12 @@ describe('resolveDestination — un dossier relatif, et rien d’autre', () => {
 
   it('refuse un chemin absolu, une remontée et un nom vide', async () => {
     const root = await tempRoot();
-    expect(resolveDestination(root, root).ok).toBe(false);
+    const absolu = resolveDestination(root, root);
+    expect(absolu.ok).toBe(false);
+    if (!absolu.ok) {
+      expect(absolu.reason).toBe('folder');
+      expect(absolu.issues.join(' ')).toContain('chemin absolu');
+    }
     expect(resolveDestination('..', root).ok).toBe(false);
     expect(resolveDestination('a/../b', root).ok).toBe(false);
     expect(resolveDestination('..\\ailleurs', root).ok).toBe(false);
@@ -111,6 +123,50 @@ describe('resolveDestination — un dossier relatif, et rien d’autre', () => {
       }
     },
   );
+});
+
+describe('resolveAbsoluteDestination — le parent choisi dans l’explorateur', () => {
+  it('accepte un dossier parent absolu existant et pose le nom dedans', async () => {
+    const parent = await tempRoot();
+
+    expect(await resolveAbsoluteDestination(parent, 'mon-app')).toEqual({
+      ok: true,
+      value: { folder: 'mon-app', directory: join(parent, 'mon-app') },
+    });
+  });
+
+  it('refuse un parent absent, un fichier, un chemin relatif ou vide', async () => {
+    const parent = await tempRoot();
+    const file = join(parent, 'fichier.txt');
+    await writeFile(file, 'contenu');
+
+    const absent = await resolveAbsoluteDestination(join(parent, 'absent'), 'mon-app');
+    expect(absent.ok).toBe(false);
+    if (!absent.ok) {
+      expect(absent.reason).toBe('parent');
+      expect(absent.issues.join(' ')).toContain('n’est pas accessible');
+    }
+
+    for (const rejected of [file, 'ailleurs', '']) {
+      const resolved = await resolveAbsoluteDestination(rejected, 'mon-app');
+      expect(resolved.ok, `« ${rejected} » doit être refusé`).toBe(false);
+      if (!resolved.ok) {
+        expect(resolved.reason).toBe('parent');
+      }
+    }
+  });
+
+  it('refuse un nom de sous-dossier qui n’est pas un simple segment', async () => {
+    const parent = await tempRoot();
+
+    for (const name of ['', 'a/b', 'a\\b', '..', 'C:\\Windows']) {
+      const resolved = await resolveAbsoluteDestination(parent, name);
+      expect(resolved.ok, `« ${name} » doit être refusé`).toBe(false);
+      if (!resolved.ok) {
+        expect(resolved.reason).toBe('folder');
+      }
+    }
+  });
 });
 
 describe('destinationState — sans rien écrire', () => {
@@ -190,6 +246,55 @@ describe('planClone — valider avant Git', () => {
   });
 });
 
+describe('planClone — la destination en local, choisie dans l’explorateur', () => {
+  it('accepte un parent absolu existant et pose le sous-dossier dedans', async () => {
+    const parent = await tempRoot();
+
+    const planned = await planClone('octocat/mon-app', 'mon-app', { kind: 'parent', parent });
+
+    expect(planned.view.ok).toBe(true);
+    expect(planned.view.problem).toBeNull();
+    expect(planned.view.directory).toBe(join(parent, 'mon-app'));
+    expect(planned.plan?.directory).toBe(join(parent, 'mon-app'));
+  });
+
+  it('déduit le nom du sous-dossier du lien quand il n’est pas donné', async () => {
+    const parent = await tempRoot();
+
+    const planned = await planClone('octocat/mon-app', '', { kind: 'parent', parent });
+
+    expect(planned.view.folder).toBe('mon-app');
+    expect(planned.view.directory).toBe(join(parent, 'mon-app'));
+  });
+
+  it('refuse un parent absent en le nommant « pas accessible »', async () => {
+    const parent = await tempRoot();
+
+    const planned = await planClone('octocat/mon-app', 'mon-app', {
+      kind: 'parent',
+      parent: join(parent, 'absent'),
+    });
+
+    expect(planned.plan).toBeUndefined();
+    expect(planned.view.problem).toBe('parent');
+    expect(planned.view.directory).toBe('');
+    expect(planned.view.issues.join(' ')).toContain('n’est pas accessible');
+  });
+
+  it('classe un dossier déjà occupé, avec son lot d’issues', async () => {
+    const parent = await tempRoot();
+    await mkdir(join(parent, 'occupe'));
+    await writeFile(join(parent, 'occupe', 'a.txt'), 'a');
+
+    const planned = await planClone('octocat/mon-app', 'occupe', { kind: 'parent', parent });
+
+    expect(planned.plan).toBeUndefined();
+    expect(planned.view.problem).toBe('occupied');
+    expect(planned.view.destination).toBe('taken');
+    expect(planned.view.issues.join(' ')).toContain('n’écrase rien');
+  });
+});
+
 describe('cloneProject — le clone, puis l’installation', () => {
   it('ne lance aucune commande quand le lien est refusé', async () => {
     const root = await tempRoot();
@@ -233,6 +338,25 @@ describe('cloneProject — le clone, puis l’installation', () => {
     // Le jeton passe par l'environnement du processus Git, jamais par `ps`.
     expect(call?.args.join(' ')).not.toContain(TOKEN);
     expect(call?.options?.env?.['PF_GIT_TOKEN']).toBe(TOKEN);
+  });
+
+  it('clone directement sous le parent absolu choisi dans l’explorateur', async () => {
+    const parent = await tempRoot();
+    const fake = fakeRunner();
+
+    const result = await cloneProject({
+      link: 'https://github.com/octocat/mon-app.git',
+      folder: 'mon-app',
+      install: false,
+      ignoreScripts: true,
+      root: { kind: 'parent', parent },
+      runner: fake.runner,
+    });
+
+    expect(result.ok).toBe(true);
+    expect(result.directory).toBe(join(parent, 'mon-app'));
+    await expect(stat(result.directory)).resolves.toBeDefined();
+    expect(fake.calls[0]?.cwd).toBe(parent);
   });
 
   it('efface le dossier créé quand le clone échoue', async () => {
@@ -316,9 +440,56 @@ describe('les Server Actions du clone — validation avant tout accès', () => {
     expect(result.installed).toBe(false);
   });
 
-  it('refuse un dossier de destination absolu', async () => {
-    const preview = await clonePreviewAction('octocat/mon-app', resolve('ailleurs'));
+  it('accepte un parent absolu local quand il existe, et le refuse sinon', async () => {
+    const parent = await tempRoot();
+
+    const accepted = await clonePreviewAction('octocat/mon-app', 'mon-app', parent);
+    expect(accepted.ok).toBe(true);
+    expect(accepted.problem).toBeNull();
+    expect(accepted.directory).toBe(join(parent, 'mon-app'));
+
+    const absent = await clonePreviewAction('octocat/mon-app', 'mon-app', join(parent, 'absent'));
+    expect(absent.ok).toBe(false);
+    expect(absent.problem).toBe('parent');
+    expect(absent.directory).toBe('');
+    expect(absent.issues.join(' ')).toContain('n’est pas accessible');
+  });
+
+  it('refuse un parent qui est un fichier, pas un dossier', async () => {
+    const parent = await tempRoot();
+    const file = join(parent, 'fichier.txt');
+    await writeFile(file, 'contenu');
+
+    const preview = await clonePreviewAction('octocat/mon-app', 'mon-app', file);
+
     expect(preview.ok).toBe(false);
-    expect(preview.issues.join(' ')).toContain('chemin absolu');
+    expect(preview.problem).toBe('parent');
+    expect(preview.issues.join(' ')).toContain('n’est pas un dossier');
+  });
+
+  it('refuse un dossier à séparateur de chemin dans le nom du sous-dossier', async () => {
+    const parent = await tempRoot();
+
+    const preview = await clonePreviewAction('octocat/mon-app', 'a/mon-app', parent);
+
+    expect(preview.ok).toBe(false);
+    expect(preview.problem).toBe('folder');
+  });
+
+  it('en hébergé, garde le repli relatif et refuse le chemin absolu', async () => {
+    const root = await tempRoot();
+    process.env['PF_WEB_WORKSPACE'] = root;
+    process.env['PF_HOSTED'] = '1';
+
+    // Un chemin absolu venu du navigateur serait une écriture arbitraire sur
+    // le serveur : en hébergé, la racine de travail est la seule destination.
+    const absolu = await clonePreviewAction('octocat/mon-app', resolve('ailleurs'));
+    expect(absolu.ok).toBe(false);
+    expect(absolu.problem).toBe('folder');
+    expect(absolu.issues.join(' ')).toContain('chemin absolu');
+
+    const relatif = await clonePreviewAction('octocat/mon-app', 'a/mon-app');
+    expect(relatif.ok).toBe(true);
+    expect(relatif.directory).toBe(join(webWorkspaceRoot(), 'a', 'mon-app'));
   });
 });

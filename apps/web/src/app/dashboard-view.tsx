@@ -1,51 +1,37 @@
+'use client';
+
 import Link from 'next/link';
 import type { ReactElement } from 'react';
+import { EmptyState } from '../components/ui/empty-state';
+import { ErrorState } from '../components/ui/error-state';
+import { Icon } from '../components/ui/icon';
+import { LoadingLine, ProgressPanel, Spinner } from '../components/ui/loading';
+import { ProjectCard } from '../components/ui/project-card';
 import type { DraftState } from '../lib/draft';
 import { STEP_ORDER, type StepId } from '../lib/flow';
+import { useMessages } from '../lib/i18n/provider';
+import { recentProjects, type StoredProject } from '../lib/projects';
 import type { GenerationReport } from './create/report/result';
+import { DetectionSummary, InstallPanel } from './open/install-panel';
+import type { LocalOpenController } from './open/local-open';
 
 /**
  * Le contenu de l'écran 1 — Dashboard (§6.1, §18bis), hors `page.tsx`.
  *
- * Next interdit tout export autre que `default` dans un `page.tsx` (validateur
- * engendré, `.next/types`) : les données et le composant testable vivent ici,
- * `page.tsx` ne fait que câbler `useDraft()`/`useSession()` et le chargement du
- * rapport (`sessionStorage`, non disponible au rendu statique des tests).
+ * Next interdit tout export autre que `default` dans un `page.tsx` : les
+ * données et les composants testables vivent ici, `page.tsx` ne fait que
+ * câbler `useDraft()`/`useSession()`, la liste des projets générés
+ * (`localStorage`) et l'ouverture locale.
+ *
+ * Trois idées gouvernent la page :
+ * 1. **Un projet généré n'est jamais un brouillon.** Dès que le brouillon est
+ *    à l'écran « rapport », il sort de « Brouillon en cours » — la liste des
+ *    projets générés le porte, et le rapport de session n'est qu'un bonus.
+ * 2. **Ouvrir un projet local ouvre l'explorateur**, pas une page
+ *    intermédiaire : la carte du menu porte tout le fil (choix, analyse,
+ *    résultat, installation).
+ * 3. **La carte d'un projet est la même partout** (`ProjectCard`).
  */
-
-export const PATHS = [
-  {
-    href: '/create',
-    label: 'Créer un projet',
-    note: 'Le parcours complet : nom, plateformes, stack, blueprints, génération.',
-  },
-  {
-    href: '/clone',
-    label: 'Cloner un projet',
-    note: 'Vos dépôts GitHub, ou n’importe quel lien Git. Installation proposée après.',
-  },
-  {
-    href: '/open',
-    label: 'Ouvrir un projet local',
-    note: 'Reconnaître un projet déjà sur cette machine et proposer l’installation.',
-  },
-] as const;
-
-/** Le nom lisible d'une étape — table complète : ajouter une étape casse ici. */
-const STEP_LABELS: Readonly<Record<StepId, string>> = {
-  create: 'nom du projet',
-  target: 'plateformes cibles',
-  type: 'type de projet',
-  architecture: 'architecture',
-  stack: 'stack technique',
-  capabilities: 'capacités',
-  env: 'environnement & secrets',
-  infrastructure: 'infrastructure',
-  blueprint: 'blueprint',
-  preview: 'aperçu des fichiers',
-  generate: 'génération',
-  report: 'rapport',
-};
 
 /** L'URL d'une étape : l'étape `create` vit à `/create`, pas à `/create/create`. */
 function resumeHref(step: StepId): string {
@@ -71,15 +57,37 @@ function hasDraft(draft: DraftState): boolean {
 /**
  * Le brouillon a-t-il produit un projet **terminé** ?
  *
- * Un projet généré avec succès n'est plus un brouillon à reprendre (§6.14) :
- * il rejoint « Projets créés », avec ses propres gestes (GitHub, doc
- * d'installation, téléchargement), jamais « Reprendre » ni « Repartir de
- * zéro ». Le rapport vit en `sessionStorage` (décision volontaire : il ne
- * survit pas à la fermeture de l'onglet) ; s'il a disparu — onglet rouvert —
- * le dernier écran dit déjà « rapport » et le lien vers lui suffit.
+ * Deux signaux, et il en faut deux :
+ *
+ * 1. le brouillon est sur l'écran « rapport » et un rapport de session le
+ *    confirme — le cas normal, juste après la génération ;
+ * 2. le rapport est en main **et** la liste des projets générés contient déjà
+ *    ce projet (même nom, même dossier).
+ *
+ * Le second n'est pas une redondance : depuis le rapport, le rail d'étapes
+ * reste cliquable, et redescendre corriger un choix réécrit `draft.step`. Sans
+ * lui, l'accueil reproposerait « Reprendre » sur un projet déjà écrit et
+ * verrouillé — exactement ce que le §6.14 interdit. Et comme il s'appuie sur la
+ * liste persistée, il survit à la fermeture de l'onglet, là où le rapport de
+ * session disparaît.
  */
-function isCompletedProject(draft: DraftState, report: GenerationReport | null): boolean {
-  return draft.step === 'report' && report !== null && report.ok;
+function isCompletedProject(
+  draft: DraftState,
+  report: GenerationReport | null,
+  projects: readonly StoredProject[] | null,
+): boolean {
+  if (report === null || !report.ok) {
+    return false;
+  }
+  if (draft.step === 'report') {
+    return true;
+  }
+  return (
+    report.directory !== '' &&
+    (projects ?? []).some(
+      (project) => project.directory === report.directory && project.name === draft.name,
+    )
+  );
 }
 
 export interface DashboardViewProps {
@@ -87,6 +95,13 @@ export interface DashboardViewProps {
   readonly report?: GenerationReport | null;
   readonly onReset?: (() => void) | undefined;
   readonly onRedownload?: (() => void) | undefined;
+  /** `null` : la liste n'a pas encore été lue (`localStorage`, après hydratation). */
+  readonly projects?: readonly StoredProject[] | null;
+  /** Donné pour les projets dont l'archive est encore en main (session courante). */
+  readonly isRedownloadable?: ((project: StoredProject) => boolean) | undefined;
+  readonly onRedownloadProject?: ((project: StoredProject) => void) | undefined;
+  /** Le fil d'ouverture locale ; absent, la carte redevient un simple lien. */
+  readonly openLocal?: LocalOpenController | undefined;
 }
 
 export function DashboardView({
@@ -94,93 +109,312 @@ export function DashboardView({
   report = null,
   onReset,
   onRedownload,
+  projects = [],
+  isRedownloadable,
+  onRedownloadProject,
+  openLocal,
 }: DashboardViewProps): ReactElement {
-  const completed = isCompletedProject(draft, report);
-  const draftOnly = !completed && hasDraft(draft);
+  const t = useMessages();
+  const completed = isCompletedProject(draft, report, projects);
+  // Le brouillon ne s'affiche **que** hors de l'écran « rapport » : un projet
+  // généré n'est pas un parcours à reprendre, même onglet rouvert.
+  const draftOnly = !completed && draft.step !== 'report' && hasDraft(draft);
+  const list = projects === null ? null : recentProjects(projects, 2);
+  // Le rapport de session décrit un projet qui est déjà dans la liste : on ne
+  // le montre pas deux fois.
+  const completedInList =
+    report !== null &&
+    report.directory !== '' &&
+    (list ?? []).some((project) => project.directory === report.directory);
+  const showCompletedCard = completed && !completedInList;
+
   return (
     <>
-      <nav className="pf-grid" aria-label="Menu d'accueil">
-        {PATHS.map((path) => (
-          <Link key={path.href} className="pf-choice no-underline" href={path.href}>
-            <span className="pf-choice-name">{path.label}</span>
-            <span className="pf-choice-note">{path.note}</span>
+      <nav aria-label={t.dashboard.pathsLabel} className="pf-grid">
+        <Link className="pf-choice no-underline" href="/create">
+          <span className="pf-choice-name">
+            <span aria-hidden="true" style={{ color: 'var(--pf-accent)' }}>
+              <Icon name="hammer" size={16} />
+            </span>
+            {t.dashboard.createTitle}
+          </span>
+          <span className="pf-choice-note">{t.dashboard.createNote}</span>
+        </Link>
+        <Link className="pf-choice no-underline" href="/clone">
+          <span className="pf-choice-name">
+            <span aria-hidden="true" style={{ color: 'var(--pf-steel)' }}>
+              <Icon name="gitBranch" size={16} />
+            </span>
+            {t.dashboard.cloneTitle}
+          </span>
+          <span className="pf-choice-note">{t.dashboard.cloneNote}</span>
+        </Link>
+        {openLocal === undefined ? (
+          <Link className="pf-choice no-underline" href="/open">
+            <span className="pf-choice-name">
+              <span aria-hidden="true" style={{ color: 'var(--pf-accent)' }}>
+                <Icon name="folderOpen" size={16} />
+              </span>
+              {t.dashboard.openTitle}
+            </span>
+            <span className="pf-choice-note">{t.dashboard.openNote}</span>
           </Link>
-        ))}
+        ) : (
+          <LocalOpenCard controller={openLocal} />
+        )}
       </nav>
 
-      {completed ? (
-        <section className="pf-card pf-card-pad mt-3">
-          <p className="pf-eyebrow">Projets créés</p>
-          <p className="mt-1">
-            {draft.name === '' ? 'Projet sans nom' : draft.name}
-            <span className="pf-badge pf-badge-ok ml-2">Terminé</span>
-          </p>
-          <p className="pf-hint mt-1">
-            Ce projet est généré : il ne se modifie plus depuis BuildIt. Connectez-le à GitHub,
-            consultez sa documentation d’installation, ou téléchargez-le à nouveau.
-          </p>
-          <div className="mt-3 flex flex-wrap items-center gap-3">
-            <Link className="pf-btn" href="/repo">
-              Connecter à GitHub
-            </Link>
-            <Link className="pf-btn" href="/create/report">
-              Voir le rapport & la doc d’installation
-            </Link>
-            {onRedownload === undefined ? null : (
-              <button type="button" className="pf-btn pf-btn-ghost" onClick={onRedownload}>
-                Télécharger à nouveau
-              </button>
+      <section className="mt-6">
+        {list === null ? (
+          <LoadingLine>{t.projects.loading}</LoadingLine>
+        ) : (
+          <>
+            {list.length === 0 ? null : (
+              <>
+                <div className="pf-card-head">
+                  <div className="min-w-0">
+                    <p className="pf-eyebrow">{t.dashboard.projectsTitle}</p>
+                  </div>
+                  <Link className="pf-btn pf-btn-sm" href="/projects">
+                    <Icon name="list" size={14} />
+                    {t.dashboard.projectsAll}
+                  </Link>
+                </div>
+                <div className="pf-stack mt-3">
+                  {list.map((project) => (
+                    <ProjectCard
+                      key={project.id}
+                      onRedownload={
+                        onRedownloadProject === undefined || isRedownloadable?.(project) !== true
+                          ? undefined
+                          : () => {
+                              onRedownloadProject(project);
+                            }
+                      }
+                      project={project}
+                    />
+                  ))}
+                </div>
+              </>
             )}
-          </div>
-        </section>
-      ) : null}
+
+            {showCompletedCard ? (
+              <section className="pf-card pf-card-pad">
+                <p className="pf-eyebrow">{t.dashboard.projectsTitle}</p>
+                <p className="mt-1 flex flex-wrap items-center gap-2">
+                  <span>{draft.name === '' ? t.dashboard.unnamed : draft.name}</span>
+                  <span className="pf-badge pf-badge-ok">{t.projects.done}</span>
+                </p>
+                <p className="pf-hint mt-1">{t.dashboard.projectDone}</p>
+                <div className="mt-3 flex flex-wrap items-center gap-3">
+                  <Link className="pf-btn" href="/repo">
+                    <Icon name="github" size={15} />
+                    {t.projects.connectGithub}
+                  </Link>
+                  <Link className="pf-btn" href="/create/report">
+                    <Icon name="file" size={15} />
+                    {t.dashboard.projectReport}
+                  </Link>
+                  {onRedownload === undefined ? null : (
+                    <button className="pf-btn pf-btn-ghost" onClick={onRedownload} type="button">
+                      <Icon name="download" size={15} />
+                      {t.projects.download}
+                    </button>
+                  )}
+                </div>
+              </section>
+            ) : null}
+
+            {list.length === 0 && !showCompletedCard ? (
+              <EmptyState
+                actions={
+                  <Link className="pf-btn" href="/create">
+                    <Icon name="plus" size={15} />
+                    {t.dashboard.createTitle}
+                  </Link>
+                }
+                icon="package"
+                title={t.dashboard.projectsEmpty}
+              />
+            ) : null}
+          </>
+        )}
+      </section>
 
       <section className="pf-card pf-card-pad mt-3">
-        <p className="pf-eyebrow">Brouillon en cours</p>
+        <p className="pf-eyebrow">{t.dashboard.draftTitle}</p>
         {draftOnly ? (
           <>
-            <p className="mt-1">
-              {draft.name === '' ? 'Projet sans nom' : draft.name}
-              <span className="pf-badge pf-badge-accent ml-2">{draft.step}</span>
+            <p className="mt-1 flex flex-wrap items-center gap-2">
+              <span>{draft.name === '' ? t.dashboard.unnamed : draft.name}</span>
+              <span className="pf-badge pf-badge-accent">{draft.step}</span>
             </p>
             <p className="pf-hint mt-1">
-              Dernier écran : {STEP_LABELS[draft.step]}. Le brouillon se reprend tout seul si vous
-              fermez l’onglet.
+              {t.dashboard.draftLastScreen(t.dashboard.draftStep[draft.step])}{' '}
+              {t.dashboard.draftKept}
             </p>
-            <div className="mt-3 flex items-center gap-3">
+            <div className="mt-3 flex flex-wrap items-center gap-3">
               <Link className="pf-btn pf-btn-primary" href={resumeHref(draft.step)}>
-                Reprendre
+                <Icon name="play" size={15} />
+                {t.dashboard.resume}
               </Link>
               {onReset === undefined ? null : (
-                <button type="button" className="pf-btn pf-btn-ghost" onClick={onReset}>
-                  Repartir de zéro
+                <button className="pf-btn pf-btn-ghost" onClick={onReset} type="button">
+                  <Icon name="refresh" size={15} />
+                  {t.dashboard.reset}
                 </button>
               )}
             </div>
           </>
         ) : (
           <p className="pf-hint mt-1">
-            {completed
-              ? 'Rien à reprendre : le projet ci-dessus est terminé. Choisissez un chemin ci-dessus pour en démarrer un autre.'
-              : 'Aucun brouillon en cours. Choisissez un chemin ci-dessus : tout est conservé au fur et à mesure.'}
+            {completed || draft.step === 'report'
+              ? t.dashboard.draftEmptyAfterProject
+              : t.dashboard.draftEmpty}
           </p>
         )}
       </section>
 
-      <nav className="pf-grid mt-3" aria-label="Compte et dépôt">
+      <nav aria-label={t.dashboard.accountLabel} className="pf-grid mt-3">
         <Link className="pf-choice no-underline" href="/github">
-          <span className="pf-choice-name">Compte GitHub</span>
-          <span className="pf-choice-note">
-            Se connecter, voir les permissions accordées, se déconnecter.
+          <span className="pf-choice-name">
+            <span aria-hidden="true" style={{ color: 'var(--pf-steel)' }}>
+              <Icon name="github" size={16} />
+            </span>
+            {t.dashboard.githubTitle}
           </span>
+          <span className="pf-choice-note">{t.dashboard.githubNote}</span>
         </Link>
         <Link className="pf-choice no-underline" href="/repo">
-          <span className="pf-choice-name">Dépôt & partage</span>
-          <span className="pf-choice-note">
-            Créer le dépôt GitHub d’un projet, inviter des collaborateurs.
+          <span className="pf-choice-name">
+            <span aria-hidden="true" style={{ color: 'var(--pf-steel)' }}>
+              <Icon name="users" size={16} />
+            </span>
+            {t.dashboard.repoTitle}
           </span>
+          <span className="pf-choice-note">{t.dashboard.repoNote}</span>
         </Link>
       </nav>
     </>
+  );
+}
+
+export interface LocalOpenCardProps {
+  readonly controller: LocalOpenController;
+}
+
+/**
+ * La carte « Ouvrir un projet local » du menu.
+ *
+ * L'appui **ouvre l'explorateur de la machine** : pas de page intermédiaire,
+ * pas de champ « collez un chemin ». Dès le dossier choisi, une barre
+ * d'avancement s'affiche **dans la carte** (`pf-card-progress`) pendant la
+ * lecture du disque, puis le résultat arrive — nom, gestionnaire, commande
+ * d'installation — avec les gestes qui suivent (confirmation, installation).
+ *
+ * En hébergé, l'explorateur serait celui du serveur : la carte le dit et
+ * renvoie vers l'écran complet, où la saisie du chemin est le repli assumé.
+ */
+export function LocalOpenCard({ controller }: LocalOpenCardProps): ReactElement {
+  const t = useMessages();
+  const busy = controller.phase === 'inspecting' || controller.installing;
+  const picking = controller.phase === 'picking';
+  const summary = controller.inspection?.ok === true ? controller.inspection.value : null;
+  const failedInspection = controller.inspection?.ok === false ? controller.inspection : null;
+  /**
+   * Dès qu'un dossier est en jeu, la carte prend toute la largeur : une barre
+   * d'avancement et une commande d'installation dans une colonne d'un tiers
+   * d'écran seraient illisibles, et c'est **dans cette carte** que l'attente
+   * doit rester (pas dans un écran à part).
+   */
+  const expanded = controller.phase !== 'idle';
+
+  return (
+    <section
+      aria-label={t.dashboard.openTitle}
+      className={`pf-choice cursor-default${expanded ? ' col-span-full' : ''}`}
+    >
+      <p className="pf-choice-name">
+        <span aria-hidden="true" style={{ color: 'var(--pf-accent)' }}>
+          <Icon name="folderOpen" size={16} />
+        </span>
+        {t.dashboard.openTitle}
+      </p>
+      <span className="pf-choice-note">{t.dashboard.openNote}</span>
+
+      {controller.canPick === false ? (
+        <p className="pf-callout mt-3">{t.dashboard.openHostedNote}</p>
+      ) : null}
+
+      <div className="mt-3 flex flex-wrap items-center gap-2">
+        <button
+          className="pf-btn pf-btn-primary"
+          disabled={busy || picking || controller.canPick === false}
+          onClick={controller.pick}
+          type="button"
+        >
+          {picking ? <Spinner size="sm" /> : <Icon name="folderOpen" size={15} />}
+          {picking ? t.open.picking : t.open.pick}
+        </button>
+        <Link className="pf-btn pf-btn-ghost pf-btn-sm" href="/open">
+          <Icon name="arrowRight" size={14} />
+          {t.dashboard.openFullScreen}
+        </Link>
+      </div>
+
+      {picking ? (
+        <p aria-live="polite" className="pf-hint mt-2" role="status">
+          {t.picker.openingHint}
+        </p>
+      ) : null}
+
+      {controller.notice === null ? null : (
+        <p aria-live="polite" className="pf-hint mt-2" role="status">
+          {controller.notice}
+        </p>
+      )}
+
+      {controller.phase === 'inspecting' ? (
+        <div className="pf-card-progress">
+          <ProgressPanel detail={controller.directory} title={t.open.analysing} />
+        </div>
+      ) : null}
+
+      {summary === null ? null : (
+        <div className="pf-card-progress">
+          <p className="pf-eyebrow">{t.dashboard.openDetected}</p>
+          <DetectionSummary className="mt-1" summary={summary} />
+          <div className="mt-3">
+            <InstallPanel
+              confirmed={controller.confirmed}
+              ignoreScripts={controller.ignoreScripts}
+              installResult={controller.installResult}
+              installing={controller.installing}
+              onConfirmed={controller.setConfirmed}
+              onIgnoreScripts={controller.setIgnoreScripts}
+              onInstall={controller.install}
+              showDetectionLabel={false}
+              summary={summary}
+            />
+          </div>
+        </div>
+      )}
+
+      {failedInspection === null ? null : (
+        <div className="pf-card-progress">
+          <ErrorState
+            actions={
+              <button className="pf-btn" onClick={controller.pick} type="button">
+                <Icon name="folderOpen" size={15} />
+                {t.open.pick}
+              </button>
+            }
+            issues={failedInspection.issues}
+            illustration="lost"
+            title={t.open.notRecognised}
+          />
+        </div>
+      )}
+    </section>
   );
 }

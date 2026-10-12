@@ -190,7 +190,11 @@ describe('écran Repository & Sharing — Field, Button, Badge, StatusMessage', 
   it('Field rend le label et l’aide avec les mêmes classes, sans enveloppe', () => {
     const html = renderToStaticMarkup(repoProps({ status: NO_REPO, name: 'mon-app' }));
 
-    expect(html).toContain('<label class="pf-label" for="pf-repo-directory">');
+    // Volontairement changé : le dossier n'est plus un champ de saisie mais un
+    // `PathPicker` (l'explorateur de la machine) — son libellé reste `pf-label`,
+    // porté par un `<span>` que le bouton référence par `aria-labelledby`.
+    expect(html).toContain('<span class="pf-label" id="pf-repo-directory-label">');
+    expect(html).toContain('id="pf-repo-directory"');
     expect(html).toContain('<label class="pf-label mt-4" for="pf-repo-name">');
     expect(html).toContain('<label class="pf-label mt-4" for="pf-repo-description">');
     expect(html).toContain('class="pf-btn pf-btn-primary mt-3"');
@@ -201,7 +205,10 @@ describe('écran Repository & Sharing — Field, Button, Badge, StatusMessage', 
       repoProps({ status: { ...NO_REPO, ok: false, issues: ['Le dossier n’existe pas.'] } }),
     );
 
-    expect(html).toContain('class="pf-error mt-1"');
+    // Volontairement changé : la lecture en échec n'est plus une suite de
+    // `StatusMessage` mais un `ErrorState` — le refus du moteur reste listé
+    // (classe portée par l'item de `IssueList`), avec la sortie cette fois.
+    expect(html).toContain('class="pf-error"');
     expect(html).toContain('role="alert"');
   });
 

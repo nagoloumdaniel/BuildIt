@@ -3,10 +3,11 @@
 import { type ReactElement, useEffect } from 'react';
 import { useDraft, useSession } from '../../../components/wizard/draft-provider';
 import { StepShell } from '../../../components/wizard/shell';
+import { useMessages } from '../../../lib/i18n/provider';
 import { ArchitectureChoices, defaultArchitecture, withArchitecture } from './options';
 
 /**
- * L'écran 5 du §6.5. Ce fichier ne porte **que** l'assemblage : la coquille
+ * L'écran 4 du §6.5. Ce fichier ne porte **que** l'assemblage : la coquille
  * d'étape et le branchement au brouillon. Next refuse tout export autre que
  * `default` dans un `page.tsx` (validateur engendré), donc les données et le
  * contenu vivent dans `options.tsx`.
@@ -19,6 +20,7 @@ import { ArchitectureChoices, defaultArchitecture, withArchitecture } from './op
  * l'effet ne la touche plus jamais.
  */
 export default function ArchitecturePage(): ReactElement {
+  const t = useMessages();
   const draft = useDraft();
   const session = useSession();
 
@@ -31,8 +33,8 @@ export default function ArchitecturePage(): ReactElement {
   return (
     <StepShell
       step="architecture"
-      title="Architecture"
-      description="La forme la plus souple n’est pas la moins chère à exploiter. L’architecture choisie part dans le manifest."
+      title={t.wizard.architecture.title}
+      description={t.wizard.architecture.description}
     >
       <ArchitectureChoices
         mode={draft.mode}

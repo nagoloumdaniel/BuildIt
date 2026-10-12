@@ -2,27 +2,25 @@
 
 import type { Category } from '@buildit/registry';
 import { type ReactElement, useEffect, useMemo, useState } from 'react';
+import { ErrorState } from '../../../components/ui/error-state';
+import { Icon } from '../../../components/ui/icon';
+import { LoadingLine } from '../../../components/ui/loading';
 import { useDraft, useSession } from '../../../components/wizard/draft-provider';
 import { StepShell } from '../../../components/wizard/shell';
 import type { OptionView } from '../../../lib/engine';
+import { useMessages } from '../../../lib/i18n/provider';
 import { loadOptionsAction } from '../../actions';
 import {
   CAPABILITY_FAMILIES,
+  type CapabilityCategory,
   DEFAULT_CAPABILITY_CATEGORY,
   engineSelection,
   toggleCapability,
 } from './capabilities';
 import { CapabilityOptions } from './option-list';
 
-/** Le message d'une panne du moteur : l'écran le montre, il ne le tait pas. */
-function failureMessage(error: unknown): string {
-  return error instanceof Error && error.message.length > 0
-    ? error.message
-    : 'Le moteur n’a pas répondu.';
-}
-
 /**
- * Écran 7 — Capabilities (§6.7).
+ * Écran 6 — Capabilities (§6.7).
  *
  * L'écran ne connaît **aucune** technologie : il demande au moteur les options
  * d'une famille du catalogue (`loadOptionsAction`) et affiche ce qu'il rend,
@@ -33,16 +31,21 @@ function failureMessage(error: unknown): string {
  * famille : ces identifiants rejoignent `services`, comme `pf add` les y met.
  */
 export default function CapabilitiesPage(): ReactElement {
+  const t = useMessages();
   const draft = useDraft();
   const session = useSession();
-  const [family, setFamily] = useState<Category>(DEFAULT_CAPABILITY_CATEGORY);
+  const [family, setFamily] = useState<CapabilityCategory>(DEFAULT_CAPABILITY_CATEGORY);
   const [options, setOptions] = useState<readonly OptionView[]>([]);
   const [loading, setLoading] = useState(true);
   const [failure, setFailure] = useState<string | undefined>(undefined);
+  // Un rechargement à la demande : la panne du moteur se réessaie sans quitter
+  // l'écran ni perdre le brouillon.
+  const [attempt, setAttempt] = useState(0);
 
   // Le brouillon est dans les dépendances : chaque bascule change la sélection,
   // donc l'état des options (une capacité peut en débloquer ou en bloquer une
   // autre). La réponse tardive d'une famille quittée est ignorée.
+  // biome-ignore lint/correctness/useExhaustiveDependencies: `attempt` est la clé de relance : elle ne sert qu'à rejouer le chargement après une panne, sans quitter la famille ni perdre le brouillon.
   useEffect(() => {
     let alive = true;
     setLoading(true);
@@ -55,7 +58,11 @@ export default function CapabilitiesPage(): ReactElement {
       })
       .catch((error: unknown) => {
         if (alive) {
-          setFailure(failureMessage(error));
+          setFailure(
+            error instanceof Error && error.message.length > 0
+              ? error.message
+              : t.wizard.capabilities.engineDown,
+          );
         }
       })
       .finally(() => {
@@ -66,11 +73,11 @@ export default function CapabilitiesPage(): ReactElement {
     return () => {
       alive = false;
     };
-  }, [family, draft]);
+  }, [family, draft, attempt, t]);
 
-  const familyInfo = CAPABILITY_FAMILIES.find((candidate) => candidate.category === family);
-  // Qui appartient à `family` — la seule catégorie dont `toggleCapability`
-  // peut, à cet instant, retirer un choix concurrent sans se tromper.
+  const familyInfo = t.wizard.capabilities.families[family];
+  // Qui appartient à `family` — la seule catégorie dont `toggleCapability` peut,
+  // à cet instant, retirer un choix concurrent sans se tromper.
   const categoryOf = useMemo(() => {
     const byId = new Map<string, Category>();
     for (const option of options) {
@@ -82,34 +89,54 @@ export default function CapabilitiesPage(): ReactElement {
   return (
     <StepShell
       step="capabilities"
-      title="Capacités"
-      description="Ce que le projet sait faire : paiements, stockage, recherche, IA… Ces choix rejoignent le champ services du manifest — il n’a pas de champ par famille, et c’est ce qui évite de le faire migrer à chaque capacité nouvelle. Tout est conservé dans le brouillon au fur et à mesure."
+      title={t.wizard.capabilities.title}
+      description={t.wizard.capabilities.description}
     >
       <fieldset>
-        <legend className="pf-label">Familles de capacités</legend>
+        <legend className="pf-label">{t.wizard.capabilities.familiesLegend}</legend>
         <div className="pf-grid">
-          {CAPABILITY_FAMILIES.map((candidate) => (
+          {CAPABILITY_FAMILIES.map((category) => (
             <button
-              key={candidate.category}
+              key={category}
               type="button"
               className="pf-choice"
-              aria-pressed={candidate.category === family}
+              aria-pressed={category === family}
               onClick={() => {
-                setFamily(candidate.category);
+                setFamily(category);
               }}
             >
-              <span className="pf-choice-name">{candidate.label}</span>
-              <span className="pf-choice-note">{candidate.note}</span>
+              <span className="pf-choice-name">
+                {t.wizard.capabilities.families[category].label}
+              </span>
+              <span className="pf-choice-note">
+                {t.wizard.capabilities.families[category].note}
+              </span>
             </button>
           ))}
         </div>
       </fieldset>
 
-      <section className="mt-6" aria-label="Options de la famille choisie">
-        <h2 className="pf-label">{familyInfo?.label ?? family}</h2>
-        {loading ? <p className="pf-hint">Chargement des options…</p> : null}
-        {failure === undefined ? null : <p className="pf-error">{failure}</p>}
-        {loading ? null : (
+      <section className="mt-6" aria-label={t.wizard.capabilities.optionsLabel}>
+        <h2 className="pf-label">{familyInfo.label}</h2>
+        {loading ? <LoadingLine>{t.wizard.capabilities.loading}</LoadingLine> : null}
+        {failure === undefined ? null : (
+          <ErrorState
+            className="mt-3"
+            title={t.wizard.capabilities.engineDownTitle}
+            body={failure}
+            actions={
+              <button
+                type="button"
+                className="pf-btn"
+                onClick={() => setAttempt((value) => value + 1)}
+              >
+                <Icon name="refresh" />
+                {t.common.retry}
+              </button>
+            }
+          />
+        )}
+        {loading || failure !== undefined ? null : (
           <CapabilityOptions
             options={options}
             onToggle={(id) => {
@@ -120,9 +147,9 @@ export default function CapabilitiesPage(): ReactElement {
       </section>
 
       <div className="mt-6">
-        <p className="pf-label">Capacités retenues</p>
+        <p className="pf-label">{t.wizard.capabilities.kept}</p>
         {draft.capabilities.length === 0 ? (
-          <p className="pf-hint">Aucune capacité choisie pour l’instant.</p>
+          <p className="pf-hint">{t.wizard.capabilities.none}</p>
         ) : (
           <p className="flex flex-wrap items-center gap-2">
             {draft.capabilities.map((id) => (
@@ -130,7 +157,7 @@ export default function CapabilitiesPage(): ReactElement {
                 key={id}
                 type="button"
                 className="pf-badge pf-badge-accent"
-                aria-label={`Retirer ${id}`}
+                aria-label={t.wizard.capabilities.remove(id)}
                 onClick={() => {
                   session.update((current) => toggleCapability(current, id, family, categoryOf));
                 }}
@@ -141,8 +168,8 @@ export default function CapabilitiesPage(): ReactElement {
           </p>
         )}
         <p className="pf-hint mt-2">
-          Ces identifiants partent dans <span className="pf-mono">services</span> : le manifest ne
-          porte aucune valeur, seulement des choix.
+          {t.wizard.capabilities.servicesNoteBefore} <span className="pf-mono">services</span>
+          {t.wizard.capabilities.servicesNoteAfter}
         </p>
       </div>
     </StepShell>

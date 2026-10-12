@@ -1,6 +1,7 @@
 import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
+import { EN, FR } from '../../lib/i18n/messages';
 import type { AccessView, RepositoryStatusView, RoleView } from './sharing';
 import { createBlocker, inviteBlocker, RepoView, type RepoViewProps, shareBlocker } from './view';
 
@@ -80,27 +81,32 @@ function render(overrides: Partial<RepoViewProps> = {}): string {
 
 describe('shareBlocker — le partage n’existe que via GitHub', () => {
   it('explique, puis se tait quand le dépôt existe', () => {
-    expect(shareBlocker(null)).toContain('Lisez d’abord');
-    expect(shareBlocker(NO_REPO)).toContain('créez-le d’abord');
-    expect(shareBlocker(WITH_REPO)).toBeUndefined();
+    expect(shareBlocker(null, FR)).toContain('Lisez d’abord');
+    expect(shareBlocker(NO_REPO, FR)).toContain('créez-le d’abord');
+    expect(shareBlocker(WITH_REPO, FR)).toBeUndefined();
+  });
+
+  it('dit la même chose en anglais', () => {
+    expect(shareBlocker(null, EN)).toContain('Read the repository state');
+    expect(shareBlocker(WITH_REPO, EN)).toBeUndefined();
   });
 });
 
 describe('createBlocker — la création du dépôt', () => {
   it('dit ce qui manque, et refuse d’en créer un second', () => {
-    expect(createBlocker(null, 'mon-app', false)).toContain('Lisez d’abord');
-    expect(createBlocker(NO_REPO, '  ', false)).toContain('nom de dépôt');
-    expect(createBlocker(NO_REPO, 'mon-app', false)).toBeUndefined();
-    expect(createBlocker(WITH_REPO, 'mon-app', false)).toContain('déjà un dépôt GitHub');
-    expect(createBlocker(NO_REPO, 'mon-app', true)).toContain('en cours');
+    expect(createBlocker(null, 'mon-app', false, FR)).toContain('Lisez d’abord');
+    expect(createBlocker(NO_REPO, '  ', false, FR)).toContain('nom de dépôt');
+    expect(createBlocker(NO_REPO, 'mon-app', false, FR)).toBeUndefined();
+    expect(createBlocker(WITH_REPO, 'mon-app', false, FR)).toContain('déjà un dépôt GitHub');
+    expect(createBlocker(NO_REPO, 'mon-app', true, FR)).toContain('en cours');
   });
 });
 
 describe('inviteBlocker — l’invitation', () => {
   it('hérite du refus de partage et exige un nom', () => {
-    expect(inviteBlocker(NO_REPO, 'bob', false)).toContain('créez-le d’abord');
-    expect(inviteBlocker(WITH_REPO, '', false)).toContain('nom d’utilisateur');
-    expect(inviteBlocker(WITH_REPO, 'bob', false)).toBeUndefined();
+    expect(inviteBlocker(NO_REPO, 'bob', false, FR)).toContain('créez-le d’abord');
+    expect(inviteBlocker(WITH_REPO, '', false, FR)).toContain('nom d’utilisateur');
+    expect(inviteBlocker(WITH_REPO, 'bob', false, FR)).toBeUndefined();
   });
 });
 
@@ -166,5 +172,53 @@ describe('RepoView — le partage', () => {
     });
 
     expect(html).toContain('Personne d’autre n’a accès');
+  });
+});
+
+describe('RepoView — le lien de partage en lecture seule (§20)', () => {
+  function withShare(overrides: Partial<NonNullable<RepoViewProps['share']>> = {}): string {
+    return render({
+      status: WITH_REPO,
+      share: {
+        link: null,
+        note: null,
+        busy: false,
+        blocked: null,
+        onCreate: () => undefined,
+        onCopy: () => undefined,
+        ...overrides,
+      },
+    });
+  }
+
+  it('propose de créer le lien, sans copie tant qu’il n’existe pas', () => {
+    const html = withShare();
+
+    expect(html).toContain('Lien de partage en lecture seule');
+    expect(html).toContain('Créer le lien de partage');
+    expect(html).not.toContain('Copier le lien');
+  });
+
+  it('affiche le lien en champ de lecture et propose de le copier', () => {
+    const html = withShare({ link: 'http://127.0.0.1:4173/share#abc' });
+
+    expect(html).toContain('value="http://127.0.0.1:4173/share#abc"');
+    expect(html).toContain('readOnly=""');
+    expect(html).toContain('Copier le lien');
+  });
+
+  it('dit pourquoi le lien n’est pas encore possible, et propose de compléter', () => {
+    const html = withShare({ blocked: 'Le brouillon est incomplet.' });
+
+    expect(html).toContain('Le brouillon est incomplet.');
+    expect(html).toContain('Compléter le brouillon');
+    expect(html).toContain('href="/create/blueprint"');
+  });
+
+  it('pendant la création, nomme le travail au lieu d’un rotor seul', () => {
+    const html = withShare({ busy: true });
+
+    expect(html).toContain('Création du lien de partage');
+    expect(html).toContain('pf-spinner');
   });
 });

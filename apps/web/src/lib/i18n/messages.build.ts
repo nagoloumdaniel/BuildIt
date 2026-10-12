@@ -1,18 +1,493 @@
+import type { Architecture, Target } from '@buildit/manifest';
 import type { Widen } from './widen';
 
 /**
  * Les textes des six dernières étapes : environnement, infrastructure,
  * blueprint, aperçu, génération, rapport. Voir `messages.ts`.
+ *
+ * Même règle que `messages.wizard.ts` : un groupe par écran, les identifiants
+ * techniques comme clés (`docker`, `plan`, `apps`…), et une fonction dès que la
+ * phrase porte une valeur (`${count} fichier${count > 1 ? 's' : ''}`).
+ *
+ * Les refus du moteur (`report.issues`, les messages de `draftToManifest`) ne
+ * sont **pas** ici : ce sont les mêmes phrases que le CLI affiche, et les
+ * chercher dans un moteur de recherche doit donner le même résultat depuis les
+ * deux interfaces. Ce qui est traduit, c'est le cadre autour.
  */
-
 export const FR_BUILD = {
   build: {
+    /** Le statut d'une génération en cours, partagé par la page et la barre. */
     generating: 'Génération en cours…',
+
+    /**
+     * Écran 7 — Environment & Secrets : noms de variables uniquement, où poser
+     * les valeurs, et ce que le brouillon a le droit de retenir.
+     */
+    env: {
+      title: 'Environnement & secrets',
+      description:
+        'Les variables que vos choix réclament. Cette page n’affiche et ne stocke que des noms : aucune valeur ne transite par l’interface.',
+      requiredLegend: 'Variables requises',
+      requiredTitle: 'Variables requises',
+      loading: 'Chargement des variables…',
+      engineDownTitle: 'Les variables n’ont pas pu être lues',
+      engineDown: 'Le moteur n’a pas répondu.',
+      empty:
+        'Aucune variable pour l’instant : les choix faits aux écrans précédents n’en réclament aucune.',
+      requiredBy: (who: string) => `Réclamée par : ${who}`,
+      engineRequirement: 'une exigence du moteur',
+      engineAdded: 'Ajoutée par le moteur',
+      whereLegend: 'Où mettre les valeurs',
+      whereTitle: 'Où mettre les valeurs',
+      /** Le chemin technique reste au milieu, en chasse fixe, posé par l'écran. */
+      envFileBefore: 'Chaque valeur se met dans',
+      envFileAfter: ', à la racine du projet.',
+      gitignoreBefore: 'Ce fichier n’est jamais commité : il figure dans le',
+      gitignoreAfter: 'engendré par le projet.',
+      namesOnly:
+        'Le brouillon ne retient que les noms, et cette page n’offre aucun champ de saisie : aucune valeur ne transite par l’interface, ni par le lien de partage.',
+      engineMarked:
+        'Les valeurs ajoutées par le moteur sont marquées : elles viennent d’une exigence tirée par vos choix, pas d’une ligne saisie ici.',
+    },
+
+    /**
+     * Écran 8 — Infrastructure : les deux booléens (Docker, CI), le cloud cible
+     * et la traduction assumée dans le champ `infra` du manifest.
+     */
+    infrastructure: {
+      title: 'Infrastructure',
+      description:
+        'Ce qui fait tourner et livrer le projet : conteneurs, intégration continue et hébergement. Ces choix rejoignent le champ infra du manifest.',
+      legend: 'Ce que le projet embarque',
+      docker: 'Docker',
+      dockerNote: 'Un Dockerfile et un environnement de développement reproductible.',
+      ci: 'Intégration continue',
+      ciNote: 'Un workflow GitHub Actions : lint, types et tests à chaque poussée.',
+      cloudLegend: 'Cloud cible',
+      cloudTitle: 'Cloud cible',
+      cloudHintBefore: 'L’hébergeur est un choix de la catégorie',
+      cloudHintMid: ': le brouillon n’a pas de champ dédié, et cet identifiant rejoint',
+      cloudHintAfter: '. Un seul cloud cible à la fois.',
+      loading: 'Chargement des hébergeurs…',
+      engineDownTitle: 'Les hébergeurs n’ont pas pu être lus',
+      engineDown: 'Le moteur n’a pas répondu.',
+      empty: 'Aucun hébergeur pour cette sélection.',
+      chosenBadge: 'Choisi',
+      manifestLegend: 'Traduction dans le manifest',
+      manifestTitle: 'Ce que l’écran écrit dans le manifest',
+      dockerWrites: 'rejoint infra, quand Docker est cochée.',
+      ciWrites: 'rejoint infra, quand l’intégration continue est cochée.',
+      hostingWrites: 'rejoint infra, l’hébergeur choisi ci-dessus.',
+    },
+
+    /**
+     * Écran 9 — Project Blueprint : le manifest canonique dit en clair. Les
+     * rôles et les libellés de plateforme/architecture y vivent, parce que le
+     * résumé est un texte avant d'être une donnée.
+     */
+    blueprint: {
+      title: 'Plan du projet',
+      description:
+        'Le résumé de ce qui sera généré. Les mêmes choix qu’en ligne de commande produisent le même projet, octet pour octet.',
+      descriptionIncomplete: 'Le résumé de ce qui sera généré, construit à partir de vos choix.',
+      incompleteTitle: 'Le plan ne peut pas être construit',
+      incompleteBody:
+        'Le brouillon est incomplet : il manque un choix à un écran précédent. Complétez-le, puis revenez sur cette page — rien n’a été écrit.',
+      fixStack: 'Corriger mes choix',
+      backHome: 'Retour au tableau de bord',
+      catalogueIssue:
+        'Le catalogue n’a pas pu être lu : les technologies restent affichées par leur identifiant.',
+      statusChecking: 'Vérification de la sélection…',
+      statusCertified: 'Sélection certifiée : le moteur connaît cette combinaison.',
+      statusExperimental:
+        'Sélection expérimentale : le moteur l’accepte, mais aucun preset ne la certifie.',
+      graphLink: 'Voir le graphe de dépendances',
+      previewLink: 'Aperçu des fichiers',
+      shareButton: 'Créer un lien de partage',
+      shareHintBefore:
+        'Le lien de partage en lecture seule (§20) porte la configuration dans son fragment d’URL : elle ne part vers aucun serveur, et il fonctionne partout où',
+      shareHintAfter: 'tourne.',
+      shareLinkLabel: 'Lien de partage (lecture seule)',
+      shareCopied: 'Lien copié dans le presse-papiers. Il est aussi affiché ci-dessous.',
+      shareManual: 'Presse-papiers indisponible ici : copiez le lien ci-dessous.',
+      roles: {
+        targets: 'Plateformes',
+        architecture: 'Architecture',
+        web: 'Application web',
+        mobile: 'Application mobile',
+        desktop: 'Application de bureau',
+        backend: 'Backend',
+        database: 'Base de données',
+        auth: 'Authentification',
+        services: 'Services',
+        quality: 'Qualité',
+        infra: 'Infrastructure',
+      },
+      targetLabels: {
+        web: 'Web',
+        mobile: 'Mobile',
+        desktop: 'Ordinateur',
+        api: 'API',
+        library: 'Bibliothèque',
+      } satisfies Record<Target, string>,
+      architectureLabels: {
+        'single-app': 'Application unique',
+        monorepo: 'Monorepo',
+        'modular-monolith': 'Monolithe modulaire',
+        microservices: 'Microservices',
+        serverless: 'Serverless',
+        'event-driven': 'Événementiel',
+      } satisfies Record<Architecture, string>,
+    },
+
+    /**
+     * Écran 10 — File Preview : le dry-run, l'arborescence et la phrase de
+     * chaque dossier racine. Un dossier absent de la table reste muet — jamais
+     * une excuse inventée.
+     */
+    preview: {
+      title: 'Aperçu des fichiers',
+      description: 'L’arborescence qui sera générée — sans rien écrire. Un dry-run du moteur.',
+      descriptionIncomplete: 'L’arborescence qui sera générée — sans rien écrire.',
+      incompleteTitle: 'Rien à prévisualiser',
+      incompleteBody:
+        'Le brouillon est incomplet : il n’y a rien à prévisualiser. Complétez vos choix, puis revenez — rien n’a été écrit sur le disque.',
+      fixStack: 'Corriger mes choix',
+      backHome: 'Retour au tableau de bord',
+      loading: 'Calcul du plan…',
+      dryRun: 'Dry-run',
+      files: (count: number) => `${count} fichier${count > 1 ? 's' : ''}`,
+      hint: 'Le plan expose les chemins, pas le contenu des fichiers : rien n’est affiché ici qui ne vienne réellement du moteur.',
+      warningsTitle: 'Avertissements du plan',
+      treeTitle: 'Arborescence',
+      treeLabel: 'Arborescence des fichiers à générer',
+      planFailed: 'Le plan n’a pas pu être calculé.',
+      folderNotes: {
+        apps: 'Les applications déployables du projet — une par cible (web, api…).',
+        packages: 'Le code partagé entre applications : types, client API, composants communs.',
+        src: 'Le code source de l’application.',
+        app: 'Les routes — un dossier par URL (App Router de Next.js).',
+        components: 'Les composants d’interface réutilisés par plusieurs écrans.',
+        lib: 'Les fonctions partagées : accès aux données, logique métier, utilitaires.',
+        prisma: 'Le schéma de base de données et les migrations.',
+        public: 'Les fichiers servis tels quels : images, polices, favicon.',
+        e2e: 'Les tests qui pilotent l’application dans un vrai navigateur.',
+        tests: 'Les tests automatisés du projet.',
+        docs: 'La documentation du projet.',
+        scripts: 'Les scripts d’installation, de build ou de maintenance du projet.',
+        '.github': 'Les workflows d’intégration continue (CI) du dépôt.',
+        generated: 'Du code produit automatiquement — jamais à modifier à la main.',
+      },
+    },
+
+    /**
+     * Écran 11 — Generation Progress : le dossier montré avant d'écrire, le
+     * lancement, le refus, et le vocabulaire des étapes du pipeline.
+     */
+    generate: {
+      title: 'Générer le projet',
+      description: 'Le projet est écrit sur cette machine, dans le dossier de travail affiché.',
+      incompleteTitle: 'Rien ne sera écrit',
+      incompleteBody:
+        'Le brouillon est incomplet : le moteur n’a pas de projet à écrire. Complétez vos choix, puis revenez — aucun fichier n’a été touché.',
+      fixStack: 'Corriger mes choix',
+      backHome: 'Retour au tableau de bord',
+      destination: 'Dossier de destination',
+      resolvingRoot: 'Résolution de la racine de travail…',
+      destinationHint:
+        'Rien n’est écrit avant votre clic. Un dossier du même nom déjà présent fait refuser la génération : aucun fichier existant n’est écrasé.',
+      button: 'Générer le projet',
+      buttonRunning: 'Génération…',
+      viewReport: 'Voir le rapport complet',
+      fatalTitle: 'La génération n’a pas pu être lancée',
+      fatalBody: 'Rien n’a été écrit — réessayez.',
+      refusedTitle: 'La génération a été refusée',
+      refusedBody: 'Rien n’a été écrit.',
+      refusedHint:
+        'Un dossier déjà présent n’est jamais écrasé : si le problème vient de là, changez le nom à l’écran « Créer un projet ». Si le problème vient des technologies choisies, corrigez-les ci-dessous.',
+      technologiesTitle: 'Technologies choisies',
+      none: 'Aucune technologie choisie.',
+      writtenDirectory: 'Projet écrit dans',
+      writtenRest: (count: number, size: string) =>
+        ` : ${count} fichier${count > 1 ? 's' : ''}, ${size}.`,
+      progressDone: 'Génération terminée.',
+      progressLabel: 'Avancement de la génération',
+      stepDone: 'Terminé',
+      stepPending: 'En attente',
+      steps: {
+        plan: 'Planification',
+        write: 'Écriture des fichiers',
+        install: 'Installation des dépendances',
+        git: 'Dépôt Git',
+        validate: 'Validation',
+      },
+    },
+
+    /**
+     * Écran 12 — Generation Report : le verdict, ce qui a été écrit, les
+     * avertissements, les refus, et la marche à suivre pour reprendre le projet.
+     */
+    report: {
+      title: 'Rapport de génération',
+      description:
+        'Ce qui a été écrit, les étapes terminées, les avertissements et les erreurs éventuelles.',
+      loading: 'Lecture du rapport…',
+      missing: 'Aucun rapport de génération dans cette session.',
+      missingAction: 'Aller à la génération',
+      okBadge: 'Réussi',
+      refusedBadge: 'Refusé',
+      refusalTitle: 'La génération a été refusée',
+      refusalBody:
+        'Rien n’a été écrit. Corrigez les technologies ci-dessous, puis relancez la génération — le brouillon et les choix sont conservés.',
+      fixStack: 'Modifier les technologies',
+      backHome: 'Retour au tableau de bord',
+      technologiesTitle: 'Technologies choisies',
+      none: 'Aucune technologie choisie.',
+      filesCount: 'Fichiers écrits',
+      weight: 'Poids',
+      stepsTitle: 'Étapes',
+      noSteps: 'Aucune',
+      warningsTitle: 'Avertissements',
+      issuesTitle: 'Problèmes',
+      installationTitle: 'Installation',
+      installationNote:
+        'Le projet est terminé : ces écrans ne le modifient plus. Pour le reprendre, suivez les commandes ci-dessous.',
+      download: 'Télécharger à nouveau',
+      connectGithub: 'Connecter à GitHub',
+      filesTitle: 'Fichiers',
+      noFiles: 'Aucun fichier écrit.',
+      install: {
+        open: 'Ouvrir le projet',
+        services: 'Démarrer les services',
+        env: (count: number, names: string) =>
+          `Renseigner ${count > 1 ? 'les variables' : 'la variable'} d’environnement (${names})`,
+        install: 'Installer les dépendances',
+        dev: 'Démarrer en développement',
+      },
+    },
   },
 } as const;
 
 export const EN_BUILD: Widen<typeof FR_BUILD> = {
   build: {
     generating: 'Generating…',
+
+    env: {
+      title: 'Environment & secrets',
+      description:
+        'The variables your choices require. This page shows and stores names only: no value ever goes through the interface.',
+      requiredLegend: 'Required variables',
+      requiredTitle: 'Required variables',
+      loading: 'Loading variables…',
+      engineDownTitle: 'The variables could not be read',
+      engineDown: 'The engine did not answer.',
+      empty: 'No variable yet: the choices made on the previous screens require none.',
+      requiredBy: (who: string) => `Required by: ${who}`,
+      engineRequirement: 'an engine requirement',
+      engineAdded: 'Added by the engine',
+      whereLegend: 'Where to put the values',
+      whereTitle: 'Where to put the values',
+      envFileBefore: 'Each value goes into',
+      envFileAfter: ', at the root of the project.',
+      gitignoreBefore: 'This file is never committed: it is listed in the',
+      gitignoreAfter: 'generated with the project.',
+      namesOnly:
+        'The draft keeps the names only, and this page offers no input field: no value goes through the interface, nor through the share link.',
+      engineMarked:
+        'Values added by the engine are marked: they come from a requirement pulled in by your choices, not from a line typed here.',
+    },
+
+    infrastructure: {
+      title: 'Infrastructure',
+      description:
+        'What runs and ships the project: containers, continuous integration and hosting. These choices join the infra field of the manifest.',
+      legend: 'What the project ships with',
+      docker: 'Docker',
+      dockerNote: 'A Dockerfile and a reproducible development environment.',
+      ci: 'Continuous integration',
+      ciNote: 'A GitHub Actions workflow: lint, types and tests on every push.',
+      cloudLegend: 'Target cloud',
+      cloudTitle: 'Target cloud',
+      cloudHintBefore: 'The host is a choice in the',
+      cloudHintMid: 'category: the draft has no dedicated field, and this identifier joins',
+      cloudHintAfter: '. One target cloud at a time.',
+      loading: 'Loading hosts…',
+      engineDownTitle: 'The hosts could not be read',
+      engineDown: 'The engine did not answer.',
+      empty: 'No host for this selection.',
+      chosenBadge: 'Chosen',
+      manifestLegend: 'Translation into the manifest',
+      manifestTitle: 'What this screen writes into the manifest',
+      dockerWrites: 'joins infra, when Docker is checked.',
+      ciWrites: 'joins infra, when continuous integration is checked.',
+      hostingWrites: 'joins infra, the host chosen above.',
+    },
+
+    blueprint: {
+      title: 'Project blueprint',
+      description:
+        'The summary of what will be generated. The same choices as on the command line produce the same project, byte for byte.',
+      descriptionIncomplete: 'The summary of what will be generated, built from your choices.',
+      incompleteTitle: 'The blueprint cannot be built',
+      incompleteBody:
+        'The draft is incomplete: a choice is missing on an earlier screen. Complete it, then come back to this page — nothing has been written.',
+      fixStack: 'Fix my choices',
+      backHome: 'Back to the dashboard',
+      catalogueIssue:
+        'The catalogue could not be read: technologies stay displayed by their identifier.',
+      statusChecking: 'Checking the selection…',
+      statusCertified: 'Certified selection: the engine knows this combination.',
+      statusExperimental:
+        'Experimental selection: the engine accepts it, but no preset certifies it.',
+      graphLink: 'See the dependency graph',
+      previewLink: 'File preview',
+      shareButton: 'Create a share link',
+      shareHintBefore:
+        'The read-only share link (§20) carries the configuration in its URL fragment: it never leaves for a server, and it works wherever',
+      shareHintAfter: 'runs.',
+      shareLinkLabel: 'Share link (read-only)',
+      shareCopied: 'Link copied to the clipboard. It is also shown below.',
+      shareManual: 'Clipboard unavailable here: copy the link below.',
+      roles: {
+        targets: 'Platforms',
+        architecture: 'Architecture',
+        web: 'Web application',
+        mobile: 'Mobile application',
+        desktop: 'Desktop application',
+        backend: 'Backend',
+        database: 'Database',
+        auth: 'Authentication',
+        services: 'Services',
+        quality: 'Quality',
+        infra: 'Infrastructure',
+      },
+      targetLabels: {
+        web: 'Web',
+        mobile: 'Mobile',
+        desktop: 'Desktop',
+        api: 'API',
+        library: 'Library',
+      },
+      architectureLabels: {
+        'single-app': 'Single application',
+        monorepo: 'Monorepo',
+        'modular-monolith': 'Modular monolith',
+        microservices: 'Microservices',
+        serverless: 'Serverless',
+        'event-driven': 'Event-driven',
+      },
+    },
+
+    preview: {
+      title: 'File preview',
+      description: 'The tree that will be generated — writing nothing. An engine dry-run.',
+      descriptionIncomplete: 'The tree that will be generated — writing nothing.',
+      incompleteTitle: 'Nothing to preview',
+      incompleteBody:
+        'The draft is incomplete: there is nothing to preview. Complete your choices, then come back — nothing has been written to disk.',
+      fixStack: 'Fix my choices',
+      backHome: 'Back to the dashboard',
+      loading: 'Computing the plan…',
+      dryRun: 'Dry-run',
+      files: (count: number) => `${count} file${count > 1 ? 's' : ''}`,
+      hint: 'The plan exposes paths, not file contents: nothing is shown here that does not truly come from the engine.',
+      warningsTitle: 'Plan warnings',
+      treeTitle: 'File tree',
+      treeLabel: 'File tree of the project to generate',
+      planFailed: 'The plan could not be computed.',
+      folderNotes: {
+        apps: 'The project’s deployable applications — one per target (web, api…).',
+        packages: 'Code shared between applications: types, API client, common components.',
+        src: 'The application source code.',
+        app: 'The routes — one folder per URL (Next.js App Router).',
+        components: 'Interface components reused by several screens.',
+        lib: 'Shared functions: data access, business logic, utilities.',
+        prisma: 'The database schema and the migrations.',
+        public: 'Files served as-is: images, fonts, favicon.',
+        e2e: 'Tests that drive the application in a real browser.',
+        tests: 'The project’s automated tests.',
+        docs: 'The project documentation.',
+        scripts: 'Install, build or maintenance scripts for the project.',
+        '.github': 'The repository’s continuous integration (CI) workflows.',
+        generated: 'Code produced automatically — never edit it by hand.',
+      },
+    },
+
+    generate: {
+      title: 'Generate the project',
+      description: 'The project is written on this machine, in the working folder shown below.',
+      incompleteTitle: 'Nothing will be written',
+      incompleteBody:
+        'The draft is incomplete: the engine has no project to write. Complete your choices, then come back — no file has been touched.',
+      fixStack: 'Fix my choices',
+      backHome: 'Back to the dashboard',
+      destination: 'Destination folder',
+      resolvingRoot: 'Resolving the working root…',
+      destinationHint:
+        'Nothing is written before you click. A folder with the same name already present makes the generation refuse: no existing file is overwritten.',
+      button: 'Generate the project',
+      buttonRunning: 'Generating…',
+      viewReport: 'See the full report',
+      fatalTitle: 'The generation could not be started',
+      fatalBody: 'Nothing was written — try again.',
+      refusedTitle: 'The generation was refused',
+      refusedBody: 'Nothing was written.',
+      refusedHint:
+        'An existing folder is never overwritten: if that is the cause, change the name on the “Create a project” screen. If the technologies are the cause, fix them below.',
+      technologiesTitle: 'Chosen technologies',
+      none: 'No technology chosen.',
+      writtenDirectory: 'Project written to',
+      writtenRest: (count: number, size: string) =>
+        `: ${count} file${count > 1 ? 's' : ''}, ${size}.`,
+      progressDone: 'Generation finished.',
+      progressLabel: 'Generation progress',
+      stepDone: 'Done',
+      stepPending: 'Pending',
+      steps: {
+        plan: 'Planning',
+        write: 'Writing files',
+        install: 'Installing dependencies',
+        git: 'Git repository',
+        validate: 'Validation',
+      },
+    },
+
+    report: {
+      title: 'Generation report',
+      description: 'What was written, the completed steps, the warnings and any errors.',
+      loading: 'Reading the report…',
+      missing: 'No generation report in this session.',
+      missingAction: 'Go to generation',
+      okBadge: 'Succeeded',
+      refusedBadge: 'Refused',
+      refusalTitle: 'The generation was refused',
+      refusalBody:
+        'Nothing was written. Fix the technologies below, then run the generation again — the draft and your choices are kept.',
+      fixStack: 'Change the technologies',
+      backHome: 'Back to the dashboard',
+      technologiesTitle: 'Chosen technologies',
+      none: 'No technology chosen.',
+      filesCount: 'Files written',
+      weight: 'Size',
+      stepsTitle: 'Steps',
+      noSteps: 'None',
+      warningsTitle: 'Warnings',
+      issuesTitle: 'Problems',
+      installationTitle: 'Installation',
+      installationNote:
+        'The project is finished: these screens no longer change it. To pick it up, follow the commands below.',
+      download: 'Download again',
+      connectGithub: 'Connect to GitHub',
+      filesTitle: 'Files',
+      noFiles: 'No file written.',
+      install: {
+        open: 'Open the project',
+        services: 'Start the services',
+        env: (count: number, names: string) =>
+          `Fill in the environment variable${count > 1 ? 's' : ''} (${names})`,
+        install: 'Install dependencies',
+        dev: 'Start in development',
+      },
+    },
   },
 };

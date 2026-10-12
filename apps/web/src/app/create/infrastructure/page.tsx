@@ -1,21 +1,18 @@
 'use client';
 
 import { type ReactElement, useEffect, useState } from 'react';
+import { ErrorState } from '../../../components/ui/error-state';
+import { Icon } from '../../../components/ui/icon';
+import { LoadingLine } from '../../../components/ui/loading';
 import { useDraft, useSession } from '../../../components/wizard/draft-provider';
 import { StepShell } from '../../../components/wizard/shell';
 import type { OptionView } from '../../../lib/engine';
+import { useMessages } from '../../../lib/i18n/provider';
 import { loadOptionsAction } from '../../actions';
 import { chooseHosting, infrastructureIds, selectedHosting } from './infrastructure';
 
-/** Le message d'une panne du moteur — affiché, jamais tu. */
-function failureMessage(error: unknown): string {
-  return error instanceof Error && error.message.length > 0
-    ? error.message
-    : 'Le moteur n’a pas répondu.';
-}
-
 /**
- * Écran 9 — Infrastructure (§6.9).
+ * Écran 8 — Infrastructure (§6.9).
  *
  * Deux cases à cocher (`docker`, CI) et un cloud cible. Le brouillon n'a pas de
  * champ cloud : l'hébergeur est un identifiant de la catégorie `hosting` choisi
@@ -27,12 +24,15 @@ function failureMessage(error: unknown): string {
  * deviner ce que ses clics écrivent.
  */
 export default function InfrastructurePage(): ReactElement {
+  const t = useMessages();
   const draft = useDraft();
   const session = useSession();
   const [hosts, setHosts] = useState<readonly OptionView[]>([]);
   const [loading, setLoading] = useState(true);
   const [failure, setFailure] = useState<string | undefined>(undefined);
+  const [attempt, setAttempt] = useState(0);
 
+  // biome-ignore lint/correctness/useExhaustiveDependencies: `attempt` est la clé de relance : elle ne sert qu'à rejouer la lecture après une panne du moteur, sans perdre le brouillon.
   useEffect(() => {
     let alive = true;
     setLoading(true);
@@ -51,7 +51,11 @@ export default function InfrastructurePage(): ReactElement {
       })
       .catch((error: unknown) => {
         if (alive) {
-          setFailure(failureMessage(error));
+          setFailure(
+            error instanceof Error && error.message.length > 0
+              ? error.message
+              : t.build.infrastructure.engineDown,
+          );
         }
       })
       .finally(() => {
@@ -62,7 +66,7 @@ export default function InfrastructurePage(): ReactElement {
     return () => {
       alive = false;
     };
-  }, [draft]);
+  }, [draft, attempt, t]);
 
   const hostingIds = hosts.map((host) => host.id);
   const current = selectedHosting(draft.technologies, hostingIds);
@@ -70,11 +74,11 @@ export default function InfrastructurePage(): ReactElement {
   return (
     <StepShell
       step="infrastructure"
-      title="Infrastructure"
-      description="Ce qui fait tourner et livrer le projet : conteneurs, intégration continue et hébergement. Ces choix rejoignent le champ infra du manifest."
+      title={t.build.infrastructure.title}
+      description={t.build.infrastructure.description}
     >
       <fieldset>
-        <legend className="pf-label">Ce que le projet embarque</legend>
+        <legend className="pf-label">{t.build.infrastructure.legend}</legend>
         <div className="pf-grid">
           <label className="pf-choice flex items-start gap-3">
             <input
@@ -89,11 +93,9 @@ export default function InfrastructurePage(): ReactElement {
                 }));
               }}
             />
-            <span>
-              <span className="pf-choice-name">Docker</span>
-              <span className="pf-choice-note">
-                Un Dockerfile et un environnement de développement reproductible.
-              </span>
+            <span className="min-w-0">
+              <span className="pf-choice-name">{t.build.infrastructure.docker}</span>
+              <span className="pf-choice-note">{t.build.infrastructure.dockerNote}</span>
             </span>
           </label>
 
@@ -110,27 +112,43 @@ export default function InfrastructurePage(): ReactElement {
                 }));
               }}
             />
-            <span>
-              <span className="pf-choice-name">Intégration continue</span>
-              <span className="pf-choice-note">
-                Un workflow GitHub Actions : lint, types et tests à chaque poussée.
-              </span>
+            <span className="min-w-0">
+              <span className="pf-choice-name">{t.build.infrastructure.ci}</span>
+              <span className="pf-choice-note">{t.build.infrastructure.ciNote}</span>
             </span>
           </label>
         </div>
       </fieldset>
 
-      <section className="mt-6" aria-label="Cloud cible">
-        <h2 className="pf-label">Cloud cible</h2>
+      <section className="mt-6" aria-label={t.build.infrastructure.cloudLegend}>
+        <h2 className="pf-label">{t.build.infrastructure.cloudTitle}</h2>
         <p className="pf-hint">
-          L’hébergeur est un choix de la catégorie <span className="pf-mono">hosting</span> : le
-          brouillon n’a pas de champ dédié, et cet identifiant rejoint{' '}
-          <span className="pf-mono">technologies</span>. Un seul cloud cible à la fois.
+          {t.build.infrastructure.cloudHintBefore} <span className="pf-mono">hosting</span>
+          {t.build.infrastructure.cloudHintMid} <span className="pf-mono">technologies</span>
+          {t.build.infrastructure.cloudHintAfter}
         </p>
-        {loading ? <p className="pf-hint mt-2">Chargement des hébergeurs…</p> : null}
-        {failure === undefined ? null : <p className="pf-error mt-2">{failure}</p>}
-        {loading ? null : hosts.length === 0 ? (
-          <p className="pf-hint mt-2">Aucun hébergeur pour cette sélection.</p>
+        {loading ? (
+          <LoadingLine className="mt-2">{t.build.infrastructure.loading}</LoadingLine>
+        ) : null}
+        {failure === undefined ? null : (
+          <ErrorState
+            className="mt-3"
+            title={t.build.infrastructure.engineDownTitle}
+            body={failure}
+            actions={
+              <button
+                type="button"
+                className="pf-btn"
+                onClick={() => setAttempt((value) => value + 1)}
+              >
+                <Icon name="refresh" />
+                {t.common.retry}
+              </button>
+            }
+          />
+        )}
+        {loading || failure !== undefined ? null : hosts.length === 0 ? (
+          <p className="pf-hint mt-2">{t.build.infrastructure.empty}</p>
         ) : (
           <div className="pf-grid mt-2">
             {hosts.map((host) => {
@@ -151,9 +169,13 @@ export default function InfrastructurePage(): ReactElement {
                 >
                   <span className="pf-choice-name">
                     {host.label}
-                    {chosen ? <span className="pf-badge pf-badge-accent ml-2">Choisi</span> : null}
+                    {chosen ? (
+                      <span className="pf-badge pf-badge-accent ml-2">
+                        {t.build.infrastructure.chosenBadge}
+                      </span>
+                    ) : null}
                   </span>
-                  <span className="pf-choice-note pf-mono">{host.id}</span>
+                  <span className="pf-choice-note pf-mono break-all">{host.id}</span>
                   {blocked ? <span className="pf-error">{host.reason}</span> : null}
                 </button>
               );
@@ -162,20 +184,20 @@ export default function InfrastructurePage(): ReactElement {
         )}
       </section>
 
-      <section className="mt-6" aria-label="Traduction dans le manifest">
-        <h2 className="pf-label">Ce que l’écran écrit dans le manifest</h2>
+      <section className="mt-6" aria-label={t.build.infrastructure.manifestLegend}>
+        <h2 className="pf-label">{t.build.infrastructure.manifestTitle}</h2>
         <dl className="pf-hint">
           <div>
             <dt className="pf-mono">docker</dt>
-            <dd>rejoint infra, quand Docker est cochée.</dd>
+            <dd>{t.build.infrastructure.dockerWrites}</dd>
           </div>
           <div>
             <dt className="pf-mono">github-actions</dt>
-            <dd>rejoint infra, quand l’intégration continue est cochée.</dd>
+            <dd>{t.build.infrastructure.ciWrites}</dd>
           </div>
           <div>
             <dt className="pf-mono">hosting</dt>
-            <dd>rejoint infra, l’hébergeur choisi ci-dessus.</dd>
+            <dd>{t.build.infrastructure.hostingWrites}</dd>
           </div>
         </dl>
       </section>

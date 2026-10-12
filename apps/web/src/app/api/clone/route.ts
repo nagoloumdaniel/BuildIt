@@ -5,7 +5,7 @@ import { type ClonePlace, cloneProject } from '../../clone/clone';
 import { webWorkspaceRoot } from '../../clone/destination';
 import { createCloneProgressReader } from '../../clone/progress';
 import { sessionDeps } from '../../github/server-deps';
-import { withoutServerSecrets } from '../../open/project';
+import { type ProjectSummaryView, withoutServerSecrets } from '../../open/project';
 
 /**
  * Le clonage **en flux** (§6.22).
@@ -49,7 +49,12 @@ type CloneEvent =
       readonly warnings: readonly string[];
       readonly installed: boolean;
       readonly installCommand?: string;
-      readonly projectDescription?: string;
+      /**
+       * Le projet reconnu, en entier : l'écran affiche le gestionnaire, la
+       * commande exacte et les avertissements, et ce résultat doit survivre à
+       * la fin du flux — le navigateur le garde tel quel.
+       */
+      readonly project?: ProjectSummaryView;
     };
 
 function record(input: unknown): Record<string, unknown> {
@@ -127,9 +132,7 @@ export async function POST(request: NextRequest): Promise<Response> {
           warnings: result.warnings,
           installed: result.installed,
           ...(result.installCommand === undefined ? {} : { installCommand: result.installCommand }),
-          ...(result.project === undefined
-            ? {}
-            : { projectDescription: result.project.description }),
+          ...(result.project === undefined ? {} : { project: result.project }),
         });
       } catch {
         send({

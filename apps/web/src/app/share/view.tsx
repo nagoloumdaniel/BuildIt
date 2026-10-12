@@ -2,7 +2,12 @@
 
 import { badgeClassName, buttonClassName, StatusMessage } from '@buildit/ui';
 import { type ReactElement, useEffect, useMemo, useState } from 'react';
+import { Card } from '../../components/ui/card';
+import { ErrorState } from '../../components/ui/error-state';
+import { Icon } from '../../components/ui/icon';
+import { LoadingLine } from '../../components/ui/loading';
 import { ScreenShell } from '../../components/wizard/shell';
+import { useMessages } from '../../lib/i18n/provider';
 import { loadGraphAction } from '../actions';
 import { BlueprintSummary } from '../create/blueprint/BlueprintSummary';
 import { blueprintView, manifestTechnologyIds } from '../create/blueprint/summary';
@@ -19,16 +24,19 @@ import { decodeSharePayload, payloadFromHash, type ShareDecodeResult } from './c
  * Le résumé est celui du Blueprint : `BlueprintSummary` et `blueprintView` sont
  * réutilisés tels quels. Un lien partagé montre donc **exactement** ce que
  * l'auteur du lien voyait, sans second rendu à maintenir.
+ *
+ * Tout le texte passe par `useMessages()` ; ne restent affichés tels quels que
+ * les refus du décodeur, qui sont les mêmes phrases pour tous les liens.
  */
 
 /** Ce que la page affiche en attendant d'avoir lu le fragment. */
 function ShareLoading(): ReactElement {
+  const t = useMessages();
   return (
-    <ScreenShell
-      title="Configuration partagée"
-      description="Lecture seule : ce lien décrit une configuration, il ne l’exécute pas."
-    >
-      <StatusMessage>Lecture du lien…</StatusMessage>
+    <ScreenShell description={t.share.descriptionLoading} title={t.share.title}>
+      <Card>
+        <LoadingLine>{t.share.loading}</LoadingLine>
+      </Card>
     </ScreenShell>
   );
 }
@@ -37,6 +45,8 @@ export interface SharePreviewProps {
   readonly result: ShareDecodeResult;
   /** Les noms lisibles des technologies, lus dans le catalogue par le serveur. */
   readonly labels: ReadonlyMap<string, string>;
+  /** Vrai tant que le catalogue n'a pas répondu : le résumé reste lisible sans lui. */
+  readonly loadingLabels?: boolean;
 }
 
 /**
@@ -45,49 +55,53 @@ export interface SharePreviewProps {
  * Pure : elle reçoit un résultat déjà décodé. Un lien illisible rend une phrase
  * — jamais une pile, jamais une invite à « réessayer » sans dire quoi corriger.
  */
-export function SharePreview({ result, labels }: SharePreviewProps): ReactElement {
+export function SharePreview({
+  result,
+  labels,
+  loadingLabels = false,
+}: SharePreviewProps): ReactElement {
+  const t = useMessages();
+
   if (!result.ok) {
     return (
-      <ScreenShell
-        title="Configuration partagée"
-        description="Lecture seule : ce lien décrit une configuration, il ne l’exécute pas."
-      >
-        <section className="pf-card pf-card-pad">
-          <StatusMessage tone="error">Ce lien n’a pas pu être lu.</StatusMessage>
-          <ul className="mt-2 list-disc pl-5">
-            {result.issues.map((issue) => (
-              <li key={issue}>{issue}</li>
-            ))}
-          </ul>
-          <StatusMessage className="mt-3">
-            Demandez à la personne qui vous l’a envoyé de le recopier en entier, ou repartez de{' '}
-            <a href="/">l’accueil</a>.
-          </StatusMessage>
-        </section>
+      <ScreenShell description={t.share.descriptionLoading} title={t.share.title}>
+        <ErrorState
+          actions={
+            <a className={buttonClassName('primary')} href="/">
+              <Icon name="home" />
+              {t.share.backHome}
+            </a>
+          }
+          body={t.share.invalidBody}
+          issues={result.issues}
+          title={t.share.invalidTitle}
+        />
+        <p className="pf-hint mt-3">
+          {t.share.invalidHint} <a href="/">{t.share.invalidHomeWord}</a>.
+        </p>
       </ScreenShell>
     );
   }
 
   return (
-    <ScreenShell
-      title="Configuration partagée"
-      description="Lecture seule : cette page montre les choix d’un projet. Elle ne modifie rien et ne génère rien."
-    >
-      <section className="pf-card pf-card-pad">
-        <p className={badgeClassName()}>Lecture seule</p>
+    <ScreenShell description={t.share.description} title={t.share.title}>
+      <Card>
+        <p className={badgeClassName()}>{t.share.readOnly}</p>
         <div className="mt-3">
-          <BlueprintSummary view={blueprintView(result.value, labels)} />
+          <BlueprintSummary view={blueprintView(result.value, labels, t)} />
         </div>
-      </section>
+      </Card>
 
-      <StatusMessage className="mt-3">
-        La configuration est portée par le fragment du lien : elle n’a été envoyée à aucun serveur,
-        et cette page n’en conserve aucune trace.
-      </StatusMessage>
+      <StatusMessage className="mt-3">{t.share.privacy}</StatusMessage>
 
-      <nav className="mt-4 flex flex-wrap items-center gap-3" aria-label="Suite">
+      {loadingLabels ? (
+        <LoadingLine className="mt-2">{t.share.readingCatalogue}</LoadingLine>
+      ) : null}
+
+      <nav aria-label={t.share.nextLabel} className="mt-4 flex flex-wrap items-center gap-3">
         <a className={buttonClassName()} href="/">
-          Accueil
+          <Icon name="home" />
+          {t.share.homeLink}
         </a>
       </nav>
     </ScreenShell>
@@ -156,5 +170,11 @@ export function ShareView({ hash }: ShareViewProps): ReactElement {
   if (result === null) {
     return <ShareLoading />;
   }
-  return <SharePreview result={result} labels={labels} />;
+  return (
+    <SharePreview
+      labels={labels}
+      loadingLabels={result.ok && technologyIds.length > 0 && labels.size === 0}
+      result={result}
+    />
+  );
 }

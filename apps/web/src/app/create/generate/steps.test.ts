@@ -1,21 +1,25 @@
 import { describe, expect, it } from 'vitest';
+import { FR } from '../../../lib/i18n/messages';
 import { formatBytes, GENERATION_STEPS, progressStates, stepLabel, targetDirectory } from './steps';
 
 /**
  * L'écran Generation Progress (§6.13) et le rapport (§6.14) affichent le même
  * vocabulaire : ces fonctions sont pures, donc ce que l'utilisateur lit est
- * vérifié sans navigateur.
+ * vérifié sans navigateur. Les libellés viennent du dictionnaire — ces tests
+ * passent le français, l'anglais est vérifié par le typecheck de `Messages`.
  */
+
+const STEPS = FR.build.generate.steps;
 
 describe('stepLabel — les étapes du pipeline en clair', () => {
   it('nomme les étapes du moteur', () => {
-    expect(stepLabel('plan')).toBe('Planification');
-    expect(stepLabel('write')).toBe('Écriture des fichiers');
-    expect(stepLabel('install')).toBe('Installation des dépendances');
+    expect(stepLabel('plan', STEPS)).toBe('Planification');
+    expect(stepLabel('write', STEPS)).toBe('Écriture des fichiers');
+    expect(stepLabel('install', STEPS)).toBe('Installation des dépendances');
   });
 
   it('une étape inconnue est affichée telle quelle, jamais masquée', () => {
-    expect(stepLabel('deploy')).toBe('deploy');
+    expect(stepLabel('deploy', STEPS)).toBe('deploy');
   });
 });
 
@@ -31,18 +35,18 @@ describe('GENERATION_STEPS — ce que generateProjectAction exécute vraiment', 
 
 describe('progressStates — l’avancement affiché', () => {
   it('marque terminé ce que le moteur a terminé, en attente le reste', () => {
-    expect(progressStates(['plan'], GENERATION_STEPS)).toEqual([
+    expect(progressStates(['plan'], GENERATION_STEPS, STEPS)).toEqual([
       { step: 'plan', label: 'Planification', done: true },
       { step: 'write', label: 'Écriture des fichiers', done: false },
     ]);
   });
 
   it('rien de terminé : tout est en attente', () => {
-    expect(progressStates([], GENERATION_STEPS).every((step) => !step.done)).toBe(true);
+    expect(progressStates([], GENERATION_STEPS, STEPS).every((step) => !step.done)).toBe(true);
   });
 
   it('une étape terminée hors liste n’est pas perdue : elle est ajoutée au compte rendu', () => {
-    const states = progressStates(['plan', 'write', 'validate'], GENERATION_STEPS);
+    const states = progressStates(['plan', 'write', 'validate'], GENERATION_STEPS, STEPS);
     expect(states.map((state) => state.step)).toEqual(['plan', 'write', 'validate']);
     expect(states.at(-1)).toEqual({ step: 'validate', label: 'Validation', done: true });
   });

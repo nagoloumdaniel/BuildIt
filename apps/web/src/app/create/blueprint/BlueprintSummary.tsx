@@ -12,14 +12,16 @@ export interface BlueprintSummaryProps {
  */
 export function BlueprintSummary({ view }: BlueprintSummaryProps): ReactElement {
   return (
-    <div>
-      <h2 className="pf-title">{view.name}</h2>
-      {view.headline === '' ? null : <p className="pf-subtitle">{view.headline}</p>}
+    <div className="min-w-0">
+      <h2 className="pf-title break-words">{view.name}</h2>
+      {view.headline === '' ? null : <p className="pf-subtitle break-words">{view.headline}</p>}
       <dl className="pf-grid mt-4">
         {view.rows.map((row) => (
-          <div key={row.role} className="pf-card pf-card-pad">
+          <div key={row.role} className="pf-card pf-card-pad min-w-0">
             <dt className="pf-eyebrow">{row.role}</dt>
-            <dd className="mt-1">{row.values.map((value) => value.label).join(' · ')}</dd>
+            <dd className="mt-1 break-words">
+              {row.values.map((value) => value.label).join(' · ')}
+            </dd>
           </div>
         ))}
       </dl>

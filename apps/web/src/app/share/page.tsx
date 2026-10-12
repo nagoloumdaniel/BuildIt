@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import type { ReactElement } from 'react';
+import { FR } from '../../lib/i18n/messages';
 import { ShareView } from './view';
 
 /**
@@ -10,11 +11,13 @@ import { ShareView } from './view';
  * rien à faire dans un moteur de recherche, et un fragment d'URL n'est de toute
  * façon jamais indexé — le `noindex` ferme la porte à l'indexation de l'URL
  * elle-même.
+ *
+ * Le titre et la description viennent du dictionnaire : une seule source pour
+ * le texte de l'onglet et celui de l'écran.
  */
 export const metadata: Metadata = {
-  title: 'Configuration partagée',
-  description:
-    'Lecture seule d’une configuration partagée : un manifest porté par le lien, sans compte et sans serveur.',
+  title: FR.share.title,
+  description: FR.share.metaDescription,
   robots: { index: false, follow: false },
 };
 

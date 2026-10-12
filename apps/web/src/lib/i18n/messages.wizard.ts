@@ -1,19 +1,632 @@
+import type { Architecture, Target } from '@buildit/manifest';
+import type { Category } from '@buildit/registry';
 import type { Widen } from './widen';
 
 /**
  * Les textes des six premières étapes du parcours : nom, plateformes, type,
  * architecture, stack, capacités. Voir `messages.ts` pour la composition.
+ *
+ * Un groupe par écran, et les **identifiants techniques comme clés** (`web`,
+ * `single-app`, `payments`…) : ce sont eux qui viennent du catalogue et de la
+ * fiche produit, donc eux qui se traduisent — jamais eux qui se renomment. Le
+ * poste de recherche, les commandes et les slugs (`next`, `pnpm install`)
+ * restent hors du dictionnaire : ils sont les mêmes dans un terminal.
+ *
+ * Le texte variable passe par une fonction, jamais par un gabarit `{n}` : le
+ * pluriel, l'accord et l'ordre des mots diffèrent d'une langue à l'autre, et
+ * une fonction le dit dans la langue concernée.
  */
-
 export const FR_WIZARD = {
   wizard: {
-    /** Les titres et descriptions des écrans de choix. */
+    /**
+     * Écran 1 — Create Project : le nom, le mode de configuration et la
+     * mémoire du brouillon. `namePlaceholder` est le gabarit du champ.
+     */
     namePlaceholder: 'mon-projet',
+    name: {
+      title: 'Créer un projet',
+      description:
+        'Nommez le projet et choisissez comment vous voulez le configurer. Tout est conservé au fur et à mesure.',
+      label: 'Nom du projet',
+      hint: 'Minuscules, chiffres, points, tirets et soulignés. Ce nom devient le dossier et l’identifiant du projet.',
+      modeLegend: 'Mode de configuration',
+      modeGuided: 'Guidé',
+      modeGuidedNote: 'Deux à quatre choix recommandés par étape. Le reste reste accessible.',
+      modeExpert: 'Expert',
+      modeExpertNote:
+        'Tout le catalogue, avec recherche et filtres, et les incompatibilités expliquées.',
+      reset: 'Repartir de zéro',
+      draftNote: 'Le brouillon se reprend tout seul si vous fermez l’onglet.',
+      presets: (names: string) => `Presets certifiés disponibles : ${names}.`,
+    },
+
+    /**
+     * Écran 2 — Target Selection : les plateformes que le catalogue peut
+     * honorer, chacune avec sa phrase, plus ce qui est retenu et pourquoi.
+     */
+    targets: {
+      title: 'Plateformes cibles',
+      description: 'Ce choix détermine les technologies que les écrans suivants vous proposeront.',
+      chosen: 'Choisie',
+      empty: 'Aucune plateforme choisie pour l’instant.',
+      /** La conjonction d'une énumération : « Ordinateur et Mobile ». */
+      pairSeparator: ' et ',
+      count: (count: number, list: string) =>
+        `${count} plateforme${count > 1 ? 's' : ''} : ${list}.`,
+      withheld: (labels: string, plural: boolean) =>
+        `${labels} : ${plural ? 'ces plateformes ne sont' : 'cette plateforme n’est'} pas encore proposée${plural ? 's' : ''} — le catalogue ne contient aucun framework pour ${plural ? 'elles' : 'elle'}. C’est la V1 (§23) ; le MVP génère des projets web, API et bibliothèque.`,
+      labels: {
+        web: { label: 'Web', note: 'Site, SPA, SSR, full-stack ou PWA.' },
+        mobile: { label: 'Mobile', note: 'Android et iOS depuis une base de code unique.' },
+        desktop: { label: 'Ordinateur', note: 'Windows, macOS et Linux.' },
+        api: { label: 'API', note: 'Backend partagé, sans interface.' },
+        library: { label: 'Bibliothèque', note: 'Paquet interne ou publiable.' },
+      } satisfies Record<Target, { label: string; note: string }>,
+    },
+
+    /**
+     * Écran 3 — Project Type : le profil, sa phrase, et ce qu'il fait
+     * recommander aux écrans suivants. `label` sert aussi de badge.
+     */
+    types: {
+      title: 'Profil du projet',
+      description:
+        'Le profil oriente l’architecture et la stack proposées ensuite. Il n’entre pas dans le manifest : c’est une aide au choix, pas une contrainte du moteur.',
+      recommendedDefault: 'Recommandations par défaut : aucune plateforme n’est encore choisie.',
+      recommendedFor: (targets: string) => `Recommandations pour vos plateformes : ${targets}.`,
+      legend: 'Profils disponibles',
+      recommendedBadge: 'Recommandé',
+      chosenBadge: 'Choisi',
+      showAll: (count: number) => `Voir toutes les options (${count})`,
+      none: 'Aucun profil choisi pour l’instant.',
+      summary: (label: string, guides: string) => `${label} : ${guides}`,
+      labels: {
+        saas: {
+          label: 'SaaS',
+          note: 'Un abonnement, des comptes clients, une facturation récurrente.',
+          guides:
+            'Oriente vers une authentification, une base relationnelle et un paiement par abonnement.',
+        },
+        marketplace: {
+          label: 'Marketplace',
+          note: 'Des vendeurs, des acheteurs, des transactions entre eux.',
+          guides: 'Oriente vers plusieurs applications séparées et un stockage de fichiers.',
+        },
+        ecommerce: {
+          label: 'E-commerce',
+          note: 'Un catalogue, un panier, des commandes.',
+          guides:
+            'Oriente vers un catalogue, un paiement, le suivi des commandes et l’envoi d’e-mails.',
+        },
+        dashboard: {
+          label: 'Dashboard',
+          note: 'Des indicateurs et des tableaux de données à consulter.',
+          guides: 'Oriente vers des graphiques, des tableaux triables et un accès protégé.',
+        },
+        blog: {
+          label: 'Blog',
+          note: 'Des articles, des pages publiques, une bonne visibilité.',
+          guides:
+            'Oriente vers un contenu éditorial, un référencement soigné et un rendu statique.',
+        },
+        ai: {
+          label: 'IA',
+          note: 'Un produit dont le cœur est un modèle de langage.',
+          guides:
+            'Oriente vers des appels de modèle, une recherche vectorielle et un suivi d’usage.',
+        },
+        api: {
+          label: 'API',
+          note: 'Un service partagé, sans interface à livrer.',
+          guides:
+            'Oriente vers une spécification ouverte, une validation stricte et un déploiement conteneurisé.',
+        },
+        business: {
+          label: 'Application métier',
+          note: 'Des processus internes, des rôles, des règles maison.',
+          guides:
+            'Oriente vers des rôles et permissions, des formulaires validés et un journal d’audit.',
+        },
+      },
+    },
+
+    /**
+     * Écran 4 — Architecture Builder : la forme du projet, sa description et
+     * son **impact** (complexité, coût d'exploitation) — c'est ce qui décide.
+     */
+    architecture: {
+      title: 'Architecture',
+      description:
+        'La forme la plus souple n’est pas la moins chère à exploiter. L’architecture choisie part dans le manifest.',
+      recommendedFor: (label: string) => `Recommandations pour le profil « ${label} ».`,
+      recommendedDefault: 'Recommandations par défaut : aucun profil n’est encore choisi.',
+      legend: 'Formes d’architecture disponibles',
+      recommendedBadge: 'Recommandé',
+      chosenBadge: 'Choisie',
+      impact: (complexity: string, cost: string) =>
+        `Complexité : ${complexity} · Coût d’exploitation : ${cost}`,
+      showAll: (count: number) => `Voir toutes les options (${count})`,
+      none: 'Aucune architecture choisie pour l’instant.',
+      summary: (label: string, complexity: string, cost: string) =>
+        `${label} — complexité ${complexity}, coût ${cost}`,
+      labels: {
+        'single-app': {
+          label: 'Application unique',
+          note: 'Une seule application, un seul dépôt, un seul déploiement.',
+          complexity: 'faible',
+          cost: 'minimal — un seul service à héberger et à surveiller.',
+        },
+        monorepo: {
+          label: 'Monorepo',
+          note: 'Plusieurs applications et paquets partagés dans un même dépôt.',
+          complexity: 'moyenne',
+          cost: 'modéré — la CI doit être outillée pour ne construire que ce qui change.',
+        },
+        'modular-monolith': {
+          label: 'Monolithe modulaire',
+          note: 'Un seul déploiement, des modules internes aux frontières nettes.',
+          complexity: 'moyenne',
+          cost: 'faible — un seul déployable, mais une discipline de modules à tenir.',
+        },
+        microservices: {
+          label: 'Microservices',
+          note: 'Des services indépendants, déployés et mis à l’échelle séparément.',
+          complexity: 'élevée',
+          cost: 'élevé — réseau, orchestration et observabilité à financer.',
+        },
+        serverless: {
+          label: 'Serverless',
+          note: 'Des fonctions exécutées à la demande, sans serveur à administrer.',
+          complexity: 'moyenne',
+          cost: 'variable — à l’usage, avec un plafond de facturation à surveiller.',
+        },
+        'event-driven': {
+          label: 'Orienté événements',
+          note: 'Des flux d’événements découplent producteurs et consommateurs.',
+          complexity: 'élevée',
+          cost: 'élevé — une file et une supervision de bout en bout.',
+        },
+      } satisfies Record<
+        Architecture,
+        { label: string; note: string; complexity: string; cost: string }
+      >,
+    },
+
+    /**
+     * Écran 5 — Stack Builder : modes, comptes, états de compatibilité,
+     * recherche globale et **libellés des 37 catégories** du catalogue.
+     */
+    stack: {
+      title: 'Stack Builder',
+      description:
+        'Choisissez vos technologies par catégorie. La compatibilité est revérifiée à chaque changement, et ce qui bloque est expliqué.',
+      modeLegend: 'Mode de configuration',
+      modeGuided: 'Guidé',
+      modeGuidedNote: 'Deux à quatre choix recommandés par catégorie, le reste à portée d’un clic.',
+      modeExpert: 'Expert',
+      modeExpertNote: 'Tout le catalogue, recherche globale et filtre de compatibilité.',
+      checking: 'Compatibilité en cours',
+      certified: 'Combinaison certifiée',
+      experimental: 'Combinaison expérimentale',
+      issues: (count: number) => `${count} point${count > 1 ? 's' : ''} à corriger`,
+      issuesTitle: 'Ces choix ne peuvent pas être générés tels quels',
+      issuesBody:
+        'Corrigez les points ci-dessous : la sélection est revérifiée à chaque changement, et rien n’est écrit avant la génération.',
+      chosenNone: 'Aucune technologie choisie : le mode guidé propose les plus courantes.',
+      chosenCount: (count: number) =>
+        `${count} technologie${count > 1 ? 's' : ''} choisie${count > 1 ? 's' : ''}`,
+      loading: 'Chargement du catalogue…',
+      emptyCatalogue:
+        'Le catalogue ne contient aucune fiche exploitable : il n’y a rien à choisir pour l’instant.',
+      resultsLabel: 'Résultats de recherche',
+      resultsFor: (query: string) => `Résultats pour « ${query} »`,
+      noMatch: 'Aucune technologie ne correspond à cette recherche.',
+      hiddenByFilter: (count: number) =>
+        `${count} option${count > 1 ? 's' : ''} incompatible${count > 1 ? 's' : ''} masquée${count > 1 ? 's' : ''} par le filtre « compatible seulement ».`,
+      expertNote: 'Tout le catalogue de cette catégorie, incompatibles comprises.',
+      guidedNote: 'Les choix recommandés d’abord, puis les incompatibles expliquées.',
+      showAll: (count: number) => `Voir toutes les options (${count})`,
+      showRecommended: 'Revenir aux recommandations',
+      chosenBadge: 'Choisi',
+      blockedBadge: 'Incompatible',
+      recommendedBadge: 'Recommandé',
+      blockedFallback: 'Incompatible avec la sélection en cours.',
+      navLabel: 'Catégories du catalogue',
+      navEyebrow: 'Catégories',
+      files: (count: number) => `${count} fiche${count > 1 ? 's' : ''}`,
+      searchLabel: 'Rechercher une technologie',
+      searchPlaceholder: 'react, postgres, drizzle…',
+      searchHint: 'La recherche parcourt tout le catalogue, sans changer de catégorie.',
+      compatibleOnly: 'Compatible seulement — les options bloquées sont comptées, pas oubliées.',
+      categories: {
+        frontend: 'Frontend',
+        language: 'Langage',
+        styling: 'Styles',
+        ui: 'Bibliothèque d’interface',
+        backend: 'Backend',
+        database: 'Base de données',
+        orm: 'ORM / ODM',
+        authentication: 'Authentification',
+        authorization: 'Autorisation',
+        state: 'État client',
+        'data-fetching': 'Récupération de données',
+        forms: 'Formulaires',
+        validation: 'Validation',
+        api: 'API',
+        build: 'Outils de build',
+        'package-manager': 'Gestionnaire de paquets',
+        monorepo: 'Monorepo',
+        testing: 'Tests',
+        linting: 'Lint',
+        formatting: 'Formatage',
+        'git-hooks': 'Crochets Git',
+        containers: 'Conteneurs',
+        'dev-environment': 'Environnement de développement',
+        'ci-cd': 'CI/CD',
+        hosting: 'Hébergement',
+        storage: 'Stockage',
+        cache: 'Cache',
+        queue: 'File d’attente',
+        search: 'Recherche',
+        email: 'E-mail',
+        payments: 'Paiements',
+        observability: 'Observabilité',
+        analytics: 'Analytique',
+        security: 'Sécurité',
+        ai: 'IA',
+        cms: 'CMS',
+        ecommerce: 'E-commerce',
+      } satisfies Record<Category, string>,
+    },
+
+    /**
+     * Écran 6 — Capabilities : les familles de capacités du §6.7 et leur
+     * phrase. C'est l'ordre de cette table qui fait la liste de l'écran :
+     * `capabilities.ts` en dérive ses catégories, donc une famille ajoutée ici
+     * a son libellé dans les deux langues par construction.
+     */
+    capabilities: {
+      title: 'Capacités',
+      description:
+        'Ce que le projet sait faire : paiements, stockage, recherche, IA… Ces choix rejoignent le champ services du manifest — il n’a pas de champ par famille, et c’est ce qui évite de le faire migrer à chaque capacité nouvelle. Tout est conservé dans le brouillon au fur et à mesure.',
+      familiesLegend: 'Familles de capacités',
+      optionsLabel: 'Options de la famille choisie',
+      loading: 'Chargement des options…',
+      engineDownTitle: 'Les options n’ont pas pu être chargées',
+      engineDown: 'Le moteur n’a pas répondu.',
+      kept: 'Capacités retenues',
+      none: 'Aucune capacité choisie pour l’instant.',
+      remove: (id: string) => `Retirer ${id}`,
+      /** Le jeton technique reste au milieu, en chasse fixe, posé par l'écran. */
+      servicesNoteBefore: 'Ces identifiants partent dans',
+      servicesNoteAfter: ': le manifest ne porte aucune valeur, seulement des choix.',
+      emptyFamily: 'Aucune option dans cette famille pour l’instant.',
+      chosenBadge: 'Choisie',
+      blockedBadge: 'Indisponible',
+      families: {
+        authorization: {
+          label: 'Autorisations',
+          note: 'Qui a le droit de faire quoi, au-delà de l’authentification.',
+        },
+        state: { label: 'État de l’application', note: 'Où vit l’état côté client.' },
+        'data-fetching': {
+          label: 'Récupération de données',
+          note: 'Comment le client lit et met en cache les données du serveur.',
+        },
+        forms: {
+          label: 'Formulaires',
+          note: 'Saisie, soumission et erreurs de formulaire.',
+        },
+        validation: { label: 'Validation', note: 'Vérifier les données aux frontières.' },
+        api: { label: 'API', note: 'Le style d’interface exposée par le backend.' },
+        build: { label: 'Outils de build', note: 'Compiler et empaqueter le projet.' },
+        storage: {
+          label: 'Stockage de fichiers',
+          note: 'Images, documents et fichiers envoyés par les utilisateurs.',
+        },
+        cache: { label: 'Cache', note: 'Servir plus vite ce qui est redemandé.' },
+        queue: { label: 'Files d’attente', note: 'Traiter en différé ce qui est lent.' },
+        search: { label: 'Recherche', note: 'Chercher dans les données du projet.' },
+        email: { label: 'E-mail', note: 'Envoyer des messages transactionnels.' },
+        payments: { label: 'Paiements', note: 'Encaisser, facturer, gérer les abonnements.' },
+        observability: {
+          label: 'Observabilité',
+          note: 'Voir ce qui se passe en production : erreurs, traces, métriques.',
+        },
+        analytics: { label: 'Analytics', note: 'Mesurer l’usage du produit.' },
+        security: { label: 'Sécurité', note: 'Analyser et durcir le projet.' },
+        ai: {
+          label: 'Intelligence artificielle',
+          note: 'Modèles, agents et recherche vectorielle.',
+        },
+        cms: { label: 'CMS', note: 'Contenu éditorial géré hors du code.' },
+        ecommerce: { label: 'E-commerce', note: 'Catalogue, panier et commandes.' },
+      } satisfies Partial<Record<Category, { label: string; note: string }>>,
+    },
   },
 } as const;
 
 export const EN_WIZARD: Widen<typeof FR_WIZARD> = {
   wizard: {
     namePlaceholder: 'my-project',
+    name: {
+      title: 'Create a project',
+      description:
+        'Name the project and pick how you want to configure it. Everything is kept as you go.',
+      label: 'Project name',
+      hint: 'Lowercase letters, digits, dots, hyphens and underscores. This name becomes the folder and the project identifier.',
+      modeLegend: 'Configuration mode',
+      modeGuided: 'Guided',
+      modeGuidedNote: 'Two to four recommended choices per step. The rest stays within reach.',
+      modeExpert: 'Expert',
+      modeExpertNote:
+        'The whole catalogue, with search and filters, and incompatibilities explained.',
+      reset: 'Start over',
+      draftNote: 'The draft comes back on its own if you close the tab.',
+      presets: (names: string) => `Certified presets available: ${names}.`,
+    },
+
+    targets: {
+      title: 'Target platforms',
+      description: 'This choice determines the technologies the next screens will offer.',
+      chosen: 'Chosen',
+      empty: 'No platform chosen yet.',
+      pairSeparator: ' and ',
+      count: (count: number, list: string) => `${count} platform${count > 1 ? 's' : ''}: ${list}.`,
+      withheld: (labels: string, plural: boolean) =>
+        `${labels}: ${plural ? 'these platforms are' : 'this platform is'} not offered yet — the catalogue holds no framework for ${plural ? 'them' : 'it'}. That is V1 (§23); the MVP generates web, API and library projects.`,
+      labels: {
+        web: { label: 'Web', note: 'Site, SPA, SSR, full-stack or PWA.' },
+        mobile: { label: 'Mobile', note: 'Android and iOS from a single codebase.' },
+        desktop: { label: 'Desktop', note: 'Windows, macOS and Linux.' },
+        api: { label: 'API', note: 'Shared backend, with no interface.' },
+        library: { label: 'Library', note: 'Internal or publishable package.' },
+      },
+    },
+
+    types: {
+      title: 'Project profile',
+      description:
+        'The profile steers the architecture and stack offered next. It never enters the manifest: it is an aid to choice, not an engine constraint.',
+      recommendedDefault: 'Default recommendations: no platform chosen yet.',
+      recommendedFor: (targets: string) => `Recommendations for your platforms: ${targets}.`,
+      legend: 'Available profiles',
+      recommendedBadge: 'Recommended',
+      chosenBadge: 'Chosen',
+      showAll: (count: number) => `See all options (${count})`,
+      none: 'No profile chosen yet.',
+      summary: (label: string, guides: string) => `${label}: ${guides}`,
+      labels: {
+        saas: {
+          label: 'SaaS',
+          note: 'A subscription, customer accounts, recurring billing.',
+          guides: 'Steers towards authentication, a relational database and subscription payments.',
+        },
+        marketplace: {
+          label: 'Marketplace',
+          note: 'Sellers, buyers, transactions between them.',
+          guides: 'Steers towards several separate applications and file storage.',
+        },
+        ecommerce: {
+          label: 'E-commerce',
+          note: 'A catalogue, a cart, orders.',
+          guides: 'Steers towards a catalogue, payments, order tracking and transactional email.',
+        },
+        dashboard: {
+          label: 'Dashboard',
+          note: 'Metrics and data tables to consult.',
+          guides: 'Steers towards charts, sortable tables and protected access.',
+        },
+        blog: {
+          label: 'Blog',
+          note: 'Articles, public pages, good visibility.',
+          guides: 'Steers towards editorial content, careful SEO and static rendering.',
+        },
+        ai: {
+          label: 'AI',
+          note: 'A product whose core is a language model.',
+          guides: 'Steers towards model calls, vector search and usage tracking.',
+        },
+        api: {
+          label: 'API',
+          note: 'A shared service, with no interface to ship.',
+          guides:
+            'Steers towards an open specification, strict validation and containerised deployment.',
+        },
+        business: {
+          label: 'Business application',
+          note: 'Internal processes, roles, in-house rules.',
+          guides: 'Steers towards roles and permissions, validated forms and an audit log.',
+        },
+      },
+    },
+
+    architecture: {
+      title: 'Architecture',
+      description:
+        'The most flexible shape is not the cheapest to run. The chosen architecture goes into the manifest.',
+      recommendedFor: (label: string) => `Recommendations for the “${label}” profile.`,
+      recommendedDefault: 'Default recommendations: no profile chosen yet.',
+      legend: 'Available architecture shapes',
+      recommendedBadge: 'Recommended',
+      chosenBadge: 'Chosen',
+      impact: (complexity: string, cost: string) =>
+        `Complexity: ${complexity} · Operating cost: ${cost}`,
+      showAll: (count: number) => `See all options (${count})`,
+      none: 'No architecture chosen yet.',
+      summary: (label: string, complexity: string, cost: string) =>
+        `${label} — ${complexity} complexity, ${cost} cost`,
+      labels: {
+        'single-app': {
+          label: 'Single application',
+          note: 'One application, one repository, one deployment.',
+          complexity: 'low',
+          cost: 'minimal — a single service to host and watch.',
+        },
+        monorepo: {
+          label: 'Monorepo',
+          note: 'Several applications and shared packages in one repository.',
+          complexity: 'medium',
+          cost: 'moderate — CI must be tooled to build only what changed.',
+        },
+        'modular-monolith': {
+          label: 'Modular monolith',
+          note: 'One deployment, internal modules with clear boundaries.',
+          complexity: 'medium',
+          cost: 'low — a single deployable, but module discipline to hold.',
+        },
+        microservices: {
+          label: 'Microservices',
+          note: 'Independent services, deployed and scaled separately.',
+          complexity: 'high',
+          cost: 'high — network, orchestration and observability to fund.',
+        },
+        serverless: {
+          label: 'Serverless',
+          note: 'Functions run on demand, with no server to administer.',
+          complexity: 'medium',
+          cost: 'variable — pay as you go, with a billing cap to watch.',
+        },
+        'event-driven': {
+          label: 'Event-driven',
+          note: 'Event streams decouple producers and consumers.',
+          complexity: 'high',
+          cost: 'high — a queue and end-to-end supervision.',
+        },
+      },
+    },
+
+    stack: {
+      title: 'Stack Builder',
+      description:
+        'Pick your technologies category by category. Compatibility is rechecked on every change, and what blocks is explained.',
+      modeLegend: 'Configuration mode',
+      modeGuided: 'Guided',
+      modeGuidedNote: 'Two to four recommended choices per category, the rest one click away.',
+      modeExpert: 'Expert',
+      modeExpertNote: 'The whole catalogue, global search and a compatibility filter.',
+      checking: 'Checking compatibility',
+      certified: 'Certified combination',
+      experimental: 'Experimental combination',
+      issues: (count: number) => `${count} point${count > 1 ? 's' : ''} to fix`,
+      issuesTitle: 'These choices cannot be generated as they are',
+      issuesBody:
+        'Fix the points below: the selection is rechecked on every change, and nothing is written before generation.',
+      chosenNone: 'No technology chosen: guided mode offers the most common ones.',
+      chosenCount: (count: number) => `${count} technolog${count > 1 ? 'ies' : 'y'} chosen`,
+      loading: 'Loading the catalogue…',
+      emptyCatalogue: 'The catalogue holds no usable entry: there is nothing to choose yet.',
+      resultsLabel: 'Search results',
+      resultsFor: (query: string) => `Results for “${query}”`,
+      noMatch: 'No technology matches this search.',
+      hiddenByFilter: (count: number) =>
+        `${count} incompatible option${count > 1 ? 's' : ''} hidden by the “compatible only” filter.`,
+      expertNote: 'The whole catalogue for this category, incompatibilities included.',
+      guidedNote: 'Recommended choices first, then the explained incompatibilities.',
+      showAll: (count: number) => `See all options (${count})`,
+      showRecommended: 'Back to recommendations',
+      chosenBadge: 'Chosen',
+      blockedBadge: 'Incompatible',
+      recommendedBadge: 'Recommended',
+      blockedFallback: 'Incompatible with the current selection.',
+      navLabel: 'Catalogue categories',
+      navEyebrow: 'Categories',
+      files: (count: number) => `${count} entr${count > 1 ? 'ies' : 'y'}`,
+      searchLabel: 'Search for a technology',
+      searchPlaceholder: 'react, postgres, drizzle…',
+      searchHint: 'The search walks the whole catalogue without changing category.',
+      compatibleOnly: 'Compatible only — blocked options are counted, not forgotten.',
+      categories: {
+        frontend: 'Frontend',
+        language: 'Language',
+        styling: 'Styling',
+        ui: 'UI library',
+        backend: 'Backend',
+        database: 'Database',
+        orm: 'ORM / ODM',
+        authentication: 'Authentication',
+        authorization: 'Authorization',
+        state: 'Client state',
+        'data-fetching': 'Data fetching',
+        forms: 'Forms',
+        validation: 'Validation',
+        api: 'API',
+        build: 'Build tools',
+        'package-manager': 'Package manager',
+        monorepo: 'Monorepo',
+        testing: 'Testing',
+        linting: 'Lint',
+        formatting: 'Formatting',
+        'git-hooks': 'Git hooks',
+        containers: 'Containers',
+        'dev-environment': 'Development environment',
+        'ci-cd': 'CI/CD',
+        hosting: 'Hosting',
+        storage: 'Storage',
+        cache: 'Cache',
+        queue: 'Queue',
+        search: 'Search',
+        email: 'Email',
+        payments: 'Payments',
+        observability: 'Observability',
+        analytics: 'Analytics',
+        security: 'Security',
+        ai: 'AI',
+        cms: 'CMS',
+        ecommerce: 'E-commerce',
+      },
+    },
+
+    capabilities: {
+      title: 'Capabilities',
+      description:
+        'What the project can do: payments, storage, search, AI… These choices join the services field of the manifest — it has no per-family field, which is what keeps it from migrating for every new capability. Everything is kept in the draft as you go.',
+      familiesLegend: 'Capability families',
+      optionsLabel: 'Options in the chosen family',
+      loading: 'Loading options…',
+      engineDownTitle: 'The options could not be loaded',
+      engineDown: 'The engine did not answer.',
+      kept: 'Chosen capabilities',
+      none: 'No capability chosen yet.',
+      remove: (id: string) => `Remove ${id}`,
+      servicesNoteBefore: 'These identifiers go into',
+      servicesNoteAfter: ': the manifest carries no value, only choices.',
+      emptyFamily: 'No option in this family yet.',
+      chosenBadge: 'Chosen',
+      blockedBadge: 'Unavailable',
+      families: {
+        authorization: {
+          label: 'Authorization',
+          note: 'Who may do what, beyond authentication.',
+        },
+        state: { label: 'Application state', note: 'Where client-side state lives.' },
+        'data-fetching': {
+          label: 'Data fetching',
+          note: 'How the client reads and caches server data.',
+        },
+        forms: { label: 'Forms', note: 'Input, submission and form errors.' },
+        validation: { label: 'Validation', note: 'Check data at the boundaries.' },
+        api: { label: 'API', note: 'The style of interface the backend exposes.' },
+        build: { label: 'Build tools', note: 'Compile and bundle the project.' },
+        storage: {
+          label: 'File storage',
+          note: 'Images, documents and files uploaded by users.',
+        },
+        cache: { label: 'Cache', note: 'Serve what is asked for again, faster.' },
+        queue: { label: 'Queues', note: 'Process slow work later.' },
+        search: { label: 'Search', note: 'Search the project’s data.' },
+        email: { label: 'Email', note: 'Send transactional messages.' },
+        payments: { label: 'Payments', note: 'Charge, invoice, manage subscriptions.' },
+        observability: {
+          label: 'Observability',
+          note: 'See what happens in production: errors, traces, metrics.',
+        },
+        analytics: { label: 'Analytics', note: 'Measure how the product is used.' },
+        security: { label: 'Security', note: 'Scan and harden the project.' },
+        ai: { label: 'Artificial intelligence', note: 'Models, agents and vector search.' },
+        cms: { label: 'CMS', note: 'Editorial content managed outside the code.' },
+        ecommerce: { label: 'E-commerce', note: 'Catalogue, cart and orders.' },
+      },
+    },
   },
 };

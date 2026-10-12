@@ -31,8 +31,30 @@ export interface ClonePreviewView {
   readonly host: string;
   readonly github: boolean;
   readonly destination: DestinationState | 'unknown';
+  /**
+   * Ce qui a arrêté la vérification — `null` quand la destination est prête.
+   *
+   * L'écran ne devine pas d'après le texte des refus : `parent` lui dit de
+   * rouvrir l'explorateur, `folder` de corriger le nom, `occupied` que le
+   * dossier existe déjà, `link` que c'est le lien qui est en cause.
+   */
+  readonly problem: CloneProblem | null;
   readonly issues: readonly string[];
 }
+
+/** L'étape qui a refusé : le lien, le dossier parent, le nom, ou un dossier occupé. */
+export type CloneProblem = 'link' | 'parent' | 'folder' | 'occupied';
+
+/**
+ * Le mode de destination de l'écran.
+ *
+ * `parent` en local : l'utilisateur choisit un dossier **absolu** dans
+ * l'explorateur de sa machine, et le clone y crée le sous-dossier du dépôt.
+ * `root` en hébergé : le dossier reste relatif à la racine de travail, parce
+ * qu'un chemin absolu venu du navigateur y serait une écriture de fichier
+ * arbitraire sur le serveur.
+ */
+export type CloneDestinationMode = 'parent' | 'root';
 
 /** Le lien validé et le dossier résolu — **interne au serveur**. */
 export interface ClonePlan {
@@ -56,6 +78,7 @@ function viewOf(
   folder: string,
   directory: string,
   destination: DestinationState | 'unknown',
+  problem: CloneProblem | null,
   issues: readonly string[],
 ): ClonePreviewView {
   return {
@@ -67,6 +90,7 @@ function viewOf(
     host: remote?.host ?? '',
     github: remote?.github !== undefined,
     destination,
+    problem,
     issues,
   };
 }
@@ -97,14 +121,16 @@ export async function planClone(
   const target: ClonePlace = typeof place === 'string' ? { kind: 'root', root: place } : place;
   const parsed = parseRemote(typeof link === 'string' ? link : '');
   if (!parsed.ok) {
-    return { view: viewOf(undefined, '', '', 'unknown', describeIssues(parsed.issues)) };
+    return {
+      view: viewOf(undefined, '', '', 'unknown', 'link', describeIssues(parsed.issues)),
+    };
   }
   const remote = parsed.value;
   const chosen =
     typeof folder === 'string' && folder.trim() !== '' ? folder.trim() : defaultFolder(remote);
   if (chosen === undefined) {
     return {
-      view: viewOf(remote, '', '', 'unknown', [
+      view: viewOf(remote, '', '', 'unknown', 'folder', [
         'Impossible de déduire un dossier de ce lien : indiquez le dossier de destination.',
       ]),
     };
@@ -115,19 +141,19 @@ export async function planClone(
       : await resolveAbsoluteDestination(target.parent, chosen);
   if (!resolved.ok) {
     return {
-      view: viewOf(remote, chosen, '', 'unknown', resolved.issues),
+      view: viewOf(remote, chosen, '', 'unknown', resolved.reason, resolved.issues),
     };
   }
   const state = await destinationState(resolved.value.directory);
   if (state === 'taken') {
     return {
-      view: viewOf(remote, resolved.value.folder, resolved.value.directory, state, [
+      view: viewOf(remote, resolved.value.folder, resolved.value.directory, state, 'occupied', [
         `Le dossier ${resolved.value.directory} existe déjà et n’est pas vide : un clone n’écrase rien.`,
       ]),
     };
   }
   return {
-    view: viewOf(remote, resolved.value.folder, resolved.value.directory, state, []),
+    view: viewOf(remote, resolved.value.folder, resolved.value.directory, state, null, []),
     plan: {
       remote,
       folder: resolved.value.folder,

@@ -1,5 +1,6 @@
 import type { Category } from '@buildit/registry';
 import type { DraftState } from '../../../lib/draft';
+import { FR_WIZARD } from '../../../lib/i18n/messages.wizard';
 import { toggleExclusive } from '../../../lib/session';
 
 /**
@@ -66,67 +67,26 @@ export const SCREEN_ROLE: Readonly<Record<Category, ScreenRole>> = {
   ecommerce: 'capabilities',
 };
 
-export interface CapabilityFamily {
-  readonly category: Category;
-  readonly label: string;
-  /** Ce que la famille recouvre, en clair — utile en mode guidé (§5). */
-  readonly note: string;
-}
-
 /**
  * Les familles de l'écran, dans l'ordre d'affichage.
  *
- * Les identifiants viennent du catalogue : ils ne sont pas préfixés, pas
- * traduits, et un renommage au registry les casse visiblement.
+ * La **liste et l'ordre viennent du dictionnaire** (`wizard.capabilities.
+ * families`) : une famille ajoutée là a son libellé en français **et** en
+ * anglais par construction, et le test de type de `Messages` refuse la langue
+ * incomplète. Les identifiants, eux, viennent du catalogue : ils ne sont pas
+ * préfixés, pas traduits, et un renommage au registry les casse visiblement —
+ * `satisfies Partial<Record<Category, …>>` au dictionnaire le garantit.
  */
-export const CAPABILITY_FAMILIES: readonly CapabilityFamily[] = [
-  {
-    category: 'authorization',
-    label: 'Autorisations',
-    note: 'Qui a le droit de faire quoi, au-delà de l’authentification.',
-  },
-  { category: 'state', label: 'État de l’application', note: 'Où vit l’état côté client.' },
-  {
-    category: 'data-fetching',
-    label: 'Récupération de données',
-    note: 'Comment le client lit et met en cache les données du serveur.',
-  },
-  { category: 'forms', label: 'Formulaires', note: 'Saisie, soumission et erreurs de formulaire.' },
-  { category: 'validation', label: 'Validation', note: 'Vérifier les données aux frontières.' },
-  { category: 'api', label: 'API', note: 'Le style d’interface exposée par le backend.' },
-  { category: 'build', label: 'Outils de build', note: 'Compiler et empaqueter le projet.' },
-  {
-    category: 'storage',
-    label: 'Stockage de fichiers',
-    note: 'Images, documents et fichiers envoyés par les utilisateurs.',
-  },
-  { category: 'cache', label: 'Cache', note: 'Servir plus vite ce qui est redemandé.' },
-  { category: 'queue', label: 'Files d’attente', note: 'Traiter en différé ce qui est lent.' },
-  { category: 'search', label: 'Recherche', note: 'Chercher dans les données du projet.' },
-  { category: 'email', label: 'E-mail', note: 'Envoyer des messages transactionnels.' },
-  { category: 'payments', label: 'Paiements', note: 'Encaisser, facturer, gérer les abonnements.' },
-  {
-    category: 'observability',
-    label: 'Observabilité',
-    note: 'Voir ce qui se passe en production : erreurs, traces, métriques.',
-  },
-  { category: 'analytics', label: 'Analytics', note: 'Mesurer l’usage du produit.' },
-  { category: 'security', label: 'Sécurité', note: 'Analyser et durcir le projet.' },
-  {
-    category: 'ai',
-    label: 'Intelligence artificielle',
-    note: 'Modèles, agents et recherche vectorielle.',
-  },
-  { category: 'cms', label: 'CMS', note: 'Contenu éditorial géré hors du code.' },
-  { category: 'ecommerce', label: 'E-commerce', note: 'Catalogue, panier et commandes.' },
-];
+export type CapabilityCategory = keyof (typeof FR_WIZARD)['wizard']['capabilities']['families'];
+
+export const CAPABILITY_FAMILIES = Object.keys(
+  FR_WIZARD.wizard.capabilities.families,
+) as readonly CapabilityCategory[];
 
 /** La famille ouverte au premier rendu, avant tout clic : la première de la liste. */
-export const DEFAULT_CAPABILITY_CATEGORY: Category = 'authorization';
+export const DEFAULT_CAPABILITY_CATEGORY: CapabilityCategory = 'authorization';
 
-export const CAPABILITY_CATEGORIES: readonly Category[] = CAPABILITY_FAMILIES.map(
-  (family) => family.category,
-);
+export const CAPABILITY_CATEGORIES: readonly CapabilityCategory[] = CAPABILITY_FAMILIES;
 
 /** Ce que le moteur attend pour vérifier une sélection. */
 export interface EngineSelection {

@@ -31,9 +31,21 @@ export interface Destination {
   readonly directory: string;
 }
 
+/**
+ * Ce qui a été refusé : le dossier **parent** choisi (inexistant, illisible,
+ * pas un dossier) ou le **nom** du sous-dossier (vide, séparateur de chemin,
+ * segment interdit). L'écran en a besoin pour proposer le bon geste : rouvrir
+ * l'explorateur dans un cas, corriger le nom dans l'autre.
+ */
+export type DestinationRefusal = 'parent' | 'folder';
+
 export type DestinationResult =
   | { readonly ok: true; readonly value: Destination }
-  | { readonly ok: false; readonly issues: readonly string[] };
+  | {
+      readonly ok: false;
+      readonly reason: DestinationRefusal;
+      readonly issues: readonly string[];
+    };
 
 const BAD_SEGMENT =
   'Choisissez un dossier simple, relatif à la racine de travail : lettres, chiffres, points, tirets et soulignés.';
@@ -46,16 +58,21 @@ const BAD_SEGMENT =
  */
 export function resolveDestination(folder: unknown, root: string): DestinationResult {
   if (typeof folder !== 'string' || folder.trim() === '') {
-    return { ok: false, issues: ['Indiquez un dossier de destination.'] };
+    return { ok: false, reason: 'folder', issues: ['Indiquez un dossier de destination.'] };
   }
   const value = folder.trim();
   // biome-ignore lint/suspicious/noControlCharactersInRegex: c'est précisément ce qu'on refuse
   if (/[\u0000-\u001f\u007f]/.test(value)) {
-    return { ok: false, issues: ['Le nom du dossier contient des caractères de contrôle.'] };
+    return {
+      ok: false,
+      reason: 'folder',
+      issues: ['Le nom du dossier contient des caractères de contrôle.'],
+    };
   }
   if (isAbsolute(value)) {
     return {
       ok: false,
+      reason: 'folder',
       issues: [
         'Le dossier de destination est relatif à la racine de travail : un chemin absolu n’est pas accepté.',
       ],
@@ -63,17 +80,18 @@ export function resolveDestination(folder: unknown, root: string): DestinationRe
   }
   const segments = value.split(/[\\/]+/).filter((segment) => segment !== '');
   if (segments.length === 0) {
-    return { ok: false, issues: [BAD_SEGMENT] };
+    return { ok: false, reason: 'folder', issues: [BAD_SEGMENT] };
   }
   for (const segment of segments) {
     if (segment === '.' || segment === '..' || !SEGMENT.test(segment)) {
-      return { ok: false, issues: [BAD_SEGMENT] };
+      return { ok: false, reason: 'folder', issues: [BAD_SEGMENT] };
     }
   }
   const directory = resolve(root, ...segments);
   if (directory !== root && !directory.startsWith(root + sep)) {
     return {
       ok: false,
+      reason: 'folder',
       issues: ['Le dossier de destination sort de la racine de travail.'],
     };
   }
@@ -120,16 +138,25 @@ export async function resolveAbsoluteDestination(
   folder: unknown,
 ): Promise<DestinationResult> {
   if (typeof parent !== 'string' || parent.trim() === '') {
-    return { ok: false, issues: ['Choisissez le dossier où le dépôt doit atterrir.'] };
+    return {
+      ok: false,
+      reason: 'parent',
+      issues: ['Choisissez le dossier où le dépôt doit atterrir.'],
+    };
   }
   const parentPath = parent.trim();
   // biome-ignore lint/suspicious/noControlCharactersInRegex: c'est précisément ce qu'on refuse
   if (/[\u0000-\u001f\u007f]/.test(parentPath)) {
-    return { ok: false, issues: ['Le chemin du dossier contient des caractères de contrôle.'] };
+    return {
+      ok: false,
+      reason: 'parent',
+      issues: ['Le chemin du dossier contient des caractères de contrôle.'],
+    };
   }
   if (!isAbsolute(parentPath)) {
     return {
       ok: false,
+      reason: 'parent',
       issues: [
         'Choisissez le dossier dans l’explorateur : un chemin relatif ne désigne pas le même endroit selon d’où le serveur a été lancé.',
       ],
@@ -140,11 +167,12 @@ export async function resolveAbsoluteDestination(
   try {
     const info = await stat(root);
     if (!info.isDirectory()) {
-      return { ok: false, issues: [`« ${root} » n’est pas un dossier.`] };
+      return { ok: false, reason: 'parent', issues: [`« ${root} » n’est pas un dossier.`] };
     }
   } catch {
     return {
       ok: false,
+      reason: 'parent',
       issues: [
         `Le dossier ${root} n’est pas accessible : il n’existe pas, ou ce compte n’a pas le droit de le lire. Choisissez-en un autre dans l’explorateur.`,
       ],
@@ -152,12 +180,13 @@ export async function resolveAbsoluteDestination(
   }
 
   if (typeof folder !== 'string' || folder.trim() === '') {
-    return { ok: false, issues: ['Indiquez le nom du dossier à créer.'] };
+    return { ok: false, reason: 'folder', issues: ['Indiquez le nom du dossier à créer.'] };
   }
   const name = folder.trim();
   if (name === '.' || name === '..' || !SEGMENT.test(name)) {
     return {
       ok: false,
+      reason: 'folder',
       issues: [
         'Le nom du dossier n’accepte que lettres, chiffres, points, tirets et soulignés — et aucun séparateur de chemin.',
       ],

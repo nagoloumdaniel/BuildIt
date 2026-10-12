@@ -1,6 +1,7 @@
 import { CATEGORIES, type Category } from '@buildit/registry';
 import { describe, expect, it } from 'vitest';
 import { freshDraft } from '../../../lib/draft';
+import { FR } from '../../../lib/i18n/messages';
 import {
   CAPABILITY_CATEGORIES,
   CAPABILITY_FAMILIES,
@@ -70,17 +71,18 @@ describe('rôle des catégories sur les écrans du parcours', () => {
   });
 
   it('donne un libellé lisible à chaque famille, jamais un identifiant de catalogue', () => {
+    const families = FR.wizard.capabilities.families;
     expect(CAPABILITY_FAMILIES.length).toBeGreaterThan(0);
-    for (const family of CAPABILITY_FAMILIES) {
+    for (const category of CAPABILITY_FAMILIES) {
+      const family = families[category];
       expect(family.label.length).toBeGreaterThan(0);
-      expect(family.label).not.toBe(family.category);
-      expect(SCREEN_ROLE[family.category as Category]).toBe('capabilities');
+      expect(family.label).not.toBe(category);
+      expect(family.note.length).toBeGreaterThan(0);
+      expect(SCREEN_ROLE[category]).toBe('capabilities');
     }
     // Les familles couvrent les capacités, dans le même ordre : deux listes qui
     // divergent afficheraient un écran amputé d'une famille.
-    expect(CAPABILITY_FAMILIES.map((family) => family.category)).toEqual([
-      ...CAPABILITY_CATEGORIES,
-    ]);
+    expect([...CAPABILITY_FAMILIES]).toEqual([...CAPABILITY_CATEGORIES]);
   });
 
   it('ouvre l’écran sur une famille qui existe vraiment', () => {

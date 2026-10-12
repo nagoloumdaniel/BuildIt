@@ -2,9 +2,13 @@
 
 import Link from 'next/link';
 import { useEffect, useMemo, useState } from 'react';
+import { ErrorState } from '../../../components/ui/error-state';
+import { Icon } from '../../../components/ui/icon';
+import { LoadingLine } from '../../../components/ui/loading';
 import { useDraft } from '../../../components/wizard/draft-provider';
 import { StepShell } from '../../../components/wizard/shell';
 import { draftToManifest } from '../../../lib/draft-to-manifest';
+import { useMessages } from '../../../lib/i18n/provider';
 import { loadGraphAction } from '../../actions';
 import { shareLinkBaseAction } from '../../actions-share';
 import { encodeShareLink, shareOrigin } from '../../share/codec';
@@ -24,6 +28,7 @@ import { blueprintView, manifestTechnologyIds } from './summary';
  * pas une étape de la progression (§6.11).
  */
 export default function BlueprintPage() {
+  const t = useMessages();
   const draft = useDraft();
   const manifest = useMemo(() => draftToManifest(draft), [draft]);
   const [labels, setLabels] = useState<ReadonlyMap<string, string>>(() => new Map());
@@ -55,19 +60,17 @@ export default function BlueprintPage() {
       })
       .catch(() => {
         if (alive) {
-          setCatalogueIssue(
-            'Le catalogue n’a pas pu être lu : les technologies restent affichées par leur identifiant.',
-          );
+          setCatalogueIssue(t.build.blueprint.catalogueIssue);
         }
       });
     return () => {
       alive = false;
     };
-  }, [manifest, technologyIds]);
+  }, [manifest, technologyIds, t]);
 
   const view = useMemo(
-    () => (manifest.ok ? blueprintView(manifest.value, labels) : null),
-    [manifest, labels],
+    () => (manifest.ok ? blueprintView(manifest.value, labels, t) : null),
+    [manifest, labels, t],
   );
 
   /**
@@ -85,9 +88,9 @@ export default function BlueprintPage() {
     setShareLink(link);
     try {
       await navigator.clipboard.writeText(link);
-      setShareNote('Lien copié dans le presse-papiers. Il est aussi affiché ci-dessous.');
+      setShareNote(t.build.blueprint.shareCopied);
     } catch {
-      setShareNote('Presse-papiers indisponible ici : copiez le lien ci-dessous.');
+      setShareNote(t.build.blueprint.shareManual);
     }
   }
 
@@ -95,19 +98,26 @@ export default function BlueprintPage() {
     return (
       <StepShell
         step="blueprint"
-        title="Plan du projet"
-        description="Le résumé de ce qui sera généré, construit à partir de vos choix."
+        title={t.build.blueprint.title}
+        description={t.build.blueprint.descriptionIncomplete}
       >
-        <div className="pf-card pf-card-pad">
-          <p className="pf-error" role="status">
-            Le brouillon est incomplet : le plan ne peut pas être construit.
-          </p>
-          <ul className="mt-2 list-disc pl-5">
-            {manifest.ok
-              ? null
-              : manifest.issues.map((issue) => <li key={issue.message}>{issue.message}</li>)}
-          </ul>
-        </div>
+        <ErrorState
+          title={t.build.blueprint.incompleteTitle}
+          body={t.build.blueprint.incompleteBody}
+          issues={manifest.ok ? [] : manifest.issues.map((issue) => issue.message)}
+          actions={
+            <>
+              <Link className="pf-btn" href="/create/stack">
+                <Icon name="layers" />
+                {t.build.blueprint.fixStack}
+              </Link>
+              <Link className="pf-btn pf-btn-ghost" href="/">
+                <Icon name="home" />
+                {t.build.blueprint.backHome}
+              </Link>
+            </>
+          }
+        />
       </StepShell>
     );
   }
@@ -115,30 +125,34 @@ export default function BlueprintPage() {
   return (
     <StepShell
       step="blueprint"
-      title="Plan du projet"
-      description="Le résumé de ce qui sera généré. Les mêmes choix qu’en ligne de commande produisent le même projet, octet pour octet."
+      title={t.build.blueprint.title}
+      description={t.build.blueprint.description}
     >
       <BlueprintSummary view={view} />
 
-      <p className="pf-hint mt-3">
-        {status === null
-          ? 'Vérification de la sélection…'
-          : status === 'certified'
-            ? 'Sélection certifiée : le moteur connaît cette combinaison.'
-            : 'Sélection expérimentale : le moteur l’accepte, mais aucun preset ne la certifie.'}
-      </p>
+      {status === null ? (
+        <LoadingLine className="mt-3">{t.build.blueprint.statusChecking}</LoadingLine>
+      ) : (
+        <p className="pf-hint mt-3">
+          {status === 'certified'
+            ? t.build.blueprint.statusCertified
+            : t.build.blueprint.statusExperimental}
+        </p>
+      )}
       {catalogueIssue === null ? null : (
-        <p className="pf-hint" role="status">
+        <p className="pf-hint break-words" role="status">
           {catalogueIssue}
         </p>
       )}
 
       <div className="mt-5 flex flex-wrap items-center gap-3">
         <Link className="pf-btn" href="/graph">
-          Voir le graphe de dépendances
+          <Icon name="gitBranch" />
+          {t.build.blueprint.graphLink}
         </Link>
         <Link className="pf-btn" href="/create/preview">
-          Aperçu des fichiers
+          <Icon name="file" />
+          {t.build.blueprint.previewLink}
         </Link>
         <button
           type="button"
@@ -146,19 +160,19 @@ export default function BlueprintPage() {
           onClick={() => void createShareLink()}
           {...(shareLink === null ? { 'aria-describedby': 'pf-share-note' } : {})}
         >
-          Créer un lien de partage
+          <Icon name="link" />
+          {t.build.blueprint.shareButton}
         </button>
       </div>
 
       {shareLink === null ? (
         <p id="pf-share-note" className="pf-hint mt-2">
-          Le lien de partage en lecture seule (§20) porte la configuration dans son fragment d’URL :
-          elle ne part vers aucun serveur, et il fonctionne partout où <code>pf web</code> tourne.
+          {t.build.blueprint.shareHintBefore} <code>pf web</code> {t.build.blueprint.shareHintAfter}
         </p>
       ) : (
-        <div className="mt-3">
+        <div className="mt-3 min-w-0">
           <label className="pf-label" htmlFor="pf-share-link">
-            Lien de partage (lecture seule)
+            {t.build.blueprint.shareLinkLabel}
           </label>
           <input
             id="pf-share-link"
