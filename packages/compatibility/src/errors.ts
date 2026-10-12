@@ -17,6 +17,7 @@ export const COMPATIBILITY_ERROR_CODES = [
   'COMPAT_TARGET_UNSUPPORTED',
   'COMPAT_CIRCULAR_DEPENDENCY',
   'COMPAT_ENGINE_UNSATISFIABLE',
+  'COMPAT_ECOSYSTEM_MISMATCH',
 ] as const;
 
 export const COMPATIBILITY_WARNING_CODES = [
@@ -45,6 +46,8 @@ const MESSAGES: Readonly<Record<CompatibilityCode, string>> = {
     'Dépendances circulaires dans le catalogue : {value}. C’est un défaut du registry, pas de votre sélection.',
   COMPAT_ENGINE_UNSATISFIABLE:
     '{first} exige {runtime} {firstRange}, {second} exige {runtime} {secondRange}. Aucune version ne satisfait les deux.',
+  COMPAT_ECOSYSTEM_MISMATCH:
+    '{first} fonctionne avec {firstEcosystems}, {second} avec {secondEcosystems} : ils ne partagent aucun écosystème.',
   COMPAT_EXPERIMENTAL_COMBINATION:
     'Combinaison expérimentale : {value} n’est couverte par aucun test de génération. Le projet sera généré, sans garantie qu’il compile.',
   COMPAT_DEPRECATED_TECHNOLOGY:

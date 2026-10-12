@@ -5,6 +5,7 @@ import { type CompatibilityCode, type CompatibilityIssue, messageFor } from './e
 import {
   checkDeclaredConflicts,
   checkDeprecated,
+  checkEcosystems,
   checkEngines,
   checkExclusiveCategories,
   checkLicenses,
@@ -130,6 +131,7 @@ function applyRules(
     ...checkTargets(entries, targets),
     ...checkExclusiveCategories(entries),
     ...checkDeclaredConflicts(entries),
+    ...checkEcosystems(entries),
     ...checkEngines(entries),
     ...checkDeprecated(entries),
     ...checkLicenses(entries),
@@ -181,6 +183,13 @@ export interface Option {
   readonly state: 'selected' | 'available' | 'blocked';
   /** Pourquoi l'option est bloquée. Toujours présent quand `state` vaut `blocked`. */
   readonly reason?: string;
+  /**
+   * Le refus lui-même : son code (pour choisir l'explication et la solution
+   * dans la langue de l'écran) et les technologies en cause. Sans lui, l'écran
+   * ne pourrait que répéter la phrase ; avec lui, il nomme les fiches en
+   * conflit et renvoie à leur documentation.
+   */
+  readonly blocking?: CompatibilityIssue;
 }
 
 /**
@@ -216,6 +225,7 @@ export function optionsFor(category: Category, selection: Selection, registry: R
       entry,
       state: 'blocked' as const,
       reason: blocking?.message ?? 'Incompatible avec la sélection en cours.',
+      ...(blocking === undefined ? {} : { blocking: blocking as CompatibilityIssue }),
     };
   });
 }

@@ -1,5 +1,10 @@
 import type { Target } from '@buildit/manifest';
-import type { RegistryEntry } from '@buildit/registry';
+import {
+  type Ecosystem,
+  type RegistryEntry,
+  RUNTIME_ECOSYSTEMS,
+  UI_ECOSYSTEMS,
+} from '@buildit/registry';
 import semver from 'semver';
 import { isExclusive } from './arity.js';
 import { type CompatibilityIssue, messageFor, RESTRICTIVE_LICENSES } from './errors.js';
@@ -182,6 +187,84 @@ export function checkEngines(entries: readonly RegistryEntry[]): CompatibilityIs
     }
   }
 
+  return issues;
+}
+
+/** Les noms lisibles d'un écosystème, pour le message. */
+const ECOSYSTEM_NAMES: Readonly<Record<Ecosystem, string>> = {
+  react: 'React',
+  vue: 'Vue',
+  svelte: 'Svelte',
+  angular: 'Angular',
+  solid: 'Solid',
+  qwik: 'Qwik',
+  preact: 'Preact',
+  html: 'HTML rendu serveur',
+  node: 'Node.js',
+  python: 'Python',
+  go: 'Go',
+  rust: 'Rust',
+  php: 'PHP',
+  ruby: 'Ruby',
+  jvm: 'la JVM',
+  dotnet: '.NET',
+};
+
+const DIMENSIONS: readonly (readonly Ecosystem[])[] = [UI_ECOSYSTEMS, RUNTIME_ECOSYSTEMS];
+
+function describeEcosystems(values: readonly Ecosystem[]): string {
+  return values.map((value) => ECOSYSTEM_NAMES[value]).join(', ');
+}
+
+/**
+ * Deux technologies qui se déclarent dans la même dimension (interface ou
+ * exécution) doivent partager au moins un écosystème.
+ *
+ * C'est la règle qui manquait : sans elle, Vuetify passait dans un projet
+ * Next.js et Prisma derrière un backend Django — deux projets générés qui
+ * n'auraient jamais démarré. Elle remplace aussi la règle grossière « une
+ * fiche par catégorie », qui refusait TypeScript au front et Python à l'API.
+ *
+ * Les paires sont comparées **deux à deux** : trois fiches dont chacune
+ * partage un écosystème avec sa voisine, mais pas avec la troisième, sont
+ * signalées pour la paire qui ne peut pas cohabiter. Une fiche sans écosystème
+ * dans la dimension ne contraint rien.
+ */
+export function checkEcosystems(entries: readonly RegistryEntry[]): CompatibilityIssue[] {
+  const issues: CompatibilityIssue[] = [];
+  for (const dimension of DIMENSIONS) {
+    const declared = entries
+      .map((entry) => ({
+        entry,
+        values: (entry.ecosystems ?? []).filter((value) => dimension.includes(value)),
+      }))
+      .filter((item) => item.values.length > 0);
+
+    for (let i = 0; i < declared.length; i += 1) {
+      for (let j = i + 1; j < declared.length; j += 1) {
+        const first = declared[i];
+        const second = declared[j];
+        if (first === undefined || second === undefined) {
+          continue;
+        }
+        if (first.values.some((value) => second.values.includes(value))) {
+          continue;
+        }
+        issues.push(
+          error(
+            'COMPAT_ECOSYSTEM_MISMATCH',
+            {
+              first: first.entry.name,
+              firstEcosystems: describeEcosystems(first.values),
+              second: second.entry.name,
+              secondEcosystems: describeEcosystems(second.values),
+            },
+            [first.entry.id, second.entry.id],
+          ),
+        );
+      }
+    }
+  }
   return issues;
 }
 

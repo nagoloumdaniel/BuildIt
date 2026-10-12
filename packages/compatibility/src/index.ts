@@ -26,6 +26,7 @@ export { optionsFor, resolve } from './resolve.js';
 export {
   checkDeclaredConflicts,
   checkDeprecated,
+  checkEcosystems,
   checkEngines,
   checkExclusiveCategories,
   checkLicenses,

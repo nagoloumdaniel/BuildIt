@@ -26,19 +26,32 @@ describe('couverture', () => {
 });
 
 describe('isExclusive', () => {
-  it.each(['frontend', 'database', 'orm', 'authentication', 'linting', 'hosting'] as const)(
-    '%s est exclusive — un seul choix a du sens',
+  it.each(['frontend', 'backend', 'database', 'orm', 'authentication', 'formatting'] as const)(
+    '%s est exclusive : un seul choix a du sens',
     (category) => {
       expect(isExclusive(category)).toBe(true);
     },
   );
 
-  it.each(['testing', 'security', 'observability', 'ai', 'storage', 'validation'] as const)(
-    '%s est cumulative — plusieurs choix coexistent',
-    (category) => {
-      expect(isExclusive(category)).toBe(false);
-    },
-  );
+  it.each([
+    'testing',
+    'security',
+    'observability',
+    'ai',
+    'storage',
+    'validation',
+    // L'audit de compatibilité : ces catégories refusaient des paires standard.
+    'language',
+    'styling',
+    'ui',
+    'linting',
+    'containers',
+    'hosting',
+    'payments',
+    'package-manager',
+  ] as const)('%s est cumulative : plusieurs choix coexistent', (category) => {
+    expect(isExclusive(category)).toBe(false);
+  });
 
   it('testing est cumulative — c’est le contre-exemple qui a invalidé l’hypothèse initiale', () => {
     // vitest, playwright et testing-library sont tous trois dans `testing` et

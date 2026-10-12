@@ -139,11 +139,12 @@ describe('pf add', () => {
   });
 
   it('une addition incompatible est refusée : code 1, rien d’écrit', async () => {
-    // shadcn/ui exige Tailwind : remplacer Tailwind ferait deux styles exclusifs.
+    // Vuetify ne s'affiche que dans Vue : l'ajouter à un projet Next.js est
+    // refusé par la règle des écosystèmes, avec les deux noms dans le message.
     const cwd = await project(SAAS);
     const before = await readFile(join(cwd, 'pf.manifest.json'), 'utf8');
     const io = fakeIo({ cwd });
-    expect(await run(['add', 'css-modules', '--yes'], io)).toBe(1);
+    expect(await run(['add', 'vuetify', '--yes'], io)).toBe(1);
     expect(io.text().err).toMatch(/\(COMPAT_[A-Z_]+\)/);
     expect(await readFile(join(cwd, 'pf.manifest.json'), 'utf8')).toBe(before);
   });
