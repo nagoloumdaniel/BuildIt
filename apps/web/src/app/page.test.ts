@@ -2,6 +2,8 @@ import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { type DraftState, freshDraft } from '../lib/draft';
+import type { GenerationReport } from './create/report/result';
+import { DashboardView } from './dashboard-view';
 
 /**
  * L'écran 1 rend le brouillon du parcours, donc il vit sous `DraftProvider`.
@@ -97,6 +99,67 @@ describe('Dashboard — le brouillon en cours', () => {
     const html = render();
 
     expect(html).toContain('Projet sans nom');
+    expect(html).toContain('Reprendre');
+  });
+});
+
+describe('Dashboard — projets créés (§6.14)', () => {
+  const SUCCESS: GenerationReport = {
+    ok: true,
+    directory: '/tmp/pf/mon-projet',
+    files: ['package.json'],
+    bytes: 1024,
+    warnings: [],
+    steps: ['plan', 'write'],
+    issues: [],
+  };
+
+  function renderView(draft: DraftState, report: GenerationReport | null = null): string {
+    return renderToStaticMarkup(
+      createElement(DashboardView, { draft, report, onReset: () => undefined }),
+    );
+  }
+
+  it('un projet généré avec succès rejoint « Projets créés », pas le brouillon', () => {
+    const draft: DraftState = { ...freshDraft(), name: 'mon-projet', step: 'report' };
+    const html = renderView(draft, SUCCESS);
+
+    expect(html).toContain('Projets créés');
+    expect(html).toContain('mon-projet');
+    expect(html).toContain('Terminé');
+    expect(html).not.toContain('Reprendre');
+    expect(html).not.toContain('Repartir de zéro');
+  });
+
+  it('propose GitHub et le rapport & la doc d’installation, jamais un retour en arrière', () => {
+    const draft: DraftState = { ...freshDraft(), name: 'mon-projet', step: 'report' };
+    const html = renderView(draft, SUCCESS);
+
+    expect(html).toContain('href="/repo"');
+    expect(html).toContain('Connecter à GitHub');
+    expect(html).toContain('href="/create/report"');
+    expect(html).toContain('la doc d’installation');
+  });
+
+  it('un rapport de refus ne compte pas comme un projet terminé', () => {
+    const draft: DraftState = { ...freshDraft(), name: 'mon-projet', step: 'report' };
+    const html = renderView(draft, { ...SUCCESS, ok: false, issues: ['refusé'] });
+
+    expect(html).not.toContain('Projets créés');
+  });
+
+  it('étape « report » sans rapport en main (onglet rouvert) : pas de carte « projets créés »', () => {
+    const draft: DraftState = { ...freshDraft(), name: 'mon-projet', step: 'report' };
+    const html = renderView(draft, null);
+
+    expect(html).not.toContain('Projets créés');
+  });
+
+  it('un brouillon encore en cours garde Reprendre et Repartir de zéro, sans « Projets créés »', () => {
+    const draft: DraftState = { ...freshDraft(), name: 'mon-projet', step: 'stack' };
+    const html = renderView(draft, null);
+
+    expect(html).not.toContain('Projets créés');
     expect(html).toContain('Reprendre');
   });
 });
