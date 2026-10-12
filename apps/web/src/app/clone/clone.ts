@@ -3,9 +3,11 @@ import { cloneRepository, type GitRemote, parseRemote } from '@buildit/git';
 import { describeIssues } from '../github/session';
 import { inspectProject, installProject, type ProjectSummaryView } from '../open/project';
 import {
+  type DestinationResult,
   type DestinationState,
   defaultFolder,
   destinationState,
+  resolveAbsoluteDestination,
   resolveDestination,
 } from './destination';
 
@@ -73,11 +75,26 @@ function viewOf(
  * Le plan du clone : lien validé, dossier résolu, destination libre — sans la
  * moindre écriture ni le moindre appel à Git.
  */
+/**
+ * **Où** le clone atterrit.
+ *
+ * `root` : le dossier est relatif à une racine serveur — la seule forme
+ * acceptable en hébergé, où un chemin absolu venu du navigateur serait une
+ * écriture de fichier arbitraire. `parent` : un dossier absolu que
+ * l'utilisateur vient de choisir dans l'explorateur **de sa machine**, ce qui
+ * n'a de sens qu'en local, où le serveur et l'utilisateur sont la même
+ * personne. L'appelant (`actions-node.ts`) décide, jamais le navigateur.
+ */
+export type ClonePlace =
+  | { readonly kind: 'root'; readonly root: string }
+  | { readonly kind: 'parent'; readonly parent: unknown };
+
 export async function planClone(
   link: unknown,
   folder: unknown,
-  root: string,
+  place: string | ClonePlace,
 ): Promise<ClonePlanResult> {
+  const target: ClonePlace = typeof place === 'string' ? { kind: 'root', root: place } : place;
   const parsed = parseRemote(typeof link === 'string' ? link : '');
   if (!parsed.ok) {
     return { view: viewOf(undefined, '', '', 'unknown', describeIssues(parsed.issues)) };
@@ -92,7 +109,10 @@ export async function planClone(
       ]),
     };
   }
-  const resolved = resolveDestination(chosen, root);
+  const resolved: DestinationResult =
+    target.kind === 'root'
+      ? resolveDestination(chosen, target.root)
+      : await resolveAbsoluteDestination(target.parent, chosen);
   if (!resolved.ok) {
     return {
       view: viewOf(remote, chosen, '', 'unknown', resolved.issues),
@@ -123,10 +143,20 @@ export interface CloneRunOptions {
   readonly install: boolean;
   /** Installer sans exécuter les scripts du projet — le défaut sage pour du code cloné. */
   readonly ignoreScripts: boolean;
-  readonly root: string;
+  /** Où ça atterrit. Une chaîne reste acceptée : c'est la racine de travail. */
+  readonly root: string | ClonePlace;
   readonly runner: CommandRunner;
   /** Jeton du compte connecté, pour un dépôt privé GitHub. Jamais journalisé. */
   readonly token?: string;
+  /**
+   * L'avancement, au fil de l'eau : `git clone` d'abord, puis l'installation.
+   *
+   * Donné, le clone passe `--progress` et l'écran affiche une vraie barre. La
+   * sortie est déjà caviardée par `packages/git` : le jeton n'y est pas.
+   */
+  readonly onProgress?: (chunk: string) => void;
+  /** Appelé quand le clone est fini et que l'installation commence. */
+  readonly onPhase?: (phase: 'installing') => void;
 }
 
 export interface CloneResultView {
@@ -161,6 +191,7 @@ export async function cloneProject(options: CloneRunOptions): Promise<CloneResul
   const failure = await cloneRepository(plan.remote, plan.directory, {
     runner: options.runner,
     ...(options.token === undefined ? {} : { token: options.token }),
+    ...(options.onProgress === undefined ? {} : { onProgress: options.onProgress }),
   });
   if (failure !== undefined) {
     return {
@@ -174,6 +205,7 @@ export async function cloneProject(options: CloneRunOptions): Promise<CloneResul
   if (!options.install) {
     return { ok: true, directory: plan.directory, issues: [], warnings: [], installed: false };
   }
+  options.onPhase?.('installing');
   const inspection = await inspectProject(plan.directory);
   if (!inspection.ok) {
     return {

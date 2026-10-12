@@ -1,94 +1,152 @@
 @import "tailwindcss";
 
 /*
- * 8A — Direction artistique.
+ * Direction artistique — « Forge ».
  *
- * Un outil de développeur : dense, neutre, lisible, un **seul** accent. Pas de
- * dégradé pastel, pas d'ombre portée décorative, pas de rayon de 16 px. La
- * couleur ne sert qu'à dire un état (sélection, avertissement, refus).
+ * Le produit compose des projets : il chauffe une matière (le brouillon) et en
+ * sort une pièce finie (le dépôt). D'où les deux couleurs, et une seule
+ * métaphore tenue partout :
  *
- * Deux règles, tenues par relecture et par le fait qu'il n'existe qu'ici :
- * - aucune couleur en dur dans un composant : tout passe par ces variables,
- *   sinon le thème sombre devient une chasse aux `.tsx` ;
- * - tout élément interactif a un `:focus-visible` visible — c'est un outil,
- *   on y travaille au clavier.
+ * - **orange** = la chaleur, l'action, ce qui est en cours ou à faire ;
+ * - **acier** (cyan froid) = la pièce refroidie, l'information, le lien, la
+ *   donnée mesurée.
+ *
+ * Deux familles, deux rôles, jamais interchangés :
+ * - **Inter** porte la prose — titres, phrases, libellés de bouton ;
+ * - **JetBrains Mono** porte la *donnée* — chemins, identifiants techniques,
+ *   compteurs d'étape, tailles, pourcentages, codes. Le lecteur apprend en une
+ *   page que ce qui est en chasse fixe est une valeur, pas un commentaire.
+ *
+ * Règles tenues par relecture :
+ * - aucune couleur en dur dans un composant : tout passe par ces variables ;
+ * - tout élément interactif a un `:focus-visible` visible ;
+ * - aucun squelette de chargement : un vrai indicateur de progression, ou rien.
  */
 
 :root {
   color-scheme: light;
 
-  --pf-bg: #f6f6f4;
+  /* --- Fonds et surfaces ------------------------------------------------ */
+  --pf-bg: #fbfaf8;
+  --pf-bg-sunken: #f1efea;
   --pf-surface: #ffffff;
-  --pf-surface-2: #efefec;
-  --pf-border: #d9d9d3;
-  /* 8F.3 : 3,25:1 sur `--pf-surface` et 3,01:1 sur `--pf-bg`. La valeur
-     précédente (#b4b4ac) donnait 2,09:1 : c'est la **seule** frontière d'un
-     `pf-input`, dont le fond est celui de la carte qui le porte (WCAG 1.4.11
-     demande 3:1). Les bordures décoratives des cartes restent `--pf-border`. */
-  --pf-border-strong: #8f8f88;
-  --pf-text: #191919;
-  --pf-muted: #5d5d56;
-  --pf-accent: #b4530a;
-  /* Plus clair que #fbf0e5 : le texte `--pf-accent` du badge doit rester
-     lisible sur ce fond (4,47:1 → 4,66:1, le seuil AA est 4,5). */
-  --pf-accent-soft: #fdf5ee;
-  /* Le survol assombrit, il n'éclaircit plus : `filter: brightness(1.08)`
-     faisait tomber le blanc à 4,41:1 sur le bouton principal. Ici 5,67:1. */
-  --pf-accent-hover: #a84c09;
+  --pf-surface-2: #f6f4f1;
+  --pf-surface-3: #edeae5;
+  --pf-border: #e4e0d9;
+  /* 3,56:1 sur blanc : c'est la frontière d'un contrôle (WCAG 1.4.11). */
+  --pf-border-strong: #8c8780;
+  --pf-text: #16181b;
+  --pf-muted: #5e6168;
+  --pf-faint: #8a8e95;
+
+  /* --- Orange : l'action ------------------------------------------------ */
+  --pf-accent: #c2490c;
+  --pf-accent-hover: #a93f0a;
+  --pf-accent-active: #8f3507;
   --pf-accent-text: #ffffff;
+  --pf-accent-soft: #fdf2ea;
+  --pf-accent-soft-2: #f9e3d2;
+  --pf-accent-line: #e9a173;
+
+  /* --- Acier : l'information ------------------------------------------- */
+  --pf-steel: #0d6e7b;
+  --pf-steel-hover: #0a5d68;
+  --pf-steel-text: #ffffff;
+  --pf-steel-soft: #e7f3f4;
+  --pf-steel-line: #8cc3c9;
+
+  /* --- États ------------------------------------------------------------ */
   --pf-ok: #1c6f47;
   --pf-ok-soft: #e7f4ec;
+  --pf-ok-line: #8cc5a8;
   --pf-warn: #7d5a00;
   --pf-warn-soft: #fbf3dd;
+  --pf-warn-line: #d9bf74;
   --pf-danger: #ab2119;
   --pf-danger-soft: #fbeae8;
+  --pf-danger-line: #e59e98;
   --pf-focus: #1d4ed8;
-  --pf-radius: 6px;
-  --pf-shadow: 0 1px 2px rgb(0 0 0 / 6%), 0 10px 24px -16px rgb(0 0 0 / 22%);
-  --pf-mono: ui-monospace, "Cascadia Code", "Segoe UI Mono", "SFMono-Regular", monospace;
+
+  /* --- Formes ----------------------------------------------------------- */
+  --pf-radius: 10px;
+  --pf-radius-sm: 8px;
+  --pf-radius-lg: 16px;
+  --pf-shadow-sm: 0 1px 2px rgb(22 24 27 / 6%);
+  --pf-shadow: 0 1px 2px rgb(22 24 27 / 5%), 0 12px 28px -20px rgb(22 24 27 / 28%);
+  --pf-shadow-lift: 0 2px 4px rgb(22 24 27 / 6%), 0 18px 36px -22px rgb(194 73 12 / 32%);
+  --pf-ring-accent: 0 0 0 3px rgb(194 73 12 / 14%);
+
+  /* --- Typographie ------------------------------------------------------ */
+  --pf-sans: var(--font-pf-sans, "Inter"), ui-sans-serif, system-ui, sans-serif;
+  --pf-mono: var(--font-pf-mono, "JetBrains Mono"), ui-monospace, "Cascadia Code", monospace;
 }
 
 [data-theme="dark"] {
   color-scheme: dark;
 
-  --pf-bg: #0e1012;
-  --pf-surface: #16181b;
-  --pf-surface-2: #1e2125;
-  --pf-border: #2b2f34;
-  /* 3,10:1 sur `--pf-surface`, 3,32:1 sur `--pf-bg` (1,90:1 et 2,04:1
-     avant) : même raison que le thème clair, cf. `--pf-border-strong`. */
-  --pf-border-strong: #63666f;
-  --pf-text: #ecedee;
-  --pf-muted: #9ba1a9;
-  --pf-accent: #ff9a45;
-  --pf-accent-soft: #2a1c10;
-  /* Équivalent exact du `brightness(1.08)` d'avant, en couleur et non en
-     filtre : le texte sombre y gagne (8,79:1 → 9,54:1). */
-  --pf-accent-hover: #ffa64b;
-  --pf-accent-text: #1a1206;
+  --pf-bg: #0c0e10;
+  --pf-bg-sunken: #08090b;
+  --pf-surface: #141719;
+  --pf-surface-2: #1c2023;
+  --pf-surface-3: #23282c;
+  --pf-border: #282d31;
+  /* 3,23:1 sur `--pf-surface` — même raison qu'en clair. */
+  --pf-border-strong: #606870;
+  --pf-text: #eceef0;
+  --pf-muted: #9aa2aa;
+  --pf-faint: #767e86;
+
+  --pf-accent: #ff8a3d;
+  --pf-accent-hover: #ff9c58;
+  --pf-accent-active: #f07a2c;
+  --pf-accent-text: #1a0e04;
+  --pf-accent-soft: #2a1710;
+  --pf-accent-soft-2: #3a2013;
+  --pf-accent-line: #6e3c18;
+
+  --pf-steel: #3fc6cf;
+  --pf-steel-hover: #59d4dc;
+  --pf-steel-text: #06211f;
+  --pf-steel-soft: #0e2a2d;
+  --pf-steel-line: #1d5257;
+
   --pf-ok: #55d68d;
   --pf-ok-soft: #12261b;
+  --pf-ok-line: #255c3d;
   --pf-warn: #f0bf4c;
   --pf-warn-soft: #2a2210;
+  --pf-warn-line: #5e4b16;
   --pf-danger: #f2857c;
   --pf-danger-soft: #2c1513;
+  --pf-danger-line: #6b2e28;
   --pf-focus: #8ab0ff;
-  --pf-shadow: 0 1px 2px rgb(0 0 0 / 55%), 0 14px 32px -18px rgb(0 0 0 / 75%);
+
+  --pf-shadow-sm: 0 1px 2px rgb(0 0 0 / 50%);
+  --pf-shadow: 0 1px 2px rgb(0 0 0 / 55%), 0 14px 32px -20px rgb(0 0 0 / 80%);
+  --pf-shadow-lift: 0 2px 4px rgb(0 0 0 / 55%), 0 20px 40px -22px rgb(255 138 61 / 22%);
+  --pf-ring-accent: 0 0 0 3px rgb(255 138 61 / 18%);
 }
 
 /* `inline` : les utilitaires engendrés pointent sur les variables, donc le
    thème bascule sans reconstruire le CSS. */
 @theme inline {
   --color-bg: var(--pf-bg);
+  --color-bg-sunken: var(--pf-bg-sunken);
   --color-surface: var(--pf-surface);
   --color-surface-2: var(--pf-surface-2);
+  --color-surface-3: var(--pf-surface-3);
   --color-border: var(--pf-border);
   --color-border-strong: var(--pf-border-strong);
   --color-text: var(--pf-text);
   --color-muted: var(--pf-muted);
+  --color-faint: var(--pf-faint);
   --color-accent: var(--pf-accent);
   --color-accent-soft: var(--pf-accent-soft);
+  --color-accent-line: var(--pf-accent-line);
   --color-accent-text: var(--pf-accent-text);
+  --color-steel: var(--pf-steel);
+  --color-steel-soft: var(--pf-steel-soft);
+  --color-steel-line: var(--pf-steel-line);
   --color-ok: var(--pf-ok);
   --color-ok-soft: var(--pf-ok-soft);
   --color-warn: var(--pf-warn);
@@ -96,8 +154,11 @@
   --color-danger: var(--pf-danger);
   --color-danger-soft: var(--pf-danger-soft);
   --color-focus: var(--pf-focus);
+  --font-sans: var(--pf-sans);
   --font-mono: var(--pf-mono);
   --radius-pf: var(--pf-radius);
+  --radius-pf-sm: var(--pf-radius-sm);
+  --radius-pf-lg: var(--pf-radius-lg);
 }
 
 @layer base {
@@ -105,20 +166,40 @@
     border-color: var(--pf-border);
   }
 
+  html {
+    scroll-behavior: smooth;
+  }
+
   body {
     background: var(--pf-bg);
     color: var(--pf-text);
+    font-family: var(--pf-sans);
     font-size: 15px;
-    line-height: 1.5;
+    line-height: 1.55;
     -webkit-font-smoothing: antialiased;
+    font-feature-settings: "cv05" 1, "ss03" 1;
+    /* Le fond n'est pas une surface plate : une chaleur très basse monte du
+       haut de la page, posée une fois ici plutôt que répétée en décoration. */
+    background-image: radial-gradient(
+      120rem 40rem at 50% -20rem,
+      color-mix(in oklab, var(--pf-accent) 7%, transparent),
+      transparent 70%
+    );
+    background-attachment: fixed;
   }
 
   :focus-visible {
     outline: 2px solid var(--pf-focus);
     outline-offset: 2px;
+    border-radius: 4px;
   }
 
-  /* 8E : c'est un outil de travail, pas une démonstration. */
+  ::selection {
+    background: var(--pf-accent-soft-2);
+    color: var(--pf-text);
+  }
+
+  /* C'est un outil de travail, pas une démonstration. */
   @media (prefers-reduced-motion: reduce) {
     *,
     *::before,
@@ -132,62 +213,175 @@
 }
 
 @layer components {
+  /* --- Trame de page ---------------------------------------------------- */
+
   .pf-shell {
-    max-width: 1100px;
+    max-width: 1120px;
     margin: 0 auto;
-    padding: 1.25rem 1.25rem 4rem;
+    padding: 1.5rem 1.25rem 5rem;
   }
+
+  @media (min-width: 48rem) {
+    .pf-shell {
+      padding: 2rem 2rem 6rem;
+    }
+  }
+
+  .pf-shell-narrow {
+    max-width: 760px;
+  }
+
+  /* --- Cartes ----------------------------------------------------------- */
 
   .pf-card {
     background: var(--pf-surface);
     border: 1px solid var(--pf-border);
     border-radius: var(--pf-radius);
+    box-shadow: var(--pf-shadow-sm);
   }
 
   .pf-card-pad {
-    padding: 1rem 1.125rem;
+    padding: 1.125rem 1.25rem;
+  }
+
+  @media (min-width: 48rem) {
+    .pf-card-pad {
+      padding: 1.375rem 1.5rem;
+    }
+  }
+
+  /* La carte qui porte l'action principale d'un écran : un filet chaud en
+     tête, pas une ombre colorée. */
+  .pf-card-accent {
+    border-color: var(--pf-accent-line);
+    box-shadow: var(--pf-shadow);
+  }
+
+  .pf-card-head {
+    align-items: flex-start;
+    display: flex;
+    gap: 0.875rem;
+    justify-content: space-between;
+  }
+
+  /* --- Typographie ------------------------------------------------------ */
+
+  .pf-display {
+    font-size: clamp(1.75rem, 1.2rem + 2.2vw, 2.5rem);
+    font-weight: 680;
+    letter-spacing: -0.028em;
+    line-height: 1.1;
   }
 
   .pf-title {
-    font-size: 1.375rem;
-    font-weight: 650;
-    letter-spacing: -0.01em;
+    font-size: 1.4375rem;
+    font-weight: 660;
+    letter-spacing: -0.021em;
+    line-height: 1.22;
+  }
+
+  .pf-title-sm {
+    font-size: 1.0625rem;
+    font-weight: 640;
+    letter-spacing: -0.014em;
   }
 
   .pf-subtitle {
     color: var(--pf-muted);
     font-size: 0.9375rem;
+    max-width: 68ch;
   }
 
+  /* L'eyebrow est en chasse fixe, pas en capitales traquées : c'est une
+     étiquette de donnée, et la famille le dit mieux que l'espacement. */
   .pf-eyebrow {
-    color: var(--pf-muted);
-    font-size: 0.75rem;
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
+    color: var(--pf-faint);
+    font-family: var(--pf-mono);
+    font-size: 0.6875rem;
+    font-weight: 500;
+    letter-spacing: 0.01em;
   }
+
+  .pf-mono {
+    font-family: var(--pf-mono);
+    font-size: 0.8125rem;
+    font-variant-ligatures: none;
+  }
+
+  /* Un chemin, une commande : la donnée reçoit un fond, donc une frontière. */
+  .pf-code {
+    background: var(--pf-surface-2);
+    border: 1px solid var(--pf-border);
+    border-radius: var(--pf-radius-sm);
+    display: block;
+    font-family: var(--pf-mono);
+    font-size: 0.8125rem;
+    overflow-x: auto;
+    padding: 0.5rem 0.65rem;
+    white-space: pre;
+  }
+
+  .pf-kbd {
+    background: var(--pf-surface-2);
+    border: 1px solid var(--pf-border-strong);
+    border-bottom-width: 2px;
+    border-radius: 5px;
+    font-family: var(--pf-mono);
+    font-size: 0.6875rem;
+    padding: 0.05rem 0.3rem;
+  }
+
+  .pf-hint {
+    color: var(--pf-muted);
+    font-size: 0.8125rem;
+    max-width: 72ch;
+  }
+
+  .pf-error {
+    color: var(--pf-danger);
+    font-size: 0.8125rem;
+  }
+
+  /* --- Boutons ---------------------------------------------------------- */
 
   .pf-btn {
     align-items: center;
     background: var(--pf-surface);
     border: 1px solid var(--pf-border-strong);
-    border-radius: var(--pf-radius);
+    border-radius: var(--pf-radius-sm);
     color: var(--pf-text);
     cursor: pointer;
     display: inline-flex;
+    font-family: inherit;
     font-size: 0.875rem;
-    font-weight: 550;
+    font-weight: 560;
     gap: 0.4rem;
     justify-content: center;
-    min-height: 2.25rem;
-    padding: 0.35rem 0.8rem;
+    letter-spacing: -0.006em;
+    min-height: 2.375rem;
+    padding: 0.4rem 0.9rem;
+    position: relative;
     text-decoration: none;
+    transition:
+      background-color 120ms ease,
+      border-color 120ms ease,
+      color 120ms ease,
+      box-shadow 120ms ease,
+      transform 120ms ease;
+    white-space: nowrap;
   }
 
-  .pf-btn:hover:not(:disabled) {
+  .pf-btn:hover:not(:disabled):not([aria-disabled="true"]) {
     background: var(--pf-surface-2);
+    border-color: var(--pf-text);
   }
 
-  .pf-btn:disabled {
+  .pf-btn:active:not(:disabled):not([aria-disabled="true"]) {
+    transform: translateY(1px);
+  }
+
+  .pf-btn:disabled,
+  .pf-btn[aria-disabled="true"] {
     cursor: not-allowed;
     opacity: 0.5;
   }
@@ -198,8 +392,23 @@
     color: var(--pf-accent-text);
   }
 
-  .pf-btn-primary:hover:not(:disabled) {
+  .pf-btn-primary:hover:not(:disabled):not([aria-disabled="true"]) {
     background: var(--pf-accent-hover);
+    border-color: var(--pf-accent-hover);
+    box-shadow: var(--pf-ring-accent);
+    color: var(--pf-accent-text);
+  }
+
+  .pf-btn-steel {
+    background: var(--pf-steel);
+    border-color: var(--pf-steel);
+    color: var(--pf-steel-text);
+  }
+
+  .pf-btn-steel:hover:not(:disabled):not([aria-disabled="true"]) {
+    background: var(--pf-steel-hover);
+    border-color: var(--pf-steel-hover);
+    color: var(--pf-steel-text);
   }
 
   .pf-btn-ghost {
@@ -207,89 +416,347 @@
     border-color: transparent;
   }
 
+  .pf-btn-ghost:hover:not(:disabled):not([aria-disabled="true"]) {
+    background: var(--pf-surface-2);
+    border-color: transparent;
+  }
+
+  .pf-btn-danger {
+    border-color: var(--pf-danger-line);
+    color: var(--pf-danger);
+  }
+
+  .pf-btn-danger:hover:not(:disabled):not([aria-disabled="true"]) {
+    background: var(--pf-danger-soft);
+    border-color: var(--pf-danger);
+  }
+
+  .pf-btn-sm {
+    font-size: 0.8125rem;
+    min-height: 2rem;
+    padding: 0.25rem 0.65rem;
+  }
+
+  .pf-btn-lg {
+    font-size: 0.9375rem;
+    min-height: 2.75rem;
+    padding: 0.55rem 1.2rem;
+  }
+
+  /* Un bouton carré qui ne porte qu'une icône : la taille de cible reste. */
+  .pf-btn-icon {
+    min-width: 2.375rem;
+    padding: 0.4rem;
+  }
+
+  .pf-btn-icon.pf-btn-sm {
+    min-width: 2rem;
+  }
+
+  /* --- Navigation en bulles -------------------------------------------- */
+
+  .pf-bubbles {
+    align-items: center;
+    background: color-mix(in oklab, var(--pf-surface) 72%, transparent);
+    border: 1px solid var(--pf-border);
+    border-radius: 999px;
+    box-shadow: var(--pf-shadow-sm);
+    display: flex;
+    gap: 0.125rem;
+    padding: 0.25rem;
+    -webkit-backdrop-filter: blur(14px) saturate(140%);
+    backdrop-filter: blur(14px) saturate(140%);
+  }
+
+  .pf-bubble {
+    align-items: center;
+    background: transparent;
+    border: 1px solid transparent;
+    border-radius: 999px;
+    color: var(--pf-muted);
+    cursor: pointer;
+    display: inline-flex;
+    font-size: 0.8125rem;
+    font-weight: 560;
+    gap: 0.4rem;
+    min-height: 2rem;
+    padding: 0.25rem 0.7rem;
+    text-decoration: none;
+    transition:
+      background-color 140ms ease,
+      color 140ms ease;
+    white-space: nowrap;
+  }
+
+  .pf-bubble:hover {
+    background: var(--pf-surface-2);
+    color: var(--pf-text);
+  }
+
+  .pf-bubble[aria-current="page"],
+  .pf-bubble[aria-selected="true"] {
+    background: var(--pf-accent-soft);
+    border-color: var(--pf-accent-line);
+    color: var(--pf-accent);
+  }
+
+  [data-theme="dark"] .pf-bubble[aria-current="page"],
+  [data-theme="dark"] .pf-bubble[aria-selected="true"] {
+    color: var(--pf-accent);
+  }
+
+  /* --- Barre d'en-tête -------------------------------------------------- */
+
+  .pf-topbar {
+    backdrop-filter: blur(16px) saturate(140%);
+    -webkit-backdrop-filter: blur(16px) saturate(140%);
+    background: color-mix(in oklab, var(--pf-bg) 82%, transparent);
+    border-bottom: 1px solid var(--pf-border);
+    position: sticky;
+    top: 0;
+    z-index: 40;
+  }
+
+  .pf-topbar-inner {
+    align-items: center;
+    display: flex;
+    gap: 1rem;
+    justify-content: space-between;
+    margin: 0 auto;
+    max-width: 1120px;
+    padding: 0.625rem 1.25rem;
+  }
+
+  @media (min-width: 48rem) {
+    .pf-topbar-inner {
+      padding: 0.75rem 2rem;
+    }
+  }
+
+  /* --- Stepper ---------------------------------------------------------- */
+
+  .pf-stepper {
+    display: flex;
+    gap: 0;
+    list-style: none;
+    margin: 0;
+    overflow-x: auto;
+    padding: 0 0 0.25rem;
+    scrollbar-width: none;
+  }
+
+  .pf-stepper::-webkit-scrollbar {
+    display: none;
+  }
+
+  .pf-step {
+    align-items: center;
+    display: flex;
+    flex: 1 1 0;
+    gap: 0.5rem;
+    min-width: 0;
+  }
+
+  .pf-step-node {
+    align-items: center;
+    background: var(--pf-surface);
+    border: 1px solid var(--pf-border-strong);
+    border-radius: 999px;
+    color: var(--pf-muted);
+    display: inline-flex;
+    flex: none;
+    font-family: var(--pf-mono);
+    font-size: 0.6875rem;
+    font-weight: 600;
+    height: 1.5rem;
+    justify-content: center;
+    transition:
+      background-color 160ms ease,
+      border-color 160ms ease,
+      color 160ms ease;
+    width: 1.5rem;
+  }
+
+  .pf-step-rail {
+    background: var(--pf-border);
+    border-radius: 999px;
+    flex: 1 1 auto;
+    height: 2px;
+    min-width: 0.75rem;
+  }
+
+  .pf-step-label {
+    color: var(--pf-muted);
+    font-size: 0.75rem;
+    font-weight: 540;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .pf-step[data-state="done"] .pf-step-node {
+    background: var(--pf-accent-soft);
+    border-color: var(--pf-accent-line);
+    color: var(--pf-accent);
+  }
+
+  .pf-step[data-state="done"] .pf-step-rail {
+    background: var(--pf-accent-line);
+  }
+
+  .pf-step[data-state="current"] .pf-step-node {
+    background: var(--pf-accent);
+    border-color: var(--pf-accent);
+    box-shadow: var(--pf-ring-accent);
+    color: var(--pf-accent-text);
+  }
+
+  .pf-step[data-state="current"] .pf-step-label {
+    color: var(--pf-text);
+    font-weight: 620;
+  }
+
+  /* --- Champs ----------------------------------------------------------- */
+
   .pf-input {
     background: var(--pf-surface);
     border: 1px solid var(--pf-border-strong);
-    border-radius: var(--pf-radius);
+    border-radius: var(--pf-radius-sm);
     color: var(--pf-text);
     font: inherit;
-    min-height: 2.25rem;
-    padding: 0.35rem 0.6rem;
+    min-height: 2.375rem;
+    padding: 0.4rem 0.7rem;
+    transition:
+      border-color 120ms ease,
+      box-shadow 120ms ease;
     width: 100%;
+  }
+
+  .pf-input::placeholder {
+    color: var(--pf-faint);
+  }
+
+  .pf-input:hover:not(:disabled) {
+    border-color: var(--pf-text);
+  }
+
+  .pf-input:focus {
+    border-color: var(--pf-accent);
+    box-shadow: var(--pf-ring-accent);
+    outline: none;
+  }
+
+  .pf-input:disabled {
+    background: var(--pf-surface-2);
+    cursor: not-allowed;
   }
 
   .pf-label {
     display: block;
     font-size: 0.8125rem;
     font-weight: 600;
-    margin-bottom: 0.3rem;
+    letter-spacing: -0.005em;
+    margin-bottom: 0.35rem;
   }
 
-  .pf-hint {
-    color: var(--pf-muted);
-    font-size: 0.8125rem;
+  /* Une case à cocher qui se voit, et dont la cible fait 24 px. */
+  .pf-check {
+    accent-color: var(--pf-accent);
+    height: 1.0625rem;
+    width: 1.0625rem;
+    flex: none;
   }
 
-  .pf-error {
-    color: var(--pf-danger);
-    font-size: 0.8125rem;
-  }
+  /* --- Badges ----------------------------------------------------------- */
 
   .pf-badge {
+    align-items: center;
     background: var(--pf-surface-2);
     border: 1px solid var(--pf-border);
     border-radius: 999px;
     color: var(--pf-muted);
+    display: inline-flex;
+    font-family: var(--pf-mono);
     font-size: 0.6875rem;
-    font-weight: 600;
-    letter-spacing: 0.02em;
-    padding: 0.1rem 0.45rem;
-    text-transform: uppercase;
+    font-weight: 500;
+    gap: 0.25rem;
+    letter-spacing: -0.01em;
+    padding: 0.1rem 0.5rem;
+    white-space: nowrap;
   }
 
   .pf-badge-accent {
     background: var(--pf-accent-soft);
-    border-color: var(--pf-accent);
+    border-color: var(--pf-accent-line);
     color: var(--pf-accent);
+  }
+
+  .pf-badge-steel {
+    background: var(--pf-steel-soft);
+    border-color: var(--pf-steel-line);
+    color: var(--pf-steel);
   }
 
   .pf-badge-ok {
     background: var(--pf-ok-soft);
-    border-color: var(--pf-ok);
+    border-color: var(--pf-ok-line);
     color: var(--pf-ok);
+  }
+
+  .pf-badge-warn {
+    background: var(--pf-warn-soft);
+    border-color: var(--pf-warn-line);
+    color: var(--pf-warn);
   }
 
   .pf-badge-danger {
     background: var(--pf-danger-soft);
-    border-color: var(--pf-danger);
+    border-color: var(--pf-danger-line);
     color: var(--pf-danger);
   }
 
-  /* Les grilles de choix : une colonne sur mobile, deux ou trois au large. */
+  /* --- Grilles et choix ------------------------------------------------- */
+
   .pf-grid {
     display: grid;
-    gap: 0.6rem;
-    grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr));
+    gap: 0.75rem;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 16rem), 1fr));
+  }
+
+  .pf-grid-wide {
+    display: grid;
+    gap: 0.875rem;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 21rem), 1fr));
   }
 
   .pf-choice {
     background: var(--pf-surface);
     border: 1px solid var(--pf-border);
     border-radius: var(--pf-radius);
+    box-shadow: var(--pf-shadow-sm);
     cursor: pointer;
     display: block;
-    padding: 0.7rem 0.8rem;
+    padding: 0.85rem 0.95rem;
+    position: relative;
     text-align: left;
+    transition:
+      border-color 140ms ease,
+      box-shadow 140ms ease,
+      transform 140ms ease;
     width: 100%;
   }
 
   .pf-choice:hover:not(:disabled) {
     border-color: var(--pf-border-strong);
+    box-shadow: var(--pf-shadow);
+    transform: translateY(-1px);
   }
 
-  .pf-choice[aria-pressed="true"] {
+  .pf-choice[aria-pressed="true"],
+  .pf-choice[data-selected="true"] {
     background: var(--pf-accent-soft);
     border-color: var(--pf-accent);
+    box-shadow: var(--pf-ring-accent);
   }
 
   .pf-choice:disabled {
@@ -298,25 +765,144 @@
   }
 
   .pf-choice-name {
-    display: block;
+    align-items: center;
+    display: flex;
+    flex-wrap: wrap;
     font-size: 0.9375rem;
-    font-weight: 600;
+    font-weight: 620;
+    gap: 0.4rem;
+    letter-spacing: -0.012em;
   }
 
   .pf-choice-note {
     color: var(--pf-muted);
     display: block;
     font-size: 0.8125rem;
-    margin-top: 0.15rem;
+    margin-top: 0.25rem;
   }
 
-  .pf-mono {
-    font-family: var(--pf-mono);
-    font-size: 0.8125rem;
+  /* --- Chargement : jamais de squelette --------------------------------- */
+
+  /* Le rotor : un arc qui tourne, pas un disque plein. */
+  .pf-spinner {
+    animation: pf-spin 700ms linear infinite;
+    border: 2px solid var(--pf-border);
+    border-radius: 999px;
+    border-top-color: var(--pf-accent);
+    display: inline-block;
+    height: 1rem;
+    width: 1rem;
   }
 
-  /* Le lien d'évitement ne se voit qu'au clavier (§8F) : il doit être le
-     premier élément focusable, donc présent partout, mais invisible sinon. */
+  .pf-spinner-sm {
+    height: 0.8125rem;
+    width: 0.8125rem;
+  }
+
+  .pf-spinner-lg {
+    border-width: 2.5px;
+    height: 1.75rem;
+    width: 1.75rem;
+  }
+
+  @keyframes pf-spin {
+    to {
+      transform: rotate(360deg);
+    }
+  }
+
+  /* La barre : déterminée quand on connaît le pourcentage, indéterminée
+     sinon. Les deux partagent le rail, donc la même hauteur et la même place —
+     passer de l'une à l'autre ne fait pas sauter la mise en page. */
+  .pf-bar {
+    background: var(--pf-surface-3);
+    border-radius: 999px;
+    height: 6px;
+    overflow: hidden;
+    position: relative;
+    width: 100%;
+  }
+
+  .pf-bar-fill {
+    background: linear-gradient(90deg, var(--pf-accent), var(--pf-accent-hover));
+    border-radius: 999px;
+    height: 100%;
+    transition: width 220ms cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  .pf-bar-indeterminate::after {
+    animation: pf-slide 1.15s cubic-bezier(0.45, 0, 0.55, 1) infinite;
+    background: linear-gradient(90deg, transparent, var(--pf-accent), transparent);
+    border-radius: 999px;
+    content: "";
+    inset: 0 auto 0 0;
+    position: absolute;
+    width: 42%;
+  }
+
+  @keyframes pf-slide {
+    from {
+      transform: translateX(-110%);
+    }
+    to {
+      transform: translateX(280%);
+    }
+  }
+
+  /* Trois points pour un travail court et sans mesure : plus discret qu'un
+     rotor à côté d'un libellé. */
+  .pf-dots > span {
+    animation: pf-pulse 1s ease-in-out infinite;
+    background: currentColor;
+    border-radius: 999px;
+    display: inline-block;
+    height: 4px;
+    width: 4px;
+  }
+
+  .pf-dots > span:nth-child(2) {
+    animation-delay: 150ms;
+  }
+
+  .pf-dots > span:nth-child(3) {
+    animation-delay: 300ms;
+  }
+
+  @keyframes pf-pulse {
+    0%,
+    100% {
+      opacity: 0.3;
+    }
+    50% {
+      opacity: 1;
+    }
+  }
+
+  /* --- Entrées et sorties ---------------------------------------------- */
+
+  .pf-fade-in {
+    animation: pf-fade-in 180ms cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  @keyframes pf-fade-in {
+    from {
+      opacity: 0;
+      transform: translateY(3px);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+
+  /* --- Divers ----------------------------------------------------------- */
+
+  .pf-divider {
+    background: var(--pf-border);
+    border: 0;
+    height: 1px;
+  }
+
   .pf-sr-only-focusable {
     clip: rect(0 0 0 0);
     height: 1px;
@@ -335,19 +921,28 @@
     z-index: 50;
   }
 
-  /* 8E : transitions courtes, jamais sur la mise en page. */
-  .pf-fade-in {
-    animation: pf-fade-in 140ms ease-out;
+  .pf-sr-only {
+    clip: rect(0 0 0 0);
+    clip-path: inset(50%);
+    height: 1px;
+    overflow: hidden;
+    position: absolute;
+    white-space: nowrap;
+    width: 1px;
   }
 
-  @keyframes pf-fade-in {
-    from {
-      opacity: 0;
-      transform: translateY(2px);
-    }
-    to {
-      opacity: 1;
-      transform: none;
-    }
+  /* Le logo suit le thème sans JavaScript : les deux fichiers sont dans le
+     document, un seul est affiché. Pas de bascule après hydratation, donc
+     pas de clignotement. */
+  .pf-logo-on-dark {
+    display: none;
+  }
+
+  [data-theme="dark"] .pf-logo-on-light {
+    display: none;
+  }
+
+  [data-theme="dark"] .pf-logo-on-dark {
+    display: block;
   }
 }

@@ -100,6 +100,73 @@ export async function destinationState(directory: string): Promise<DestinationSt
   }
 }
 
+/**
+ * Le dossier **parent** choisi dans l'explorateur de la machine (mode local).
+ *
+ * C'est la correction d'un vrai défaut d'usage : la destination était
+ * « relative à une racine de travail » que l'utilisateur ne voyait pas, ne
+ * choisissait pas, et dont il ignorait l'existence — un clone atterrissait
+ * dans `~/buildit/<nom>` sans que rien ne le dise clairement, et un échec
+ * ressemblait à « le clonage ne marche pas ».
+ *
+ * En local, le parent est désormais un **chemin absolu choisi dans
+ * l'explorateur** : l'utilisateur voit où ça va, et un dossier inaccessible le
+ * dit avec ce mot-là. La racine de travail reste la règle en hébergé
+ * (`resolveDestination`), où aucun chemin absolu venu du navigateur ne peut
+ * être cru : ce serait une écriture de fichier arbitraire sur le serveur.
+ */
+export async function resolveAbsoluteDestination(
+  parent: unknown,
+  folder: unknown,
+): Promise<DestinationResult> {
+  if (typeof parent !== 'string' || parent.trim() === '') {
+    return { ok: false, issues: ['Choisissez le dossier où le dépôt doit atterrir.'] };
+  }
+  const parentPath = parent.trim();
+  // biome-ignore lint/suspicious/noControlCharactersInRegex: c'est précisément ce qu'on refuse
+  if (/[\u0000-\u001f\u007f]/.test(parentPath)) {
+    return { ok: false, issues: ['Le chemin du dossier contient des caractères de contrôle.'] };
+  }
+  if (!isAbsolute(parentPath)) {
+    return {
+      ok: false,
+      issues: [
+        'Choisissez le dossier dans l’explorateur : un chemin relatif ne désigne pas le même endroit selon d’où le serveur a été lancé.',
+      ],
+    };
+  }
+  const root = resolve(parentPath);
+
+  try {
+    const info = await stat(root);
+    if (!info.isDirectory()) {
+      return { ok: false, issues: [`« ${root} » n’est pas un dossier.`] };
+    }
+  } catch {
+    return {
+      ok: false,
+      issues: [
+        `Le dossier ${root} n’est pas accessible : il n’existe pas, ou ce compte n’a pas le droit de le lire. Choisissez-en un autre dans l’explorateur.`,
+      ],
+    };
+  }
+
+  if (typeof folder !== 'string' || folder.trim() === '') {
+    return { ok: false, issues: ['Indiquez le nom du dossier à créer.'] };
+  }
+  const name = folder.trim();
+  if (name === '.' || name === '..' || !SEGMENT.test(name)) {
+    return {
+      ok: false,
+      issues: [
+        'Le nom du dossier n’accepte que lettres, chiffres, points, tirets et soulignés — et aucun séparateur de chemin.',
+      ],
+    };
+  }
+
+  return { ok: true, value: { folder: name, directory: join(root, name) } };
+}
+
 /** Le dossier proposé par défaut : le nom du dépôt, quand il est utilisable tel quel. */
 export function defaultFolder(remote: GitRemote): string | undefined {
   const name = (

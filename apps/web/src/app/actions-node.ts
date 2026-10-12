@@ -3,6 +3,7 @@
 import { type CommandRunner, nodeCommandRunner } from '@buildit/exec';
 import { isHostedEnvironment } from '../lib/hosting';
 import {
+  type ClonePlace,
   type ClonePreviewView,
   type CloneResultView,
   cloneProject,
@@ -136,11 +137,28 @@ export async function githubRepositoriesAction(): Promise<RepositoryListView> {
 
 // --- Écran 22 — Clone Project ---------------------------------------------
 
+/**
+ * Où le clone atterrit, selon l'environnement.
+ *
+ * En local, l'utilisateur choisit un dossier **absolu** dans l'explorateur de
+ * sa machine : c'est lui le propriétaire du disque, et une « racine de
+ * travail » invisible qu'il n'a pas choisie était la principale cause de
+ * clones qui semblaient ne pas marcher. En hébergé, le `parent` du navigateur
+ * est ignoré — l'accepter serait une écriture de fichier arbitraire sur le
+ * serveur.
+ */
+function clonePlace(parent: unknown): ClonePlace {
+  return isHostedEnvironment()
+    ? { kind: 'root', root: webWorkspaceRoot() }
+    : { kind: 'parent', parent };
+}
+
 export async function clonePreviewAction(
   link: unknown,
   folder: unknown,
+  parent?: unknown,
 ): Promise<ClonePreviewView> {
-  return (await planClone(link, folder, webWorkspaceRoot())).view;
+  return (await planClone(link, folder, clonePlace(parent))).view;
 }
 
 /**
@@ -151,8 +169,8 @@ export async function clonePreviewAction(
  */
 export async function cloneProjectAction(input: unknown): Promise<CloneResultView> {
   const record = inputRecord(input);
-  const root = webWorkspaceRoot();
-  const planned = await planClone(record['link'], record['folder'], root);
+  const place = clonePlace(record['parent']);
+  const planned = await planClone(record['link'], record['folder'], place);
   if (planned.plan === undefined) {
     return {
       ok: false,
@@ -168,7 +186,7 @@ export async function cloneProjectAction(input: unknown): Promise<CloneResultVie
     folder: record['folder'],
     install: record['install'] === true,
     ignoreScripts: record['ignoreScripts'] === true,
-    root,
+    root: place,
     runner: projectRunner(),
     ...(token === undefined ? {} : { token }),
   });

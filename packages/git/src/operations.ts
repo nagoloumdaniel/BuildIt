@@ -108,6 +108,19 @@ export interface CloneOptions {
   readonly runner: CommandRunner;
   /** Jeton GitHub, pour un dépôt privé en HTTPS sur github.com seulement. */
   readonly token?: string;
+  /**
+   * Appelé au fil de l'eau avec la sortie de `git clone`, **caviardée**.
+   *
+   * Donné, le clone passe `--progress` : git écrit alors son avancement même
+   * quand sa sortie n'est pas un terminal, et l'appelant peut afficher
+   * « Réception des objets : 42 % » au lieu d'un rotor. Absent, rien ne
+   * change — pas de `--progress`, pas de sortie supplémentaire à lire.
+   *
+   * Le caviardage est fait **ici** et pas chez l'appelant : c'est le seul
+   * endroit qui connaît le jeton, et un flux d'avancement qui transiterait par
+   * le navigateur est exactement le chemin par lequel un secret fuirait.
+   */
+  readonly onProgress?: (chunk: string) => void;
 }
 
 /**
@@ -140,7 +153,16 @@ export async function cloneRepository(
   const token =
     remote.github !== undefined && remote.protocol === 'https' ? options.token : undefined;
   const auth = authentication(token);
-  const args = [...HARDENING, ...auth.args, 'clone', '--', remote.url, absolute];
+  const progress = options.onProgress;
+  const args = [
+    ...HARDENING,
+    ...auth.args,
+    'clone',
+    ...(progress === undefined ? [] : ['--progress']),
+    '--',
+    remote.url,
+    absolute,
+  ];
 
   const cleanUp = async (): Promise<void> => {
     if (created !== undefined) {
@@ -154,7 +176,12 @@ export async function cloneRepository(
 
   let result: Awaited<ReturnType<CommandRunner['run']>>;
   try {
-    result = await options.runner.run('git', args, dirname(absolute), { env: auth.env });
+    result = await options.runner.run('git', args, dirname(absolute), {
+      env: auth.env,
+      ...(progress === undefined
+        ? {}
+        : { onOutput: (chunk: string) => progress(redact(chunk, token)) }),
+    });
   } catch {
     await cleanUp();
     return failure(issue('GIT_UNAVAILABLE', {}, 'Installez Git : https://git-scm.com/downloads'));

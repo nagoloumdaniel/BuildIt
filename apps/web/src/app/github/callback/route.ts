@@ -1,7 +1,7 @@
 import { exchangeAuthorizationCode } from '@buildit/github';
 import { NextResponse } from 'next/server';
 import { defaultCookieJar, unsealJson } from '../../../lib/session-cookie';
-import { STATE_COOKIE_NAME } from '../authorize/route';
+import { STATE_COOKIE_NAME } from '../oauth-state';
 import { clientSecret, sessionDeps } from '../server-deps';
 
 interface SealedState {

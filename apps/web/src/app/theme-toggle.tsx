@@ -1,6 +1,8 @@
 'use client';
 
 import { type ReactElement, useEffect, useState } from 'react';
+import { Icon, type IconName } from '../components/ui/icon';
+import { useMessages } from '../lib/i18n/provider';
 import {
   browserStorage,
   readPreference,
@@ -16,22 +18,30 @@ const NEXT: Readonly<Record<ThemePreference, ThemePreference>> = {
   system: 'light',
 };
 
-const LABELS: Readonly<Record<ThemePreference, string>> = {
-  light: 'clair',
-  dark: 'sombre',
-  system: 'système',
+const GLYPH: Readonly<Record<ThemePreference, IconName>> = {
+  light: 'sun',
+  dark: 'moon',
+  system: 'monitor',
 };
 
 /**
- * La bascule de thème du socle — neutre à dessein : la direction artistique
- * est l'affaire de la sous-phase 8A. Elle existe ici parce que le script
- * anti-flash n'est vérifiable qu'avec un moyen de changer de thème.
+ * La bascule de thème.
+ *
+ * Trois états, un seul bouton : l'icône dit lequel, et le libellé accessible
+ * le nomme. Pas de menu déroulant — trois valeurs se parcourent plus vite
+ * qu'elles ne se choisissent, et un menu coûterait un piège à focus pour
+ * trois lignes.
+ *
+ * Le libellé reste masqué visuellement mais présent : sans lui, le bouton
+ * serait « un soleil », ce qui ne dit ni l'état courant ni ce qu'un clic fait.
  */
 export function ThemeToggle(): ReactElement {
+  const t = useMessages();
   const [preference, setPreference] = useState<ThemePreference>('system');
 
   // Le premier rendu est celui du serveur, qui ne connaît pas la préférence :
-  // le script anti-flash a déjà posé le bon `data-theme`, on se synchronise ici.
+  // le script anti-clignotement a déjà posé le bon `data-theme`, on se
+  // synchronise ici.
   useEffect(() => {
     setPreference(readPreference(browserStorage()));
   }, []);
@@ -39,9 +49,6 @@ export function ThemeToggle(): ReactElement {
   useEffect(() => {
     const query = window.matchMedia('(prefers-color-scheme: dark)');
     const sync = (): void => {
-      // `setAttribute` plutôt que `dataset.theme` : `noPropertyAccessFromIndexSignature`
-      // interdit l'accès par point sur une signature d'index, et les crochets
-      // feraient râler Biome. L'attribut est exactement ce que lit le CSS.
       document.documentElement.setAttribute('data-theme', resolveTheme(preference, query.matches));
     };
     sync();
@@ -50,15 +57,25 @@ export function ThemeToggle(): ReactElement {
     return () => query.removeEventListener('change', sync);
   }, [preference]);
 
-  function cycle(): void {
-    const next = NEXT[preference];
-    setPreference(next);
-    writePreference(browserStorage(), next);
-  }
+  const label = {
+    light: t.common.themeLight,
+    dark: t.common.themeDark,
+    system: t.common.themeSystem,
+  }[preference];
 
   return (
-    <button type="button" onClick={cycle} aria-label={`Thème : ${LABELS[preference]}`}>
-      Thème : {LABELS[preference]}
+    <button
+      aria-label={t.a11y.themeToggle(label)}
+      className="pf-btn pf-btn-ghost pf-btn-sm pf-btn-icon"
+      onClick={() => {
+        const next = NEXT[preference];
+        setPreference(next);
+        writePreference(browserStorage(), next);
+      }}
+      title={t.a11y.themeToggle(label)}
+      type="button"
+    >
+      <Icon name={GLYPH[preference]} size={16} />
     </button>
   );
 }

@@ -66,9 +66,26 @@ describe('StepShell', () => {
     expect(html).not.toContain('Continuer');
   });
 
-  it('la progression ne propose aucun saut en avant : la progression est une liste, pas un menu', () => {
+  it('la progression ne propose aucun saut en avant : seules les étapes déjà franchies sont des liens', () => {
     const html = renderToStaticMarkup(<Progress current="stack" />);
-    expect(html).not.toContain('<a ');
+
+    // Franchies : cliquables. Revenir corriger un choix est le geste le plus
+    // fréquent du parcours, et le rail est l'endroit où on le cherche.
+    expect(html).toContain('href="/create"');
+    expect(html).toContain('href="/create/architecture"');
+
+    // L'étape courante et les suivantes ne sont pas des liens : y sauter
+    // contournerait les conditions bloquantes du §6.
+    expect(html).not.toContain('href="/create/stack"');
+    expect(html).not.toContain('href="/create/capabilities"');
+    expect(html).not.toContain('href="/create/report"');
+  });
+
+  it('la progression dit la position en clair sur petit écran, sans douze pastilles', () => {
+    const html = renderToStaticMarkup(<Progress current="stack" />);
+
+    expect(html).toContain('Étape 5 sur 12');
+    expect(html).toContain('aria-valuenow="42"');
   });
 });
 

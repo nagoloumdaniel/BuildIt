@@ -2,6 +2,7 @@ import { randomUUID } from 'node:crypto';
 import { SCOPES } from '@buildit/github';
 import { NextResponse } from 'next/server';
 import { defaultCookieJar, sealJson } from '../../../lib/session-cookie';
+import { STATE_COOKIE_NAME } from '../oauth-state';
 import { clientSecret, sessionDeps } from '../server-deps';
 
 /**
@@ -11,10 +12,10 @@ import { clientSecret, sessionDeps } from '../server-deps';
  * `state` protège contre un vol de code (CSRF) : un identifiant à usage
  * unique, scellé dans un cookie éphémère, revérifié au retour
  * (`github/callback`). Sans lui, un lien d'autorisation forgé par un tiers
- * pourrait faire accepter une connexion que le visiteur n'a pas demandée.
+ * pourrait faire accepter une connexion que le visiteur n'a pas demandée. Son
+ * nom de cookie vit dans `../oauth-state.ts` : un fichier de route ne peut
+ * pas exporter autre chose que ses verbes HTTP.
  */
-export const STATE_COOKIE_NAME = 'pf_github_oauth_state';
-
 export function GET(request: Request): NextResponse {
   const deps = sessionDeps();
   const secret = process.env['SESSION_SECRET'] ?? '';

@@ -46,6 +46,19 @@ export interface RunOptions {
    * à celui du processus courant.
    */
   readonly env?: Readonly<Record<string, string>>;
+  /**
+   * Appelé à chaque morceau de sortie, au fil de l'eau.
+   *
+   * `run` continue d'accumuler la sortie complète et de la rendre : ce rappel
+   * ne remplace rien, il **double** le flux pour qui veut afficher un
+   * avancement avant la fin. C'est ce qui permet à l'écran de clonage de
+   * montrer « Réception des objets : 42 % » pendant que `git` travaille,
+   * plutôt qu'un rotor pendant trois minutes.
+   *
+   * Il ne doit pas lever : une erreur d'affichage n'a pas à faire échouer une
+   * commande. L'exécuteur l'isole.
+   */
+  readonly onOutput?: (chunk: string) => void;
 }
 
 /**
@@ -125,12 +138,21 @@ export const nodeCommandRunner: CommandRunner = {
       child.stdin.on('error', () => undefined);
       child.stdin.end(options.input ?? '');
       let output = '';
-      child.stdout.on('data', (chunk: Buffer) => {
-        output += chunk.toString();
-      });
-      child.stderr.on('data', (chunk: Buffer) => {
-        output += chunk.toString();
-      });
+      const collect = (chunk: Buffer): void => {
+        const text = chunk.toString();
+        output += text;
+        if (options.onOutput !== undefined) {
+          // Isolé : un rappel d'affichage qui lève ne doit pas tuer la
+          // commande ni faire rejeter la promesse.
+          try {
+            options.onOutput(text);
+          } catch {
+            // Rien à dire : l'appelant a cassé son propre affichage.
+          }
+        }
+      };
+      child.stdout.on('data', collect);
+      child.stderr.on('data', collect);
       child.on('error', reject);
       child.on('close', (code) => {
         // Un code null — tué par un signal — n'arrive que si le parent tue

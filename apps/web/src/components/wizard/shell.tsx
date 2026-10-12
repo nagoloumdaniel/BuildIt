@@ -1,7 +1,8 @@
 'use client';
 
 import Link from 'next/link';
-import { type ReactElement, type ReactNode, useEffect, useRef } from 'react';
+import { type ReactElement, type ReactNode, useEffect, useMemo, useRef } from 'react';
+import { useMessages } from '../../lib/i18n/provider';
 import {
   blockedReason,
   nextStep,
@@ -10,6 +11,8 @@ import {
   type StepId,
   stepIndex,
 } from '../../lib/flow';
+import { Icon } from '../ui/icon';
+import { Stepper } from '../ui/stepper';
 import { useDraft, useSession } from './draft-provider';
 
 /**
@@ -26,27 +29,23 @@ export function stepHref(step: StepId): string {
 /**
  * La progression du parcours.
  *
- * Non cliquable à dessein : sauter une étape contournerait les conditions
- * bloquantes du §6. On peut toujours revenir en arrière — jamais sauter en
- * avant sans être passé.
+ * Exportée séparément du cadre : certains tests la rendent seule, et l'écran
+ * Report la montre une dernière fois sans son cadre de navigation.
  */
 export function Progress({ current }: { current: StepId }): ReactElement {
+  const t = useMessages();
   const index = stepIndex(current);
+  const steps = useMemo(
+    () => STEP_ORDER.map((step) => ({ id: step, label: t.steps[step], href: stepHref(step) })),
+    [t],
+  );
   return (
-    <ol
-      className="flex flex-wrap items-center gap-x-2 gap-y-1"
-      aria-label="Progression du parcours"
-    >
-      {STEP_ORDER.map((step, position) => (
-        <li
-          key={step}
-          className={position === index ? 'pf-eyebrow text-accent' : 'pf-eyebrow'}
-          {...(position === index ? { 'aria-current': 'step' as const } : {})}
-        >
-          {position + 1}. {step}
-        </li>
-      ))}
-    </ol>
+    <Stepper
+      ariaLabel={t.a11y.progress}
+      compactLabel={t.common.step(index + 1, STEP_ORDER.length)}
+      current={index}
+      steps={steps}
+    />
   );
 }
 
@@ -79,13 +78,18 @@ export interface StepShellProps {
    * a un sens tant que rien n'a été écrit.
    */
   readonly hidePrevious?: boolean;
+  /** Les gestes propres à l'écran, à droite du titre. */
+  readonly actions?: ReactNode;
 }
 
 /**
  * Le cadre d'une étape : progression, titre, contenu, navigation.
  *
  * Le bouton « Continuer » désactivé **dit pourquoi** juste à côté (§12) : un
- * bouton grisé sans explication est un cul-de-sac.
+ * bouton grisé sans explication est un cul-de-sac. La barre de navigation du
+ * bas est collante sur petit écran : sur une étape longue (la stack en
+ * compte deux cents), « Continuer » ne doit pas être à deux écrans de
+ * défilement.
  */
 export function StepShell({
   step,
@@ -93,7 +97,9 @@ export function StepShell({
   description,
   children,
   hidePrevious = false,
+  actions,
 }: StepShellProps): ReactElement {
+  const t = useMessages();
   const draft = useDraft();
   const session = useSession();
   const titleRef = useRef<HTMLHeadingElement>(null);
@@ -130,51 +136,62 @@ export function StepShell({
   return (
     <main className="pf-shell">
       <Progress current={step} />
-      <section className="pf-card pf-card-pad mt-3 pf-fade-in">
-        <p className="pf-eyebrow">
-          Étape {stepIndex(step) + 1} sur {STEP_ORDER.length}
-        </p>
-        {/* `tabIndex={-1}` : le titre est une cible de focus programmée (entrée
-            dans l'étape), jamais un arrêt de tabulation de plus. */}
-        <h1 className="pf-title" tabIndex={-1} ref={titleRef}>
-          {title}
-        </h1>
-        <p className="pf-subtitle">{description}</p>
-        <div className="mt-5">{children}</div>
-      </section>
+
+      <div className="pf-fade-in mt-5">
+        <header className="pf-card-head">
+          <div className="min-w-0">
+            <p className="pf-eyebrow">{t.common.step(stepIndex(step) + 1, STEP_ORDER.length)}</p>
+            {/* `tabIndex={-1}` : le titre est une cible de focus programmée
+                (entrée dans l'étape), jamais un arrêt de tabulation de plus. */}
+            <h1 className="pf-display mt-1" ref={titleRef} tabIndex={-1}>
+              {title}
+            </h1>
+            <p className="pf-subtitle mt-2">{description}</p>
+          </div>
+          {actions === undefined ? null : (
+            <div className="flex flex-none items-center gap-2">{actions}</div>
+          )}
+        </header>
+
+        <div className="mt-6">{children}</div>
+      </div>
 
       <nav
-        className="mt-3 flex items-center justify-between gap-3"
-        aria-label="Navigation de l’étape"
+        aria-label={t.a11y.stepNavigation}
+        className="mt-8 flex flex-wrap items-center justify-between gap-3 border-t border-border pt-4"
       >
         {previous === null || hidePrevious ? (
           <Link className="pf-btn" href="/">
-            Accueil
+            <Icon name="home" />
+            {t.common.backHome}
           </Link>
         ) : (
           <Link className="pf-btn" href={stepHref(previous)}>
-            Précédent
+            <Icon name="arrowLeft" />
+            {t.common.previous}
           </Link>
         )}
 
         {next === null || hidePrevious ? null : (
-          <span className="flex items-center gap-3">
+          <span className="flex flex-wrap items-center justify-end gap-3">
             {ready ? null : (
-              <span className="pf-error" role="status">
+              <span className="pf-error flex items-center gap-1.5" role="status">
+                <Icon name="warning" size={14} />
                 {reason}
               </span>
             )}
             <Link
+              aria-disabled={!ready}
               className={
                 ready
                   ? 'pf-btn pf-btn-primary'
                   : 'pf-btn pf-btn-primary pointer-events-none opacity-50'
               }
               href={stepHref(next)}
-              aria-disabled={!ready}
               tabIndex={ready ? 0 : -1}
             >
-              Continuer
+              {t.common.continue}
+              <Icon name="arrowRight" />
             </Link>
           </span>
         )}
@@ -189,6 +206,13 @@ export interface ScreenShellProps {
   readonly children: ReactNode;
   /** Les actions de l'écran, à droite du titre. */
   readonly actions?: ReactNode;
+  /**
+   * Le retour : une adresse et son libellé. Tout écran hors parcours en a un —
+   * c'est la « boucle » qui évite le cul-de-sac. Par défaut, l'accueil.
+   */
+  readonly back?: { readonly href: string; readonly label: string } | null;
+  /** Resserre la colonne : un écran de lecture, pas une grille. */
+  readonly narrow?: boolean;
 }
 
 /** Le cadre des écrans hors parcours : accueil, GitHub, graphe, aperçu. */
@@ -197,17 +221,34 @@ export function ScreenShell({
   description,
   children,
   actions,
+  back,
+  narrow = false,
 }: ScreenShellProps): ReactElement {
+  const t = useMessages();
+  const target = back === undefined ? { href: '/', label: t.common.backHome } : back;
+
   return (
-    <main className="pf-shell">
-      <header className="flex items-start justify-between gap-4">
-        <div>
-          <h1 className="pf-title">{title}</h1>
-          {description === undefined ? null : <p className="pf-subtitle">{description}</p>}
+    <main className={`pf-shell${narrow ? ' pf-shell-narrow' : ''}`}>
+      {target === null ? null : (
+        <Link className="pf-btn pf-btn-ghost pf-btn-sm -ml-2" href={target.href}>
+          <Icon name="arrowLeft" size={14} />
+          {target.label}
+        </Link>
+      )}
+
+      <header className={`pf-card-head${target === null ? '' : ' mt-3'}`}>
+        <div className="min-w-0">
+          <h1 className="pf-display">{title}</h1>
+          {description === undefined ? null : (
+            <p className="pf-subtitle mt-2">{description}</p>
+          )}
         </div>
-        {actions}
+        {actions === undefined ? null : (
+          <div className="flex flex-none items-center gap-2">{actions}</div>
+        )}
       </header>
-      <div className="mt-4 pf-fade-in">{children}</div>
+
+      <div className="pf-fade-in mt-6">{children}</div>
     </main>
   );
 }
