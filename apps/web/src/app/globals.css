@@ -714,6 +714,12 @@
 
   /* Le code de la langue courante, seul : une valeur en chasse fixe, à la
      largeur des autres bulles d'icône. */
+  /* Un bouton posé dans une bulle prend sa forme : un survol carré dans une
+     pilule ronde se voyait comme un défaut. */
+  .pf-pod .pf-btn {
+    border-radius: 999px;
+  }
+
   .pf-locale {
     font-family: var(--pf-mono);
     font-size: 0.75rem;
