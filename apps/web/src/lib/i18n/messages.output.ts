@@ -83,11 +83,50 @@ export const FR_OUTPUT = {
     retry: 'Réessayer',
     writtenIn: 'Projet écrit dans',
     writtenWhat: 'le dossier du projet',
+    /** Avant de générer : la génération ferme le parcours, et c'est dit avant. */
+    lockTitle: 'La génération termine le projet',
+    lockBody:
+      'Une fois le projet généré, il ne peut plus être modifié et il n’y a pas de retour possible vers les étapes précédentes. Vérifiez vos choix avant de continuer.',
+    openFolder: 'Ouvrir le dossier du projet',
+    openFolderLabel: (directory: string) =>
+      `Ouvrir le dossier du projet dans l’explorateur de fichiers : ${directory}`,
+    openingFolder: 'Ouverture du dossier…',
+    openFolderRefusals: {
+      hosted: 'BuildIt n’est pas lancé sur cette machine : le dossier ne peut pas s’ouvrir d’ici.',
+      empty: 'Aucun dossier n’a été indiqué.',
+      notRegistered: 'Ce dossier n’a pas été écrit par BuildIt : il ne sera pas ouvert d’ici.',
+      missing: 'Ce dossier n’existe plus à cet endroit.',
+      failed: 'L’explorateur de fichiers n’a pas pu s’ouvrir. Ouvrez le dossier vous-même.',
+    },
+    folderWrittenIn: 'Projet écrit dans le dossier',
+    manualWhere:
+      'À taper dans un terminal ouvert dans le dossier du projet (Windows : clic droit dans le dossier, puis « Ouvrir dans le Terminal »).',
+    install: {
+      terminal: 'Terminal',
+      editor: 'Éditeur',
+      openTerminal: 'Ouvrez un terminal dans le dossier du projet.',
+      openTerminalIn: (name: string) => `Ouvrez un terminal dans le dossier « ${name} ».`,
+      openTerminalUnpacked:
+        'Décompressez l’archive, puis ouvrez un terminal dans le dossier obtenu.',
+      openTerminalHow:
+        'Windows : clic droit dans le dossier, puis « Ouvrir dans le Terminal », ou ouvrez PowerShell et tapez la commande ci-dessous. macOS : ouvrez Terminal et tapez la commande. Linux : clic droit, « Ouvrir dans un terminal ». Toutes les commandes suivantes se tapent dans ce même terminal.',
+      services: 'À taper dans ce terminal : démarre les services (Docker Desktop doit être lancé).',
+      envCopy: 'À taper dans ce terminal : crée le fichier .env à partir du gabarit.',
+      envEdit: (count: number, names: string) =>
+        `Sans terminal : ouvrez le fichier .env dans votre éditeur de code et renseignez ${count > 1 ? 'les variables' : 'la variable'} ${names}, puis enregistrez.`,
+      install:
+        'À taper dans ce terminal : installe les dépendances. Cela peut prendre quelques minutes.',
+      dev: 'À taper dans ce terminal : démarre le projet, puis ouvrez dans le navigateur l’adresse affichée.',
+    },
     report: {
       architecture: 'Architecture du projet',
       openGithub: 'Ouvrir sur GitHub',
       openGithubLabel: 'Ouvrir le dépôt sur GitHub, dans un nouvel onglet',
       installedNote: 'Les dépendances ont été installées pendant la génération.',
+      installWhere:
+        'Chaque étape dit où la faire : dans un terminal ouvert dans le dossier du projet, ou dans votre éditeur.',
+      finish: 'Terminer',
+      finishing: 'Finalisation…',
     },
   },
 } as const;
@@ -166,11 +205,47 @@ export const EN_OUTPUT: Widen<typeof FR_OUTPUT> = {
     retry: 'Try again',
     writtenIn: 'Project written to',
     writtenWhat: 'the project folder',
+    lockTitle: 'Generating finishes the project',
+    lockBody:
+      'Once the project is generated, it can no longer be modified and there is no going back to the previous steps. Check your choices before you continue.',
+    openFolder: 'Open the project folder',
+    openFolderLabel: (directory: string) =>
+      `Open the project folder in the file explorer: ${directory}`,
+    openingFolder: 'Opening the folder…',
+    openFolderRefusals: {
+      hosted: 'BuildIt is not running on this machine: the folder cannot be opened from here.',
+      empty: 'No folder was given.',
+      notRegistered: 'BuildIt did not write this folder: it will not be opened from here.',
+      missing: 'This folder no longer exists at that location.',
+      failed: 'The file explorer could not open. Open the folder yourself.',
+    },
+    folderWrittenIn: 'Project written to the folder',
+    manualWhere:
+      'Type it in a terminal opened in the project folder (Windows: right-click in the folder, then “Open in Terminal”).',
+    install: {
+      terminal: 'Terminal',
+      editor: 'Editor',
+      openTerminal: 'Open a terminal in the project folder.',
+      openTerminalIn: (name: string) => `Open a terminal in the “${name}” folder.`,
+      openTerminalUnpacked: 'Unpack the archive, then open a terminal in the resulting folder.',
+      openTerminalHow:
+        'Windows: right-click in the folder, then “Open in Terminal”, or open PowerShell and type the command below. macOS: open Terminal and type the command. Linux: right-click, “Open in Terminal”. All the following commands are typed in this same terminal.',
+      services: 'Type in this terminal: starts the services (Docker Desktop must be running).',
+      envCopy: 'Type in this terminal: creates the .env file from the template.',
+      envEdit: (count: number, names: string) =>
+        `No terminal needed: open the .env file in your code editor, fill in the ${count > 1 ? 'variables' : 'variable'} ${names}, then save.`,
+      install: 'Type in this terminal: installs the dependencies. It may take a few minutes.',
+      dev: 'Type in this terminal: starts the project, then open the address it shows in your browser.',
+    },
     report: {
       architecture: 'Project architecture',
       openGithub: 'Open on GitHub',
       openGithubLabel: 'Open the repository on GitHub, in a new tab',
       installedNote: 'Dependencies were installed during generation.',
+      installWhere:
+        'Each step says where to do it: in a terminal opened in the project folder, or in your editor.',
+      finish: 'Finish',
+      finishing: 'Finishing…',
     },
   },
 };

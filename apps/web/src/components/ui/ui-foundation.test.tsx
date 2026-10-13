@@ -59,6 +59,32 @@ describe('UI foundation', () => {
     expect(html).toContain('<span class="pf-journey-sr">Type</span>');
     // Upcoming steps are not links: jumping ahead would skip blocking checks.
     expect(html).not.toContain('href="/create/type"');
+    // Small screens: a thin decorative bar, filled to step / total.
+    expect(html).toContain('<div aria-hidden="true" class="pf-rail-bar"');
+    expect(html).toContain('--pf-rail-bar-fill:0.5');
+  });
+
+  it('turns done steps into plain text once the stepper is locked', () => {
+    const steps = [
+      { id: 'name', label: 'Nom', href: '/create' },
+      { id: 'type', label: 'Type', href: '/create/type' },
+    ];
+    const open = renderToStaticMarkup(
+      <Stepper ariaLabel="Parcours" compactLabel="Étape 2 sur 2" current={1} steps={steps} />,
+    );
+    const locked = renderToStaticMarkup(
+      <Stepper
+        ariaLabel="Parcours"
+        compactLabel="Étape 2 sur 2"
+        current={1}
+        locked
+        steps={steps}
+      />,
+    );
+
+    expect(open).toContain('href="/create"');
+    expect(locked).not.toContain('href="/create"');
+    expect(locked).toContain('title="Nom"');
   });
 
   it('associates panel progress with its visible title', () => {

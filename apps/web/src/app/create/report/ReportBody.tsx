@@ -1,12 +1,14 @@
 import Link from 'next/link';
 import type { ReactElement } from 'react';
-import { CommandLine, CommandSteps } from '../../../components/ui/copy';
 import { IssueList, NoteList } from '../../../components/ui/empty-state';
 import { ErrorState } from '../../../components/ui/error-state';
 import { Icon } from '../../../components/ui/icon';
+import { ProjectFolder } from '../../../components/ui/project-export';
 import { useLocale } from '../../../lib/i18n/provider';
 import { isGithubUrl } from '../../../lib/projects';
 import { formatBytes } from '../generate/steps';
+import { FinishButton } from './finish-button';
+import { InstallGuide } from './install-guide';
 import { installSteps } from './install-steps';
 import type { GenerationReport } from './result';
 
@@ -25,6 +27,11 @@ export interface ReportBodyProps {
    * retenue. Jamais devinée : sans elle, pas de bouton « Ouvrir sur GitHub ».
    */
   readonly repositoryUrl?: string;
+  /**
+   * Ce que fait « Terminer » (brouillon remis à zéro, retour à l'accueil).
+   * Absent, pas de bouton : le rapport reste rendu sans effet de bord.
+   */
+  readonly onFinish?: () => void;
 }
 
 /**
@@ -35,8 +42,9 @@ export interface ReportBodyProps {
  * Il dit d'abord si la génération a réussi, puis où et combien, puis ce qui
  * doit alerter, puis comment reprendre le projet. La liste des fichiers n'y
  * est plus : l'architecture du projet a son propre écran (étape 10), et un
- * seul bouton y mène. Pas de retour à l'accueil ici : la navigation de
- * l'application le porte déjà.
+ * seul bouton y mène. Aucun lien vers l'accueil ici : la seule sortie d'un
+ * projet réussi est « Terminer », qui range le brouillon avant d'y retourner.
+ * Un refus n'a pas de « Terminer » : rien n'a été écrit, il reste à corriger.
  */
 export function ReportBody({
   report,
@@ -46,6 +54,7 @@ export function ReportBody({
   envVarNames,
   onRedownload,
   repositoryUrl,
+  onFinish,
 }: ReportBodyProps): ReactElement {
   const { t, locale } = useLocale();
   const body = t.build.report;
@@ -64,7 +73,9 @@ export function ReportBody({
       </p>
 
       {report.directory === '' ? null : (
-        <CommandLine className="mt-3" value={report.directory} what={body.directoryWhat} />
+        // Un rapport avec un dossier vient toujours d'une écriture locale par le
+        // serveur : le dossier est au registre, il peut s'ouvrir.
+        <ProjectFolder className="mt-3" directory={report.directory} openable />
       )}
 
       {report.ok ? (
@@ -129,8 +140,9 @@ export function ReportBody({
         <section className="mt-5">
           <h3 className="pf-label">{body.installationTitle}</h3>
           <p className="pf-hint">{body.installationNote}</p>
+          <p className="pf-hint mt-1">{o.installWhere}</p>
           {report.installed === true ? <p className="pf-hint mt-1">{o.installedNote}</p> : null}
-          <CommandSteps
+          <InstallGuide
             className="mt-3"
             steps={installSteps(
               {
@@ -147,6 +159,7 @@ export function ReportBody({
       )}
 
       <div className="mt-5 flex flex-wrap items-center gap-3">
+        {!report.ok || onFinish === undefined ? null : <FinishButton onFinish={onFinish} />}
         <Link className="pf-btn" href="/create/preview">
           <Icon name="layers" />
           {o.architecture}

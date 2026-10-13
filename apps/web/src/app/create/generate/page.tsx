@@ -5,7 +5,7 @@ import { useCallback, useMemo } from 'react';
 import { ErrorState } from '../../../components/ui/error-state';
 import { Icon } from '../../../components/ui/icon';
 import { ProjectExport } from '../../../components/ui/project-export';
-import { useDraft } from '../../../components/wizard/draft-provider';
+import { useDraft, useSession } from '../../../components/wizard/draft-provider';
 import { StepShell } from '../../../components/wizard/shell';
 import { draftToManifest } from '../../../lib/draft-to-manifest';
 import { useLocale } from '../../../lib/i18n/provider';
@@ -29,10 +29,18 @@ import { rememberGeneratedProject } from './remember';
  * d'écrire le même projet ailleurs. Les deux ne sont écrits qu'au succès : un
  * refus n'a produit aucun projet. Le « Continuer » du parcours mène au
  * rapport : pas de second bouton pour y aller.
+ *
+ * La **première** sortie réussie (archive téléchargée, dossier écrit, en local
+ * comme par le navigateur) verrouille le brouillon (`generated: true`) : le
+ * projet existe désormais hors de BuildIt, le modifier ici le ferait diverger
+ * de ce qui est sur le disque. Le cadre des étapes lit ce drapeau pour fermer
+ * le retour aux étapes 1 à 10. Comme on ne revient pas en arrière, l'écran le
+ * dit **avant** le premier geste, pas après.
  */
 export default function GeneratePage() {
   const { t: messages } = useLocale();
   const draft = useDraft();
+  const session = useSession();
   const manifest = useMemo(() => draftToManifest(draft), [draft]);
 
   const remember = useCallback(
@@ -42,8 +50,13 @@ export default function GeneratePage() {
       }
       saveReport(browserSessionStorage(), result);
       rememberGeneratedProject(browserProjectStorage(), draft, result, new Date(), manifest.value);
+      // Tout de suite, pas au passage au rapport : un onglet fermé ici doit
+      // déjà retrouver un projet verrouillé.
+      session.update((current) =>
+        current.generated === true ? current : { ...current, generated: true },
+      );
     },
-    [draft, manifest],
+    [draft, manifest, session],
   );
 
   if (!manifest.ok) {
@@ -74,7 +87,17 @@ export default function GeneratePage() {
       title={messages.build.generate.title}
       description={messages.output.generateDescription}
     >
+      {draft.generated === true ? null : (
+        <div className="pf-callout pf-output-lock mb-4" role="note">
+          <p className="pf-output-callout-title flex items-center gap-2">
+            <Icon name="lock" size={14} />
+            {messages.output.lockTitle}
+          </p>
+          <p className="mt-1">{messages.output.lockBody}</p>
+        </div>
+      )}
       <ProjectExport
+        install={{ docker: draft.infra.docker, envVarNames: draft.envVarNames }}
         manifest={manifest.value}
         onGenerated={remember}
         projectName={manifest.value.name}

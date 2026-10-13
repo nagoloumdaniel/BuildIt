@@ -22,6 +22,12 @@ export const FR_JOURNEY = {
       confirm: 'Effacer et quitter',
       keep: 'Garder mes choix',
     },
+    /**
+     * Dit au lecteur d'écran pourquoi l'écran demandé n'apparaît pas : le
+     * projet est généré, le parcours repart vers sa fin.
+     */
+    locked:
+      'Ce projet est déjà généré : ses choix ne se modifient plus. Retour à la fin du parcours.',
   },
 } as const;
 
@@ -35,5 +41,7 @@ export const EN_JOURNEY: Widen<typeof FR_JOURNEY> = {
       confirm: 'Erase and leave',
       keep: 'Keep my choices',
     },
+    locked:
+      'This project has already been generated: its choices can no longer change. Going back to the end of the journey.',
   },
 };

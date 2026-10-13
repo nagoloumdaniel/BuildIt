@@ -31,6 +31,13 @@ export interface DraftState {
   /** Noms des variables d'environnement requises — jamais leurs valeurs (§6.8). */
   envVarNames: string[];
   infra: { docker: boolean; ci: boolean };
+  /**
+   * Le projet est généré (archive téléchargée ou dossier écrit) : plus rien ne
+   * se modifie. Persisté avec le reste, parce que le verrou doit survivre à un
+   * rechargement et au bouton Précédent du navigateur. Absent : rien n'est
+   * encore généré.
+   */
+  generated?: true;
   /** Résolution du moteur, recalculée à chaque changement — jamais persistée. */
   resolution?: { status: 'certified' | 'experimental'; issues: readonly string[] };
 }
@@ -48,6 +55,7 @@ interface PersistedDraft {
   capabilities: string[];
   envVarNames: string[];
   infra: { docker: boolean; ci: boolean };
+  generated?: true;
 }
 
 export function freshDraft(): DraftState {
@@ -136,6 +144,7 @@ export function loadDraft(storage: Storage | null): DraftState {
     capabilities,
     envVarNames,
     infra: persistedInfra,
+    generated,
   } = persisted;
   const filled = optionalString(type);
   const shape = optionalString(architecture);
@@ -151,6 +160,7 @@ export function loadDraft(storage: Storage | null): DraftState {
     capabilities: strings(capabilities),
     envVarNames: strings(envVarNames),
     infra: infra(persistedInfra),
+    ...(generated === true ? { generated: true as const } : {}),
   };
 }
 
@@ -167,6 +177,7 @@ function toPersisted(draft: DraftState): PersistedDraft {
     capabilities: [...draft.capabilities],
     envVarNames: [...draft.envVarNames],
     infra: { ...draft.infra },
+    ...(draft.generated === true ? { generated: true as const } : {}),
     // `resolution` n'est pas ici, et ne doit jamais y être : elle est
     // recalculée par le moteur à chaque changement.
   };
@@ -233,6 +244,7 @@ export function restorePersistedDraft(
 ): DraftState {
   const type = keep(stored.type, current.type, baseline.type);
   const architecture = keep(stored.architecture, current.architecture, baseline.architecture);
+  const generated = keep(stored.generated, current.generated, baseline.generated);
   return {
     version: stored.version,
     step: keep(stored.step, current.step, baseline.step),
@@ -245,6 +257,7 @@ export function restorePersistedDraft(
     capabilities: keepList(stored.capabilities, current.capabilities, baseline.capabilities),
     envVarNames: keepList(stored.envVarNames, current.envVarNames, baseline.envVarNames),
     infra: keep(stored.infra, current.infra, baseline.infra),
+    ...(generated === true ? { generated: true as const } : {}),
     // `resolution` n'est jamais persistée : le brouillon relu ne la porte pas,
     // et un écran la recalcule de toute façon.
   };

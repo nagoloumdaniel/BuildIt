@@ -1,7 +1,36 @@
 import { renderToStaticMarkup } from 'react-dom/server';
-import { describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
+import { type DraftState, freshDraft } from '../../lib/draft';
 import { DraftProvider } from './draft-provider';
 import { Progress, ScreenShell, STEP_ICONS, StepShell } from './shell';
+
+/**
+ * Le brouillon vu par le cadre, remplaçable test par test : le provider rend
+ * sans stockage, donc toujours un brouillon neuf, et le verrou d'un projet
+ * généré ne se verrait jamais. `vi.hoisted` parce que `vi.mock` est remonté
+ * au-dessus des déclarations du fichier.
+ */
+const seeded = vi.hoisted(() => ({ draft: null as DraftState | null }));
+
+vi.mock('./draft-provider', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('./draft-provider')>();
+  return {
+    ...actual,
+    useDraft: (): DraftState => {
+      const draft = actual.useDraft();
+      return seeded.draft ?? draft;
+    },
+  };
+});
+
+// Le renvoi d'une étape refermée prend le routeur de Next, absent hors de Next.
+vi.mock('next/navigation', () => ({
+  useRouter: () => ({ push: vi.fn(), replace: vi.fn() }),
+}));
+
+afterEach(() => {
+  seeded.draft = null;
+});
 
 /**
  * Le cadre commun des écrans : progression, navigation, raison bloquante.
@@ -61,7 +90,8 @@ describe('StepShell', () => {
       </StepShell>,
     );
 
-    expect(html).toContain('Accueil');
+    // Au rapport, « Terminer » (posé par la page) est la seule sortie.
+    expect(html).not.toContain('>Accueil<');
     expect(html).not.toContain('Précédent');
     expect(html).not.toContain('Continuer');
   });
@@ -144,6 +174,90 @@ describe('StepShell', () => {
     );
 
     expect(html).not.toContain('Annuler la création du projet');
+  });
+});
+
+describe('StepShell : bouton Annuler', () => {
+  it('est un vrai bouton à contour, icône X, libellé masquable sur petit écran', () => {
+    const html = render(
+      <StepShell step="stack" title="Stack technique" description="Choisissez.">
+        <p>contenu</p>
+      </StepShell>,
+    );
+
+    expect(html).toContain('class="pf-btn pf-btn-sm pf-journey-cancel"');
+    expect(html).not.toContain('pf-btn-ghost pf-btn-sm');
+    expect(html).toContain('data-icon="close"');
+    expect(html).toContain('<span class="pf-journey-cancel-text">Annuler</span>');
+    // Il vit dans la ligne du titre, pas en dessous.
+    expect(html).toMatch(/class="pf-journey-head[^"]*">.*pf-journey-cancel/s);
+  });
+});
+
+describe('StepShell : projet généré', () => {
+  const generated = (step: DraftState['step']): DraftState => ({
+    ...freshDraft(),
+    name: 'mon-app',
+    step,
+    generated: true,
+  });
+
+  it('referme les dix premières étapes : rien du contenu, une phrase pour le lecteur d’écran', () => {
+    seeded.draft = generated('report');
+    const html = render(
+      <StepShell step="stack" title="Stack technique" description="Choisissez.">
+        <p>contenu</p>
+      </StepShell>,
+    );
+
+    expect(html).toContain('aria-busy="true"');
+    expect(html).toContain('déjà généré');
+    expect(html).not.toContain('contenu');
+    expect(html).not.toContain('Stack technique');
+    expect(html).not.toContain('Annuler la création du projet');
+  });
+
+  it('sur Génération : ni Annuler ni Précédent, mais le Rapport reste à un clic', () => {
+    seeded.draft = generated('generate');
+    const html = render(
+      <StepShell step="generate" title="Génération" description="Écrire.">
+        <p>contenu</p>
+      </StepShell>,
+    );
+
+    expect(html).toContain('contenu');
+    expect(html).not.toContain('Annuler la création du projet');
+    expect(html).not.toContain('Précédent');
+    expect(html).toContain('href="/create/report"');
+    // Le stepper ne ramène plus en arrière : aucune étape franchie n'est un lien.
+    expect(html).not.toContain('href="/create"');
+    expect(html).not.toContain('href="/create/stack"');
+  });
+
+  it('sur Rapport, même sans `hidePrevious` : ni Annuler ni Précédent', () => {
+    seeded.draft = generated('report');
+    const html = render(
+      <StepShell step="report" title="Rapport" description="Ce qui a été écrit.">
+        <p>contenu</p>
+      </StepShell>,
+    );
+
+    expect(html).toContain('contenu');
+    expect(html).not.toContain('>Accueil<');
+    expect(html).not.toContain('Précédent');
+    expect(html).not.toContain('Annuler la création du projet');
+    expect(html).not.toContain('href="/create/generate"');
+  });
+});
+
+describe('Progress : petit écran', () => {
+  it('pose une barre fine remplie à la proportion de l’étape, cachée du lecteur d’écran', () => {
+    const html = renderToStaticMarkup(<Progress current="stack" />);
+
+    expect(html).toContain('<div aria-hidden="true" class="pf-rail-bar"');
+    expect(html).toContain(`--pf-rail-bar-fill:${5 / 12}`);
+    // La position reste dite, une seule fois.
+    expect(html.match(/Étape 5 sur 12/g)).toHaveLength(1);
   });
 });
 

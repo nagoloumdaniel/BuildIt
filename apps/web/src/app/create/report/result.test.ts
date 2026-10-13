@@ -1,5 +1,11 @@
 import { describe, expect, it } from 'vitest';
-import { type GenerationReport, loadReport, REPORT_STORAGE_KEY, saveReport } from './result';
+import {
+  clearReport,
+  type GenerationReport,
+  loadReport,
+  REPORT_STORAGE_KEY,
+  saveReport,
+} from './result';
 
 /**
  * Le rapport vit dans `sessionStorage`, donc **derrière une frontière non
@@ -130,5 +136,24 @@ describe('loadReport — l’installation des dépendances', () => {
       [REPORT_STORAGE_KEY]: JSON.stringify({ ...REPORT, installed: 'oui' }),
     }) as unknown as Storage;
     expect(loadReport(hostile)).not.toHaveProperty('installed');
+  });
+});
+
+describe('clearReport — « Terminer » range le rapport', () => {
+  it('oublie le rapport enregistré', () => {
+    const storage = fakeStorage();
+    saveReport(storage as unknown as Storage, REPORT);
+    clearReport(storage as unknown as Storage);
+    expect(loadReport(storage as unknown as Storage)).toBeNull();
+  });
+
+  it('ne lève ni sans stockage ni sur un stockage qui refuse', () => {
+    expect(() => clearReport(null)).not.toThrow();
+    const refusing = {
+      removeItem: () => {
+        throw new Error('refusé');
+      },
+    };
+    expect(() => clearReport(refusing as unknown as Storage)).not.toThrow();
   });
 });

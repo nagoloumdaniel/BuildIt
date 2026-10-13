@@ -34,6 +34,18 @@ export function saveReport(storage: Storage | null, report: GenerationReport): v
   }
 }
 
+/**
+ * Oublie le rapport : « Terminer » clôt le projet, un retour sur cet écran ne
+ * doit pas montrer le rapport d'un projet déjà rangé.
+ */
+export function clearReport(storage: Storage | null): void {
+  try {
+    storage?.removeItem(REPORT_STORAGE_KEY);
+  } catch {
+    // Stockage refusé : il n'y avait rien à oublier.
+  }
+}
+
 export function loadReport(storage: Storage | null): GenerationReport | null {
   let raw: string | null = null;
   try {

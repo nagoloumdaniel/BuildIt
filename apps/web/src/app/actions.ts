@@ -25,6 +25,11 @@ import {
 import { isHostedEnvironment } from '../lib/hosting';
 import { readRegistry, unregisterGenerated } from '../lib/output-registry';
 import { type GeneratedFilesView, generateArchive, generateFiles } from './create/generate/archive';
+import {
+  launchDetached,
+  type OpenFolderOutcome,
+  openProjectFolder,
+} from './create/generate/open-folder';
 import { checkOutputDestination } from './create/generate/output-destination';
 
 /**
@@ -360,4 +365,19 @@ async function forget(root: string, directory: string): Promise<void> {
   } catch {
     // Registre illisible ou protégé : il sera réécrit à la prochaine génération.
   }
+}
+
+/**
+ * Ouvre dans l'explorateur de la machine le dossier d'un projet que BuildIt a
+ * écrit (fin de génération, rapport). Local seulement, et seulement pour un
+ * dossier inscrit au registre : les refus sont rendus par leur code, l'écran
+ * les dit dans la langue de l'utilisateur.
+ */
+export async function openProjectFolderAction(directory: unknown): Promise<OpenFolderOutcome> {
+  return openProjectFolder(directory, {
+    hosted: isHostedEnvironment(),
+    registryRoot: workspaceRoot(),
+    platform: process.platform,
+    launch: launchDetached,
+  });
 }

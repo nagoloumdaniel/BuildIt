@@ -66,4 +66,48 @@
   .pf-output-callout-title {
     font-weight: 620;
   }
+
+  /*
+   * Le dossier d'un projet écrit : le bouton qui l'ouvre, puis son chemin en
+   * petite chasse fixe. Le chemin passe à la ligne plutôt que de déborder.
+   */
+  .pf-output-folder {
+    align-items: center;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem 0.75rem;
+    margin: 0;
+  }
+
+  .pf-output-folder-path {
+    color: var(--pf-muted);
+    font-size: 0.8125rem;
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
+
+  /* Une étape d'installation : où la faire (Terminal, Éditeur), puis quoi faire. */
+  .pf-install-label {
+    align-items: center;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.375rem 0.5rem;
+  }
+
+  .pf-install-place {
+    align-items: center;
+    display: inline-flex;
+    flex: none;
+    gap: 0.25rem;
+  }
+
+  .pf-install-place[data-where="editor"] {
+    border-color: var(--pf-steel-line);
+    color: var(--pf-steel);
+  }
+
+  /* L'avertissement avant de générer : on ne revient pas sur un projet généré. */
+  .pf-output-lock {
+    max-width: 44rem;
+  }
 }

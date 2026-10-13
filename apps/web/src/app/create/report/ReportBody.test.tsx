@@ -183,4 +183,48 @@ describe('ReportBody', () => {
     expect(html).toContain('cp .env.example .env');
     expect(html).toContain('DATABASE_URL');
   });
+
+  it('un succès se termine par un seul bouton orange « Terminer », sans lien vers l’accueil', () => {
+    const html = render({
+      report: SUCCESS,
+      technologies: [],
+      ...BASE_PROPS,
+      onFinish: () => undefined,
+    });
+    expect(html).toMatch(
+      /<button[^>]*class="pf-btn pf-btn-primary"[^>]*>(?:(?!<\/button>).)*Terminer/,
+    );
+    expect(html.split('Terminer')).toHaveLength(2);
+    expect(html).not.toContain('href="/"');
+    expect(html).not.toContain('Accueil');
+  });
+
+  it('un refus n’a pas de « Terminer » : rien n’a été écrit, il reste à corriger', () => {
+    const html = render({
+      report: REFUSED,
+      technologies: [],
+      ...BASE_PROPS,
+      onFinish: () => undefined,
+    });
+    expect(html).not.toContain('Terminer');
+  });
+
+  it('un dossier écrit en local s’ouvre d’un bouton, son chemin reste en petit à côté', () => {
+    const html = render({ report: SUCCESS, technologies: [], ...BASE_PROPS });
+    expect(html).toContain('Ouvrir le dossier du projet');
+    expect(html).toContain('pf-output-folder-path');
+  });
+
+  it('chaque étape dit où la faire : terminal, ou éditeur sans commande pour .env', () => {
+    const html = render({
+      report: SUCCESS,
+      technologies: [],
+      docker: false,
+      envVarNames: ['DATABASE_URL'],
+    });
+    expect(html).toContain('Ouvrez un terminal dans le dossier du projet.');
+    expect(html).toContain('À taper dans ce terminal');
+    expect(html).toContain('data-where="editor"');
+    expect(html).toContain('Sans terminal');
+  });
 });

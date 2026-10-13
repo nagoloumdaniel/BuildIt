@@ -13,6 +13,7 @@ import {
   useRef,
   useState,
 } from 'react';
+import { loadDraft } from '../../lib/draft';
 import {
   blockedReason,
   nextStep,
@@ -23,7 +24,9 @@ import {
 } from '../../lib/flow';
 import { useMessages } from '../../lib/i18n/provider';
 import { hasChoices } from '../../lib/journey-cancel';
+import { isGenerated, type LockSource, lockedRedirect, lockSource } from '../../lib/journey-lock';
 import { type SlideDirection, slideDirection, stepMemory } from '../../lib/journey-transition';
+import { browserStorage } from '../../lib/theme';
 import { Icon, type IconName } from '../ui/icon';
 import { Stepper } from '../ui/stepper';
 import { useDraft, useSession } from './draft-provider';
@@ -45,7 +48,16 @@ export function stepHref(step: StepId): string {
  * Exportée séparément du cadre : certains tests la rendent seule, et l'écran
  * Report la montre une dernière fois sans son cadre de navigation.
  */
-export function Progress({ current, from }: { current: StepId; from?: number }): ReactElement {
+export function Progress({
+  current,
+  from,
+  locked = false,
+}: {
+  current: StepId;
+  from?: number;
+  /** Projet généré : aucune étape franchie n'est plus un lien. */
+  locked?: boolean;
+}): ReactElement {
   const t = useMessages();
   const index = stepIndex(current);
   const steps = useMemo(
@@ -57,6 +69,7 @@ export function Progress({ current, from }: { current: StepId; from?: number }):
       ariaLabel={t.a11y.progress}
       compactLabel={t.common.step(index + 1, STEP_ORDER.length)}
       current={index}
+      locked={locked}
       steps={steps}
       {...(from === undefined ? {} : { from })}
     />
@@ -166,6 +179,28 @@ function GoHome(): null {
 }
 
 /**
+ * Le renvoi hors d'une étape refermée (projet généré).
+ *
+ * Même raison que `GoHome` pour n'être monté qu'au besoin. `replace` et non
+ * `push` : l'adresse refermée ne doit pas rester dans l'historique, sans quoi
+ * le bouton Précédent du navigateur y ramènerait aussitôt, en boucle.
+ *
+ * La cible est recalculée ici, au moment de partir, sur le brouillon du
+ * stockage s'il est généré : au chargement d'une adresse, celui en mémoire a
+ * déjà perdu l'étape où le parcours s'était arrêté (voir `lockSource`).
+ */
+function GoLocked({ step, memory }: { step: StepId; memory: LockSource }): null {
+  const router = useRouter();
+  useEffect(() => {
+    const target = lockedRedirect(step, lockSource(memory, loadDraft(browserStorage())));
+    if (target !== null) {
+      router.replace(stepHref(target));
+    }
+  }, [router, step, memory]);
+  return null;
+}
+
+/**
  * L'**adresse demandée** au chargement du document, lue quand ce module est
  * évalué (donc à l'hydratation).
  *
@@ -228,6 +263,13 @@ export function StepShell({
   // brouillon portait avant qu'on arrive ici.
   const reason = blockedReason({ ...draft, step });
   const ready = reason === undefined;
+  // Projet généré : plus de retour possible, ni par « Précédent », ni par
+  // « Annuler », ni par le stepper. `hidePrevious` reste pour l'écran qui
+  // le pose lui-même. Une étape refermée (1 à 10) n'est pas affichée du
+  // tout : elle renvoie vers la fin du parcours.
+  const generated = isGenerated(draft);
+  const closed = lockedRedirect(step, draft) !== null;
+  const noWayBack = hidePrevious || generated;
 
   // L'annulation : `confirming` ouvre l'encart, `leaving` monte le départ.
   // La `ref` double l'état parce que l'effet de reprise ci-dessous doit la
@@ -264,11 +306,13 @@ export function StepShell({
   // La reprise (§3) repart de l'écran quitté : le brouillon retient l'étape.
   // Sauf pendant un départ : le brouillon vient d'être remis à neuf, et lui
   // réécrire l'étape quittée ferait reprendre un parcours annulé.
+  // Une étape refermée n'écrit rien non plus : le brouillon doit garder
+  // l'étape où le parcours s'est arrêté, c'est elle qui choisit le renvoi.
   useEffect(() => {
-    if (!leavingRef.current && draft.step !== step) {
+    if (!leavingRef.current && !closed && draft.step !== step) {
       session.update((current) => ({ ...current, step }));
     }
-  }, [draft.step, step, session]);
+  }, [draft.step, step, session, closed]);
 
   // L'encart ouvert reçoit le focus sur le geste **sûr** (garder ses choix) :
   // un Entrée de trop ne doit rien effacer. Fermé, le focus revient au bouton
@@ -314,26 +358,44 @@ export function StepShell({
     }
   };
 
-  // Un projet généré n'a plus rien à annuler (§6.14).
-  const cancelButton = hidePrevious ? null : (
+  // Un projet généré n'a plus rien à annuler (§6.14). Sur petit écran, le
+  // libellé visible disparaît (CSS) : l'icône seule, le nom accessible reste.
+  const cancelButton = noWayBack ? null : (
     <button
       aria-controls={confirming ? panelId : undefined}
       aria-expanded={confirming}
       aria-label={t.journey.cancel.label}
-      className="pf-btn pf-btn-ghost pf-btn-sm"
+      className="pf-btn pf-btn-sm pf-journey-cancel"
       onClick={requestCancel}
       ref={cancelRef}
       type="button"
     >
       <Icon name="close" size={14} />
-      {t.journey.cancel.button}
+      <span className="pf-journey-cancel-text">{t.journey.cancel.button}</span>
     </button>
   );
+
+  // L'étape refermée ne montre rien de son contenu : pas même un instant,
+  // ni les chargements qu'il lancerait. Seule une phrase dit pourquoi.
+  if (closed) {
+    return (
+      <main aria-busy="true" className="pf-shell">
+        <GoLocked memory={draft} step={step} />
+        <p className="pf-journey-sr" role="status">
+          {t.journey.locked}
+        </p>
+      </main>
+    );
+  }
 
   return (
     <main className="pf-shell">
       {leaving ? <GoHome /> : null}
-      <Progress current={step} {...(entry.from === undefined ? {} : { from: entry.from })} />
+      <Progress
+        current={step}
+        locked={generated}
+        {...(entry.from === undefined ? {} : { from: entry.from })}
+      />
 
       {/* Seul le contenu glisse : le stepper reste en place et son rail se
           remplit pendant ce temps. */}
@@ -393,7 +455,11 @@ export function StepShell({
         aria-label={t.a11y.stepNavigation}
         className="mt-8 flex flex-wrap items-center justify-between gap-3 border-t border-border pt-4"
       >
-        {previous === null || hidePrevious ? (
+        {/* Au rapport, « Terminer » est la seule sortie : un « Accueil » à
+            côté doublerait le geste sans remettre le brouillon à zéro. */}
+        {step === 'report' ? (
+          <span />
+        ) : previous === null || noWayBack ? (
           <Link className="pf-btn" href="/">
             <Icon name="home" />
             {t.common.backHome}

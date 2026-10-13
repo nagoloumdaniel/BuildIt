@@ -140,6 +140,52 @@
     }
   }
 
+  /* --- Petit écran : une barre fine et rien d'autre --------------------- */
+
+  /* Sous 48rem, les numéros disparaissent : le titre en grand dit l'étape,
+     la barre dit la distance restante. Le rail est retiré (`display: none`)
+     plutôt que masqué visuellement : ses liens resteraient atteignables au
+     clavier sans rien montrer du focus. La position reste dite par le texte
+     masqué du `nav`. */
+  .pf-rail-bar {
+    background: var(--pf-border);
+    border-radius: 999px;
+    height: 3px;
+    overflow: hidden;
+    position: relative;
+  }
+
+  /* Même mécanique que le rail : `scaleX`, même durée que le glissement. */
+  .pf-rail-bar::after {
+    background: var(--pf-accent);
+    content: "";
+    inset: 0;
+    position: absolute;
+    transform: scaleX(var(--pf-rail-bar-fill, 0));
+    transform-origin: left center;
+    transition: transform 220ms var(--pf-ease);
+  }
+
+  @media (max-width: 47.99rem) {
+    .pf-rail {
+      display: none;
+    }
+  }
+
+  @media (min-width: 48rem) {
+    .pf-rail-bar {
+      display: none;
+    }
+  }
+
+  /* Mouvement réduit : la progression se pose, elle ne glisse pas. */
+  @media (prefers-reduced-motion: reduce) {
+    .pf-rail::after,
+    .pf-rail-bar::after {
+      transition: none;
+    }
+  }
+
   /* --- Glissement entre étapes ----------------------------------------- */
 
   /* Le contenu glisse de quelques pixels : sans cette coupe, il dépasserait
@@ -204,11 +250,12 @@
   /* --- Titre d'écran ---------------------------------------------------- */
 
   /* Le titre et ses gestes sur une même ligne, centrés l'un sur l'autre :
-     « Annuler » se lit comme une action sur ce titre, pas sur l'eyebrow. */
+     « Annuler » se lit comme une action sur ce titre, pas sur l'eyebrow.
+     Jamais de retour à la ligne, téléphone compris : c'est le titre qui
+     cède la place (il passe à la ligne sur lui-même), pas le bouton. */
   .pf-journey-head {
     align-items: center;
     display: flex;
-    flex-wrap: wrap;
     gap: 0.75rem 1rem;
     justify-content: space-between;
   }
@@ -235,7 +282,7 @@
   }
 
   .pf-journey-head > .pf-journey-title {
-    flex: 1 1 16rem;
+    flex: 1 1 auto;
   }
 
   .pf-journey-title-icon {
@@ -248,6 +295,33 @@
   .pf-journey-title-icon svg {
     height: 0.8em;
     width: 0.8em;
+  }
+
+  /* --- Bouton « Annuler » ---------------------------------------------- */
+
+  /* Un vrai bouton à contour, pas un fantôme : quitter le parcours doit se
+     trouver du premier coup d'œil. Le rouge n'arrive qu'au survol et au
+     focus, quand le geste est sur le point d'être fait : au repos, le
+     bouton ne crie pas sur chaque écran. Couleur seulement, rien ne bouge. */
+  /* Deux classes : il faut l'emporter sur le survol générique de `.pf-btn`. */
+  .pf-btn.pf-journey-cancel:hover:not(:disabled):not([aria-disabled="true"]),
+  .pf-btn.pf-journey-cancel[aria-expanded="true"] {
+    background: var(--pf-danger-soft);
+    border-color: var(--pf-danger);
+    color: var(--pf-danger);
+  }
+
+  /* Petit écran : l'icône seule, dans un carré. Le nom accessible
+     (`aria-label`) dit toujours « Annuler la création du projet ». */
+  @media (max-width: 47.99rem) {
+    .pf-btn.pf-journey-cancel {
+      min-width: 2rem;
+      padding-inline: 0.4rem;
+    }
+
+    .pf-journey-cancel-text {
+      display: none;
+    }
   }
 
   /* --- Confirmation d'annulation --------------------------------------- */

@@ -14,14 +14,18 @@ import { type CSSProperties, type ReactElement, useEffect, useRef, useState } fr
  *
  * Aucun nom d'étape n'est affiché : le titre de la page le dit déjà, en grand,
  * juste dessous. Les répéter en 12 px ne tenait pas sur un téléphone, et
- * obligeait à un second rendu « Étape 5 sur 12 » pour le petit écran. Ici, un
- * seul rendu à toutes les largeurs : les pastilles rétrécissent, le rail
- * reste. Le nom survit pour ceux qui ne voient pas le titre : texte masqué
- * pour le lecteur d'écran, `title` pour la souris.
+ * obligeait à un second rendu « Étape 5 sur 12 » pour le petit écran. Le nom
+ * survit pour ceux qui ne voient pas le titre : texte masqué pour le lecteur
+ * d'écran, `title` pour la souris.
  *
  * Le rail se remplit jusqu'à l'étape courante. Comme la page (donc le
  * stepper) est remontée à chaque étape, `from` lui dit d'où il part : il
  * s'affiche d'abord à l'ancienne position, puis glisse vers la nouvelle.
+ *
+ * Sous 48rem, les douze pastilles cèdent la place à une simple barre fine
+ * (le CSS choisit, un seul rendu) : sur un téléphone, le titre en grand dit
+ * déjà où l'on est, et douze numéros de 22 px n'y ajoutaient que du bruit.
+ * La barre est décorative ; « Étape 5 sur 12 » reste dit au lecteur d'écran.
  */
 
 export interface StepperItem {
@@ -39,6 +43,20 @@ export interface StepperProps {
   readonly compactLabel: string;
   /** L'index de l'étape quittée, pour animer le remplissage depuis elle. */
   readonly from?: number;
+  /**
+   * Aucune étape n'est un lien : le projet est généré, revenir sur un choix
+   * n'a plus de sens (voir `lib/journey-lock.ts`).
+   */
+  readonly locked?: boolean;
+}
+
+/**
+ * La part de la barre mobile remplie : 5 / 12 à l'étape 5. Contrairement au
+ * rail, elle n'a pas de pastilles où s'arrêter, donc la première étape montre
+ * déjà un douzième : une barre vide dirait « pas commencé ».
+ */
+function barRatio(index: number, total: number): number {
+  return total === 0 ? 0 : (index + 1) / total;
 }
 
 /** La part du rail remplie, de 0 (première pastille) à 1 (dernière). */
@@ -56,6 +74,7 @@ export function Stepper({
   ariaLabel,
   compactLabel,
   from,
+  locked = false,
 }: StepperProps): ReactElement {
   const total = steps.length;
   const currentIndex = clampIndex(current, total);
@@ -77,10 +96,14 @@ export function Stepper({
   }, [shown, currentIndex]);
 
   const style = { '--pf-rail-fill': fillRatio(shown, total) } as CSSProperties;
+  const barStyle = { '--pf-rail-bar-fill': barRatio(shown, total) } as CSSProperties;
 
   return (
     <nav aria-label={ariaLabel} className="pf-rail-nav">
       <p className="pf-journey-sr">{compactLabel}</p>
+      {/* La barre du petit écran : masquée au-dessus de 48rem, et du lecteur
+          d'écran partout (la phrase ci-dessus dit déjà la même chose). */}
+      <div aria-hidden="true" className="pf-rail-bar" style={barStyle} />
       {/* `ol` parce que l'ordre porte le sens. */}
       <ol className="pf-rail" ref={railRef} style={style}>
         {steps.map((step, index) => {
@@ -98,7 +121,7 @@ export function Stepper({
               key={step.id}
               {...(state === 'current' ? { 'aria-current': 'step' as const } : {})}
             >
-              {state === 'done' ? (
+              {state === 'done' && !locked ? (
                 <Link className="pf-rail-node" href={step.href} title={step.label}>
                   {content}
                 </Link>

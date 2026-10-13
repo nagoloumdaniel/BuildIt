@@ -1,7 +1,7 @@
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
 import { saasManifest } from '../../app/create/generate/fixtures';
-import { OutputProgress, ProjectExport, toGenerationView } from './project-export';
+import { OutputProgress, ProjectExport, ProjectFolder, toGenerationView } from './project-export';
 
 /**
  * La sortie d'un projet, rendue sans navigateur : le premier geste unique, les
@@ -96,5 +96,43 @@ describe('toGenerationView', () => {
       true,
     );
     expect(toGenerationView({ ...DONE, installRequested: true }).installed).toBe(false);
+  });
+});
+
+describe('ProjectFolder — le dossier écrit, ouvert d’un bouton en local', () => {
+  it('en local : un bouton « Ouvrir le dossier du projet », le chemin en petit à côté, rien à copier', () => {
+    const html = renderToStaticMarkup(
+      <ProjectFolder directory={'C:\\Projets\\mon-projet'} openable />,
+    );
+    expect(html).toMatch(
+      /<button[^>]*type="button"[^>]*>(?:(?!<\/button>).)*Ouvrir le dossier du projet/,
+    );
+    expect(html).toContain('data-icon="folderOpen"');
+    expect(html).toContain('pf-output-folder-path');
+    expect(html).toContain('C:\\Projets\\mon-projet');
+    expect(html).not.toContain('Copier');
+  });
+
+  it('écrit par le navigateur : le nom du dossier seul, sans bouton', () => {
+    const html = renderToStaticMarkup(<ProjectFolder directory="mon-projet" openable={false} />);
+    expect(html).toContain('mon-projet');
+    expect(html).toContain('Projet écrit dans le dossier');
+    expect(html).not.toContain('<button');
+  });
+
+  it('OutputProgress choisit la forme du dossier : copie, bouton, ou texte', () => {
+    const open = renderToStaticMarkup(
+      <OutputProgress directory="/p/app" directoryMode="open" status="ok" tone="ok" value={100} />,
+    );
+    expect(open).toContain('Ouvrir le dossier du projet');
+    const text = renderToStaticMarkup(
+      <OutputProgress directory="app" directoryMode="text" status="ok" tone="ok" value={100} />,
+    );
+    expect(text).not.toContain('<button');
+    const copy = renderToStaticMarkup(
+      <OutputProgress directory="/p/app" status="…" tone="running" />,
+    );
+    expect(copy).not.toContain('Ouvrir le dossier du projet');
+    expect(copy).toContain('Projet écrit dans');
   });
 });

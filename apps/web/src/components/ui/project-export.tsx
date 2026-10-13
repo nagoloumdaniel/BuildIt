@@ -7,9 +7,11 @@ import {
   type GenerationView,
   generateFilesAction,
   generateZipAction,
+  openProjectFolderAction,
 } from '../../app/actions';
 import { installProjectAction } from '../../app/actions-node';
 import { canOpenNativePickerAction, pickFolderAction } from '../../app/actions-picker';
+import type { OpenFolderRefusal } from '../../app/create/generate/open-folder';
 import { targetDirectory } from '../../app/create/generate/steps';
 import {
   type GenerateDone,
@@ -17,12 +19,14 @@ import {
   type GenerateStreamFailure,
   streamGeneration,
 } from '../../app/create/generate/stream-client';
+import { InstallGuide } from '../../app/create/report/install-guide';
+import { installSteps } from '../../app/create/report/install-steps';
 import { PickCard } from '../../app/open/pick-card';
 import { canWriteInBrowser, pickWritableFolder, writeProject } from '../../lib/browser-write';
 import { downloadZip } from '../../lib/download-zip';
-import { useLocale } from '../../lib/i18n/provider';
+import { useLocale, useMessages } from '../../lib/i18n/provider';
 import { formatBytes } from '../../lib/projects';
-import { CommandLine, CommandSteps } from './copy';
+import { CommandLine } from './copy';
 import { IssueList } from './empty-state';
 import { Icon } from './icon';
 import { LoadingLine, ProgressBar, Spinner } from './loading';
@@ -62,6 +66,12 @@ export interface ProjectExportProps {
    * Utile là où le geste de générer a déjà été fait (liste des projets).
    */
   readonly initiallyOpen?: boolean;
+  /**
+   * Ce que la marche à suivre doit connaître quand le navigateur a écrit le
+   * projet sans installer : Docker et les variables d'environnement ajoutent
+   * des étapes. Absent, la marche à suivre s'en tient au socle.
+   */
+  readonly install?: { readonly docker: boolean; readonly envVarNames: readonly string[] };
 }
 
 type Stage =
@@ -121,6 +131,94 @@ export interface OutputProgressProps {
   readonly value?: number;
   /** Le dossier réellement écrit. Absent tant qu'aucun fichier n'existe. */
   readonly directory?: string;
+  /**
+   * Comment montrer ce dossier :
+   * - `copy` (défaut) : le chemin à copier, pendant le travail ou après un échec ;
+   * - `open` : écrit par le serveur local, un bouton l'ouvre dans l'explorateur ;
+   * - `text` : écrit par le navigateur, son nom seul (aucun moyen de l'ouvrir).
+   */
+  readonly directoryMode?: 'copy' | 'open' | 'text';
+}
+
+export interface ProjectFolderProps {
+  readonly directory: string;
+  /** Vrai seulement pour un dossier écrit par le serveur local (inscrit au registre). */
+  readonly openable: boolean;
+  readonly className?: string;
+}
+
+type FolderState =
+  | { readonly kind: 'idle' }
+  | { readonly kind: 'opening' }
+  | { readonly kind: 'refused'; readonly reason: OpenFolderRefusal };
+
+/**
+ * Le dossier d'un projet écrit. En local, un bouton l'ouvre dans
+ * l'explorateur de la machine : c'est le geste attendu après une génération,
+ * plus utile qu'un chemin à copier. Le chemin reste visible à côté, en petite
+ * chasse fixe, pour savoir où il est. Écrit par le navigateur, le dossier n'a
+ * que son nom : aucune page web ne peut ouvrir l'explorateur.
+ */
+export function ProjectFolder({
+  directory,
+  openable,
+  className,
+}: ProjectFolderProps): ReactElement {
+  const o = useMessages().output;
+  const [state, setState] = useState<FolderState>({ kind: 'idle' });
+  const alive = useRef(true);
+  useEffect(() => {
+    alive.current = true;
+    return () => {
+      alive.current = false;
+    };
+  }, []);
+
+  async function open(): Promise<void> {
+    setState({ kind: 'opening' });
+    let next: FolderState;
+    try {
+      const outcome = await openProjectFolderAction(directory);
+      next = outcome.ok ? { kind: 'idle' } : { kind: 'refused', reason: outcome.reason };
+    } catch {
+      next = { kind: 'refused', reason: 'failed' };
+    }
+    if (alive.current) {
+      setState(next);
+    }
+  }
+
+  if (!openable) {
+    return (
+      <p className={`pf-output-folder${className === undefined ? '' : ` ${className}`}`}>
+        <span className="pf-hint">{o.folderWrittenIn}</span>
+        <span className="pf-mono pf-output-folder-path">{directory}</span>
+      </p>
+    );
+  }
+  const opening = state.kind === 'opening';
+  return (
+    <div className={className}>
+      <div className="pf-output-folder">
+        <button
+          aria-label={o.openFolderLabel(directory)}
+          className="pf-btn"
+          disabled={opening}
+          onClick={() => void open()}
+          type="button"
+        >
+          {opening ? <Spinner size="sm" /> : <Icon name="folderOpen" />}
+          {opening ? o.openingFolder : o.openFolder}
+        </button>
+        <span className="pf-mono pf-output-folder-path">{directory}</span>
+      </div>
+      {state.kind === 'refused' ? (
+        <p className="pf-hint mt-2" role="alert">
+          {o.openFolderRefusals[state.reason]}
+        </p>
+      ) : null}
+    </div>
+  );
 }
 
 /**
@@ -133,6 +231,7 @@ export function OutputProgress({
   tone,
   value,
   directory,
+  directoryMode = 'copy',
 }: OutputProgressProps): ReactElement {
   const { t } = useLocale();
   const o = t.output;
@@ -155,7 +254,9 @@ export function OutputProgress({
       {tone === 'error' ? null : (
         <ProgressBar className="mt-2" label={o.progressLabel} value={value} />
       )}
-      {directory === undefined || directory === '' ? null : (
+      {directory === undefined || directory === '' ? null : directoryMode !== 'copy' ? (
+        <ProjectFolder className="mt-3" directory={directory} openable={directoryMode === 'open'} />
+      ) : (
         <div className="mt-3">
           <p className="pf-hint">{o.writtenIn}</p>
           <CommandLine className="mt-1" value={directory} what={o.writtenWhat} />
@@ -170,6 +271,7 @@ export function ProjectExport({
   projectName,
   onGenerated,
   initiallyOpen = false,
+  install,
 }: ProjectExportProps): ReactElement {
   const { t, locale } = useLocale();
   const o = t.output;
@@ -535,6 +637,7 @@ export function ProjectExport({
       <div>
         <OutputProgress
           directory={stage.directory}
+          directoryMode="text"
           status={o.browserDone(stage.written)}
           tone="ok"
           value={100}
@@ -542,13 +645,17 @@ export function ProjectExport({
         <section className="pf-callout pf-callout-steel mt-3">
           <p className="pf-output-callout-title">{o.installTitle}</p>
           <p className="mt-1">{o.installHint}</p>
-          <CommandSteps
+          <InstallGuide
             className="mt-2"
-            steps={[
-              { label: stage.directory, command: `cd ${projectName}` },
-              { label: 'pnpm', command: 'pnpm install' },
-              { label: 'dev', command: 'pnpm dev' },
-            ]}
+            steps={installSteps(
+              {
+                directory: '',
+                folderName: stage.directory,
+                docker: install?.docker ?? false,
+                envVarNames: install?.envVarNames ?? [],
+              },
+              t,
+            )}
             what={o.installWhat}
           />
         </section>
@@ -725,9 +832,17 @@ export function ProjectExport({
   if (result.installRequested && !result.installed) {
     return (
       <div>
-        <OutputProgress directory={result.directory} status={o.installFailed} tone="error" />
+        <OutputProgress
+          directory={result.directory}
+          directoryMode="open"
+          status={o.installFailed}
+          tone="error"
+        />
         <IssueList className="mt-3" issues={result.installIssues} />
         <p className="pf-hint mt-3">{o.installFailedHint}</p>
+        {result.installCommand === undefined ? null : (
+          <p className="pf-hint mt-1">{o.manualWhere}</p>
+        )}
         {result.installCommand === undefined ? null : (
           <CommandLine
             className="mt-2"
@@ -755,6 +870,7 @@ export function ProjectExport({
     <div>
       <OutputProgress
         directory={result.directory}
+        directoryMode="open"
         status={result.installed ? o.doneInstalled : o.done}
         tone="ok"
         value={100}
