@@ -13,6 +13,7 @@ import { useMessages } from '../../lib/i18n/provider';
 import type { RepositoryView } from '../github/repositories';
 import type { CloneStreamFailure } from './client';
 import type { CloneDestinationMode, ClonePreviewView, CloneResultView } from './clone';
+import { HostedCloneForm, type HostedCloneProps, HostedCloneRun } from './hosted-view';
 import type { ClonePhase, CloneProgress } from './progress';
 
 /**
@@ -24,8 +25,10 @@ import type { ClonePhase, CloneProgress } from './progress';
  * personne ne voyait : en **local**, l'écran fait choisir un dossier parent
  * **absolu** dans l'explorateur de la machine, affiche le chemin complet qui
  * sera écrit, et laisse éditer le seul nom du sous-dossier. En **hébergé**, le
- * repli relatif reste la règle — un chemin absolu venu du navigateur y serait
- * une écriture de fichier arbitraire sur le serveur — et l'écran le dit.
+ * serveur n'est pas la machine de l'utilisateur et n'a pas `git` : l'écran
+ * passe la main à `hosted-view.tsx`, qui copie les fichiers du dépôt depuis
+ * l'archive GitHub vers un dossier choisi dans le navigateur, et dit avant de
+ * commencer que ce n'est ni un clone (pas d'historique) ni une installation.
  *
  * L'avancement affiché est celui de git, poussé par `POST /api/clone`. La phase
  * ne recule jamais ; le détail brut est en chasse fixe ; et parce que le suivi
@@ -53,8 +56,11 @@ export interface CloneViewProps {
   readonly tab: CloneTab;
   readonly onTab: (tab: CloneTab) => void;
   readonly destinationMode: CloneDestinationMode;
-  /** La racine de travail du serveur — le repli de l'hébergé. */
-  readonly root: string;
+  /**
+   * La copie hébergée (`destinationMode === 'root'`). Sans elle, le mode
+   * hébergé n'a rien à proposer : c'est la page qui la fournit toujours.
+   */
+  readonly hosted?: Omit<HostedCloneProps, 'link' | 'folder' | 'onFolder'>;
   readonly connected: boolean;
   readonly repositories: readonly RepositoryView[];
   readonly repositoriesLoading: boolean;
@@ -225,6 +231,10 @@ export function CloneView(props: CloneViewProps): ReactElement {
       : composedDirectory(props.parent, props.folder);
   const refusal =
     status === 'failed' && props.failure !== null ? failureMessage(props.failure, c) : null;
+  const hostedProps: HostedCloneProps | null =
+    destinationMode === 'root' && props.hosted !== undefined
+      ? { ...props.hosted, link: props.link, folder: props.folder, onFolder: props.onFolder }
+      : null;
 
   return (
     <ScreenShell title={c.title} description={c.description} icon="gitBranch">
@@ -360,52 +370,42 @@ export function CloneView(props: CloneViewProps): ReactElement {
                 <CommandLine className="mt-1" value={shownDirectory} what={c.pathWhat} />
               )}
             </>
-          ) : (
-            <>
-              <label className="pf-label mt-4" htmlFor="pf-clone-folder">
-                {c.destinationLabel}
-              </label>
-              <input
-                id="pf-clone-folder"
-                className="pf-input pf-mono"
-                autoComplete="off"
-                spellCheck={false}
-                placeholder={c.folderNamePlaceholder}
-                value={props.folder}
-                onChange={(event) => props.onFolder(event.target.value)}
-              />
-              <p className="pf-callout pf-callout-steel mt-2">{c.hostedFallback(props.root)}</p>
-            </>
-          )}
+          ) : null}
 
-          <fieldset className="mt-4">
-            <legend className="pf-label">{c.afterClone}</legend>
-            <label className="pf-hint flex items-center gap-2" htmlFor="pf-clone-install">
-              <input
-                id="pf-clone-install"
-                type="checkbox"
-                checked={props.install}
-                onChange={(event) => props.onInstall(event.target.checked)}
-              />
-              {c.installAfter}
-            </label>
-            {props.install ? (
-              <label className="pf-hint mt-2 flex items-center gap-2" htmlFor="pf-clone-ignore">
+          {hostedProps === null ? null : <HostedCloneForm {...hostedProps} />}
+
+          {destinationMode === 'parent' ? (
+            <fieldset className="mt-4">
+              <legend className="pf-label">{c.afterClone}</legend>
+              <label className="pf-hint flex items-center gap-2" htmlFor="pf-clone-install">
                 <input
-                  id="pf-clone-ignore"
+                  id="pf-clone-install"
                   type="checkbox"
-                  checked={props.ignoreScripts}
-                  onChange={(event) => props.onIgnoreScripts(event.target.checked)}
+                  checked={props.install}
+                  onChange={(event) => props.onInstall(event.target.checked)}
                 />
-                {c.ignoreScripts}
+                {c.installAfter}
               </label>
-            ) : null}
-            <p className="pf-callout mt-2">{c.untrusted}</p>
-          </fieldset>
+              {props.install ? (
+                <label className="pf-hint mt-2 flex items-center gap-2" htmlFor="pf-clone-ignore">
+                  <input
+                    id="pf-clone-ignore"
+                    type="checkbox"
+                    checked={props.ignoreScripts}
+                    onChange={(event) => props.onIgnoreScripts(event.target.checked)}
+                  />
+                  {c.ignoreScripts}
+                </label>
+              ) : null}
+              <p className="pf-callout mt-2">{c.untrusted}</p>
+            </fieldset>
+          ) : null}
         </section>
       )}
 
-      {props.tab === 'link' ? (
+      {props.tab === 'link' && hostedProps !== null ? <HostedCloneRun {...hostedProps} /> : null}
+
+      {props.tab === 'link' && hostedProps === null ? (
         <section className="mt-3">
           <div className="flex flex-wrap items-center gap-2">
             <button

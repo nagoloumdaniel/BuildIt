@@ -45,7 +45,7 @@ describe('pf graph', () => {
     expect(out).not.toMatch(/TypeScript \(typescript\)\s+←/);
   });
 
-  it('une stack avec une technologie déclarée est expérimentale', async () => {
+  it('une stack avec une technologie déclarée est dite déclarée, sans alarme', async () => {
     const cwd = await temp();
     const manifest = getPreset('api')?.manifest('demo');
     await writeFile(
@@ -54,7 +54,8 @@ describe('pf graph', () => {
     );
     const io = fakeIo({ cwd });
     expect(await run(['graph', 'm.json'], io)).toBe(0);
-    expect(io.text().out).toContain('stack expérimentale');
+    expect(io.text().out).toContain('stack déclarée');
+    expect(io.text().out).not.toContain('expérimentale');
     expect(io.text().out).toMatch(/· search\s+/);
   });
 

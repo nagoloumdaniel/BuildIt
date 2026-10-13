@@ -1,8 +1,8 @@
 'use client';
 
 import { type ReactElement, useEffect, useRef, useState } from 'react';
+import { canWriteInBrowser, pickWritableFolder } from '../../lib/browser-write';
 import { useMessages } from '../../lib/i18n/provider';
-import { workspaceRootAction } from '../actions';
 import {
   cloneDestinationModeAction,
   clonePreviewAction,
@@ -11,6 +11,16 @@ import {
 import type { RepositoryView } from '../github/repositories';
 import { type CloneStreamFailure, streamClone } from './client';
 import type { CloneDestinationMode, ClonePreviewView, CloneResultView } from './clone';
+import {
+  checkHostedCopy,
+  copyToFolder,
+  downloadRepositoryZip,
+  type HostedFailure,
+  type HostedProgress,
+  saveBlob,
+} from './hosted-client';
+import type { HostedPlanView } from './hosted-protocol';
+import type { HostedOutcome, HostedStatus } from './hosted-view';
 import type { CloneProgress } from './progress';
 import { type CloneRunStatus, type CloneTab, CloneView } from './view';
 
@@ -27,13 +37,15 @@ import { type CloneRunStatus, type CloneTab, CloneView } from './view';
  * La destination suit l'environnement, décidé par le **serveur** :
  * - en local, un dossier parent absolu choisi dans l'explorateur de la
  *   machine, et le clone y crée le sous-dossier du dépôt ;
- * - en hébergé, un dossier relatif à la racine de travail, et rien d'autre.
+ * - en hébergé, le serveur n'a ni `git` ni le disque de l'utilisateur : le
+ *   dépôt GitHub est copié depuis son archive (`/api/clone-archive`), et le
+ *   navigateur écrit les fichiers dans un dossier choisi dans l'explorateur
+ *   de Windows, ou télécharge le ZIP quand il ne sait pas écrire.
  */
 export default function ClonePage(): ReactElement {
   const t = useMessages();
   const [tab, setTab] = useState<CloneTab>('mine');
   const [destinationMode, setDestinationMode] = useState<CloneDestinationMode>('parent');
-  const [root, setRoot] = useState('');
   const [connected, setConnected] = useState(false);
   const [repositories, setRepositories] = useState<readonly RepositoryView[]>([]);
   const [repositoriesLoading, setRepositoriesLoading] = useState(true);
@@ -50,16 +62,21 @@ export default function ClonePage(): ReactElement {
   const [progress, setProgress] = useState<CloneProgress | null>(null);
   const [failure, setFailure] = useState<CloneStreamFailure | null>(null);
   const abort = useRef<AbortController | null>(null);
+  // La copie hébergée : son propre état, parce qu'elle ne raconte pas la même
+  // chose qu'un `git clone` (des fichiers écrits, pas des objets reçus).
+  const [canWrite, setCanWrite] = useState<boolean | null>(null);
+  const [plan, setPlan] = useState<HostedPlanView | null>(null);
+  const [hostedStatus, setHostedStatus] = useState<HostedStatus>('idle');
+  const [hostedProgress, setHostedProgress] = useState<HostedProgress | null>(null);
+  const [hostedOutcome, setHostedOutcome] = useState<HostedOutcome | null>(null);
+  const [hostedFailure, setHostedFailure] = useState<HostedFailure | null>(null);
+  const [partial, setPartial] = useState<{ written: number; directory: string } | null>(null);
 
   useEffect(() => {
     let alive = true;
-    void workspaceRootAction()
-      .then((value) => {
-        if (alive) {
-          setRoot(value);
-        }
-      })
-      .catch(() => undefined);
+    // Le navigateur ne se connaît qu'une fois monté : au rendu serveur, on ne
+    // sait pas encore s'il écrit dans un dossier, et le bouton attend.
+    setCanWrite(canWriteInBrowser());
     void cloneDestinationModeAction()
       .then((mode) => {
         if (alive) {
@@ -101,6 +118,118 @@ export default function ClonePage(): ReactElement {
     setFailure(null);
     setProgress(null);
     setStatus('idle');
+    resetHosted();
+  }
+
+  /** La copie hébergée revient à zéro : le lien ou le dossier a changé. */
+  function resetHosted(): void {
+    setPlan(null);
+    setHostedStatus('idle');
+    setHostedProgress(null);
+    setHostedOutcome(null);
+    setHostedFailure(null);
+    setPartial(null);
+  }
+
+  async function checkHosted(): Promise<void> {
+    resetHosted();
+    setHostedStatus('checking');
+    const view = await checkHostedCopy(link, folder);
+    if (view === undefined) {
+      setHostedStatus('unavailable');
+      return;
+    }
+    setPlan(view);
+    // Le nom proposé par le serveur (celui du dépôt) devient visible : c'est
+    // lui qui sera créé, l'utilisateur doit le voir avant de choisir.
+    if (folder.trim() === '' && view.folder !== '') {
+      setFolder(view.folder);
+    }
+    setHostedStatus('idle');
+  }
+
+  function startHosted(): AbortController {
+    setHostedOutcome(null);
+    setHostedFailure(null);
+    setHostedProgress(null);
+    setPartial(null);
+    const controller = new AbortController();
+    abort.current = controller;
+    return controller;
+  }
+
+  async function copyHosted(): Promise<void> {
+    if (plan === null || !plan.ok) {
+      return;
+    }
+    // L'explorateur d'abord, dans le geste même : un navigateur refuse de
+    // l'ouvrir après une attente réseau.
+    const picked = await pickWritableFolder();
+    if (!picked.ok) {
+      if (picked.reason === 'unsupported') {
+        setCanWrite(false);
+      } else if (picked.reason === 'failed') {
+        setHostedFailure({ code: 'picker' });
+        setHostedStatus('failed');
+      }
+      return;
+    }
+    const controller = startHosted();
+    setHostedStatus('copying');
+    try {
+      const outcome = await copyToFolder(
+        { link, folder: plan.folder, parent: picked.handle, onProgress: setHostedProgress },
+        { signal: controller.signal },
+      );
+      if (outcome.kind === 'done') {
+        setHostedOutcome({ kind: 'folder', result: outcome.result });
+        setHostedStatus('done');
+        return;
+      }
+      setPartial({ written: outcome.written, directory: outcome.directory });
+      if (outcome.kind === 'cancelled') {
+        setHostedStatus('cancelled');
+        return;
+      }
+      setHostedFailure(
+        outcome.failure.code === 'taken'
+          ? { code: 'taken', detail: outcome.directory }
+          : outcome.failure,
+      );
+      setHostedStatus('failed');
+    } finally {
+      abort.current = null;
+    }
+  }
+
+  async function downloadHosted(): Promise<void> {
+    if (plan === null || !plan.ok) {
+      return;
+    }
+    const controller = startHosted();
+    setHostedStatus('zipping');
+    try {
+      const outcome = await downloadRepositoryZip(
+        link,
+        plan.folder,
+        (received) => setHostedProgress({ phase: 'downloading', received }),
+        { signal: controller.signal },
+      );
+      if (outcome.kind === 'done') {
+        saveBlob(outcome.blob, outcome.fileName);
+        setHostedOutcome({ kind: 'zip', fileName: outcome.fileName, bytes: outcome.bytes });
+        setHostedStatus('done');
+        return;
+      }
+      if (outcome.kind === 'cancelled') {
+        setHostedStatus('cancelled');
+        return;
+      }
+      setHostedFailure(outcome.failure);
+      setHostedStatus('failed');
+    } finally {
+      abort.current = null;
+    }
   }
 
   async function check(nextParent?: string): Promise<void> {
@@ -175,7 +304,19 @@ export default function ClonePage(): ReactElement {
       tab={tab}
       onTab={setTab}
       destinationMode={destinationMode}
-      root={root}
+      hosted={{
+        canWrite,
+        plan,
+        status: hostedStatus,
+        progress: hostedProgress,
+        outcome: hostedOutcome,
+        failure: hostedFailure,
+        partial,
+        onCheck: () => void checkHosted(),
+        onCopy: () => void copyHosted(),
+        onDownload: () => void downloadHosted(),
+        onCancel: () => abort.current?.abort(),
+      }}
       connected={connected}
       repositories={repositories}
       repositoriesLoading={repositoriesLoading}
@@ -187,12 +328,14 @@ export default function ClonePage(): ReactElement {
         setLink(value);
         setPreview(null);
         setResult(null);
+        resetHosted();
       }}
       folder={folder}
       onFolder={(value) => {
         setFolder(value);
         setPreview(null);
         setResult(null);
+        resetHosted();
       }}
       parent={parent}
       onParent={(value) => {

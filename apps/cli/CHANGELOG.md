@@ -1,5 +1,11 @@
 # @nagoloum/cli
 
+## 0.3.0
+
+### Minor Changes
+
+- Configurateur web : projet verrouillé après génération (plus de retour possible), bouton Terminer, ouverture du dossier du projet installé, documentation d'installation qui dit où taper chaque commande ; stepper en barre sur mobile ; plan du projet modifiable choix par choix ; lien de partage de production copiable ; graphe de dépendances redessiné avec légende explicative ; architecture en arbre ; écran Cloner fonctionnel en ligne (copie du dépôt dans un dossier choisi) ; avertissement « combinaison expérimentale » supprimé, chaque technologie du catalogue planifiée par les tests.
+
 ## 0.2.0
 
 ### Minor Changes

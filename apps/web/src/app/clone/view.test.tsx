@@ -64,7 +64,6 @@ function render(overrides: Partial<CloneViewProps> = {}): string {
       tab: 'link',
       onTab: () => undefined,
       destinationMode: 'parent',
-      root: 'C:\\travail',
       connected: false,
       repositories: [],
       repositoriesLoading: false,
@@ -246,16 +245,39 @@ describe('CloneView — destination refusée', () => {
 });
 
 describe('CloneView — la destination en hébergé', () => {
-  it('garde le repli relatif et explique pourquoi', () => {
-    const html = render({ destinationMode: 'root', folder: 'mon-projet', root: 'C:\\travail' });
+  const hosted: NonNullable<CloneViewProps['hosted']> = {
+    canWrite: true,
+    plan: null,
+    status: 'idle',
+    progress: null,
+    outcome: null,
+    failure: null,
+    partial: null,
+    onCheck: () => undefined,
+    onCopy: () => undefined,
+    onDownload: () => undefined,
+    onCancel: () => undefined,
+  };
 
-    expect(html).toContain('Dossier de destination');
-    expect(html).toContain('Serveur hébergé');
-    expect(html).toContain('C:\\travail');
-    // L'explorateur serait celui du serveur : il n'est pas proposé.
+  it('passe la main à la copie hébergée, et dit avant tout ce qu’elle n’est pas', () => {
+    const html = render({ destinationMode: 'root', folder: 'mon-projet', hosted });
+
+    expect(html).toContain(c.hostedTitle);
+    expect(html).toContain('sans historique git');
+    expect(html).toContain('une page web ne peut lancer aucun programme');
+    expect(html).toContain(c.hostedCopy);
+    // Ni explorateur du serveur, ni racine de travail, ni installation.
     expect(html).not.toContain('Choisir où cloner');
-    expect(html).not.toContain('Choisir un autre dossier');
     expect(html).not.toContain('Dossier parent');
+    expect(html).not.toContain(c.installAfter);
+    expect(html).not.toContain(c.check);
+  });
+
+  it('sans la copie hébergée, n’affiche aucun geste qui ne marcherait pas', () => {
+    const html = render({ destinationMode: 'root', folder: 'mon-projet' });
+
+    expect(html).not.toContain(c.hostedCopy);
+    expect(html).not.toContain(c.installAfter);
   });
 });
 

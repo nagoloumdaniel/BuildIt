@@ -2,7 +2,6 @@ import { nodeCommandRunner } from '@buildit/exec';
 import type { NextRequest } from 'next/server';
 import { isHostedEnvironment } from '../../../lib/hosting';
 import { type ClonePlace, cloneProject } from '../../clone/clone';
-import { webWorkspaceRoot } from '../../clone/destination';
 import { createCloneProgressReader } from '../../clone/progress';
 import { sessionDeps } from '../../github/server-deps';
 import { type ProjectSummaryView, withoutServerSecrets } from '../../open/project';
@@ -63,6 +62,31 @@ function record(input: unknown): Record<string, unknown> {
     : {};
 }
 
+/** Le refus du mode hébergé, au format du flux : l'écran le lit comme un `done`. */
+function hostedRefusal(): Response {
+  const event: CloneEvent = {
+    type: 'done',
+    ok: false,
+    directory: '',
+    issues: [
+      'Le clonage par git ne tourne qu’en local (pf web) : ce serveur hébergé n’a pas git et ne voit pas votre disque. Utilisez la copie depuis GitHub de l’écran Cloner, ou lancez git clone dans un terminal.',
+    ],
+    warnings: [],
+    installed: false,
+  };
+  return new Response(
+    `data: ${JSON.stringify(event)}
+
+`,
+    {
+      headers: {
+        'cache-control': 'no-store, no-transform',
+        'content-type': 'text/event-stream; charset=utf-8',
+      },
+    },
+  );
+}
+
 export async function POST(request: NextRequest): Promise<Response> {
   let body: unknown;
   try {
@@ -72,12 +96,16 @@ export async function POST(request: NextRequest): Promise<Response> {
   }
   const input = record(body);
 
-  // Le mode décide d'où vient la destination, et le navigateur n'a pas voix
-  // au chapitre : en hébergé, le dossier reste relatif à la racine de travail
-  // même si la requête porte un `parent`.
-  const place: ClonePlace = isHostedEnvironment()
-    ? { kind: 'root', root: webWorkspaceRoot() }
-    : { kind: 'parent', parent: input['parent'] };
+  // En hébergé, `git clone` tournerait dans la fonction serverless : pas de
+  // `git` dans ce runtime, et un clone réussi resterait sur un disque
+  // éphémère que l'utilisateur ne voit pas. C'était le défaut de production :
+  // l'écran disait « échec » sans dire pourquoi. L'écran passe désormais par
+  // `/api/clone-archive` ; un appel direct reçoit un refus qui l'explique, au
+  // lieu d'une tentative vouée à l'échec.
+  if (isHostedEnvironment()) {
+    return hostedRefusal();
+  }
+  const place: ClonePlace = { kind: 'parent', parent: input['parent'] };
 
   const token = await sessionDeps().store.get();
   const encoder = new TextEncoder();

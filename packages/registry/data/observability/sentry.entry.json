@@ -8,10 +8,6 @@
   "license": "BSL-1.1",
   "lastReviewedAt": "2026-09-28",
   "compatibleWith": ["next"],
-  "packages": ["@sentry/nextjs"],
-  "packageRanges": {
-    "@sentry/nextjs": "^10.0.0"
-  },
   "env": ["SENTRY_DSN"],
   "docs": "https://docs.sentry.io"
 }

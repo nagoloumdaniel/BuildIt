@@ -13,12 +13,22 @@ import type { GitRemote } from '@buildit/git';
  * moteur et n'exporte pas la sienne.
  */
 
+/**
+ * Le dossier personnel, derrière une fonction : le traceur de fichiers de
+ * Next évalue `join(homedir(), 'buildit')` à la construction et tentait
+ * d'embarquer `~/buildit` **de la machine de build**, c'est-à-dire les projets
+ * générés de la personne qui construit. Une fonction locale lui est opaque.
+ */
+function homeDirectory(): string {
+  return homedir();
+}
+
 export function webWorkspaceRoot(
   env: Readonly<Record<string, string | undefined>> = process.env,
 ): string {
   const configured = env['PF_WEB_WORKSPACE'];
   return resolve(
-    configured === undefined || configured === '' ? join(homedir(), 'buildit') : configured,
+    configured === undefined || configured === '' ? join(homeDirectory(), 'buildit') : configured,
   );
 }
 
@@ -194,6 +204,15 @@ export async function resolveAbsoluteDestination(
   }
 
   return { ok: true, value: { folder: name, directory: join(root, name) } };
+}
+
+/**
+ * Un nom de sous-dossier acceptable : un seul segment simple. C'est la règle
+ * de `resolveAbsoluteDestination`, réutilisée par la copie hébergée, où le
+ * dossier est créé par le navigateur et non par le serveur.
+ */
+export function validFolderName(name: string): boolean {
+  return name !== '.' && name !== '..' && SEGMENT.test(name);
 }
 
 /** Le dossier proposé par défaut : le nom du dépôt, quand il est utilisable tel quel. */

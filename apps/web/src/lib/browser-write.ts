@@ -103,7 +103,8 @@ export function safeSegments(path: string): readonly string[] | undefined {
   return ok && segments.length > 0 ? segments : undefined;
 }
 
-function decode(base64: string): Uint8Array {
+/** Le base64 reçu du serveur, rendu en octets. */
+export function decodeBase64(base64: string): Uint8Array {
   const binary = atob(base64);
   const bytes = new Uint8Array(binary.length);
   for (let index = 0; index < binary.length; index += 1) {
@@ -117,6 +118,64 @@ async function isEmpty(directory: WritableDirectory): Promise<boolean> {
     return false;
   }
   return true;
+}
+
+export type OpenFolderOutcome =
+  | { readonly ok: true; readonly root: WritableDirectory; readonly directory: string }
+  | {
+      readonly ok: false;
+      readonly reason: 'taken' | 'failed';
+      readonly directory: string;
+      readonly detail?: string;
+    };
+
+/**
+ * Crée (ou reprend, s'il est vide) `<parent>/<name>/`, sans rien écraser.
+ *
+ * Séparé de `writeProject` pour les écritures **au fil de l'eau** : la copie
+ * d'un dépôt reçoit ses fichiers un par un depuis le serveur, et le dossier
+ * doit être réservé avant le premier octet. Un dossier déjà présent et non
+ * vide est refusé.
+ */
+export async function openProjectFolder(
+  parent: WritableDirectory,
+  name: string,
+): Promise<OpenFolderOutcome> {
+  const directory = `${parent.name}/${name}`;
+  try {
+    const root = await parent.getDirectoryHandle(name, { create: true });
+    if (!(await isEmpty(root))) {
+      return { ok: false, reason: 'taken', directory };
+    }
+    return { ok: true, root, directory };
+  } catch (error) {
+    return { ok: false, reason: 'failed', directory, detail: String(error) };
+  }
+}
+
+/**
+ * Écrit un fichier sous `root`, en créant ses dossiers. Lève en cas d'échec.
+ *
+ * Le chemin est rejugé ici (`safeSegments`) même s'il l'a déjà été côté
+ * serveur : c'est le dernier endroit avant le disque.
+ */
+export async function writeFileAt(
+  root: WritableDirectory,
+  path: string,
+  data: Uint8Array,
+): Promise<void> {
+  const segments = safeSegments(path);
+  if (segments === undefined) {
+    throw new Error(`Chemin refusé : ${path}`);
+  }
+  let folder = root;
+  for (const segment of segments.slice(0, -1)) {
+    folder = await folder.getDirectoryHandle(segment, { create: true });
+  }
+  const handle = await folder.getFileHandle(segments.at(-1) ?? path, { create: true });
+  const stream = await handle.createWritable();
+  await stream.write(data);
+  await stream.close();
 }
 
 /**
@@ -140,29 +199,16 @@ export async function writeProject(
     }
   }
 
-  let root: WritableDirectory;
-  try {
-    root = await parent.getDirectoryHandle(name, { create: true });
-    if (!(await isEmpty(root))) {
-      return { ok: false, reason: 'taken', directory, written: 0 };
-    }
-  } catch (error) {
-    return { ok: false, reason: 'failed', directory, written: 0, detail: String(error) };
+  const opened = await openProjectFolder(parent, name);
+  if (!opened.ok) {
+    return { ...opened, written: 0 };
   }
 
   let written = 0;
   onProgress?.(0, files.length);
   for (const file of files) {
-    const segments = safeSegments(file.path) ?? [];
     try {
-      let folder = root;
-      for (const segment of segments.slice(0, -1)) {
-        folder = await folder.getDirectoryHandle(segment, { create: true });
-      }
-      const handle = await folder.getFileHandle(segments.at(-1) ?? file.path, { create: true });
-      const stream = await handle.createWritable();
-      await stream.write(decode(file.base64));
-      await stream.close();
+      await writeFileAt(opened.root, file.path, decodeBase64(file.base64));
     } catch (error) {
       return {
         ok: false,

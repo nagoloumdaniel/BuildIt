@@ -1,0 +1,40 @@
+/*
+ * L'écran Cloner.
+ *
+ * Importée par `app/globals.css`. Aucune couleur en dur (variables `--pf-*`),
+ * `:focus-visible` sur tout élément interactif, rien qui bouge au survol,
+ * `prefers-reduced-motion` respecté.
+ */
+
+@layer components {
+  /* L'encart de la copie hébergée : ce qu'elle n'est pas, dit avant le geste.
+     Le titre garde la taille d'un titre de carte, le reste celle de l'encart. */
+  .pf-clone-hosted .pf-title-sm {
+    color: var(--pf-text);
+  }
+
+  /* Trois avertissements, pas une énumération décorative : des puces sobres,
+     alignées sur le texte de l'encart. */
+  .pf-clone-notes {
+    display: grid;
+    gap: 0.35rem;
+    list-style: disc;
+    padding-left: 1.1rem;
+  }
+
+  .pf-clone-notes li::marker {
+    color: var(--pf-steel);
+  }
+
+  /* Les noms écartés : des chemins, donc en chasse fixe, et bornés en hauteur
+     pour qu'un dépôt exotique ne repousse pas les commandes hors de vue. */
+  .pf-clone-skipped {
+    background: var(--pf-bg-sunken);
+    border: 1px solid var(--pf-border);
+    border-radius: var(--pf-radius-sm);
+    max-height: 10rem;
+    overflow-y: auto;
+    overflow-wrap: anywhere;
+    padding: 0.5rem 0.75rem;
+  }
+}

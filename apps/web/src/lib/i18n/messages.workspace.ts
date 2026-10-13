@@ -124,10 +124,98 @@ export const FR_WORKSPACE = {
     fullPath: 'Chemin complet qui sera écrit',
     pathWhat: 'le chemin',
     fullPathUnknown: 'Choisissez le dossier parent pour voir le chemin complet.',
-    /* Le repli de l'hébergé : un chemin absolu venu du navigateur y serait une
-       écriture de fichier arbitraire sur le serveur. */
-    hostedFallback: (root: string) =>
-      `Serveur hébergé : le clone s’exécute sur le serveur, pas sur votre machine. Le dossier reste relatif à la racine de travail : ${root}. Il doit être absent ou vide.`,
+    /* La copie hébergée (trybuildit.vercel.app). Le serveur n'est pas la
+       machine de l'utilisateur et n'a pas git : on copie les fichiers depuis
+       l'archive GitHub, et on dit **avant** ce que ce n'est pas. */
+    hostedTitle: 'Copie depuis la version en ligne',
+    hostedIntro:
+      'Cette page tourne sur un serveur, pas sur votre ordinateur : elle ne peut pas lancer git chez vous. Elle télécharge les fichiers du dépôt depuis GitHub, et votre navigateur les écrit dans le dossier que vous choisissez.',
+    hostedNoHistory:
+      'Vous obtenez une copie des fichiers de la branche par défaut, sans historique git (pas de dossier .git). La commande pour un vrai clone est donnée à la fin.',
+    hostedNoInstall:
+      'Les dépendances ne sont pas installées : une page web ne peut lancer aucun programme sur votre machine. La commande à lancer est donnée à la fin.',
+    hostedLimits: (files: number, megabytes: number) =>
+      `Au plus ${files} fichiers et ${megabytes} Mo décompressés. Au-delà, utilisez git clone.`,
+    hostedFolderLabel: 'Nom du dossier à créer',
+    hostedFolderHint:
+      'Un seul nom, sans séparateur de chemin. Il sera créé dans le dossier que vous choisirez dans l’explorateur.',
+    hostedCheck: 'Vérifier le lien',
+    hostedCopy: 'Choisir un dossier et copier',
+    hostedDownload: 'Télécharger le ZIP',
+    hostedNoFolderApi:
+      'Ce navigateur ne sait pas écrire dans un dossier (c’est le cas de Firefox et de Safari). Téléchargez l’archive ZIP du dépôt, ou ouvrez cette page dans Chrome ou Edge pour écrire directement dans un dossier.',
+    hostedBlockerCheck: 'Vérifiez d’abord le lien.',
+    hostedReady: (label: string) => `Dépôt GitHub reconnu : ${label}.`,
+    hostedNotGithubTitle: 'Ce lien ne se clone que sur votre machine',
+    hostedNotGithubBody:
+      'Hors de GitHub, il n’existe pas d’archive téléchargeable sans git. Ouvrez un terminal dans le dossier où le dépôt doit atterrir, puis lancez ces commandes :',
+    hostedDownloading: 'Téléchargement de l’archive depuis GitHub',
+    hostedWriting: 'Écriture des fichiers dans le dossier',
+    hostedCopying: 'Copie en cours…',
+    hostedZipping: 'Téléchargement de l’archive…',
+    hostedReceived: (size: string) => `${size} reçus`,
+    hostedWritten: (written: number, total: number) => `${written} / ${total} fichiers`,
+    sizeKilobytes: (value: number) =>
+      `${value.toLocaleString('fr-FR', { maximumFractionDigits: 0 })} Ko`,
+    sizeMegabytes: (value: number) =>
+      `${value.toLocaleString('fr-FR', { maximumFractionDigits: 1 })} Mo`,
+    hostedCopied: (directory: string) => `Fichiers copiés dans ${directory}.`,
+    hostedCopiedCount: (written: number, size: string) =>
+      `${written} fichiers, ${size}. Copie sans historique git.`,
+    hostedSkipped: (count: number) =>
+      `${count} fichier(s) écarté(s) : leur nom n’est pas accepté par Windows.`,
+    hostedSymlinks: (count: number) =>
+      `${count} lien(s) symbolique(s) non copié(s) : un navigateur ne sait pas en créer.`,
+    hostedZipSaved: (fileName: string, size: string) =>
+      `Archive ${fileName} téléchargée (${size}).`,
+    hostedZipNext:
+      'Décompressez-la : elle contient un dossier nommé propriétaire-dépôt-commit. Copie sans historique git.',
+    hostedNextTitle: 'Installer les dépendances',
+    hostedInstallStep: (folder: string) =>
+      `Ouvrez un terminal dans le dossier ${folder} (dans l’explorateur de Windows : clic droit sur le dossier, puis « Ouvrir dans le Terminal »), et lancez :`,
+    hostedNothingToInstall:
+      'Aucun gestionnaire de dépendances reconnu dans le dépôt : rien à installer d’après ses fichiers.',
+    hostedRealCloneTitle: 'Pour un vrai clone, avec l’historique',
+    hostedCloneStep: 'Ouvrez un terminal dans le dossier où le dépôt doit atterrir, puis clonez :',
+    hostedCdStep: 'Entrez dans le dossier du dépôt :',
+    hostedInstallAfterClone: 'Installez les dépendances :',
+    hostedCommandsWhat: 'la commande',
+    hostedCancelledTitle: 'Copie arrêtée',
+    hostedFailedTitle: 'La copie n’a pas abouti',
+    hostedPartial: (written: number, directory: string) =>
+      `${written} fichier(s) déjà écrit(s) restent dans ${directory} : supprimez ce dossier avant de recommencer.`,
+    hostedNothingWritten: 'Aucun fichier n’a été écrit.',
+    hostedErrorLink: 'Le lien n’est pas reconnu.',
+    hostedErrorFolder: 'Le nom du dossier n’est pas valide.',
+    hostedErrorNotGithub:
+      'Ce lien n’est pas sur GitHub : il ne se copie que sur votre machine, avec git.',
+    hostedErrorNotFound:
+      'Dépôt introuvable sur GitHub. Vérifiez le lien ; s’il est privé, connectez votre compte GitHub.',
+    hostedErrorUnauthorized: 'GitHub a refusé l’accès : reconnectez votre compte GitHub.',
+    hostedErrorRateLimited:
+      'GitHub limite les téléchargements pour le moment. Réessayez dans quelques minutes, ou connectez votre compte GitHub.',
+    hostedErrorArchiveTooLarge: (megabytes: number) =>
+      `L’archive du dépôt dépasse ${megabytes} Mo : utilisez git clone.`,
+    hostedErrorTooManyFiles: (files: number) =>
+      `Le dépôt compte plus de ${files} fichiers : utilisez git clone.`,
+    hostedErrorTooLarge: (megabytes: number) =>
+      `Le dépôt décompressé dépasse ${megabytes} Mo : utilisez git clone.`,
+    hostedErrorFileTooLarge: (megabytes: number, name: string) =>
+      `Le fichier ${name} dépasse ${megabytes} Mo : utilisez git clone.`,
+    hostedErrorUnsafePath: (name: string) =>
+      `L’archive contient un chemin qui sortirait du dossier (${name}) : elle est refusée en entier.`,
+    hostedErrorUnsupported: 'L’archive reçue n’est pas dans un format lisible ici.',
+    hostedErrorCorrupt: (name: string) => `L’archive reçue est abîmée (${name}).`,
+    hostedErrorHttp: (status: number) => `Le serveur a répondu HTTP ${status}.`,
+    hostedErrorNetwork: 'La liaison avec le serveur a été perdue.',
+    hostedErrorTaken: (directory: string) =>
+      `Le dossier ${directory} existe déjà et n’est pas vide : rien n’a été écrasé. Choisissez un autre nom ou un autre emplacement.`,
+    hostedErrorWrite: (detail: string) => `Le navigateur n’a pas pu écrire : ${detail}`,
+    hostedErrorMalformed: 'Réponse du serveur illisible : la copie est arrêtée.',
+    hostedErrorIncomplete: 'Le serveur a fermé le flux avant la fin.',
+    hostedErrorTimeout: (seconds: number) =>
+      `Rien reçu depuis ${seconds} secondes : la copie est arrêtée.`,
+    hostedErrorPicker: 'L’explorateur n’a pas pu s’ouvrir. Réessayez.',
     pickOtherFolder: 'Choisir un autre dossier',
     destinationUnavailable: 'Dossier pas accessible',
     destinationUnavailableBody:
@@ -272,8 +360,93 @@ export const EN_WORKSPACE: Widen<typeof FR_WORKSPACE> = {
     fullPath: 'Full path that will be written',
     pathWhat: 'the path',
     fullPathUnknown: 'Choose the parent folder to see the full path.',
-    hostedFallback: (root: string) =>
-      `Hosted server: the clone runs on the server, not on your machine. The folder stays relative to the working root: ${root}. It must be absent or empty.`,
+    hostedTitle: 'Copy from the online version',
+    hostedIntro:
+      'This page runs on a server, not on your computer: it cannot run git on your machine. It downloads the repository files from GitHub, and your browser writes them into the folder you choose.',
+    hostedNoHistory:
+      'You get a copy of the default branch files, without git history (no .git folder). The command for a real clone is given at the end.',
+    hostedNoInstall:
+      'Dependencies are not installed: a web page cannot run any program on your machine. The command to run is given at the end.',
+    hostedLimits: (files: number, megabytes: number) =>
+      `At most ${files} files and ${megabytes} MB uncompressed. Beyond that, use git clone.`,
+    hostedFolderLabel: 'Name of the folder to create',
+    hostedFolderHint:
+      'A single name, with no path separator. It is created inside the folder you choose in the file explorer.',
+    hostedCheck: 'Check the link',
+    hostedCopy: 'Choose a folder and copy',
+    hostedDownload: 'Download the ZIP',
+    hostedNoFolderApi:
+      'This browser cannot write into a folder (Firefox and Safari cannot). Download the repository ZIP archive, or open this page in Chrome or Edge to write straight into a folder.',
+    hostedBlockerCheck: 'Check the link first.',
+    hostedReady: (label: string) => `GitHub repository recognised: ${label}.`,
+    hostedNotGithubTitle: 'This link only clones on your machine',
+    hostedNotGithubBody:
+      'Outside GitHub, there is no archive to download without git. Open a terminal in the folder where the repository should land, then run these commands:',
+    hostedDownloading: 'Downloading the archive from GitHub',
+    hostedWriting: 'Writing the files into the folder',
+    hostedCopying: 'Copying…',
+    hostedZipping: 'Downloading the archive…',
+    hostedReceived: (size: string) => `${size} received`,
+    hostedWritten: (written: number, total: number) => `${written} / ${total} files`,
+    sizeKilobytes: (value: number) =>
+      `${value.toLocaleString('en-GB', { maximumFractionDigits: 0 })} KB`,
+    sizeMegabytes: (value: number) =>
+      `${value.toLocaleString('en-GB', { maximumFractionDigits: 1 })} MB`,
+    hostedCopied: (directory: string) => `Files copied into ${directory}.`,
+    hostedCopiedCount: (written: number, size: string) =>
+      `${written} files, ${size}. Copy without git history.`,
+    hostedSkipped: (count: number) =>
+      `${count} file(s) left out: Windows does not accept their name.`,
+    hostedSymlinks: (count: number) =>
+      `${count} symbolic link(s) not copied: a browser cannot create them.`,
+    hostedZipSaved: (fileName: string, size: string) => `Archive ${fileName} downloaded (${size}).`,
+    hostedZipNext:
+      'Extract it: it holds a folder named owner-repository-commit. Copy without git history.',
+    hostedNextTitle: 'Install the dependencies',
+    hostedInstallStep: (folder: string) =>
+      `Open a terminal in the ${folder} folder (in Windows File Explorer: right-click the folder, then “Open in Terminal”), and run:`,
+    hostedNothingToInstall:
+      'No dependency manager recognised in the repository: nothing to install according to its files.',
+    hostedRealCloneTitle: 'For a real clone, with history',
+    hostedCloneStep: 'Open a terminal in the folder where the repository should land, then clone:',
+    hostedCdStep: 'Move into the repository folder:',
+    hostedInstallAfterClone: 'Install the dependencies:',
+    hostedCommandsWhat: 'the command',
+    hostedCancelledTitle: 'Copy stopped',
+    hostedFailedTitle: 'The copy did not complete',
+    hostedPartial: (written: number, directory: string) =>
+      `${written} file(s) already written stay in ${directory}: delete that folder before trying again.`,
+    hostedNothingWritten: 'No file was written.',
+    hostedErrorLink: 'The link is not recognised.',
+    hostedErrorFolder: 'The folder name is not valid.',
+    hostedErrorNotGithub: 'This link is not on GitHub: it only copies on your machine, with git.',
+    hostedErrorNotFound:
+      'Repository not found on GitHub. Check the link; if it is private, connect your GitHub account.',
+    hostedErrorUnauthorized: 'GitHub refused access: reconnect your GitHub account.',
+    hostedErrorRateLimited:
+      'GitHub is limiting downloads right now. Try again in a few minutes, or connect your GitHub account.',
+    hostedErrorArchiveTooLarge: (megabytes: number) =>
+      `The repository archive is over ${megabytes} MB: use git clone.`,
+    hostedErrorTooManyFiles: (files: number) =>
+      `The repository has more than ${files} files: use git clone.`,
+    hostedErrorTooLarge: (megabytes: number) =>
+      `The uncompressed repository is over ${megabytes} MB: use git clone.`,
+    hostedErrorFileTooLarge: (megabytes: number, name: string) =>
+      `The file ${name} is over ${megabytes} MB: use git clone.`,
+    hostedErrorUnsafePath: (name: string) =>
+      `The archive holds a path that would leave the folder (${name}): it is refused as a whole.`,
+    hostedErrorUnsupported: 'The archive received is not in a format readable here.',
+    hostedErrorCorrupt: (name: string) => `The archive received is damaged (${name}).`,
+    hostedErrorHttp: (status: number) => `The server answered HTTP ${status}.`,
+    hostedErrorNetwork: 'The connection to the server was lost.',
+    hostedErrorTaken: (directory: string) =>
+      `The folder ${directory} already exists and is not empty: nothing was overwritten. Choose another name or another place.`,
+    hostedErrorWrite: (detail: string) => `The browser could not write: ${detail}`,
+    hostedErrorMalformed: 'Unreadable server response: the copy is stopped.',
+    hostedErrorIncomplete: 'The server closed the stream before the end.',
+    hostedErrorTimeout: (seconds: number) =>
+      `Nothing received for ${seconds} seconds: the copy is stopped.`,
+    hostedErrorPicker: 'The file explorer could not open. Try again.',
     pickOtherFolder: 'Choose another folder',
     destinationUnavailable: 'Folder not reachable',
     destinationUnavailableBody:

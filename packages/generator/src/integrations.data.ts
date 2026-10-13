@@ -82,8 +82,8 @@ export interface Integration {
    * Certains fichiers dépendent d'une combinaison, pas d'une technologie :
    * le client Prisma n'est pas le même sur PostgreSQL et sur MySQL. Poser le
    * code PostgreSQL pour Prisma seul livrerait un projet faux dès qu'on change
-   * de base. Une combinaison sans intégration ne reçoit rien — et reste
-   * `experimental` tant qu'une de ses fiches l'est.
+   * de base. Une combinaison sans intégration ne reçoit rien plutôt que du
+   * code faux.
    */
   readonly when?: string | readonly string[];
   /**
@@ -465,6 +465,9 @@ export function redis(): ReturnType<typeof connect> {
 }
 `;
 
+/** Les frameworks web qui rendent du React : les paquets `@…/react` y vivent. */
+const REACT_FRONTENDS: readonly string[] = ['next', 'react', 'remix', 'preact'];
+
 export const INTEGRATIONS: readonly Integration[] = [
   {
     id: 'typescript',
@@ -513,6 +516,10 @@ export const INTEGRATIONS: readonly Integration[] = [
     clientInstrumentation: 'lib/observability/sentry.client',
     // Binaire d'envoi des source maps : non configuré, donc inutile.
     denyBuilds: ['@sentry/cli'],
+    // Le SDK Next.js vit ici et non dans la fiche : posé par la fiche, il
+    // atterrissait dans une API FastAPI ou Hono qui choisissait Sentry
+    // (`catalogue-coverage.test.ts`). Hors Next.js, aucun SDK n'est deviné.
+    dependencies: { '@sentry/nextjs': '^10.0.0' },
     devDependencies: { '@types/node': '^24.0.0' },
     files: [
       { path: 'lib/observability/sentry.client.ts', contents: SENTRY_CLIENT },
@@ -595,6 +602,29 @@ export const INTEGRATIONS: readonly Integration[] = [
       { path: 'lib/db.ts', contents: PRISMA_CLIENT_POSTGRESQL },
     ],
   },
+  // --- paquets propres à un framework ---
+  // Ces paquets ne servent que sous un framework précis. Portés par la fiche,
+  // ils étaient posés partout : `next-auth` dans SvelteKit, `@clerk/nextjs`
+  // dans Remix, `@tanstack/react-query` dans Nuxt. Ils ne sont plus installés
+  // que pour la combinaison qu'ils servent ; ailleurs, la fiche reste listée
+  // au README sans paquet inventé.
+  { id: 'clerk', when: 'next', dependencies: { '@clerk/nextjs': '^6.0.0' } },
+  { id: 'authjs', when: 'next', dependencies: { 'next-auth': '>=5.0.0' } },
+  ...REACT_FRONTENDS.flatMap((frontend): Integration[] => [
+    {
+      id: 'tanstack-query',
+      when: frontend,
+      dependencies: { '@tanstack/react-query': '^5.0.0' },
+    },
+    {
+      id: 'testing-library',
+      when: frontend,
+      devDependencies: {
+        '@testing-library/react': '^16.0.0',
+        '@testing-library/user-event': '^14.0.0',
+      },
+    },
+  ]),
   {
     id: 'eslint',
     scripts: { lint: 'eslint .' },

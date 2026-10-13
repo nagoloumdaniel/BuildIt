@@ -174,12 +174,14 @@ describe('erreurs de résolution', () => {
 });
 
 describe('statut de la combinaison', () => {
-  it('expérimentale dès qu’une technologie n’est pas certifiée', () => {
+  it('expérimentale dès qu’une technologie n’est pas certifiée — sans avertissement', () => {
+    // Le statut reste informatif ; toutes les fiches sont couvertes par un
+    // test de génération, il n'y a plus rien à signaler à l'utilisateur.
     const result = resolve({ targets: ['web'], technologies: ['next'] }, BASE);
     expect(result.ok).toBe(true);
     if (result.ok) {
       expect(result.value.status).toBe('experimental');
-      expect(result.value.warnings.map((w) => w.code)).toContain('COMPAT_EXPERIMENTAL_COMBINATION');
+      expect(result.value.warnings).toEqual([]);
     }
   });
 

@@ -1,7 +1,35 @@
 import type { Manifest } from '@buildit/manifest';
 import { loadRecipes } from '@buildit/recipes';
+import { loadCatalogue, loadRegistry, type Registry } from '@buildit/registry';
 import { describe, expect, it } from 'vitest';
 import { planProject } from './pipeline.js';
+
+/**
+ * Le catalogue officiel, sans le conflit déclaré entre Jest et Vitest.
+ *
+ * Le registry les déclare en conflit précisément parce que le socle refuse
+ * deux propriétaires du script « test » : le moteur le dit désormais au
+ * Stack Builder, avant la génération. Pour exercer le refus du socle lui-même,
+ * on retire ce garde-fou en amont.
+ */
+function registryWithoutTestConflict(): Registry {
+  const official = loadCatalogue();
+  if (!official.ok) {
+    throw new Error('catalogue officiel invalide');
+  }
+  const raw = official.value.entries().map((entry) => {
+    if (entry.id !== 'jest' && entry.id !== 'vitest') {
+      return entry;
+    }
+    const { conflictsWith: _ignored, ...rest } = entry;
+    return rest;
+  });
+  const registry = loadRegistry(raw);
+  if (!registry.ok) {
+    throw new Error(registry.issues.map((issue) => issue.message).join(' | '));
+  }
+  return registry.value;
+}
 
 /** Le preset Full-stack du §8, en monorepo : Next.js + Hono. */
 const FULLSTACK: Manifest = {
@@ -221,9 +249,12 @@ describe('monorepo : chemins d’erreur et variantes', () => {
 
   it('un défaut dans une application remonte tel quel', () => {
     // vitest et jest réclament tous deux « test » dans chaque application.
-    expect(codes({ ...FULLSTACK, quality: ['biome', 'vitest', 'jest'] })).toContain(
-      'GEN_SCRIPT_CONFLICT',
-    );
+    expect(
+      codes(
+        { ...FULLSTACK, quality: ['biome', 'vitest', 'jest'] },
+        { registry: registryWithoutTestConflict() },
+      ),
+    ).toContain('GEN_SCRIPT_CONFLICT');
   });
 
   it('le devcontainer est à la racine, une seule fois', () => {

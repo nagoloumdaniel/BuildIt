@@ -313,15 +313,19 @@ describe('le preset SaaS du §8 est certifié — 6.7a', () => {
   });
 });
 
-/** Une stack réellement expérimentale : Drizzle n'est pas certifié. */
-const EXPERIMENTAL: Manifest = { ...SAAS, database: { engine: 'postgresql', orm: 'drizzle' } };
+/** Une stack avec une fiche seulement déclarée : Drizzle n'a pas de template. */
+const DECLARED: Manifest = { ...SAAS, database: { engine: 'postgresql', orm: 'drizzle' } };
 
 describe('les avertissements remontent jusqu’au bout', () => {
-  it('le plan porte l’avertissement de combinaison expérimentale', () => {
-    const result = planProject(EXPERIMENTAL, '/cible');
+  it('une fiche déclarée ne produit plus d’avertissement de combinaison expérimentale', () => {
+    // Toutes les fiches du catalogue sont planifiées par
+    // `catalogue-coverage.test.ts` : l'avertissement ne disait plus rien de vrai.
+    const result = planProject(DECLARED, '/cible');
     expect(result.ok).toBe(true);
     if (result.ok) {
-      expect(result.value.warnings.map((w) => w.code)).toContain('COMPAT_EXPERIMENTAL_COMBINATION');
+      expect(result.value.warnings.map((w) => w.code)).not.toContain(
+        'COMPAT_EXPERIMENTAL_COMBINATION',
+      );
     }
   });
 
@@ -351,7 +355,7 @@ describe('les avertissements remontent jusqu’au bout', () => {
 
   it('la génération les rend aussi — l’utilisateur les voit après écriture', async () => {
     const target = join(await tempDir(), 'quai3');
-    const result = await generateProject(EXPERIMENTAL, target);
+    const result = await generateProject(DECLARED, target);
     expect(result.ok).toBe(true);
     if (result.ok) {
       expect(result.value.warnings.length).toBeGreaterThan(0);
@@ -361,13 +365,42 @@ describe('les avertissements remontent jusqu’au bout', () => {
 });
 
 /**
+ * Le catalogue officiel, sans le conflit déclaré entre Jest et Vitest.
+ *
+ * Le registry les déclare en conflit précisément parce que le socle refuse
+ * deux propriétaires du script « test » : le moteur le dit désormais au
+ * Stack Builder, avant la génération. Pour exercer le refus du socle lui-même,
+ * on retire ce garde-fou en amont.
+ */
+function registryWithoutTestConflict(): Registry {
+  const official = loadCatalogue();
+  if (!official.ok) {
+    throw new Error('catalogue officiel invalide');
+  }
+  const raw = official.value.entries().map((entry) => {
+    if (entry.id !== 'jest' && entry.id !== 'vitest') {
+      return entry;
+    }
+    const { conflictsWith: _ignored, ...rest } = entry;
+    return rest;
+  });
+  const registry = loadRegistry(raw);
+  if (!registry.ok) {
+    throw new Error(registry.issues.map((issue) => issue.message).join(' | '));
+  }
+  return registry.value;
+}
+
+/**
  * Les chemins d'erreur du pipeline. Ce sont ceux qui s'exécutent quand quelque
  * chose va mal — donc exactement ceux dont le comportement compte le plus.
  */
 describe('chemins d’erreur', () => {
   it('remonte un conflit de script avec les mots du socle', () => {
     // vitest et jest réclament tous deux le script « test ».
-    const result = planProject({ ...SAAS, quality: ['vitest', 'jest'] }, '/cible');
+    const result = planProject({ ...SAAS, quality: ['vitest', 'jest'] }, '/cible', {
+      registry: registryWithoutTestConflict(),
+    });
     expect(result.ok).toBe(false);
     if (!result.ok) {
       expect(result.issues.map((i) => i.code)).toContain('GEN_SCRIPT_CONFLICT');

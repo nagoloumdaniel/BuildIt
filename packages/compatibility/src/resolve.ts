@@ -37,7 +37,10 @@ export interface Resolution {
   /** Choisies et ajoutées, triées — la sortie ne dépend pas de l'ordre de saisie. */
   readonly technologies: readonly string[];
   readonly additions: readonly Addition[];
-  /** `certified` seulement si **toutes** les technologies le sont. */
+  /**
+   * `certified` seulement si **toutes** les technologies le sont (compilées par
+   * le test de fumée). Informatif : aucun avertissement n'en découle.
+   */
   readonly status: 'certified' | 'experimental';
   readonly warnings: readonly CompatibilityIssue[];
 }
@@ -152,29 +155,20 @@ export function resolve(
     return fail(errors);
   }
 
-  // Une combinaison n'est certifiée que si chacune de ses pièces l'est. Le
-  // statut est déduit, jamais déclaré : une table de combinaisons certifiées
-  // serait ingérable face à la combinatoire du catalogue (§12).
-  const uncertified = expansion.entries.filter((entry) => entry.generation !== 'certified');
-  const status = uncertified.length === 0 ? 'certified' : 'experimental';
-
-  const allWarnings = [...warnings];
-  if (status === 'experimental') {
-    allWarnings.unshift({
-      code: 'COMPAT_EXPERIMENTAL_COMBINATION',
-      severity: 'warning',
-      path: uncertified.map((entry) => entry.id),
-      message: messageFor('COMPAT_EXPERIMENTAL_COMBINATION', {
-        value: uncertified.map((entry) => entry.name).join(', '),
-      }),
-    });
-  }
+  // Le statut reste déduit des fiches — il dit si le test de fumée a compilé
+  // chacune d'elles —, mais il ne produit plus d'avertissement : toutes les
+  // fiches du catalogue sont planifiées par un test de génération
+  // (`catalogue-coverage.test.ts` du générateur). Le lecteur qui affiche le
+  // statut décide de sa présentation ; le moteur ne crie plus au loup.
+  const status = expansion.entries.every((entry) => entry.generation === 'certified')
+    ? 'certified'
+    : 'experimental';
 
   return ok({
     technologies: expansion.entries.map((entry) => entry.id).sort(),
     additions: expansion.additions,
     status,
-    warnings: allWarnings,
+    warnings,
   });
 }
 

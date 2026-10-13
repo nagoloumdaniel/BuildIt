@@ -273,8 +273,8 @@ export function planProject(
     return fail(toIssues(plan.issues));
   }
 
-  // Les avertissements de tous les étages traversés sont réunis : combinaison
-  // expérimentale, licence restrictive, version non épinglée. Aucun n'est
+  // Les avertissements de tous les étages traversés sont réunis : licence
+  // restrictive, technologie dépréciée, version non épinglée. Aucun n'est
   // consommé en chemin.
   return ok({
     plan: plan.value,

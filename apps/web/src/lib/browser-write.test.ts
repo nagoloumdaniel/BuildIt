@@ -1,9 +1,12 @@
 import { describe, expect, it } from 'vitest';
 import {
   canWriteInBrowser,
+  decodeBase64,
+  openProjectFolder,
   pickWritableFolder,
   safeSegments,
   type WritableDirectory,
+  writeFileAt,
   writeProject,
 } from './browser-write';
 
@@ -108,6 +111,47 @@ describe('writeProject', () => {
     const parent = memoryDir('Projets', 'page.tsx');
     const outcome = await writeProject(parent, 'demo', FILES);
     expect(outcome).toMatchObject({ ok: false, reason: 'failed', written: 1 });
+  });
+});
+
+describe('écritures au fil de l’eau', () => {
+  it('réserve le dossier, puis écrit fichier par fichier', async () => {
+    const parent = memoryDir('Projets');
+    const opened = await openProjectFolder(parent, 'depot');
+    expect(opened).toMatchObject({ ok: true, directory: 'Projets/depot' });
+    if (!opened.ok) {
+      return;
+    }
+    await writeFileAt(opened.root, 'src/a.ts', decodeBase64(encode('a')));
+    const root = parent.dirs.get('depot');
+    expect(new TextDecoder().decode(root?.dirs.get('src')?.files.get('a.ts'))).toBe('a');
+    // Le même dossier, désormais rempli, est refusé.
+    expect(await openProjectFolder(parent, 'depot')).toMatchObject({ ok: false, reason: 'taken' });
+  });
+
+  it('dit pourquoi le dossier n’a pas pu être créé', async () => {
+    const parent: WritableDirectory = {
+      name: 'Bloqué',
+      async getDirectoryHandle() {
+        throw new DOMException('refusé', 'NotAllowedError');
+      },
+      async getFileHandle() {
+        throw new Error('jamais');
+      },
+      async *values() {},
+    };
+    expect(await openProjectFolder(parent, 'x')).toMatchObject({
+      ok: false,
+      reason: 'failed',
+      directory: 'Bloqué/x',
+    });
+    expect(await writeProject(parent, 'x', FILES)).toMatchObject({ ok: false, written: 0 });
+  });
+
+  it('refuse d’écrire un chemin hostile, même appelé directement', async () => {
+    await expect(writeFileAt(memoryDir('P'), '../x', new Uint8Array())).rejects.toThrow(
+      'Chemin refusé',
+    );
   });
 });
 

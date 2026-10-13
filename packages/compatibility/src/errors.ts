@@ -21,7 +21,6 @@ export const COMPATIBILITY_ERROR_CODES = [
 ] as const;
 
 export const COMPATIBILITY_WARNING_CODES = [
-  'COMPAT_EXPERIMENTAL_COMBINATION',
   'COMPAT_DEPRECATED_TECHNOLOGY',
   'COMPAT_RESTRICTIVE_LICENSE',
 ] as const;
@@ -48,8 +47,6 @@ const MESSAGES: Readonly<Record<CompatibilityCode, string>> = {
     '{first} exige {runtime} {firstRange}, {second} exige {runtime} {secondRange}. Aucune version ne satisfait les deux.',
   COMPAT_ECOSYSTEM_MISMATCH:
     '{first} fonctionne avec {firstEcosystems}, {second} avec {secondEcosystems} : ils ne partagent aucun écosystème.',
-  COMPAT_EXPERIMENTAL_COMBINATION:
-    'Combinaison expérimentale : {value} n’est couverte par aucun test de génération. Le projet sera généré, sans garantie qu’il compile.',
   COMPAT_DEPRECATED_TECHNOLOGY:
     '{value} est dépréciée. Elle reste utilisable, mais n’est plus recommandée pour un nouveau projet.',
   COMPAT_RESTRICTIVE_LICENSE:
