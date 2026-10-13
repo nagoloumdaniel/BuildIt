@@ -1,0 +1,12 @@
+{
+  "id": "aspnet-core",
+  "name": "ASP.NET Core",
+  "category": "backend",
+  "targets": ["api"],
+  "status": "stable",
+  "generation": "declared",
+  "license": "MIT",
+  "lastReviewedAt": "2026-10-13",
+  "ecosystems": ["dotnet"],
+  "docs": "https://learn.microsoft.com/aspnet/core"
+}

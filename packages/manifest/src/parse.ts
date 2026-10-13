@@ -138,6 +138,23 @@ export function parseManifest(input: unknown): ParseResult<Manifest, ManifestIss
     // « après parseManifest, un manifest est en forme canonique » rend
     // `parse → serialize → parse` idempotent et permet de comparer deux
     // manifests par égalité structurelle, sans passer par leur chaîne.
+    // Un frontend et un backend dans un seul paquet se disputeraient les
+    // scripts `dev`, `build` et `start` : le générateur ne sait les séparer
+    // qu'en monorepo. Le dire ici, à la validation, plutôt qu'au milieu de la
+    // génération.
+    const { frontend, backend, architecture } = result.data;
+    if (frontend !== undefined && backend !== undefined && architecture !== 'monorepo') {
+      return fail([
+        {
+          code: 'MANIFEST_APPS_NEED_MONOREPO',
+          path: ['architecture'],
+          message: messageFor('MANIFEST_APPS_NEED_MONOREPO', {
+            frontend: frontend.framework,
+            backend: backend.framework,
+          }),
+        },
+      ]);
+    }
     return ok(canonicalizeManifest(result.data));
   }
 

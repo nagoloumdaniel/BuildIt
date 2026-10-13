@@ -80,7 +80,7 @@ const API_BASE: Readonly<
   php: ['laravel', 'php'],
   ruby: ['rails', 'ruby'],
   jvm: ['spring-boot', 'java'],
-  dotnet: undefined,
+  dotnet: ['aspnet-core', 'csharp'],
 };
 
 /** Les catégories dont un projet n'a qu'un représentant (`arity.ts`). */
@@ -374,13 +374,7 @@ function expectCoherentPlan(
  * Les fiches qu'aucun manifest ne peut porter, avec la raison. Liste fermée et
  * vérifiée : une fiche qui deviendrait plaçable doit en sortir.
  */
-const UNPLACEABLE: Readonly<Record<string, string>> = {
-  // C# ne vise que `api`, et le catalogue n'a aucun backend .NET : le schéma
-  // exige `backend.framework`, et tout backend existant déclare un autre
-  // runtime (COMPAT_ECOSYSTEM_MISMATCH). Il redeviendra plaçable avec une
-  // fiche ASP.NET Core.
-  csharp: 'aucun backend .NET au catalogue',
-};
+const UNPLACEABLE: Readonly<Record<string, string>> = {};
 
 describe('couverture du catalogue : chaque fiche se planifie', () => {
   it('le catalogue est entièrement couvert', () => {

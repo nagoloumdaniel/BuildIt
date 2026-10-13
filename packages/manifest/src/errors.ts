@@ -22,6 +22,7 @@ export const MANIFEST_ISSUE_CODES = [
   'MANIFEST_ENUM_UNKNOWN',
   'MANIFEST_SLUG_INVALID',
   'MANIFEST_DUPLICATE_ENTRY',
+  'MANIFEST_APPS_NEED_MONOREPO',
 ] as const;
 
 export type ManifestIssueCode = (typeof MANIFEST_ISSUE_CODES)[number];
@@ -53,6 +54,8 @@ const MESSAGES: Readonly<Record<ManifestIssueCode, string>> = {
   MANIFEST_SLUG_INVALID:
     'Identifiant de technologie invalide : {value}. Attendu des minuscules et des chiffres séparés par des tirets, par exemple « better-auth ».',
   MANIFEST_DUPLICATE_ENTRY: 'La valeur {value} apparaît plusieurs fois.',
+  MANIFEST_APPS_NEED_MONOREPO:
+    'Un frontend ({frontend}) et un backend ({backend}) font deux applications : choisissez l’architecture « monorepo » pour qu’elles aient chacune leur dossier et leurs scripts.',
 };
 
 export const messageFor: (

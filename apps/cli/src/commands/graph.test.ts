@@ -67,7 +67,7 @@ describe('pf graph', () => {
         manifestVersion: 1,
         name: 'demo',
         targets: ['web'],
-        architecture: 'single-app',
+        architecture: 'monorepo',
         frontend: { framework: 'next', language: 'typescript' },
         backend: { framework: 'hono' },
         database: { engine: 'postgresql', orm: 'prisma' },

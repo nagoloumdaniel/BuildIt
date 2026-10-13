@@ -233,3 +233,24 @@ describe('parseManifest — aucun message vide', () => {
     }
   });
 });
+
+describe('un frontend et un backend exigent le monorepo', () => {
+  const base = {
+    manifestVersion: 1,
+    name: 'demo',
+    targets: ['web', 'api'],
+    frontend: { framework: 'next', language: 'typescript' },
+    backend: { framework: 'hono' },
+  };
+
+  it('refuse un seul paquet, nommément', () => {
+    const result = parseManifest({ ...base, architecture: 'single-app' });
+    expect(result.ok ? [] : result.issues.map((issue) => issue.code)).toEqual([
+      'MANIFEST_APPS_NEED_MONOREPO',
+    ]);
+  });
+
+  it('accepte le monorepo', () => {
+    expect(parseManifest({ ...base, architecture: 'monorepo' }).ok).toBe(true);
+  });
+});
