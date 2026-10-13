@@ -62,7 +62,7 @@ Options : `--dir`, `--recipes <a,b>`, `--no-install`, `--no-git`, `--dry-run`, `
 
 ## `pf graph [manifest.json] [--preset <p>]`
 
-La stack résolue : chaque technologie, sa catégorie, certifiée (`✓`) ou seulement déclarée (`·`), celles que le moteur ajoute et **qui les exige**, le statut de la stack (certifiée si toutes le sont, expérimentale sinon) et les avertissements (licences…). Sans argument, lit `pf.manifest.json`.
+La stack résolue : chaque technologie, sa catégorie, certifiée (`✓`) ou seulement déclarée (`·`), celles que le moteur ajoute et **qui les exige**, le statut de la stack (certifiée si toutes le sont, déclarée sinon) et les avertissements (licences…). Sans argument, lit `pf.manifest.json`.
 
 ## `pf add <technologie> [--manifest <fichier>] [--yes]`
 

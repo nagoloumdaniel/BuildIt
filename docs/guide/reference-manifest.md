@@ -130,7 +130,7 @@ et un message :
 | Question | Qui la tranche |
 |---|---|
 | « Ce slug existe-t-il au catalogue ? » | le **registry** (`pf add auth` → « Technologie inconnue ») |
-| « Ces technologies vont-elles ensemble ? » | le **compatibility engine** (deux ORM → refus, `Drizzle` → expérimental) |
+| « Ces technologies vont-elles ensemble ? » | le **compatibility engine** (deux ORM → refus, `Drizzle` → déclarée) |
 
 Un manifest peut donc être **valide et ingénérable** : c'est voulu — le manifest
 décrit une intention, le moteur dit si elle tient. Voir

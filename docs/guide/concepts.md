@@ -13,7 +13,7 @@ peut pas deviner en lisant une sortie de commande.
       CLI ─┘                                    │
                                                 ▼
                      resolve : registry (identité) + compatibility (combinaison,
-                     ajouts exigés, statut certifié/expérimental)
+                     ajouts exigés, statut certifié/déclaré)
                                                 │
                           Recettes ──► Templates ──► File Plan
                                                 │
@@ -63,7 +63,6 @@ $ pnpm pf add auth
 
 $ pnpm pf add drizzle --manifest pf.manifest.json --yes
 + Drizzle → database.orm (remplace prisma)
-! Combinaison expérimentale : Drizzle n’est couverte par aucun test de génération. Le projet sera généré, sans garantie qu’il compile.   # combinaison
 ```
 
 Cette séparation n'est pas une élégance gratuite : elle est ce qui permet à un
@@ -139,15 +138,17 @@ cas du preset SaaS), `orm` est exclusive. La déduire de la seule catégorie ser
 faux ; elle vit dans
 [`packages/compatibility/src/arity.ts`](../../packages/compatibility/src/arity.ts).
 
-### Certifié, ou expérimental
+### Certifié, ou déclaré
 
 Une combinaison est **certifiée** si *toutes* ses technologies le sont : le test
 de fumée les génère, les installe, les construit, les démarre. Sinon elle est
-**expérimentale** : le projet est généré, mais aucun test ne garantit qu'il
-compile (§24 : « ne pas générer de combinaisons non testées »).
+**déclarée** : chaque technologie du catalogue est planifiée à sec par la suite
+`catalogue-coverage.test.ts` (paquets, variables, scripts de CI cohérents),
+sans être compilée. Aucun avertissement n'est affiché : le moteur refuse ce qui
+ne peut pas fonctionner, il ne prévient pas pour ce qui le peut.
 
 ```text
-mon-api — 12 technologies, stack expérimentale
+mon-api — 12 technologies, stack déclarée
   · orm              Drizzle (drizzle)          ← déclarée : hors test de fumée
   ✓ backend          Hono (hono)
 ```

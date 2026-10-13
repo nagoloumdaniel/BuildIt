@@ -110,7 +110,7 @@ Options : `--dir`, `--recipes <a,b>`, `--no-install`, `--no-git`, `--dry-run`,
 
 La stack résolue : chaque technologie, sa catégorie, certifiée (`✓`) ou déclarée
 (`·`), celles que le moteur ajoute **et qui les exige**, le statut de la stack, et
-les avertissements (licences, combinaison expérimentale). Sans argument, lit
+les avertissements (licences, technologies dépréciées). Sans argument, lit
 `pf.manifest.json`.
 
 ### `pf add <technologie> [--manifest <fichier>] [--yes]`
@@ -128,7 +128,6 @@ $ pnpm pf add stripe --manifest pf.manifest.json --yes
 
 $ pnpm pf add drizzle --manifest pf.manifest.json --yes
 + Drizzle → database.orm (remplace prisma)
-! Combinaison expérimentale : Drizzle n’est couverte par aucun test de génération. Le projet sera généré, sans garantie qu’il compile.
 ```
 
 Une technologie qui n'a pas de sens seule est refusée **avec la raison** :

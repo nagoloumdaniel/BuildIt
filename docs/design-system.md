@@ -51,7 +51,7 @@ existe.**
 | `Illustration` | les trois dessins de la maison : `forge`, `lost`, `empty` |
 | `Logo`, `Wordmark` | le logo, qui suit le thème sans JavaScript (WebP en image de fond) |
 | `Card`, `CardHead` | une unité de décision délimitée |
-| `Stepper` | les douze numéros sur une seule ligne de progression qui se remplit, à toutes les largeurs |
+| `Stepper` | les douze numéros sur une ligne de progression à partir de 48rem ; une simple barre en dessous |
 | `BubbleNav` | la navigation en pilules, dans sa bulle de l'en-tête |
 | `CopyButton`, `CommandLine`, `CommandSteps` | une valeur technique et sa copie, une marche à suivre |
 | `PickCard` | la carte qui **est** le geste : l'appuyer ouvre l'explorateur |
@@ -83,7 +83,8 @@ Les classes `pf-*` de `globals.css` restent disponibles : `pf-btn`,
 Les zones qui ont leur propriétaire ont leur feuille, importée par
 `globals.css` : `src/styles/journey.css` (stepper, glissement d'étape,
 annulation), `output.css` (sorties d'un projet), `architecture.css` (arbre
-commenté). Même règles que la feuille principale.
+commenté), `graph.css` (graphe et légende), `share.css` (plan du projet,
+lien de partage), `clone.css` (copie hébergée d'un dépôt). Même règles que la feuille principale.
 
 Rien n'y est déclaré sans usage : une classe ou un jeton qui ne sert nulle part
 est du dessin mort, il part avec le reste. L'audit se fait en comparant les

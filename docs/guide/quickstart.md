@@ -355,7 +355,7 @@ saas — 17 technologies, stack certifiée
 ```
 
 `✓` : la fiche est certifiée (un test de génération la couvre). `·` : elle est
-seulement déclarée au catalogue — la combinaison devient alors « expérimentale ».
+seulement déclarée au catalogue — la combinaison est alors « déclarée » : planifiée et vérifiée à sec, sans test de compilation.
 Voir [Concepts](concepts.md).
 
 ## 8. Le configurateur web
@@ -431,13 +431,12 @@ seul piège de la ligne de commande lancée depuis les sources.
 ✓ <dossier>/pf.manifest.json mis à jour.
 
 + Drizzle → database.orm (remplace prisma)
-! Combinaison expérimentale : Drizzle n’est couverte par aucun test de génération. Le projet sera généré, sans garantie qu’il compile.
 ! Redis est sous licence SSPL-1.0, qui impose des contraintes de redistribution. Vérifiez sa compatibilité avec votre usage.
 ✓ <dossier>/pf.manifest.json mis à jour.
 ```
 
 ```text
-mon-api — 12 technologies, stack expérimentale
+mon-api — 12 technologies, stack déclarée
 
   ✓ linting          Biome (biome)
   ✓ containers       Docker (docker)
@@ -453,7 +452,6 @@ mon-api — 12 technologies, stack expérimentale
   ✓ validation       Zod (zod)  ← ajoutée : exigée par hono
 
 ✓ certifiée (prouvée par le test de fumée) · · déclarée
-! Combinaison expérimentale : Drizzle n’est couverte par aucun test de génération. Le projet sera généré, sans garantie qu’il compile.
 ! Redis est sous licence SSPL-1.0, qui impose des contraintes de redistribution. Vérifiez sa compatibilité avec votre usage.
 ```
 
