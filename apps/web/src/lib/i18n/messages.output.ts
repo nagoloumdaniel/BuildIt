@@ -21,9 +21,24 @@ export const FR_OUTPUT = {
     folderNote:
       'Le projet est écrit dans un dossier de cette machine, puis ses dépendances sont installées si vous le souhaitez.',
     folderOpening: 'Fenêtre de l’explorateur ouverte sur le bureau de cette machine…',
-    folderHostedTitle: 'Écriture dans un dossier indisponible ici',
+    folderHostedTitle: 'Ce navigateur ne sait pas écrire dans un dossier',
     folderHostedBody:
-      'BuildIt ne peut pas écrire sur votre machine depuis le web. Lancez-le en local avec la commande ci-dessous, ou téléchargez le ZIP.',
+      'Ouvrez BuildIt dans Chrome ou Edge pour choisir un dossier, téléchargez le ZIP, ou lancez BuildIt en local avec la commande ci-dessous.',
+    browserNote:
+      'Le navigateur écrit les fichiers dans le dossier choisi. L’installation des dépendances ne peut pas se lancer depuis une page web : les commandes s’affichent à la fin, prêtes à copier.',
+    browserWriting: (written: number, total: number) =>
+      `Écriture des fichiers dans le dossier choisi : ${written} sur ${total}…`,
+    browserPreparing: 'Génération des fichiers par le moteur…',
+    browserDone: (count: number) =>
+      `Génération terminée : ${count} fichier${count > 1 ? 's' : ''} écrit${count > 1 ? 's' : ''}.`,
+    browserTaken:
+      'Ce dossier contient déjà un dossier du même nom, non vide. Rien n’a été écrasé : choisissez un autre emplacement.',
+    browserFailed: 'L’écriture s’est arrêtée. Les fichiers déjà écrits sont restés en place.',
+    browserDenied: 'Le navigateur n’a pas obtenu le droit d’écrire dans ce dossier.',
+    installTitle: 'Installer les dépendances dans votre terminal',
+    installHint:
+      'Une page web ne peut pas lancer de programme sur votre machine : copiez ces commandes dans un terminal ouvert sur le dossier choisi.',
+    installWhat: 'la commande',
     folderHostedWhat: 'la commande pour lancer BuildIt en local',
     pickCancelled: 'Aucun dossier choisi.',
     pickFailed:
@@ -90,9 +105,24 @@ export const EN_OUTPUT: Widen<typeof FR_OUTPUT> = {
     folderNote:
       'The project is written into a folder on this machine, then its dependencies are installed if you wish.',
     folderOpening: 'Explorer window open on this machine’s desktop…',
-    folderHostedTitle: 'Writing to a folder is not available here',
+    folderHostedTitle: 'This browser cannot write to a folder',
     folderHostedBody:
-      'BuildIt cannot write to your machine from the web. Run it locally with the command below, or download the ZIP.',
+      'Open BuildIt in Chrome or Edge to pick a folder, download the ZIP, or run BuildIt locally with the command below.',
+    browserNote:
+      'The browser writes the files into the chosen folder. Installing dependencies cannot start from a web page: the commands are shown at the end, ready to copy.',
+    browserWriting: (written: number, total: number) =>
+      `Writing files into the chosen folder: ${written} of ${total}…`,
+    browserPreparing: 'The engine is generating the files…',
+    browserDone: (count: number) =>
+      `Generation complete: ${count} file${count > 1 ? 's' : ''} written.`,
+    browserTaken:
+      'This folder already holds a non-empty folder with the same name. Nothing was overwritten: pick another location.',
+    browserFailed: 'Writing stopped. Files already written were left in place.',
+    browserDenied: 'The browser did not get permission to write into this folder.',
+    installTitle: 'Install dependencies in your terminal',
+    installHint:
+      'A web page cannot run programs on your machine: copy these commands into a terminal opened on the chosen folder.',
+    installWhat: 'the command',
     folderHostedWhat: 'the command to run BuildIt locally',
     pickCancelled: 'No folder chosen.',
     pickFailed: 'The explorer could not open on this machine. Download the ZIP, or try again.',

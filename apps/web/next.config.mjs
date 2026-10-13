@@ -26,6 +26,15 @@ const config = {
   images: {
     unoptimized: true,
   },
+  /**
+   * Les gabarits du générateur sont lus sur le disque à l'exécution : rien ne
+   * les importe, donc le traçage de Next ne les voit pas et la fonction
+   * déployée partait sans eux (« template introuvable » en production). On
+   * les embarque explicitement, pour toutes les routes et actions.
+   */
+  outputFileTracingIncludes: {
+    '/**': ['../../packages/generator/templates/**/*'],
+  },
   // Les paquets du moteur sont des paquets workspace qui publient leur
   // **source** (`"import": "./src/index.ts"`) : sans cette liste, webpack les
   // prend pour des dépendances ordinaires de `node_modules` et bute sur du

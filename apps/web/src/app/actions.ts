@@ -24,7 +24,7 @@ import {
 } from '../lib/engine';
 import { isHostedEnvironment } from '../lib/hosting';
 import { readRegistry, unregisterGenerated } from '../lib/output-registry';
-import { generateArchive } from './create/generate/archive';
+import { type GeneratedFilesView, generateArchive, generateFiles } from './create/generate/archive';
 import { checkOutputDestination } from './create/generate/output-destination';
 
 /**
@@ -225,6 +225,21 @@ export async function workspaceRootAction(): Promise<string> {
  * navigateur choisit où l'archive atterrit. C'est la même implémentation que
  * la sortie hébergée de `generateProjectAction` (`generateArchive`).
  */
+/** Les fichiers du projet, que le navigateur écrira lui-même (sortie dossier en hébergé). */
+export async function generateFilesAction(input: unknown): Promise<GeneratedFilesView> {
+  const manifest = parseManifest(input);
+  if (!manifest.ok) {
+    return {
+      ok: false,
+      files: [],
+      bytes: 0,
+      warnings: [],
+      issues: manifest.issues.map((issue) => issue.message),
+    };
+  }
+  return generateFiles(manifest.value);
+}
+
 export async function generateZipAction(input: unknown): Promise<GenerationView> {
   const manifest = parseManifest(input);
   if (!manifest.ok) {

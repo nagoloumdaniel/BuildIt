@@ -1,3 +1,5 @@
+import { existsSync } from 'node:fs';
+import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { resolve, type Selection } from '@buildit/compatibility';
 import type { Manifest } from '@buildit/manifest';
@@ -140,10 +142,29 @@ function toIssues(issues: readonly Issue<string>[]): PipelineIssue[] {
 }
 
 /**
- * Templates livrés avec le paquet. Résolu depuis ce fichier : `src/` en
- * développement, `dist/` une fois publié — le dossier est à côté des deux.
+ * Templates livrés avec le paquet.
+ *
+ * Résolu d'abord depuis ce fichier : `src/` en développement, `dist/` une fois
+ * publié — le dossier est à côté des deux. Mais un bundler (webpack, dans le
+ * configurateur web) fige `import.meta.url` au chemin **de la machine de
+ * build** : sur Vercel, `/vercel/path0/packages/generator/templates` n'existe
+ * plus dans la fonction déployée, et chaque gabarit était « introuvable ».
+ * D'où les replis, évalués à l'exécution : la variable `PF_TEMPLATES_ROOT`,
+ * puis le dossier tel qu'il est embarqué à côté du répertoire courant
+ * (`outputFileTracingIncludes` dans `apps/web/next.config.mjs`).
  */
-const DEFAULT_TEMPLATES_ROOT = fileURLToPath(new URL('../templates', import.meta.url));
+function defaultTemplatesRoot(): string {
+  const fromModule = fileURLToPath(new URL('../templates', import.meta.url));
+  const candidates = [
+    process.env['PF_TEMPLATES_ROOT'],
+    fromModule,
+    join(process.cwd(), 'packages', 'generator', 'templates'),
+    join(process.cwd(), '..', '..', 'packages', 'generator', 'templates'),
+  ].filter((value): value is string => value !== undefined && value !== '');
+  return candidates.find((candidate) => existsSync(candidate)) ?? fromModule;
+}
+
+const DEFAULT_TEMPLATES_ROOT = defaultTemplatesRoot();
 
 function requireRecipeCatalogue(options: PipelineOptions): ParseResult<RecipeCatalogue, string> {
   if (options.recipeCatalogue !== undefined) {

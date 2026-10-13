@@ -59,3 +59,59 @@ export async function generateArchive(manifest: Manifest): Promise<GenerationVie
     await rm(tmpRoot, { recursive: true, force: true });
   }
 }
+
+/** Un fichier du projet, tel que le navigateur l'écrira : chemin relatif et contenu. */
+export interface GeneratedFile {
+  readonly path: string;
+  readonly base64: string;
+}
+
+export interface GeneratedFilesView {
+  readonly ok: boolean;
+  readonly files: readonly GeneratedFile[];
+  readonly bytes: number;
+  readonly warnings: readonly string[];
+  readonly issues: readonly string[];
+}
+
+/**
+ * Les fichiers du projet, pour que **le navigateur** les écrive.
+ *
+ * En hébergé, le serveur n'a aucun accès au disque de l'utilisateur. Le
+ * navigateur, lui, peut écrire dans un dossier que l'utilisateur vient de
+ * désigner (File System Access API). Le serveur génère donc dans un dossier
+ * temporaire isolé, comme pour l'archive, et rend les fichiers un par un au
+ * lieu de les compresser : le navigateur n'a pas à décompresser, et il peut
+ * compter réellement ce qu'il a écrit.
+ */
+export async function generateFiles(manifest: Manifest): Promise<GeneratedFilesView> {
+  const tmpRoot = await mkdtemp(join(tmpdir(), 'buildit-files-'));
+  const directory = join(tmpRoot, manifest.name);
+  try {
+    const result = await generateProject(manifest, directory);
+    if (!result.ok) {
+      return {
+        ok: false,
+        files: [],
+        bytes: 0,
+        warnings: [],
+        issues: result.issues.map((issue) => issue.message),
+      };
+    }
+    const files = await Promise.all(
+      result.value.report.written.map(async (file) => ({
+        path: file,
+        base64: (await readFile(join(directory, ...file.split('/')))).toString('base64'),
+      })),
+    );
+    return {
+      ok: true,
+      files,
+      bytes: result.value.report.bytes,
+      warnings: result.value.warnings.map((warning) => warning.message),
+      issues: [],
+    };
+  } finally {
+    await rm(tmpRoot, { recursive: true, force: true });
+  }
+}

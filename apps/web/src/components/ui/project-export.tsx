@@ -5,6 +5,7 @@ import { type ReactElement, useCallback, useEffect, useRef, useState } from 'rea
 import {
   checkOutputDestinationAction,
   type GenerationView,
+  generateFilesAction,
   generateZipAction,
 } from '../../app/actions';
 import { installProjectAction } from '../../app/actions-node';
@@ -17,10 +18,11 @@ import {
   streamGeneration,
 } from '../../app/create/generate/stream-client';
 import { PickCard } from '../../app/open/pick-card';
+import { canWriteInBrowser, pickWritableFolder, writeProject } from '../../lib/browser-write';
 import { downloadZip } from '../../lib/download-zip';
 import { useLocale } from '../../lib/i18n/provider';
 import { formatBytes } from '../../lib/projects';
-import { CommandLine } from './copy';
+import { CommandLine, CommandSteps } from './copy';
 import { IssueList } from './empty-state';
 import { Icon } from './icon';
 import { LoadingLine, ProgressBar, Spinner } from './loading';
@@ -68,6 +70,15 @@ type Stage =
   | { readonly kind: 'zipping' }
   | { readonly kind: 'zipped'; readonly zipBase64: string }
   | { readonly kind: 'zipFailed'; readonly issues: readonly string[] }
+  /** Hébergé : le navigateur écrit lui-même dans le dossier choisi. */
+  | { readonly kind: 'browserWriting'; readonly written: number; readonly total: number }
+  | { readonly kind: 'browserDone'; readonly directory: string; readonly written: number }
+  | {
+      readonly kind: 'browserFailed';
+      readonly message: string;
+      readonly issues: readonly string[];
+      readonly directory?: string;
+    }
   | {
       readonly kind: 'destination';
       readonly parent: string;
@@ -168,11 +179,14 @@ export function ProjectExport({
   const [picking, setPicking] = useState(false);
   /** `null` tant que le serveur n'a pas dit s'il est sur la machine de l'utilisateur. */
   const [local, setLocal] = useState<boolean | null>(null);
+  /** Le navigateur sait-il écrire dans un dossier ? Lu après hydratation. */
+  const [browserWrite, setBrowserWrite] = useState(false);
   const following = useRef<AbortController | null>(null);
   const alive = useRef(true);
 
   useEffect(() => {
     alive.current = true;
+    setBrowserWrite(canWriteInBrowser());
     void canOpenNativePickerAction()
       .then((can) => {
         if (alive.current) {
@@ -218,6 +232,79 @@ export function ProjectExport({
     } catch {
       if (alive.current) {
         setStage({ kind: 'zipFailed', issues: [] });
+      }
+    }
+  }
+
+  /**
+   * La sortie dossier **en hébergé** : l'explorateur et l'écriture passent par
+   * le navigateur (File System Access API), le serveur ne fait que générer.
+   * Pas d'installation : aucune page web ne lance de programme sur la machine.
+   */
+  async function writeFromBrowser(): Promise<void> {
+    setPicking(true);
+    const picked = await pickWritableFolder();
+    if (!alive.current) {
+      return;
+    }
+    setPicking(false);
+    if (!picked.ok) {
+      setStage({
+        kind: 'choose',
+        notice: picked.reason === 'cancelled' ? o.pickCancelled : o.pickFailed,
+      });
+      return;
+    }
+    setStage({ kind: 'browserWriting', written: 0, total: 0 });
+    try {
+      const generated = await generateFilesAction(manifest);
+      if (!alive.current) {
+        return;
+      }
+      if (!generated.ok) {
+        setStage({ kind: 'browserFailed', message: o.fatal, issues: generated.issues });
+        return;
+      }
+      const outcome = await writeProject(
+        picked.handle,
+        projectName,
+        generated.files,
+        (written, total) => {
+          if (alive.current) {
+            setStage({ kind: 'browserWriting', written, total });
+          }
+        },
+      );
+      if (!alive.current) {
+        return;
+      }
+      if (!outcome.ok) {
+        setStage({
+          kind: 'browserFailed',
+          message:
+            outcome.reason === 'taken'
+              ? o.browserTaken
+              : outcome.written === 0
+                ? o.browserDenied
+                : o.browserFailed,
+          issues: [],
+          ...(outcome.written > 0 ? { directory: outcome.directory } : {}),
+        });
+        return;
+      }
+      setStage({ kind: 'browserDone', directory: outcome.directory, written: outcome.written });
+      succeed({
+        ok: true,
+        directory: '',
+        files: generated.files.map((file) => file.path),
+        bytes: generated.bytes,
+        warnings: generated.warnings,
+        steps: ['plan', 'write'],
+        issues: [],
+      });
+    } catch {
+      if (alive.current) {
+        setStage({ kind: 'browserFailed', message: o.fatal, issues: [] });
       }
     }
   }
@@ -407,15 +494,15 @@ export function ProjectExport({
             <PickCard
               busy={picking}
               busyLabel={o.folderOpening}
-              disabled={local !== true}
+              disabled={local === null || (local === false && !browserWrite)}
               icon="folderOpen"
-              note={o.folderNote}
-              onPick={() => void pick()}
+              note={local === false ? o.browserNote : o.folderNote}
+              onPick={() => void (local === false ? writeFromBrowser() : pick())}
               title={o.folderTitle}
             />
           </div>
         </fieldset>
-        {local === false ? (
+        {local === false && !browserWrite ? (
           <div className="pf-callout pf-callout-steel mt-3">
             <p className="pf-output-callout-title">{o.folderHostedTitle}</p>
             <p className="mt-1">{o.folderHostedBody}</p>
@@ -427,6 +514,61 @@ export function ProjectExport({
             {stage.notice}
           </p>
         )}
+      </div>
+    );
+  }
+
+  if (stage.kind === 'browserWriting') {
+    return (
+      <OutputProgress
+        status={
+          stage.total === 0 ? o.browserPreparing : o.browserWriting(stage.written, stage.total)
+        }
+        tone="running"
+        {...(stage.total === 0 ? {} : { value: Math.round((stage.written / stage.total) * 100) })}
+      />
+    );
+  }
+
+  if (stage.kind === 'browserDone') {
+    return (
+      <div>
+        <OutputProgress
+          directory={stage.directory}
+          status={o.browserDone(stage.written)}
+          tone="ok"
+          value={100}
+        />
+        <section className="pf-callout pf-callout-steel mt-3">
+          <p className="pf-output-callout-title">{o.installTitle}</p>
+          <p className="mt-1">{o.installHint}</p>
+          <CommandSteps
+            className="mt-2"
+            steps={[
+              { label: stage.directory, command: `cd ${projectName}` },
+              { label: 'pnpm', command: 'pnpm install' },
+              { label: 'dev', command: 'pnpm dev' },
+            ]}
+            what={o.installWhat}
+          />
+        </section>
+      </div>
+    );
+  }
+
+  if (stage.kind === 'browserFailed') {
+    return (
+      <div>
+        <OutputProgress
+          status={stage.message}
+          tone="error"
+          {...(stage.directory === undefined ? {} : { directory: stage.directory })}
+        />
+        <IssueList className="mt-2" issues={stage.issues} />
+        <button className="pf-btn mt-3" onClick={() => setStage({ kind: 'choose' })} type="button">
+          <Icon name="refresh" size={15} />
+          {t.common.retry}
+        </button>
       </div>
     );
   }
