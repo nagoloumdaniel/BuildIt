@@ -4,6 +4,9 @@
 @import "../styles/journey.css";
 @import "../styles/output.css";
 @import "../styles/architecture.css";
+@import "../styles/graph.css";
+@import "../styles/share.css";
+@import "../styles/clone.css";
 
 /*
  * Direction artistique — « Forge ».
@@ -720,12 +723,16 @@
     border-radius: 999px;
   }
 
+  /* Un rond parfait, comme les boutons thème et GitHub : largeur = hauteur. */
   .pf-locale {
     font-family: var(--pf-mono);
     font-size: 0.75rem;
     font-weight: 600;
+    height: 2rem;
     letter-spacing: 0.04em;
-    min-width: 2.5rem;
+    min-width: 2rem;
+    padding: 0;
+    width: 2rem;
   }
 
   /* --- En-tête flottante ----------------------------------------------- */

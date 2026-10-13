@@ -129,6 +129,16 @@ describe('shareOrigin — l’origine retenue', () => {
       'https://exemple.fr',
     );
   });
+
+  it('ne laisse jamais une boucle locale l’emporter sur un vrai domaine', () => {
+    expect(shareOrigin('http://127.0.0.1:4173', 'https://trybuildit.vercel.app')).toBe(
+      'https://trybuildit.vercel.app',
+    );
+    // En local, la boucle locale reste la bonne réponse.
+    expect(shareOrigin('http://127.0.0.1:4173', 'http://localhost:4173')).toBe(
+      'http://127.0.0.1:4173',
+    );
+  });
 });
 
 describe('decodeSharePayload — décoder, ou dire pourquoi', () => {

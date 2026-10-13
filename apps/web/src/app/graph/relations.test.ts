@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { EN, FR } from '../../lib/i18n/messages';
 import {
   describeEdge,
+  explainGraph,
   graphText,
   layoutGraph,
   type RelationEdge,
@@ -155,5 +156,72 @@ describe('layoutGraph — une mise en page déterministe', () => {
     expect(layout.edges).toEqual([]);
     expect(layout.width).toBeGreaterThan(0);
     expect(layout.height).toBeGreaterThan(0);
+  });
+});
+
+describe('layoutGraph — des colonnes d’exigence', () => {
+  it('place ce qui est exigé à droite de ce qui l’exige', () => {
+    const layout = layoutGraph(NODES, EDGES);
+    const at = new Map(layout.nodes.map((placed) => [placed.node.id, placed]));
+    expect(at.get('next')?.rank).toBe(0);
+    expect(at.get('typescript')?.rank).toBe(1);
+    expect(at.get('typescript')?.x ?? 0).toBeGreaterThan(at.get('next')?.x ?? 0);
+  });
+
+  it('ne trace qu’une fois une compatibilité déclarée dans les deux sens', () => {
+    const layout = layoutGraph(NODES, [
+      { from: 'next', to: 'postgresql', kind: 'compatibleWith' },
+      { from: 'postgresql', to: 'next', kind: 'compatibleWith' },
+    ]);
+    expect(layout.edges).toHaveLength(1);
+  });
+
+  it('un cycle déclaré par erreur ne bloque pas la mise en page', () => {
+    const layout = layoutGraph(NODES, [
+      { from: 'next', to: 'typescript', kind: 'requires' },
+      { from: 'typescript', to: 'next', kind: 'requires' },
+    ]);
+    expect(layout.nodes).toHaveLength(NODES.length);
+    expect(layout.edges).toHaveLength(2);
+  });
+
+  it('donne la même taille à toutes les pastilles', () => {
+    const layout = layoutGraph(NODES, EDGES);
+    expect(layout.pillWidth).toBeGreaterThan(0);
+    expect(layout.pillHeight).toBeGreaterThan(0);
+  });
+});
+
+describe('explainGraph — ce que dit le graphe affiché', () => {
+  const edges: readonly RelationEdge[] = [
+    ...EDGES,
+    { from: 'postgresql', to: 'typescript', kind: 'requires' },
+  ];
+
+  it('sépare les choix des additions', () => {
+    const explanation = explainGraph(NODES, edges);
+    expect(explanation.chosen.map((node) => node.id)).toEqual(['next', 'postgresql']);
+    expect(explanation.added.map((entry) => entry.node.id)).toEqual(['typescript']);
+  });
+
+  it('donne, pour chaque addition, ce qui l’exige', () => {
+    const [typescript] = explainGraph(NODES, edges).added;
+    expect(typescript?.requiredBy.map((node) => node.label)).toEqual(['Next.js', 'PostgreSQL']);
+  });
+
+  it('choisit pour exemple une exigence d’un choix vers une addition', () => {
+    const { example } = explainGraph(NODES, edges);
+    expect(example?.from.id).toBe('next');
+    expect(example?.to.id).toBe('typescript');
+  });
+
+  it('signale la présence d’une compatibilité', () => {
+    expect(explainGraph(NODES, EDGES).hasCompatibility).toBe(true);
+    expect(explainGraph(NODES, [EDGES[0] as RelationEdge]).hasCompatibility).toBe(false);
+  });
+
+  it('les phrases suivent la langue', () => {
+    expect(FR.graphGuide.requiredBy(['Next.js', 'Prisma'])).toBe('exigé par Next.js et Prisma');
+    expect(EN.graphGuide.requiredBy(['Next.js', 'Prisma'])).toBe('required by Next.js and Prisma');
   });
 });

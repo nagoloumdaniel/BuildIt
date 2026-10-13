@@ -101,6 +101,37 @@ describe('ArchitectureView : l’arbre', () => {
     const shallow = render({ kind: 'ready', files: ['lib/db.ts'], warnings: [] });
     expect(shallow).toContain('Tout replier');
   });
+
+  it('l’ancienne phrase d’explication générale a disparu, dans les deux langues', () => {
+    expect(html).not.toContain('ce qu’on y range');
+    expect('hint' in FR_ARCHITECTURE.architecture).toBe(false);
+    expect('hint' in EN_ARCHITECTURE.architecture).toBe(false);
+  });
+
+  it('les dossiers dessinent leurs branches : une liste imbriquée par niveau', () => {
+    // Les filets (tronc, coudes, « └ » du dernier) sont posés en CSS sur
+    // `.pf-arch-children > .pf-arch-node` : il faut donc ces deux classes.
+    expect(html).toContain('<ul class="pf-arch-children"');
+    expect(html).toContain('<li class="pf-arch-node">');
+  });
+});
+
+describe('ArchitectureView : la racine', () => {
+  const status: ArchitectureStatus = { kind: 'ready', files: FILES, warnings: [] };
+
+  it('avec un nom de projet, tout part d’une racine qui compte tous les fichiers', () => {
+    const html = renderToStaticMarkup(<ArchitectureView rootName="quai3" status={status} />);
+    expect(html).toContain('pf-arch-root');
+    expect(html).toMatch(/quai3\/<\/span><span class="pf-mono pf-arch-count">7 fichiers/);
+    // Le premier niveau s'accroche à la racine par les mêmes filets.
+    expect(html).toContain('class="pf-arch-tree pf-arch-children"');
+  });
+
+  it('sans nom, le premier niveau est sa propre racine, sans filet', () => {
+    const html = renderToStaticMarkup(<ArchitectureView status={status} />);
+    expect(html).not.toContain('pf-arch-root');
+    expect(html).toContain('class="pf-arch-tree"');
+  });
 });
 
 describe('les textes de l’architecture', () => {

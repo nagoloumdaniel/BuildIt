@@ -8,10 +8,28 @@
  */
 
 @layer components {
-  /* --- L'arbre ---------------------------------------------------------- */
+  /* --- La géométrie ------------------------------------------------------ */
 
-  /* Des listes imbriquées : la profondeur se lit au retrait et au filet, pas
-     seulement à la couleur. */
+  /* Toutes les mesures de l'arbre dérivent de ces variables : le tronc d'un
+     niveau tombe au milieu de l'icône de son dossier, et le coude de chaque
+     enfant arrive au milieu de sa première ligne. Changer une valeur ici
+     garde les filets justes, au large comme à 360 px. */
+  .pf-arch {
+    --arch-icon: 16px;
+    --arch-chev: 12px;
+    --arch-gap: 0.375rem;
+    /* L'espace avant l'icône : celui du chevron, laissé vide pour un fichier,
+       pour que toutes les icônes d'un niveau s'alignent. */
+    --arch-lead: calc(var(--arch-chev) + var(--arch-gap));
+    --arch-elbow: 1rem;
+    --arch-row-pad: 0.1875rem;
+    --arch-head: 1.75rem;
+    --arch-mid: calc(var(--arch-row-pad) + var(--arch-head) / 2);
+    --arch-line: var(--pf-border-strong);
+  }
+
+  /* --- L'arbre ----------------------------------------------------------- */
+
   .pf-arch-tree,
   .pf-arch-children {
     list-style: none;
@@ -19,33 +37,101 @@
     padding: 0;
   }
 
+  /* Le tronc d'un niveau est posé sous l'icône du dossier parent. */
   .pf-arch-children {
-    border-left: 1px solid var(--pf-border);
-    margin-left: 0.4rem;
-    padding-left: 0.75rem;
+    margin-left: calc(var(--arch-lead) + var(--arch-icon) / 2 - 0.5px);
   }
 
   .pf-arch-children[hidden] {
     display: none;
   }
 
+  /* Une branche qui s'ouvre apparaît en fondu, sans glisser : l'opacité seule,
+     pour que rien ne se déplace sous le curseur qui vient de cliquer. */
+  .pf-arch-node > .pf-arch-children:not([hidden]) {
+    animation: pf-arch-reveal var(--pf-fast) var(--pf-ease);
+  }
+
+  @keyframes pf-arch-reveal {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+
+  /* --- Les filets -------------------------------------------------------- */
+
+  /* Chaque enfant porte son morceau de tronc (`::before`, toute sa hauteur,
+     branche dépliée comprise) et son coude (`::after`). Les morceaux se
+     touchent d'un enfant à l'autre : le tronc paraît continu. */
+  .pf-arch-children > .pf-arch-node {
+    padding-left: var(--arch-elbow);
+    position: relative;
+  }
+
+  .pf-arch-children > .pf-arch-node::before,
+  .pf-arch-children > .pf-arch-node::after {
+    content: "";
+    left: 0;
+    pointer-events: none;
+    position: absolute;
+  }
+
+  .pf-arch-children > .pf-arch-node::before {
+    border-left: 1px solid var(--arch-line);
+    bottom: 0;
+    top: 0;
+  }
+
+  .pf-arch-children > .pf-arch-node::after {
+    border-top: 1px solid var(--arch-line);
+    top: var(--arch-mid);
+    width: calc(var(--arch-elbow) - 0.25rem);
+  }
+
+  /* Le dernier enfant ferme le tronc : un seul trait coudé, arrondi, qui
+     s'arrête à sa ligne. Rien ne descend plus bas que lui. */
+  .pf-arch-children > .pf-arch-node:last-child::before {
+    border-bottom: 1px solid var(--arch-line);
+    border-bottom-left-radius: var(--pf-radius-sm);
+    bottom: auto;
+    height: calc(var(--arch-mid) + 1px);
+    width: calc(var(--arch-elbow) - 0.25rem);
+  }
+
+  .pf-arch-children > .pf-arch-node:last-child::after {
+    content: none;
+  }
+
+  /* --- Une ligne : nom et phrase ---------------------------------------- */
+
   /* Le nom et sa phrase sur la même ligne au large ; la phrase passe dessous
      quand la place manque (`flex-wrap`), sans débordement horizontal. */
   .pf-arch-row {
-    align-items: baseline;
+    align-items: flex-start;
     column-gap: 0.75rem;
     display: flex;
     flex-wrap: wrap;
-    padding: 0.2rem 0;
-    row-gap: 0.1rem;
+    padding-block: var(--arch-row-pad);
   }
 
+  /* Une hauteur fixe pour la tête : c'est elle qui situe le coude. */
   .pf-arch-head {
     align-items: center;
     display: inline-flex;
     gap: 0.5rem;
     max-width: 100%;
+    min-height: var(--arch-head);
     min-width: 0;
+  }
+
+  /* Un fichier, la racine : pas de chevron, mais sa place, pour que l'icône
+     tombe au même endroit que celle d'un dossier voisin. */
+  .pf-arch-lead {
+    gap: var(--arch-gap);
+    padding-left: var(--arch-lead);
   }
 
   .pf-arch-toggle {
@@ -57,7 +143,7 @@
     cursor: pointer;
     display: inline-flex;
     font: inherit;
-    gap: 0.375rem;
+    gap: var(--arch-gap);
     margin-left: -0.25rem;
     min-width: 0;
     padding: 0.125rem 0.25rem;
@@ -68,13 +154,6 @@
   /* Le survol teinte le fond, il ne déplace rien (§7). */
   .pf-arch-toggle:hover {
     background: var(--pf-bg-sunken);
-  }
-
-  /* Un fichier n'a pas de chevron : un retrait de la même largeur aligne son
-     icône sur celle des dossiers voisins. */
-  .pf-arch-file {
-    gap: 0.375rem;
-    padding-left: calc(14px + 0.375rem);
   }
 
   .pf-arch-chevron {
@@ -103,6 +182,12 @@
     overflow-wrap: anywhere;
   }
 
+  /* Un dossier pèse un peu plus qu'un fichier : la charpente se lit d'abord. */
+  .pf-arch-toggle .pf-arch-name,
+  .pf-arch-root .pf-arch-name {
+    font-weight: 500;
+  }
+
   .pf-arch-count {
     color: var(--pf-muted);
     flex: none;
@@ -110,20 +195,47 @@
     white-space: nowrap;
   }
 
+  /* La phrase s'aligne sur le texte du nom : son interligne fixe et un
+     décalage égal à la moitié de l'écart avec la tête. */
   .pf-arch-note {
     color: var(--pf-muted);
     flex: 1 1 18rem;
     font-size: 0.8125rem;
-    line-height: 1.45;
+    line-height: 1.25rem;
     min-width: 0;
+    padding-top: calc((var(--arch-head) - 1.25rem) / 2);
   }
 
-  /* Au petit écran, la phrase prend toute la ligne, sous le nom, alignée sur
-     son icône plutôt que sur le chevron. */
+  /* --- Les petits écrans ------------------------------------------------- */
+
+  /* La phrase prend toute la ligne, sous le nom, alignée sur lui plutôt que
+     sur l'icône : la colonne des noms reste lisible. */
   @media (max-width: 40rem) {
     .pf-arch-note {
       flex-basis: 100%;
-      padding-left: calc(14px + 0.375rem);
+      padding-bottom: 0.125rem;
+      padding-left: calc(var(--arch-lead) + var(--arch-icon) + var(--arch-gap));
+      padding-top: 0;
+    }
+  }
+
+  /* À 360 px, chaque niveau coûte de la largeur : le chevron s'efface (l'icône
+     ouvert/fermé dit déjà l'état, `aria-expanded` aussi) et le coude se
+     raccourcit. Le retrait par niveau passe d'environ 2,7 rem à 1,25 rem. */
+  @media (max-width: 30rem) {
+    .pf-arch {
+      --arch-chev: 0px;
+      --arch-lead: 0px;
+      --arch-elbow: 0.75rem;
+    }
+
+    .pf-arch-chevron {
+      display: none;
+    }
+
+    .pf-arch-toggle {
+      margin-left: -0.125rem;
+      padding-inline: 0.125rem;
     }
   }
 
@@ -131,6 +243,10 @@
     .pf-arch-toggle,
     .pf-arch-chevron {
       transition: none;
+    }
+
+    .pf-arch-node > .pf-arch-children:not([hidden]) {
+      animation: none;
     }
   }
 }

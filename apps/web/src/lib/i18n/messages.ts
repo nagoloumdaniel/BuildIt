@@ -2,8 +2,10 @@ import { EN_ACCOUNT, FR_ACCOUNT } from './messages.account';
 import { EN_ARCHITECTURE, FR_ARCHITECTURE } from './messages.architecture';
 import { EN_BUILD, FR_BUILD } from './messages.build';
 import { EN_DASHBOARD, FR_DASHBOARD } from './messages.dashboard';
+import { EN_GRAPH, FR_GRAPH } from './messages.graph';
 import { EN_JOURNEY, FR_JOURNEY } from './messages.journey';
 import { EN_OUTPUT, FR_OUTPUT } from './messages.output';
+import { EN_SHARE, FR_SHARE } from './messages.share';
 import { EN_WIZARD, FR_WIZARD } from './messages.wizard';
 import { EN_WORKSPACE, FR_WORKSPACE } from './messages.workspace';
 import type { Widen } from './widen';
@@ -94,7 +96,7 @@ const FR_CORE = {
   footer: {
     navLabel: 'Raccourcis du pied de page',
     licenceLine: 'Logiciel libre, licence MIT',
-    version: '0.2.0',
+    version: '0.3.0',
   },
 
   picker: {
@@ -247,7 +249,7 @@ const EN_CORE: Widen<typeof FR_CORE> = {
   footer: {
     navLabel: 'Footer shortcuts',
     licenceLine: 'Open source, MIT licence',
-    version: '0.2.0',
+    version: '0.3.0',
   },
 
   picker: {
@@ -345,6 +347,8 @@ export const FR = {
   ...FR_JOURNEY,
   ...FR_OUTPUT,
   ...FR_ARCHITECTURE,
+  ...FR_GRAPH,
+  ...FR_SHARE,
 };
 
 /** La forme du dictionnaire : le français fait foi. */
@@ -360,6 +364,8 @@ export const EN: Messages = {
   ...EN_JOURNEY,
   ...EN_OUTPUT,
   ...EN_ARCHITECTURE,
+  ...EN_GRAPH,
+  ...EN_SHARE,
 };
 
 export const MESSAGES: Readonly<Record<'fr' | 'en', Messages>> = { fr: FR, en: EN };

@@ -1,7 +1,7 @@
 'use client';
 
 import type { Category } from '@buildit/registry';
-import { type ReactElement, useEffect, useMemo, useState } from 'react';
+import { type ReactElement, useEffect, useMemo, useRef, useState } from 'react';
 import { ErrorState } from '../../../components/ui/error-state';
 import { Icon } from '../../../components/ui/icon';
 import { LoadingLine } from '../../../components/ui/loading';
@@ -10,6 +10,7 @@ import { StepShell } from '../../../components/wizard/shell';
 import type { OptionView } from '../../../lib/engine';
 import { useMessages } from '../../../lib/i18n/provider';
 import { loadOptionsAction } from '../../actions';
+import { currentDeepLink, revealSection } from '../blueprint/deep-link';
 import {
   CAPABILITY_FAMILIES,
   type CapabilityCategory,
@@ -41,6 +42,19 @@ export default function CapabilitiesPage(): ReactElement {
   // Un rechargement à la demande : la panne du moteur se réessaie sans quitter
   // l'écran ni perdre le brouillon.
   const [attempt, setAttempt] = useState(0);
+  const optionsRef = useRef<HTMLElement>(null);
+
+  // L'arrivée par un crayon du plan (`/create/capabilities?family=payments`) :
+  // la famille demandée est ouverte et ses options amenées sous les yeux. Une
+  // famille inconnue est ignorée : l'écran s'ouvre comme d'habitude.
+  useEffect(() => {
+    const requested = currentDeepLink('family');
+    const known = CAPABILITY_FAMILIES.find((category) => category === requested);
+    if (known !== undefined) {
+      setFamily(known);
+      revealSection(optionsRef.current);
+    }
+  }, []);
 
   // Le brouillon est dans les dépendances : chaque bascule change la sélection,
   // donc l'état des options (une capacité peut en débloquer ou en bloquer une
@@ -116,7 +130,11 @@ export default function CapabilitiesPage(): ReactElement {
         </div>
       </fieldset>
 
-      <section className="mt-6" aria-label={t.wizard.capabilities.optionsLabel}>
+      <section
+        ref={optionsRef}
+        className="pf-deep-target mt-6"
+        aria-label={t.wizard.capabilities.optionsLabel}
+      >
         <h2 className="pf-label">{familyInfo.label}</h2>
         {loading ? <LoadingLine>{t.wizard.capabilities.loading}</LoadingLine> : null}
         {failure === undefined ? null : (

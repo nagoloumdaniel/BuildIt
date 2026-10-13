@@ -14,7 +14,7 @@ import { useMessages } from '../../lib/i18n/provider';
 import { loadGraphAction } from '../actions';
 import { manifestTechnologyIds } from '../create/blueprint/summary';
 import { GraphDiagram } from './GraphDiagram';
-import { GraphEdgesTable, GraphNodesTable } from './GraphTables';
+import { GraphGuide } from './GraphGuide';
 import { layoutGraph, type RelationEdge, type RelationNode } from './relations';
 
 interface GraphState {
@@ -26,8 +26,10 @@ interface GraphState {
 /**
  * Dependency Graph (§6.11) — la vue avancée, **accessible depuis le Blueprint,
  * jamais imposée**. Elle est hors parcours (`ScreenShell`, sans progression) et
- * n'a aucune dépendance : pas de librairie de graphe, un SVG déterministe plus
- * deux tableaux qui sont l'équivalent textuel complet.
+ * n'a aucune dépendance : pas de librairie de graphe, un dessin déterministe
+ * (dont la description porte l'équivalent textuel complet) puis une lecture
+ * propre au graphe affiché : qui a été choisi, ce que le moteur a ajouté et
+ * à cause de quoi, et la légende du dessin.
  *
  * La sélection est celle du manifest canonique quand il est constructible :
  * le graphe montre alors exactement ce que le moteur a résolu, additions
@@ -150,57 +152,21 @@ export default function GraphPage(): ReactElement {
             </span>
           </p>
 
-          <section className="pf-card pf-card-pad mt-4">
-            <div className="flex flex-wrap items-baseline justify-between gap-2">
+          <section className="pf-card pf-graph-card mt-4">
+            <div className="pf-graph-card-head">
               <h2 className="pf-label flex items-center gap-2">
                 <Icon name="gitBranch" size={14} />
                 {t.graph.diagramHeading}
               </h2>
-              <p className="pf-hint">{t.graph.diagramHint}</p>
+              <p className="pf-hint">{t.graphGuide.diagramHint}</p>
             </div>
-            <div className="pf-scroll-x mt-3">
+            <div className="pf-scroll-x pf-graph-stage">
               <GraphDiagram labels={labels} layout={layout} />
             </div>
-            <p className="pf-eyebrow mt-3">{t.graph.legendTitle}</p>
-            <ul className="pf-row mt-1 list-none p-0 text-sm">
-              <li className="pf-hint flex items-center gap-2">
-                <Icon name="check" size={14} />
-                {t.graph.stateLabels.selected}
-              </li>
-              <li className="pf-hint flex items-center gap-2">
-                <Icon name="sparkles" size={14} />
-                {t.graph.stateLabels.added}
-              </li>
-              <li className="pf-hint flex items-center gap-2">
-                <Icon name="gitBranch" size={14} />
-                {t.graph.relationLabels.requires}
-              </li>
-              <li className="pf-hint flex items-center gap-2">
-                <Icon name="externalLink" size={14} />
-                {t.graph.relationLabels.compatibleWith}
-              </li>
-            </ul>
+            <p className="pf-hint pf-graph-scroll-hint">{t.graphGuide.scrollHint}</p>
           </section>
 
-          <section className="mt-5">
-            <h2 className="pf-label flex items-center gap-2">
-              <Icon name="list" size={14} />
-              {t.graph.nodesHeading}
-            </h2>
-            <div className="pf-scroll-x mt-2">
-              <GraphNodesTable nodes={graph.nodes} />
-            </div>
-          </section>
-
-          <section className="mt-5">
-            <h2 className="pf-label flex items-center gap-2">
-              <Icon name="link" size={14} />
-              {t.graph.relationsHeading}
-            </h2>
-            <div className="pf-scroll-x mt-2">
-              <GraphEdgesTable edges={graph.edges} labels={labels} />
-            </div>
-          </section>
+          <GraphGuide edges={graph.edges} nodes={graph.nodes} />
         </div>
       )}
     </ScreenShell>

@@ -1,4 +1,5 @@
 import { type Manifest, parseManifest, serializeManifest } from '@buildit/manifest';
+import { isLoopbackOrigin } from './origin';
 
 /**
  * Le codec du partage en lecture seule (§20, décision 9.1).
@@ -72,13 +73,21 @@ export function encodeShareLink(manifest: Manifest, base = ''): string {
 }
 
 /**
- * L'origine à retenir : celle configurée si elle existe, celle du navigateur
- * sinon. Une base configurée sert quand l'UI est atteinte par un autre nom que
- * `127.0.0.1` (tunnel, nom d'hôte) — Phase 12.
+ * L'origine à retenir : celle que le serveur propose si elle existe, celle du
+ * navigateur sinon. Une base proposée sert quand l'UI est atteinte par un autre
+ * nom que `127.0.0.1` (tunnel, nom d'hôte, site hébergé) — Phase 12.
+ *
+ * Dernier garde-fou : une base en boucle locale ne l'emporte jamais sur une
+ * page ouverte depuis un vrai domaine. Le navigateur sait sous quel nom il a
+ * atteint le site ; un lien `127.0.0.1` envoyé depuis le site public ne
+ * s'ouvrirait chez personne.
  */
 export function shareOrigin(configured: string, current: string): string {
-  const trimmed = configured.trim();
-  return trimmed === '' ? current : trimBase(trimmed);
+  const trimmed = trimBase(configured);
+  if (trimmed === '') {
+    return current;
+  }
+  return isLoopbackOrigin(trimmed) && !isLoopbackOrigin(current) ? current : trimmed;
 }
 
 /**

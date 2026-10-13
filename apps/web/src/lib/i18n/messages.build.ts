@@ -72,11 +72,6 @@ export const FR_BUILD = {
       engineDown: 'Le moteur n’a pas répondu.',
       empty: 'Aucun hébergeur pour cette sélection.',
       chosenBadge: 'Choisi',
-      manifestLegend: 'Traduction dans le manifest',
-      manifestTitle: 'Ce que l’écran écrit dans le manifest',
-      dockerWrites: 'rejoint infra, quand Docker est cochée.',
-      ciWrites: 'rejoint infra, quand l’intégration continue est cochée.',
-      hostingWrites: 'rejoint infra, l’hébergeur choisi ci-dessus.',
     },
 
     /**
@@ -98,16 +93,8 @@ export const FR_BUILD = {
         'Le catalogue n’a pas pu être lu : les technologies restent affichées par leur identifiant.',
       statusChecking: 'Vérification de la sélection…',
       statusCertified: 'Sélection certifiée : le moteur connaît cette combinaison.',
-      statusExperimental:
-        'Sélection expérimentale : le moteur l’accepte, mais aucun preset ne la certifie.',
+      statusValid: 'Sélection valide : le moteur accepte cette combinaison.',
       graphLink: 'Voir le graphe de dépendances',
-      shareButton: 'Créer un lien de partage',
-      shareHintBefore:
-        'Le lien de partage en lecture seule (§20) porte la configuration dans son fragment d’URL : elle ne part vers aucun serveur, et il fonctionne partout où',
-      shareHintAfter: 'tourne.',
-      shareLinkLabel: 'Lien de partage (lecture seule)',
-      shareCopied: 'Lien copié dans le presse-papiers. Il est aussi affiché ci-dessous.',
-      shareManual: 'Presse-papiers indisponible ici : copiez le lien ci-dessous.',
       roles: {
         targets: 'Plateformes',
         architecture: 'Architecture',
@@ -171,7 +158,6 @@ export const FR_BUILD = {
       none: 'Aucune technologie choisie.',
       filesCount: 'Fichiers écrits',
       weight: 'Poids',
-      directoryWhat: 'le dossier du projet',
       commandWhat: 'la commande',
       warningsTitle: 'Avertissements',
       issuesTitle: 'Problèmes',
@@ -180,14 +166,6 @@ export const FR_BUILD = {
         'Le projet est terminé : ces écrans ne le modifient plus. Pour le reprendre, suivez les commandes ci-dessous.',
       download: 'Télécharger à nouveau',
       connectGithub: 'Connecter à GitHub',
-      install: {
-        open: 'Ouvrir le projet',
-        services: 'Démarrer les services',
-        env: (count: number, names: string) =>
-          `Renseigner ${count > 1 ? 'les variables' : 'la variable'} d’environnement (${names})`,
-        install: 'Installer les dépendances',
-        dev: 'Démarrer en développement',
-      },
     },
   },
 } as const;
@@ -238,11 +216,6 @@ export const EN_BUILD: Widen<typeof FR_BUILD> = {
       engineDown: 'The engine did not answer.',
       empty: 'No host for this selection.',
       chosenBadge: 'Chosen',
-      manifestLegend: 'Translation into the manifest',
-      manifestTitle: 'What this screen writes into the manifest',
-      dockerWrites: 'joins infra, when Docker is checked.',
-      ciWrites: 'joins infra, when continuous integration is checked.',
-      hostingWrites: 'joins infra, the host chosen above.',
     },
 
     blueprint: {
@@ -259,16 +232,8 @@ export const EN_BUILD: Widen<typeof FR_BUILD> = {
         'The catalogue could not be read: technologies stay displayed by their identifier.',
       statusChecking: 'Checking the selection…',
       statusCertified: 'Certified selection: the engine knows this combination.',
-      statusExperimental:
-        'Experimental selection: the engine accepts it, but no preset certifies it.',
+      statusValid: 'Valid selection: the engine accepts this combination.',
       graphLink: 'See the dependency graph',
-      shareButton: 'Create a share link',
-      shareHintBefore:
-        'The read-only share link (§20) carries the configuration in its URL fragment: it never leaves for a server, and it works wherever',
-      shareHintAfter: 'runs.',
-      shareLinkLabel: 'Share link (read-only)',
-      shareCopied: 'Link copied to the clipboard. It is also shown below.',
-      shareManual: 'Clipboard unavailable here: copy the link below.',
       roles: {
         targets: 'Platforms',
         architecture: 'Architecture',
@@ -323,7 +288,6 @@ export const EN_BUILD: Widen<typeof FR_BUILD> = {
       none: 'No technology chosen.',
       filesCount: 'Files written',
       weight: 'Size',
-      directoryWhat: 'the project folder',
       commandWhat: 'the command',
       warningsTitle: 'Warnings',
       issuesTitle: 'Problems',
@@ -332,14 +296,6 @@ export const EN_BUILD: Widen<typeof FR_BUILD> = {
         'The project is finished: these screens no longer change it. To pick it up, follow the commands below.',
       download: 'Download again',
       connectGithub: 'Connect to GitHub',
-      install: {
-        open: 'Open the project',
-        services: 'Start the services',
-        env: (count: number, names: string) =>
-          `Fill in the environment variable${count > 1 ? 's' : ''} (${names})`,
-        install: 'Install dependencies',
-        dev: 'Start in development',
-      },
     },
   },
 };

@@ -11,6 +11,7 @@ import { PathPicker } from '../../components/ui/path-picker';
 import { ScreenShell } from '../../components/wizard/shell';
 import type { Messages } from '../../lib/i18n/messages';
 import { useMessages } from '../../lib/i18n/provider';
+import { ShareLinkRow } from '../share/link-row';
 import type { AccessView, RepositoryStatusView, RoleView } from './sharing';
 
 /**
@@ -28,12 +29,10 @@ import type { AccessView, RepositoryStatusView, RoleView } from './sharing';
 
 export interface SharePanelProps {
   readonly link: string | null;
-  readonly note: string | null;
-  readonly busy: boolean;
   /** Pourquoi le lien ne peut pas être créé — `null` quand le brouillon est prêt. */
   readonly blocked: string | null;
-  readonly onCreate: () => void;
-  readonly onCopy: () => void;
+  /** Encode le lien ; `false` quand il n'a pas pu l'être. La copie vit dans `ShareLinkRow`. */
+  readonly onCreate: () => Promise<boolean> | boolean;
 }
 
 export interface RepoViewProps {
@@ -404,12 +403,14 @@ export function RepoView(props: RepoViewProps): ReactElement {
 
       {share === undefined ? null : (
         <Card className="mt-3">
-          <CardHead icon="link" note={t.repo.shareLinkNote} title={t.repo.shareLinkTitle} />
+          <CardHead icon="link" title={t.repo.shareLinkTitle} />
           {share.blocked === null ? null : (
             <>
-              <StatusMessage className="mt-2" tone="error">
-                {share.blocked}
-              </StatusMessage>
+              <div id="pf-repo-share-blocked">
+                <StatusMessage className="mt-2" tone="error">
+                  {share.blocked}
+                </StatusMessage>
+              </div>
               <div className="mt-2">
                 <a className="pf-btn" href="/create/blueprint">
                   <Icon name="arrowRight" />
@@ -418,42 +419,13 @@ export function RepoView(props: RepoViewProps): ReactElement {
               </div>
             </>
           )}
-          <div className="mt-3 flex flex-wrap items-center gap-2">
-            <Button
-              disabled={share.busy || share.blocked !== null}
-              onClick={share.onCreate}
-              variant="primary"
-            >
-              <Icon name="link" />
-              {t.repo.shareLinkCreate}
-            </Button>
-            {share.link === null ? null : (
-              <Button disabled={share.busy} onClick={share.onCopy}>
-                <Icon name="copy" />
-                {t.repo.shareLinkCopy}
-              </Button>
-            )}
-          </div>
-          {share.busy ? (
-            <LoadingLine className="mt-2">{t.repo.shareLinkCreating}</LoadingLine>
-          ) : null}
-          {share.link === null ? null : (
-            <div className="mt-3">
-              <label className="pf-label" htmlFor="pf-repo-share-link">
-                {t.repo.shareLinkLabel}
-              </label>
-              <input
-                className="pf-input pf-mono"
-                id="pf-repo-share-link"
-                onFocus={(event) => event.currentTarget.select()}
-                readOnly
-                value={share.link}
-              />
-              {share.note === null ? null : (
-                <StatusMessage className="mt-1">{share.note}</StatusMessage>
-              )}
-            </div>
-          )}
+          <ShareLinkRow
+            className="mt-3"
+            disabled={share.blocked !== null}
+            link={share.link}
+            onCreate={share.onCreate}
+            {...(share.blocked === null ? {} : { describedBy: 'pf-repo-share-blocked' })}
+          />
         </Card>
       )}
     </ScreenShell>

@@ -1,46 +1,38 @@
 'use server';
 
+import { headers } from 'next/headers';
+import { publicShareBase, type RequestOrigin } from './share/origin';
+
 /**
  * Ce que le serveur apporte au partage (§20, décision 9.1).
  *
  * **Pas l'encodage** : le manifest voyage dans le fragment de l'URL, donc
  * l'envoyer au serveur pour qu'il rende un lien contredirait la décision — le
  * manifest doit ne jamais quitter le navigateur. Le seul élément que le
- * navigateur ne peut pas connaître, c'est l'origine **publique** sous laquelle
- * l'UI est atteinte quand ce n'est pas `127.0.0.1` (tunnel, nom d'hôte, Phase 12).
+ * serveur peut apporter, c'est l'origine **publique** sous laquelle l'UI est
+ * atteinte : la décision vit dans `share/origin.ts` (pure, testée), cette
+ * action ne fait que lui passer l'environnement et les en-têtes de la requête.
  *
- * `PF_SHARE_BASE_URL` la porte. Tant qu'elle est vide, le client emploie
- * `window.location.origin` — le cas normal, local.
+ * En local, sans `PF_SHARE_BASE_URL`, elle rend `''` : le client emploie
+ * `window.location.origin`, le cas normal. En hébergé, elle ne rend jamais une
+ * boucle locale.
  */
-
-/**
- * Une origine exploitable, ou `''`.
- *
- * Refusés : absence de schéma, schéma autre que `http`/`https`, chemin, requête
- * ou fragment. Mieux vaut retomber sur l'origine du navigateur que produire un
- * lien qui ne s'ouvre nulle part.
- */
-function configuredBase(value: string | undefined): string {
-  const trimmed = (value ?? '').trim();
-  if (trimmed === '') {
-    return '';
-  }
-  let url: URL;
-  try {
-    url = new URL(trimmed);
-  } catch {
-    return '';
-  }
-  if (url.protocol !== 'http:' && url.protocol !== 'https:') {
-    return '';
-  }
-  if ((url.pathname !== '' && url.pathname !== '/') || url.search !== '' || url.hash !== '') {
-    return '';
-  }
-  return url.origin;
+export async function shareLinkBaseAction(): Promise<string> {
+  return publicShareBase(process.env, await currentRequest());
 }
 
-/** L'origine publique configurée, ou `''` : le client emploiera la sienne. */
-export async function shareLinkBaseAction(): Promise<string> {
-  return configuredBase(process.env['PF_SHARE_BASE_URL']);
+/**
+ * Le nom sous lequel la requête est arrivée, ou `null` hors requête (tests,
+ * rendu statique) : `headers()` lève alors, et l'origine se décide sans lui.
+ */
+async function currentRequest(): Promise<RequestOrigin | null> {
+  try {
+    const list = await headers();
+    return {
+      proto: list.get('x-forwarded-proto'),
+      host: list.get('x-forwarded-host') ?? list.get('host'),
+    };
+  } catch {
+    return null;
+  }
 }

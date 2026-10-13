@@ -207,7 +207,7 @@ export const FR_WIZARD = {
       modeExpertNote: 'Tout le catalogue, recherche globale et filtre de compatibilité.',
       checking: 'Compatibilité en cours',
       certified: 'Combinaison certifiée',
-      experimental: 'Combinaison expérimentale',
+      valid: 'Combinaison valide',
       issues: (count: number) => `${count} point${count > 1 ? 's' : ''} à corriger`,
       issuesTitle: 'Ces choix ne peuvent pas être générés tels quels',
       issuesBody:
@@ -507,7 +507,7 @@ export const EN_WIZARD: Widen<typeof FR_WIZARD> = {
       modeExpertNote: 'The whole catalogue, global search and a compatibility filter.',
       checking: 'Checking compatibility',
       certified: 'Certified combination',
-      experimental: 'Experimental combination',
+      valid: 'Valid combination',
       issues: (count: number) => `${count} point${count > 1 ? 's' : ''} to fix`,
       issuesTitle: 'These choices cannot be generated as they are',
       issuesBody:

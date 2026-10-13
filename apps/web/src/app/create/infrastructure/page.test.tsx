@@ -31,17 +31,25 @@ describe('écran Infrastructure (§6.9)', () => {
     expect(html).toContain('hosting');
   });
 
-  it('affiche la traduction brouillon → manifest, sans la laisser deviner', () => {
+  it('ne détaille plus la traduction brouillon → manifest : le plan du projet la montre', () => {
     const html = renderToStaticMarkup(
       <DraftProvider>
         <InfrastructurePage />
       </DraftProvider>,
     );
 
-    // Les deux identifiants que `draft-to-manifest.ts` pose à partir des
-    // booléens : l'écran le dit, l'utilisateur n'a pas à le déduire.
-    expect(html).toContain('docker');
-    expect(html).toContain('github-actions');
-    expect(html).toContain('infra');
+    expect(html).not.toContain('Ce que l’écran écrit dans le manifest');
+    expect(html).not.toContain('github-actions');
+  });
+
+  it('marque les trois sections qu’un crayon du plan peut viser', () => {
+    const html = renderToStaticMarkup(
+      <DraftProvider>
+        <InfrastructurePage />
+      </DraftProvider>,
+    );
+
+    // Docker, CI et le cloud cible : chacun s'arrête sous l'en-tête collant.
+    expect(html.match(/pf-deep-target/g)?.length).toBe(3);
   });
 });

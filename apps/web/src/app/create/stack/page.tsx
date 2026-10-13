@@ -1,7 +1,7 @@
 'use client';
 
 import type { Category } from '@buildit/registry';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { DisclosureButton } from '../../../components/ui/disclosure-button';
 import { EmptyState } from '../../../components/ui/empty-state';
 import { ErrorState } from '../../../components/ui/error-state';
@@ -13,6 +13,7 @@ import { StepShell } from '../../../components/wizard/shell';
 import { useMessages } from '../../../lib/i18n/provider';
 import { toggle, toggleExclusive } from '../../../lib/session';
 import { checkSelectionAction } from '../../actions';
+import { currentDeepLink, revealSection } from '../blueprint/deep-link';
 import { loadStackBlocksAction } from './actions';
 import { CategoryNav, ExpertToolbar } from './stack-options';
 import {
@@ -60,6 +61,16 @@ export default function StackPage() {
   // Relancer la vérification du moteur sans quitter l'écran : c'est l'action de
   // récupération d'un refus de compatibilité, et elle ne touche pas la sélection.
   const [attempt, setAttempt] = useState(0);
+  // L'arrivée par un crayon du plan (`/create/stack?category=orm`) : la
+  // catégorie demandée, en attente du catalogue, puis le défilement jusqu'à
+  // ses options. Sans paramètre, l'écran s'ouvre comme avant.
+  const [requested, setRequested] = useState<string | null>(null);
+  const [revealPending, setRevealPending] = useState(false);
+  const optionsRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    setRequested(currentDeepLink('category'));
+  }, []);
 
   // Le brouillon ne porte que `targets` et `technologies` : c'est la sélection
   // que le moteur revalide. `useMemo` sur les deux tableaux garde la référence
@@ -125,6 +136,21 @@ export default function StackPage() {
     }));
   }
 
+  // La catégorie demandée n'est retenue que si le catalogue la connaît : un
+  // paramètre inventé ouvre l'écran comme d'habitude, sans erreur.
+  useEffect(() => {
+    if (requested === null || blocks.length === 0) {
+      return;
+    }
+    const block = blocks.find((candidate) => candidate.category === requested);
+    if (block !== undefined) {
+      setCurrent(block.category);
+      setQuery('');
+      setRevealPending(true);
+    }
+    setRequested(null);
+  }, [requested, blocks]);
+
   const active = current ?? defaultCategory(blocks);
   const activeBlock = blocks.find((block) => block.category === active);
   const activeOptions = activeBlock?.options ?? [];
@@ -146,6 +172,14 @@ export default function StackPage() {
   const results = filterCatalogue(blocks, { query, compatibleOnly: filtered });
   const chosen = selectedCount(blocks);
   const resolution = draft.resolution;
+
+  // Le défilement attend que la carte de la catégorie soit rendue.
+  useEffect(() => {
+    if (revealPending && activeBlock !== undefined) {
+      revealSection(optionsRef.current);
+      setRevealPending(false);
+    }
+  }, [revealPending, activeBlock]);
   const modes = [
     {
       value: 'guided' as const,
@@ -193,10 +227,11 @@ export default function StackPage() {
         {resolution === undefined ? (
           <span className="pf-badge">{t.wizard.stack.checking}</span>
         ) : resolution.issues.length === 0 ? (
+          // Pas de « combinaison expérimentale » : le moteur accepte la
+          // sélection, c'est tout ce que l'écran a à dire. « Certifiée » reste
+          // l'information en plus quand un preset la porte.
           <span className="pf-badge pf-badge-ok">
-            {resolution.status === 'certified'
-              ? t.wizard.stack.certified
-              : t.wizard.stack.experimental}
+            {resolution.status === 'certified' ? t.wizard.stack.certified : t.wizard.stack.valid}
           </span>
         ) : (
           <span className="pf-badge pf-badge-danger">
@@ -280,7 +315,7 @@ export default function StackPage() {
           )}
 
           {activeBlock === undefined ? null : (
-            <div className="pf-card pf-card-pad mt-3">
+            <div ref={optionsRef} className="pf-card pf-card-pad pf-deep-target mt-3">
               <header className="flex flex-wrap items-start justify-between gap-3">
                 <div className="min-w-0">
                   <h2 className="pf-label">{categoryLabel(t, activeBlock.category)}</h2>

@@ -1,6 +1,6 @@
 'use client';
 
-import { type ReactElement, useEffect, useState } from 'react';
+import { type ReactElement, useEffect, useRef, useState } from 'react';
 import { ErrorState } from '../../../components/ui/error-state';
 import { Icon } from '../../../components/ui/icon';
 import { LoadingLine } from '../../../components/ui/loading';
@@ -10,6 +10,7 @@ import { StepShell } from '../../../components/wizard/shell';
 import type { OptionView } from '../../../lib/engine';
 import { useMessages } from '../../../lib/i18n/provider';
 import { loadOptionsAction } from '../../actions';
+import { currentDeepLink, revealSection } from '../blueprint/deep-link';
 import { chooseHosting, infrastructureIds, selectedHosting } from './infrastructure';
 
 /**
@@ -21,8 +22,9 @@ import { chooseHosting, infrastructureIds, selectedHosting } from './infrastruct
  * CI/CD restent des booléens, parce que le manifest n'a que deux façons de les
  * exprimer — et c'est `lib/draft-to-manifest.ts` qui les traduit.
  *
- * Les identifiants et leurs cibles sont affichés : l'utilisateur n'a pas à
- * deviner ce que ses clics écrivent.
+ * La traduction brouillon → manifest n'est plus détaillée ici : le plan du
+ * projet (écran 9) montre ce qui sera réellement généré, et un crayon y ramène
+ * à la bonne case.
  */
 export default function InfrastructurePage(): ReactElement {
   const t = useMessages();
@@ -32,6 +34,26 @@ export default function InfrastructurePage(): ReactElement {
   const [loading, setLoading] = useState(true);
   const [failure, setFailure] = useState<string | undefined>(undefined);
   const [attempt, setAttempt] = useState(0);
+  const dockerRef = useRef<HTMLLabelElement>(null);
+  const ciRef = useRef<HTMLLabelElement>(null);
+  const hostingRef = useRef<HTMLElement>(null);
+
+  // L'arrivée par un crayon du plan (`?section=docker|ci|hosting`) : la
+  // section visée est amenée sous les yeux, et une case reçoit le focus pour
+  // qu'un clavier puisse la décocher aussitôt. Sans paramètre, rien ne change.
+  useEffect(() => {
+    const section = currentDeepLink('section');
+    if (section === 'hosting') {
+      revealSection(hostingRef.current);
+      return;
+    }
+    const target =
+      section === 'docker' ? dockerRef.current : section === 'ci' ? ciRef.current : null;
+    if (target !== null) {
+      revealSection(target);
+      target.querySelector('input')?.focus({ preventScroll: true });
+    }
+  }, []);
 
   // biome-ignore lint/correctness/useExhaustiveDependencies: `attempt` est la clé de relance : elle ne sert qu'à rejouer la lecture après une panne du moteur, sans perdre le brouillon.
   useEffect(() => {
@@ -81,7 +103,7 @@ export default function InfrastructurePage(): ReactElement {
       <fieldset>
         <legend className="pf-label">{t.build.infrastructure.legend}</legend>
         <div className="pf-grid">
-          <label className="pf-choice flex items-start gap-3">
+          <label ref={dockerRef} className="pf-choice pf-deep-target flex items-start gap-3">
             <input
               type="checkbox"
               className="mt-1"
@@ -100,7 +122,7 @@ export default function InfrastructurePage(): ReactElement {
             </span>
           </label>
 
-          <label className="pf-choice flex items-start gap-3">
+          <label ref={ciRef} className="pf-choice pf-deep-target flex items-start gap-3">
             <input
               type="checkbox"
               className="mt-1"
@@ -121,7 +143,11 @@ export default function InfrastructurePage(): ReactElement {
         </div>
       </fieldset>
 
-      <section className="mt-6" aria-label={t.build.infrastructure.cloudLegend}>
+      <section
+        ref={hostingRef}
+        className="pf-deep-target mt-6"
+        aria-label={t.build.infrastructure.cloudLegend}
+      >
         <h2 className="pf-label">{t.build.infrastructure.cloudTitle}</h2>
         <p className="pf-hint">
           {t.build.infrastructure.cloudHintBefore} <span className="pf-mono">hosting</span>
@@ -176,24 +202,6 @@ export default function InfrastructurePage(): ReactElement {
             })}
           </div>
         )}
-      </section>
-
-      <section className="mt-6" aria-label={t.build.infrastructure.manifestLegend}>
-        <h2 className="pf-label">{t.build.infrastructure.manifestTitle}</h2>
-        <dl className="pf-hint">
-          <div>
-            <dt className="pf-mono">docker</dt>
-            <dd>{t.build.infrastructure.dockerWrites}</dd>
-          </div>
-          <div>
-            <dt className="pf-mono">github-actions</dt>
-            <dd>{t.build.infrastructure.ciWrites}</dd>
-          </div>
-          <div>
-            <dt className="pf-mono">hosting</dt>
-            <dd>{t.build.infrastructure.hostingWrites}</dd>
-          </div>
-        </dl>
       </section>
     </StepShell>
   );

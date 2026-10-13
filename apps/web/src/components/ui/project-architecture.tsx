@@ -70,12 +70,18 @@ export function ProjectArchitecture({ manifest }: ProjectArchitectureProps): Rea
 
   const retry = useCallback(() => setAttempt((value) => value + 1), []);
 
-  return <ArchitectureView onRetry={retry} status={status} />;
+  return <ArchitectureView onRetry={retry} rootName={manifest.name} status={status} />;
 }
 
 export interface ArchitectureViewProps {
   readonly status: ArchitectureStatus;
   readonly onRetry?: () => void;
+  /**
+   * Le nom du projet, posé en racine de l'arbre : tout part de lui, comme le
+   * dossier que le moteur écrira. Sans nom, les entrées du premier niveau sont
+   * leurs propres racines, sans filet.
+   */
+  readonly rootName?: string;
 }
 
 /**
@@ -87,7 +93,11 @@ export interface ArchitectureViewProps {
  * contrat du dry-run n'a qu'un canal (`warnings`), et c'est le seul cas où le
  * moteur ne rend aucun fichier tout en ayant quelque chose à dire.
  */
-export function ArchitectureView({ status, onRetry }: ArchitectureViewProps): ReactElement {
+export function ArchitectureView({
+  status,
+  onRetry,
+  rootName,
+}: ArchitectureViewProps): ReactElement {
   const t = useMessages();
 
   if (status.kind === 'loading') {
@@ -133,6 +143,7 @@ export function ArchitectureView({ status, onRetry }: ArchitectureViewProps): Re
     <ArchitecturePanel
       files={status.files}
       key={status.files.join('\n')}
+      rootName={rootName}
       warnings={status.warnings}
     />
   );
@@ -141,9 +152,11 @@ export function ArchitectureView({ status, onRetry }: ArchitectureViewProps): Re
 function ArchitecturePanel({
   files,
   warnings,
+  rootName,
 }: {
   readonly files: readonly string[];
   readonly warnings: readonly string[];
+  readonly rootName: string | undefined;
 }): ReactElement {
   const t = useMessages();
   const baseId = useId();
@@ -152,6 +165,7 @@ function ArchitecturePanel({
   const [open, setOpen] = useState<ReadonlySet<string>>(() => initiallyOpen(tree));
   const total = tree.reduce((sum, node) => sum + node.fileCount, 0);
   const allOpen = directories.every((path) => open.has(path));
+  const hasRoot = rootName !== undefined && rootName !== '';
 
   // Un identifiant par dossier, pour `aria-controls` : dérivé de l'ordre de
   // l'arbre, pas du chemin, qui peut contenir `[`, `.` ou `…`.
@@ -191,8 +205,6 @@ function ArchitecturePanel({
         )}
       </div>
 
-      <p className="pf-hint mt-2">{t.architecture.hint}</p>
-
       {warnings.length === 0 ? null : (
         <section className="mt-4">
           <h2 className="pf-label">{t.architecture.warningsTitle}</h2>
@@ -200,8 +212,23 @@ function ArchitecturePanel({
         </section>
       )}
 
-      <section className="pf-card pf-card-pad mt-4">
-        <ul aria-label={t.architecture.treeLabel} className="pf-arch-tree">
+      {/* Avec un nom de projet, l'arbre a une vraie racine : le premier niveau
+          s'y accroche par les mêmes filets que les niveaux suivants, et le
+          dessin se lit comme le dossier écrit sur le disque. */}
+      <section className="pf-card pf-card-pad pf-arch mt-4">
+        {hasRoot ? (
+          <div className="pf-arch-row pf-arch-root">
+            <span className="pf-arch-head pf-arch-lead">
+              <Icon className="pf-arch-icon pf-arch-icon-folder" name="folderOpen" size={16} />
+              <span className="pf-mono pf-arch-name">{rootName}/</span>
+              <span className="pf-mono pf-arch-count">{t.architecture.files(total)}</span>
+            </span>
+          </div>
+        ) : null}
+        <ul
+          aria-label={t.architecture.treeLabel}
+          className={hasRoot ? 'pf-arch-tree pf-arch-children' : 'pf-arch-tree'}
+        >
           <Branch ids={ids} nodes={tree} onToggle={toggle} open={open} />
         </ul>
       </section>
@@ -217,6 +244,11 @@ interface BranchProps {
 }
 
 /**
+ * Les branches se dessinent en CSS (`architecture.css`) : chaque niveau a son
+ * tronc vertical, chaque enfant son coude, et le dernier ferme le tronc en
+ * « └ ». Le balisage reste une liste : les filets sont de la décoration, la
+ * structure est dans l'imbrication des `<ul>`.
+ *
  * Une liste imbriquée plutôt qu'un `role="tree"` : un arbre ARIA promet la
  * navigation aux flèches, et une promesse à moitié tenue est pire qu'une liste
  * honnête. Chaque dossier est un bouton qui dit son état (`aria-expanded`) et
@@ -239,8 +271,8 @@ function Branch({ nodes, open, ids, onToggle }: BranchProps): ReactElement {
           return (
             <li className="pf-arch-node" key={node.path}>
               <div className="pf-arch-row">
-                <span className="pf-arch-head pf-arch-file">
-                  <Icon className="pf-arch-icon" name="file" size={14} />
+                <span className="pf-arch-head pf-arch-lead">
+                  <Icon className="pf-arch-icon" name="file" size={16} />
                   <span className="pf-mono pf-arch-name">{node.name}</span>
                 </span>
                 {note}
@@ -262,11 +294,11 @@ function Branch({ nodes, open, ids, onToggle }: BranchProps): ReactElement {
                   onClick={() => onToggle(node.path)}
                   type="button"
                 >
-                  <Icon className="pf-arch-chevron" name="chevronRight" size={14} />
+                  <Icon className="pf-arch-chevron" name="chevronRight" size={12} />
                   <Icon
                     className="pf-arch-icon pf-arch-icon-folder"
                     name={expanded ? 'folderOpen' : 'folder'}
-                    size={14}
+                    size={16}
                   />
                   <span className="pf-mono pf-arch-name">{node.name}/</span>
                 </button>

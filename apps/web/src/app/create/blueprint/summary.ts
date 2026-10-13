@@ -20,15 +20,41 @@ import type { Messages } from '../../../lib/i18n/messages';
 export interface SummaryItem {
   readonly id: string;
   readonly label: string;
+  /**
+   * L'étape (et la section) où ce choix se modifie. Absent sur la page de
+   * partage : un lien reçu se lit, il ne se modifie pas.
+   */
+  readonly edit?: string;
 }
 
+/** Ce que porte chaque ligne : la clé dit quel écran l'a écrite, le rôle se lit. */
+export type SummaryRowKey =
+  | 'targets'
+  | 'type'
+  | 'architecture'
+  | 'web'
+  | 'mobile'
+  | 'desktop'
+  | 'backend'
+  | 'database'
+  | 'auth'
+  | 'services'
+  | 'quality'
+  | 'infra'
+  | 'env';
+
 export interface SummaryRow {
+  readonly key: SummaryRowKey;
   readonly role: string;
   readonly values: readonly SummaryItem[];
+  /** Un seul crayon pour toute la ligne, quand ses valeurs ne se choisissent pas une à une. */
+  readonly edit?: string;
 }
 
 export interface BlueprintView {
   readonly name: string;
+  /** L'étape où le nom se modifie — même règle que `SummaryItem.edit`. */
+  readonly nameEdit?: string;
   /** « Next.js + PostgreSQL + Stripe » — la phrase du §6.10. */
   readonly headline: string;
   readonly rows: readonly SummaryRow[];
@@ -145,6 +171,7 @@ export function blueprintView(
   const roles = t.build.blueprint.roles;
   const rows: SummaryRow[] = [
     {
+      key: 'targets',
       role: roles.targets,
       values: manifest.targets.map((target) => ({
         id: target,
@@ -152,6 +179,7 @@ export function blueprintView(
       })),
     },
     {
+      key: 'architecture',
       role: roles.architecture,
       values: [
         {
@@ -165,6 +193,7 @@ export function blueprintView(
   if (manifest.frontend !== undefined) {
     const app = manifest.frontend;
     rows.push({
+      key: 'web',
       role: roles.web,
       values: items([app.framework, app.language, app.styling, app.ui], labels),
     });
@@ -172,12 +201,14 @@ export function blueprintView(
   if (manifest.mobile !== undefined) {
     const app = manifest.mobile;
     rows.push({
+      key: 'mobile',
       role: roles.mobile,
       values: items([app.framework, app.language, app.styling], labels),
     });
   }
   if (manifest.desktop !== undefined) {
     rows.push({
+      key: 'desktop',
       role: roles.desktop,
       values: items([manifest.desktop.framework], labels),
     });
@@ -185,6 +216,7 @@ export function blueprintView(
   if (manifest.backend !== undefined) {
     const app = manifest.backend;
     rows.push({
+      key: 'backend',
       role: roles.backend,
       values: items([app.framework, app.language], labels),
     });
@@ -192,21 +224,22 @@ export function blueprintView(
   if (manifest.database !== undefined) {
     const database = manifest.database;
     rows.push({
+      key: 'database',
       role: roles.database,
       values: items([database.engine, database.orm], labels),
     });
   }
   if (manifest.auth !== undefined) {
-    rows.push({ role: roles.auth, values: items([manifest.auth.provider], labels) });
+    rows.push({ key: 'auth', role: roles.auth, values: items([manifest.auth.provider], labels) });
   }
   if (manifest.services !== undefined && manifest.services.length > 0) {
-    rows.push({ role: roles.services, values: items(manifest.services, labels) });
+    rows.push({ key: 'services', role: roles.services, values: items(manifest.services, labels) });
   }
   if (manifest.quality !== undefined && manifest.quality.length > 0) {
-    rows.push({ role: roles.quality, values: items(manifest.quality, labels) });
+    rows.push({ key: 'quality', role: roles.quality, values: items(manifest.quality, labels) });
   }
   if (manifest.infra !== undefined && manifest.infra.length > 0) {
-    rows.push({ role: roles.infra, values: items(manifest.infra, labels) });
+    rows.push({ key: 'infra', role: roles.infra, values: items(manifest.infra, labels) });
   }
 
   return {

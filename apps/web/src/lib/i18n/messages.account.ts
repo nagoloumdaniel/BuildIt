@@ -178,16 +178,8 @@ export const FR_ACCOUNT = {
     /* Le lien de configuration en lecture seule : le brouillon part dans le
        fragment de l'URL, donc jamais vers le serveur. */
     shareLinkTitle: 'Lien de partage en lecture seule',
-    shareLinkNote:
-      'La configuration du brouillon est encodée dans le fragment du lien : elle ne part vers aucun serveur, et le lien s’ouvre partout où « pf web » tourne.',
     shareLinkBlocked:
       'Le brouillon est incomplet : le lien ne peut pas être créé tant que le plan du projet n’est pas constructible.',
-    shareLinkCreate: 'Créer le lien de partage',
-    shareLinkCreating: 'Création du lien de partage…',
-    shareLinkLabel: 'Lien (lecture seule)',
-    shareLinkCopy: 'Copier le lien',
-    shareLinkCopied: 'Lien copié dans le presse-papiers.',
-    shareLinkCopyManual: 'Presse-papiers indisponible ici : copiez le lien ci-dessous.',
     shareLinkResume: 'Compléter le brouillon',
     roleNames: {
       read: 'Lecture',
@@ -232,23 +224,11 @@ export const FR_ACCOUNT = {
       'Le graphe est vide parce que rien n’est coché. Choisissez des technologies, puis revenez ici.',
     emptyAction: 'Choisir des technologies',
     certified: 'Sélection certifiée',
-    experimental: 'Sélection expérimentale',
+    experimental: 'Sélection valide',
     counts: (nodes: number, edges: number) =>
       `${nodes} nœud${nodes > 1 ? 's' : ''}, ${edges} relation${edges > 1 ? 's' : ''}`,
     diagramTitle: 'Graphe de dépendances de la sélection',
     diagramHeading: 'Dessin du graphe',
-    legendTitle: 'Légende',
-    diagramHint: 'Le dessin montre la forme ; les tableaux ci-dessous portent le détail.',
-    nodesHeading: 'Nœuds',
-    relationsHeading: 'Relations',
-    nodesCaption: 'Nœuds du graphe',
-    nodeColumn: 'Technologie',
-    categoryColumn: 'Catégorie',
-    originColumn: 'Origine',
-    relationsCaption: 'Relations déclarées',
-    fromColumn: 'De',
-    relationColumn: 'Relation',
-    toColumn: 'Vers',
     noEdges: 'Aucune relation déclarée entre ces technologies.',
     relationLabels: {
       requires: 'exige',
@@ -416,16 +396,8 @@ export const EN_ACCOUNT: Widen<typeof FR_ACCOUNT> = {
     remove: 'Remove',
     cancelInvite: 'Cancel',
     shareLinkTitle: 'Read-only share link',
-    shareLinkNote:
-      'The draft configuration is encoded in the link’s fragment: it goes to no server, and the link opens wherever “pf web” runs.',
     shareLinkBlocked:
       'The draft is incomplete: the link cannot be created until the project plan can be built.',
-    shareLinkCreate: 'Create the share link',
-    shareLinkCreating: 'Creating the share link…',
-    shareLinkLabel: 'Link (read-only)',
-    shareLinkCopy: 'Copy the link',
-    shareLinkCopied: 'Link copied to the clipboard.',
-    shareLinkCopyManual: 'Clipboard unavailable here: copy the link below.',
     shareLinkResume: 'Complete the draft',
     roleNames: {
       read: 'Read',
@@ -466,23 +438,11 @@ export const EN_ACCOUNT: Widen<typeof FR_ACCOUNT> = {
       'The graph is empty because nothing is ticked. Choose technologies, then come back here.',
     emptyAction: 'Choose technologies',
     certified: 'Certified selection',
-    experimental: 'Experimental selection',
+    experimental: 'Valid selection',
     counts: (nodes: number, edges: number) =>
       `${nodes} node${nodes === 1 ? '' : 's'}, ${edges} relation${edges === 1 ? '' : 's'}`,
     diagramTitle: 'Dependency graph of the selection',
     diagramHeading: 'Graph drawing',
-    legendTitle: 'Legend',
-    diagramHint: 'The drawing shows the shape; the tables below carry the detail.',
-    nodesHeading: 'Nodes',
-    relationsHeading: 'Relations',
-    nodesCaption: 'Graph nodes',
-    nodeColumn: 'Technology',
-    categoryColumn: 'Category',
-    originColumn: 'Origin',
-    relationsCaption: 'Declared relations',
-    fromColumn: 'From',
-    relationColumn: 'Relation',
-    toColumn: 'To',
     noEdges: 'No relation declared between these technologies.',
     relationLabels: {
       requires: 'requires',

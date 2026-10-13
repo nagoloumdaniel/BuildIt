@@ -181,11 +181,8 @@ describe('RepoView — le lien de partage en lecture seule (§20)', () => {
       status: WITH_REPO,
       share: {
         link: null,
-        note: null,
-        busy: false,
         blocked: null,
-        onCreate: () => undefined,
-        onCopy: () => undefined,
+        onCreate: () => true,
         ...overrides,
       },
     });
@@ -195,16 +192,22 @@ describe('RepoView — le lien de partage en lecture seule (§20)', () => {
     const html = withShare();
 
     expect(html).toContain('Lien de partage en lecture seule');
-    expect(html).toContain('Créer le lien de partage');
+    expect(html).toContain('Créer un lien de partage');
     expect(html).not.toContain('Copier le lien');
+    // L'explication sous les contrôles est partie : le titre de la carte suffit.
+    expect(html).not.toContain('Lien (lecture seule)');
   });
 
-  it('affiche le lien en champ de lecture et propose de le copier', () => {
+  it('affiche le lien en champ de lecture et propose de le copier, sur la même ligne', () => {
     const html = withShare({ link: 'http://127.0.0.1:4173/share#abc' });
 
     expect(html).toContain('value="http://127.0.0.1:4173/share#abc"');
     expect(html).toContain('readOnly=""');
-    expect(html).toContain('Copier le lien');
+    expect(html).toContain('aria-label="Copier le lien"');
+    expect(html).toContain('aria-label="Lien de partage"');
+    // Un seul conteneur : le bouton, puis le champ et sa copie à sa droite.
+    expect(html).toContain('pf-share-row');
+    expect(html).toContain('pf-share-field');
   });
 
   it('dit pourquoi le lien n’est pas encore possible, et propose de compléter', () => {
@@ -215,10 +218,12 @@ describe('RepoView — le lien de partage en lecture seule (§20)', () => {
     expect(html).toContain('href="/create/blueprint"');
   });
 
-  it('pendant la création, nomme le travail au lieu d’un rotor seul', () => {
-    const html = withShare({ busy: true });
+  it('grise la création tant que le brouillon est incomplet, et dit pourquoi', () => {
+    const html = withShare({ blocked: 'Le brouillon est incomplet.' });
 
-    expect(html).toContain('Création du lien de partage');
-    expect(html).toContain('pf-spinner');
+    expect(html).toContain('aria-describedby="pf-repo-share-blocked"');
+    expect(html).toMatch(
+      /<button[^>]*disabled=""[^>]*pf-share-create|<button[^>]*pf-share-create[^>]*disabled=""/,
+    );
   });
 });

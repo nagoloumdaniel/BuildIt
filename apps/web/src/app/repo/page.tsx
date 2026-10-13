@@ -35,8 +35,6 @@ export default function RepoPage(): ReactElement {
   const [pending, setPending] = useState<string | null>(null);
   const [message, setMessage] = useState<string | undefined>(undefined);
   const [shareLink, setShareLink] = useState<string | null>(null);
-  const [shareNote, setShareNote] = useState<string | null>(null);
-  const [shareBusy, setShareBusy] = useState(false);
 
   /**
    * Le manifest du brouillon, pour le lien de partage en lecture seule.
@@ -131,33 +129,18 @@ export default function RepoPage(): ReactElement {
     });
   }
 
-  /** Le lien de partage : encodage local, rien n'est envoyé au serveur (§20). */
-  async function createShareLink(): Promise<void> {
+  /**
+   * Le lien de partage : encodage local, rien n'est envoyé au serveur (§20).
+   * Le serveur ne rend que l'origine publique ; la copie et ses retours vivent
+   * dans `ShareLinkRow`, partagée avec le plan du projet.
+   */
+  async function createShareLink(): Promise<boolean> {
     if (!manifest.ok) {
-      return;
+      return false;
     }
-    setShareBusy(true);
-    try {
-      const base = await shareLinkBaseAction().catch(() => '');
-      setShareLink(encodeShareLink(manifest.value, shareOrigin(base, window.location.origin)));
-      setShareNote(null);
-    } finally {
-      setShareBusy(false);
-    }
-  }
-
-  async function copyShareLink(): Promise<void> {
-    if (shareLink === null) {
-      return;
-    }
-    try {
-      await navigator.clipboard.writeText(shareLink);
-      setShareNote(t.repo.shareLinkCopied);
-    } catch {
-      // Un presse-papiers inaccessible n'empêche pas le lien d'exister : il
-      // reste affiché dans le champ, sélectionnable à la main.
-      setShareNote(t.repo.shareLinkCopyManual);
-    }
+    const base = await shareLinkBaseAction().catch(() => '');
+    setShareLink(encodeShareLink(manifest.value, shareOrigin(base, window.location.origin)));
+    return true;
   }
 
   return (
@@ -175,7 +158,6 @@ export default function RepoPage(): ReactElement {
         setStatus(null);
         setAccess(null);
         setShareLink(null);
-        setShareNote(null);
         // Le dossier choisi dans l'explorateur vaut lecture : l'inspection part
         // au choix, comme sur l'écran « Ouvrir un projet local ».
         if (value.trim() !== '') {
@@ -195,11 +177,8 @@ export default function RepoPage(): ReactElement {
       roles={roles}
       share={{
         link: shareLink,
-        note: shareNote,
-        busy: shareBusy,
         blocked: manifest.ok ? null : t.repo.shareLinkBlocked,
-        onCreate: () => void createShareLink(),
-        onCopy: () => void copyShareLink(),
+        onCreate: createShareLink,
       }}
       status={status}
       username={username}

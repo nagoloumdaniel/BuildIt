@@ -1,0 +1,147 @@
+/*
+ * Le plan du projet et son lien de partage.
+ *
+ * Importée par `app/globals.css`. Aucune couleur en dur (variables `--pf-*`),
+ * `:focus-visible` sur tout élément interactif, rien qui bouge au survol,
+ * `prefers-reduced-motion` respecté.
+ */
+
+@layer components {
+  /* --- La ligne de partage ------------------------------------------- */
+
+  /* Le bouton, puis le champ et sa copie sur la même ligne. Sous ~22 rem
+     disponibles, le champ passe sous le bouton et prend toute la largeur :
+     la base du `flex` suffit, sans point de rupture. */
+  .pf-share-row {
+    align-items: center;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    min-width: 0;
+  }
+
+  .pf-share-field {
+    align-items: center;
+    display: flex;
+    flex: 1 1 22rem;
+    gap: 0.5rem;
+    min-width: 0;
+  }
+
+  .pf-share-field .pf-input {
+    flex: 1 1 auto;
+    min-width: 0;
+    width: auto;
+  }
+
+  .pf-share-field .pf-btn {
+    flex: none;
+  }
+
+  /* Les deux libellés du bouton de création partagent une case : le bouton
+     garde la largeur du plus long, le champ voisin ne bouge pas quand
+     « Lien créé » remplace « Créer un lien de partage ». */
+  .pf-share-create {
+    display: inline-grid;
+  }
+
+  .pf-share-swap {
+    align-items: center;
+    display: inline-flex;
+    gap: 0.5rem;
+    grid-area: 1 / 1;
+    justify-content: center;
+  }
+
+  .pf-share-swap[data-shown="false"] {
+    visibility: hidden;
+  }
+
+  /* --- Le plan : un choix et son crayon ------------------------------- */
+
+  /* Le plan : une liste à deux colonnes (rôle, valeurs) qui s'empile à
+     l'étroit. Les lignes sont séparées par un filet, pas par des cartes. */
+  .pf-plan-list {
+    margin: 0;
+    padding: 0.25rem 1rem;
+  }
+
+  .pf-plan-row {
+    align-items: start;
+    border-bottom: 1px solid var(--pf-border);
+    display: grid;
+    gap: 0.25rem 1rem;
+    grid-template-columns: 1fr;
+    padding: 0.7rem 0;
+  }
+
+  .pf-plan-row:last-child {
+    border-bottom: 0;
+  }
+
+  .pf-plan-role {
+    align-items: center;
+    display: flex;
+    gap: 0.25rem;
+    min-height: 2rem;
+  }
+
+  .pf-plan-cell {
+    align-items: center;
+    display: flex;
+    margin: 0;
+    min-height: 2rem;
+    min-width: 0;
+  }
+
+  @media (min-width: 40rem) {
+    .pf-plan-row {
+      grid-template-columns: 11rem 1fr;
+    }
+  }
+
+  .pf-plan-values {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.25rem 0.75rem;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  .pf-plan-value {
+    align-items: center;
+    display: inline-flex;
+    gap: 0.125rem;
+    min-width: 0;
+  }
+
+  .pf-plan-value > span {
+    overflow-wrap: anywhere;
+  }
+
+  .pf-plan-name {
+    align-items: center;
+    display: flex;
+    gap: 0.25rem;
+    min-width: 0;
+  }
+
+  /* Le crayon est discret jusqu'au geste : couleur d'information au repos,
+     d'action au survol. Rien ne se déplace. */
+  .pf-plan-edit {
+    color: var(--pf-muted);
+    flex: none;
+  }
+
+  .pf-plan-edit:hover,
+  .pf-plan-edit:focus-visible {
+    color: var(--pf-accent-strong);
+  }
+
+  /* La section qu'un crayon du plan amène sous les yeux : elle s'arrête sous
+     l'en-tête collant (`.pf-topbar`) au lieu de passer derrière ses bulles. */
+  .pf-deep-target {
+    scroll-margin-top: 5.5rem;
+  }
+}
