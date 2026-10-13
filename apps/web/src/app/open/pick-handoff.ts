@@ -4,8 +4,8 @@ import { useRouter } from 'next/navigation';
 import { useCallback, useEffect, useState } from 'react';
 import { useMessages } from '../../lib/i18n/provider';
 import { canOpenNativePickerAction } from '../actions-picker';
-import { canUseBrowserPicker } from './browser-picker';
-import { type PickMode, pickProjectFolder } from './local-open';
+import { canUseFileInput } from './browser-picker';
+import { browserPickMode, type PickMode, pickProjectFolder } from './local-open';
 import { handOver } from './picked-store';
 
 /**
@@ -43,7 +43,7 @@ export function usePickHandoff(): PickHandoff {
     let alive = true;
     void canOpenNativePickerAction().then((native) => {
       if (alive) {
-        setMode(native ? 'native' : canUseBrowserPicker() ? 'browser' : 'none');
+        setMode(browserPickMode(native));
       }
     });
     return () => {
@@ -60,6 +60,11 @@ export function usePickHandoff(): PickHandoff {
     void (async () => {
       const result = await pickProjectFolder(mode);
       setBusy(false);
+      if (!result.ok && mode === 'browser' && result.reason === 'failed' && canUseFileInput()) {
+        setMode('input');
+        setNotice(t.open.fallbackNote);
+        return;
+      }
       if (!result.ok) {
         setNotice(
           result.reason === 'cancelled'

@@ -208,6 +208,7 @@ const ECOSYSTEM_NAMES: Readonly<Record<Ecosystem, string>> = {
   ruby: 'Ruby',
   jvm: 'la JVM',
   dotnet: '.NET',
+  cobol: 'COBOL',
 };
 
 const DIMENSIONS: readonly (readonly Ecosystem[])[] = [UI_ECOSYSTEMS, RUNTIME_ECOSYSTEMS];

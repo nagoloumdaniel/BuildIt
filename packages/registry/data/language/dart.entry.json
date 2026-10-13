@@ -1,0 +1,12 @@
+{
+  "id": "dart",
+  "name": "Dart",
+  "category": "language",
+  "targets": ["mobile"],
+  "status": "stable",
+  "generation": "declared",
+  "license": "BSD-3-Clause",
+  "lastReviewedAt": "2026-10-13",
+  "compatibleWith": ["flutter"],
+  "docs": "https://dart.dev"
+}

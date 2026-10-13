@@ -1,0 +1,13 @@
+{
+  "id": "db2",
+  "name": "IBM Db2",
+  "category": "database",
+  "targets": ["api", "library"],
+  "status": "stable",
+  "generation": "declared",
+  "license": "Proprietary",
+  "lastReviewedAt": "2026-10-13",
+  "compatibleWith": ["cobol", "java"],
+  "env": ["DB2_DATABASE", "DB2_USER", "DB2_PASSWORD"],
+  "docs": "https://www.ibm.com/docs/db2"
+}

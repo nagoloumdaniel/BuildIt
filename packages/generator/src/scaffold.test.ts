@@ -243,6 +243,20 @@ describe('.env.example', () => {
     );
   });
 
+  it('ajoute les variables du manifest (`env`), triées, sans doublon ni valeur', () => {
+    const files = scaffoldFiles({ ...MANIFEST, env: ['ZZ_CUSTOM', 'DATABASE_URL'] }, [
+      entry({ id: 'postgresql', category: 'database', env: ['DATABASE_URL'] }),
+    ]);
+    const names = fileNamed(files, '.env.example')
+      .split('\n')
+      .filter((line) => line.includes('='));
+    expect(names).toEqual(['DATABASE_URL=', 'ZZ_CUSTOM=']);
+  });
+
+  it('refuse une variable du manifest qui porte une valeur', () => {
+    expect(codesOf({ ...MANIFEST, env: ['TOKEN=abc'] }, [])).toContain('GEN_SECRET_IN_ENV');
+  });
+
   it('existe même sans aucune variable', () => {
     expect(fileNamed(scaffoldFiles(MANIFEST, []), '.env.example').length).toBeGreaterThan(0);
   });

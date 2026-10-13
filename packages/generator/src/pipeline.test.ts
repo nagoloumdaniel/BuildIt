@@ -149,13 +149,17 @@ describe('generateProject — le projet sur le disque', () => {
     expect(files).toEqual([
       '.env.example',
       '.gitignore',
+      'CONTRIBUTING.md',
       'README.md',
+      'SECURITY.md',
       'app',
       'biome.json',
       'components',
       'docker-compose.yml',
+      'docs',
       'e2e',
       'env.d.ts',
+      'features',
       'instrumentation-client.ts',
       'instrumentation.ts',
       'lib',
@@ -165,6 +169,7 @@ describe('generateProject — le projet sur le disque', () => {
       'pnpm-workspace.yaml',
       'prisma',
       'prisma.config.ts',
+      'shared',
       'tsconfig.json',
     ]);
   });

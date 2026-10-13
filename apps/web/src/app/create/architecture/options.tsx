@@ -1,11 +1,9 @@
 'use client';
 
-import { ARCHITECTURES, type Architecture } from '@buildit/manifest';
-import { type ReactElement, useState } from 'react';
-import { DisclosureButton } from '../../../components/ui/disclosure-button';
+import { ARCHITECTURES, type Architecture, skeletonTree } from '@buildit/manifest';
+import type { ReactElement } from 'react';
 import type { DraftState } from '../../../lib/draft';
 import { useMessages } from '../../../lib/i18n/provider';
-import { isProjectType, type ProjectType } from '../type/profiles';
 
 /**
  * Écran 4 — **Architecture Builder** (§6.5) : la forme du projet, avec sa
@@ -26,44 +24,88 @@ import { isProjectType, type ProjectType } from '../type/profiles';
  */
 
 /**
- * Les architectures recommandées pour chaque profil du §6.4.
- *
- * `Record<ProjectType, …>` : ajouter un profil à l'écran 3 casse la compilation
- * ici tant qu'on n'a pas dit ce qu'on lui recommande. Deux à quatre valeurs,
- * jamais tout le catalogue (§5).
+ * Les technologies qui orientent la forme. Identifiants du catalogue, recopiés
+ * ici parce que l'écran est un composant client sans accès au registry ; le
+ * test de l'écran vérifie contre le catalogue réel qu'aucun ne manque ni ne
+ * change de catégorie.
  */
-const BY_TYPE: Readonly<Record<ProjectType, readonly Architecture[]>> = {
-  saas: ['monorepo', 'single-app', 'modular-monolith'],
-  marketplace: ['monorepo', 'microservices'],
-  ecommerce: ['monorepo', 'modular-monolith', 'single-app'],
-  dashboard: ['single-app', 'modular-monolith'],
-  blog: ['single-app', 'serverless'],
-  ai: ['modular-monolith', 'serverless', 'monorepo'],
-  api: ['single-app', 'serverless'],
-  business: ['modular-monolith', 'monorepo'],
-};
+export const STACK_SIGNALS = {
+  frontend: [
+    'angular',
+    'astro',
+    'htmx',
+    'next',
+    'nuxt',
+    'preact',
+    'qwik',
+    'react',
+    'remix',
+    'solidjs',
+    'svelte',
+    'sveltekit',
+    'vue',
+  ],
+  backend: [
+    'actix-web',
+    'aspnet-core',
+    'axum',
+    'django',
+    'elysia',
+    'express',
+    'fastapi',
+    'fastify',
+    'fiber',
+    'flask',
+    'gin',
+    'hono',
+    'laravel',
+    'nestjs',
+    'rails',
+    'spring-boot',
+    'symfony',
+  ],
+  queue: ['bullmq', 'kafka', 'nats', 'rabbitmq', 'sqs'],
+  /** Hébergeurs à fonctions (Vercel Functions, Lambda, Workers, Netlify Functions). */
+  serverless: ['vercel', 'netlify', 'cloudflare', 'aws'],
+} as const satisfies Record<string, readonly string[]>;
 
-const FALLBACK: readonly Architecture[] = ['single-app', 'monorepo', 'modular-monolith'];
+export interface StackProfile {
+  readonly frontend: boolean;
+  readonly backend: boolean;
+  readonly queue: boolean;
+  readonly serverless: boolean;
+}
 
-export function recommendedArchitectures(type: string | undefined): readonly Architecture[] {
-  return isProjectType(type) ? BY_TYPE[type] : FALLBACK;
+const has = (list: readonly string[], technologies: readonly string[]) =>
+  technologies.some((id) => list.includes(id));
+
+/**
+ * Ce que la stack dit du projet. Avant l'écran Stack, aucune technologie
+ * n'est choisie : les cibles de l'écran 2 décident alors du front et du back.
+ */
+export function stackProfile(
+  technologies: readonly string[] = [],
+  targets: readonly string[] = [],
+): StackProfile {
+  const frontend = has(STACK_SIGNALS.frontend, technologies);
+  const backend = has(STACK_SIGNALS.backend, technologies);
+  const anyFramework = frontend || backend;
+  return {
+    frontend: anyFramework ? frontend : targets.some((target) => target !== 'api'),
+    backend: anyFramework ? backend : targets.includes('api'),
+    queue: has(STACK_SIGNALS.queue, technologies),
+    serverless: has(STACK_SIGNALS.serverless, technologies),
+  };
 }
 
 /**
- * La forme à préremplir quand aucune n'est encore choisie.
- *
- * La première de `recommendedArchitectures` — jamais une valeur à part : une
- * seconde table dirait un jour autre chose que les badges « Recommandé » de
- * l'écran, et personne ne saurait laquelle croire. `BY_TYPE` l'ordonne déjà de
- * la plus courante à la plus spécialisée pour le profil ; c'est ce même ordre
- * qui décide, ici comme à l'écran.
+ * La forme posée quand aucune n'est encore choisie : le manifest exige une
+ * architecture (§10). L'application unique est la plus simple ; le moteur passe
+ * de lui-même en monorepo quand un frontend et un backend sont choisis
+ * (`draftToManifest`). Ce n'est pas une recommandation, l'écran n'en affiche
+ * aucune.
  */
-export function defaultArchitecture(type: string | undefined): Architecture {
-  const [first] = recommendedArchitectures(type);
-  // `recommendedArchitectures` ne rend jamais un tableau vide (`FALLBACK` en
-  // a trois) : `first` est toujours défini, `as const` ne le dit pas à `tsc`.
-  return first as Architecture;
-}
+export const DEFAULT_ARCHITECTURE: Architecture = 'single-app';
 
 /** Le changement de brouillon d'une sélection — testable hors React. */
 export function withArchitecture(draft: DraftState, architecture: Architecture): DraftState {
@@ -71,48 +113,33 @@ export function withArchitecture(draft: DraftState, architecture: Architecture):
 }
 
 export interface ArchitectureChoicesProps {
-  readonly mode: 'guided' | 'expert';
   readonly selected: string | undefined;
-  /** Le profil choisi à l'écran 3 — il décide des recommandations. */
-  readonly type: string | undefined;
+  /** Les technologies déjà choisies — elles dessinent l'arborescence montrée. */
+  readonly technologies?: readonly string[];
+  /** Les cibles de l'écran 2 — elles devinent front et back avant la stack. */
+  readonly targets?: readonly string[];
   readonly onSelect: (architecture: Architecture) => void;
 }
 
 /** Le contenu de l'écran, hors contexte React — donc testable au rendu serveur. */
 export function ArchitectureChoices({
-  mode,
   selected,
-  type,
+  technologies = [],
+  targets = [],
   onSelect,
 }: ArchitectureChoicesProps): ReactElement {
   const t = useMessages();
-  const [expanded, setExpanded] = useState(false);
-  const guided = mode === 'guided';
-  const recommended = recommendedArchitectures(type);
-  const ordered = [
-    ...recommended,
-    ...ARCHITECTURES.filter((architecture) => !recommended.includes(architecture)),
-  ];
-  const visible = guided && !expanded ? recommended : ordered;
+  const profile = stackProfile(technologies, targets);
   const chosen = ARCHITECTURES.find((architecture) => architecture === selected);
   const labels = t.wizard.architecture.labels;
 
   return (
     <>
-      {guided ? (
-        <p className="pf-hint mb-2">
-          {isProjectType(type)
-            ? t.wizard.architecture.recommendedFor(t.wizard.types.labels[type].label)
-            : t.wizard.architecture.recommendedDefault}
-        </p>
-      ) : null}
-
       <fieldset>
         <legend className="pf-label">{t.wizard.architecture.legend}</legend>
         <div className="pf-grid">
-          {visible.map((architecture) => {
+          {ARCHITECTURES.map((architecture) => {
             const note = labels[architecture];
-            const isRecommended = guided && recommended.includes(architecture);
             return (
               <button
                 key={architecture}
@@ -122,33 +149,38 @@ export function ArchitectureChoices({
                 aria-pressed={chosen === architecture}
                 onClick={() => onSelect(architecture)}
               >
-                <span className="pf-choice-name">
-                  {note.label}
-                  {isRecommended ? (
-                    <span className="pf-badge pf-badge-accent">
-                      {t.wizard.architecture.recommendedBadge}
-                    </span>
-                  ) : null}
-                </span>
+                <span className="pf-choice-name">{note.label}</span>
                 <span className="pf-choice-note">{note.note}</span>
                 <span className="pf-choice-note">
                   {t.wizard.architecture.impact(note.complexity, note.cost)}
+                </span>
+                <span className="pf-choice-note">
+                  {t.wizard.architecture.repoLabel} : {note.repo}
+                </span>
+                <span className="pf-choice-note">
+                  {t.wizard.architecture.runtimeLabel} : {note.runtime}
+                </span>
+                <span className="pf-choice-note">{t.wizard.architecture.treeLabel}</span>
+                {/* `span`, pas `pre` : un bouton n'accepte que du contenu en ligne. */}
+                <span
+                  className="pf-choice-note"
+                  data-tree={architecture}
+                  style={{
+                    display: 'block',
+                    fontFamily: 'var(--font-mono, monospace)',
+                    fontSize: '0.75rem',
+                    whiteSpace: 'pre-wrap',
+                  }}
+                >
+                  {skeletonTree(architecture, profile)
+                    .map((dir) => `${dir.path}/`)
+                    .join('\n')}
                 </span>
               </button>
             );
           })}
         </div>
       </fieldset>
-
-      {guided ? (
-        <DisclosureButton
-          className="mt-3"
-          expanded={expanded}
-          lessLabel={t.wizard.stack.showRecommended}
-          moreLabel={t.wizard.architecture.showAll(ARCHITECTURES.length - recommended.length)}
-          onToggle={() => setExpanded((value) => !value)}
-        />
-      ) : null}
 
       <p className="pf-hint mt-4">
         {chosen === undefined

@@ -1,0 +1,13 @@
+{
+  "id": "cobol-check",
+  "name": "COBOL Check",
+  "category": "testing",
+  "targets": ["api", "library"],
+  "status": "stable",
+  "generation": "declared",
+  "license": "Apache-2.0",
+  "lastReviewedAt": "2026-10-13",
+  "requires": ["cobol"],
+  "ecosystems": ["cobol"],
+  "docs": "https://github.com/openmainframeproject/cobol-check"
+}

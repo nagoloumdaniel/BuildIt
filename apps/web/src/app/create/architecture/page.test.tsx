@@ -1,14 +1,15 @@
 import { ARCHITECTURES } from '@buildit/manifest';
+import { loadCatalogue } from '@buildit/registry';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
 import { DraftProvider } from '../../../components/wizard/draft-provider';
 import { freshDraft } from '../../../lib/draft';
 import { FR } from '../../../lib/i18n/messages';
-import { PROJECT_TYPES } from '../type/profiles';
 import {
   ArchitectureChoices,
-  defaultArchitecture,
-  recommendedArchitectures,
+  DEFAULT_ARCHITECTURE,
+  STACK_SIGNALS,
+  stackProfile,
   withArchitecture,
 } from './options';
 import ArchitecturePage from './page';
@@ -32,51 +33,66 @@ describe('les architectures réelles du manifest (§6.5)', () => {
       expect(note.cost.length).toBeGreaterThan(0);
     }
   });
+});
 
-  it('recommande de 2 à 4 architectures et ne sort jamais du manifest', () => {
-    for (const type of [undefined, ...PROJECT_TYPES]) {
-      const recommended = recommendedArchitectures(type);
-      expect(recommended.length).toBeGreaterThanOrEqual(2);
-      expect(recommended.length).toBeLessThanOrEqual(4);
-      for (const architecture of recommended) {
-        expect(ARCHITECTURES).toContain(architecture);
-      }
+describe('profil de stack', () => {
+  it('les identifiants repérés existent au catalogue, dans la bonne catégorie', () => {
+    const catalogue = loadCatalogue();
+    if (!catalogue.ok) throw new Error('catalogue invalide');
+    const categoryOf = (id: string) => catalogue.value.get(id)?.category;
+    for (const id of STACK_SIGNALS.frontend) expect(categoryOf(id)).toBe('frontend');
+    for (const id of STACK_SIGNALS.backend) expect(categoryOf(id)).toBe('backend');
+    for (const id of STACK_SIGNALS.queue) expect(categoryOf(id)).toBe('queue');
+    for (const id of STACK_SIGNALS.serverless) expect(categoryOf(id)).toBe('hosting');
+    // Tous les frameworks front **web** et back du catalogue sont repérés. Les
+    // frameworks mobile et ordinateur (Expo, Flutter, Electron…) sont aussi de
+    // catégorie `frontend`, mais ne dessinent pas d'application web.
+    for (const entry of catalogue.value.entries()) {
+      const webOnly =
+        entry.targets.includes('web') &&
+        !entry.targets.some((target) => target === 'mobile' || target === 'desktop');
+      if (entry.category === 'frontend' && webOnly)
+        expect(STACK_SIGNALS.frontend).toContain(entry.id);
+      if (entry.category === 'backend') expect(STACK_SIGNALS.backend).toContain(entry.id);
+      if (entry.category === 'queue') expect(STACK_SIGNALS.queue).toContain(entry.id);
     }
   });
 
-  it('recommande la même chose pour le même profil (déterministe)', () => {
-    expect(recommendedArchitectures('saas')).toEqual(recommendedArchitectures('saas'));
+  it('sans technologie, les cibles décident du front et du back', () => {
+    expect(stackProfile([], ['web', 'api'])).toMatchObject({ frontend: true, backend: true });
+    expect(stackProfile([], ['web'])).toMatchObject({ frontend: true, backend: false });
   });
 });
 
 describe('ArchitectureChoices', () => {
-  it('en guidé, n’affiche que les recommandées et garde le reste accessible', () => {
+  it('montre l’arborescence de base de chaque forme, et les notes dépôt / runtime', () => {
     const html = renderToStaticMarkup(
-      <ArchitectureChoices mode="guided" selected={undefined} type="saas" onSelect={() => {}} />,
+      <ArchitectureChoices
+        selected={undefined}
+        technologies={['next', 'hono']}
+        targets={['web', 'api']}
+        onSelect={() => {}}
+      />,
     );
-
-    expect(rendered(html)).toBe(recommendedArchitectures('saas').length);
-    expect(html).toContain('Recommandé');
-    expect(html).toContain('Voir toutes les options');
+    expect(html).toContain('apps/api/src/modules/example/domain/');
+    expect(html).toContain('functions/http/');
+    expect(html).toContain('Dépôt');
+    expect(html).toContain('Exécution');
   });
 
-  it('en expert, déplie le catalogue complet d’emblée', () => {
+  it('affiche les six formes d’emblée, sans recommandation ni bouton « voir plus »', () => {
     const html = renderToStaticMarkup(
-      <ArchitectureChoices mode="expert" selected={undefined} type="saas" onSelect={() => {}} />,
+      <ArchitectureChoices selected={undefined} onSelect={() => {}} />,
     );
 
     expect(rendered(html)).toBe(ARCHITECTURES.length);
+    expect(html).not.toContain('Recommand');
     expect(html).not.toContain('Voir toutes les options');
   });
 
   it('affiche la complexité et le coût d’exploitation, pas seulement le nom', () => {
     const html = renderToStaticMarkup(
-      <ArchitectureChoices
-        mode="expert"
-        selected={undefined}
-        type={undefined}
-        onSelect={() => {}}
-      />,
+      <ArchitectureChoices selected={undefined} onSelect={() => {}} />,
     );
 
     expect(html).toContain('Complexité');
@@ -85,7 +101,7 @@ describe('ArchitectureChoices', () => {
 
   it('marque l’architecture choisie, et elle seule', () => {
     const html = renderToStaticMarkup(
-      <ArchitectureChoices mode="expert" selected="monorepo" type="saas" onSelect={() => {}} />,
+      <ArchitectureChoices selected="monorepo" onSelect={() => {}} />,
     );
 
     expect(html).toMatch(/data-architecture="monorepo"[^>]*aria-pressed="true"/);
@@ -95,21 +111,9 @@ describe('ArchitectureChoices', () => {
   });
 });
 
-describe('defaultArchitecture — la forme préremplie (§6.5)', () => {
-  it('reprend la première recommandation de chaque profil, jamais une table à part', () => {
-    for (const type of PROJECT_TYPES) {
-      expect(defaultArchitecture(type)).toBe(recommendedArchitectures(type)[0]);
-    }
-  });
-
-  it('sans profil connu, retombe sur la première valeur par défaut', () => {
-    expect(defaultArchitecture(undefined)).toBe(recommendedArchitectures(undefined)[0]);
-    expect(defaultArchitecture('profil-inconnu')).toBe(recommendedArchitectures(undefined)[0]);
-  });
-
-  it('rend toujours une valeur du manifest, jamais undefined', () => {
-    expect(ARCHITECTURES).toContain(defaultArchitecture('saas'));
-    expect(ARCHITECTURES).toContain(defaultArchitecture(undefined));
+describe('DEFAULT_ARCHITECTURE', () => {
+  it('est une valeur du manifest', () => {
+    expect(ARCHITECTURES).toContain(DEFAULT_ARCHITECTURE);
   });
 });
 

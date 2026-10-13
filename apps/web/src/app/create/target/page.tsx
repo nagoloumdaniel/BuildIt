@@ -1,6 +1,5 @@
 'use client';
 
-import { TARGETS } from '@buildit/manifest';
 import { useDraft, useSession } from '../../../components/wizard/draft-provider';
 import { StepShell } from '../../../components/wizard/shell';
 import { useMessages } from '../../../lib/i18n/provider';
@@ -24,7 +23,6 @@ export default function TargetPage() {
   // une cible sans framework mène à un manifest impossible, donc à un
   // cul-de-sac. Le calcul se lit dans le catalogue, il ne s'écrit pas ici.
   const offered = offeredTargets();
-  const withheld = TARGETS.filter((target) => !offered.includes(target));
   const labels = t.wizard.targets.labels;
 
   return (
@@ -66,18 +64,6 @@ export default function TargetPage() {
           ? t.wizard.targets.empty
           : t.wizard.targets.count(draft.targets.length, draft.targets.join(', '))}
       </p>
-
-      {withheld.length > 0 ? (
-        // Ce n'est pas un oubli : le catalogue n'a encore aucune fiche capable
-        // d'être le framework de ces plateformes. Le dire ici vaut mieux que de
-        // les proposer et refuser trois écrans plus loin (§7.9, §7.10, §23).
-        <p className="pf-hint">
-          {t.wizard.targets.withheld(
-            withheld.map((target) => labels[target].label).join(t.wizard.targets.pairSeparator),
-            withheld.length > 1,
-          )}
-        </p>
-      ) : null}
     </StepShell>
   );
 }

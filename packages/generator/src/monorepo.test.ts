@@ -83,9 +83,12 @@ describe('monorepo : chaque application est générée comme une application seu
   });
 
   it('rien d’une application ne reste à la racine', () => {
-    const root = paths().filter(
-      (path) => !path.startsWith('apps/') && !path.startsWith('packages/'),
-    );
+    // Le squelette d'architecture (docs, infra, tests transverses) est
+    // propre au dépôt, pas à une application : il est vérifié à part.
+    const root = plan()
+      .plan.files.filter((planned) => !planned.source.startsWith('architecture:'))
+      .map((planned) => planned.path)
+      .filter((path) => !path.startsWith('apps/') && !path.startsWith('packages/'));
     expect(root.sort()).toEqual([
       '.dockerignore',
       '.github/workflows/ci.yml',
@@ -97,6 +100,17 @@ describe('monorepo : chaque application est générée comme une application seu
       'pnpm-workspace.yaml',
       'turbo.json',
     ]);
+  });
+
+  it('pose le squelette monorepo : ADR, environnements, tests transverses', () => {
+    expect(paths()).toEqual(
+      expect.arrayContaining([
+        'docs/decisions/ADR-001-monorepo.md',
+        'infra/environments/production/README.md',
+        'tests/e2e/README.md',
+        'apps/api/src/modules/example/domain/README.md',
+      ]),
+    );
   });
 
   it('chaque application a son propre nom de paquet', () => {
@@ -177,6 +191,14 @@ describe('monorepo : la racine porte le dépôt entier', () => {
       tasks: Record<string, { persistent?: boolean; cache?: boolean }>;
     };
     expect(turbo.tasks['dev']).toEqual({ cache: false, persistent: true });
+  });
+});
+
+describe('monorepo : variables ajoutées à la main', () => {
+  it('vont une seule fois, dans l’API, sans valeur', () => {
+    const manifest: Manifest = { ...FULLSTACK, env: ['MY_CUSTOM_KEY'] };
+    expect(file('apps/api/.env.example', manifest)).toContain('\nMY_CUSTOM_KEY=\n');
+    expect(file('apps/web/.env.example', manifest)).not.toContain('MY_CUSTOM_KEY');
   });
 });
 

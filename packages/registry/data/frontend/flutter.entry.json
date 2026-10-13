@@ -1,0 +1,12 @@
+{
+  "id": "flutter",
+  "name": "Flutter",
+  "category": "frontend",
+  "targets": ["mobile"],
+  "status": "stable",
+  "generation": "declared",
+  "license": "BSD-3-Clause",
+  "lastReviewedAt": "2026-10-13",
+  "requires": ["dart"],
+  "docs": "https://docs.flutter.dev"
+}

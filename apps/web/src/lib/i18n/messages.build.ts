@@ -44,9 +44,19 @@ export const FR_BUILD = {
       gitignoreBefore: 'Ce fichier n’est jamais commité : il figure dans le',
       gitignoreAfter: 'engendré par le projet.',
       namesOnly:
-        'Le brouillon ne retient que les noms, et cette page n’offre aucun champ de saisie : aucune valeur ne transite par l’interface, ni par le lien de partage.',
+        'Le brouillon ne retient que les noms : aucune valeur ne transite par l’interface, ni par le lien de partage.',
       engineMarked:
         'Les valeurs ajoutées par le moteur sont marquées : elles viennent d’une exigence tirée par vos choix, pas d’une ligne saisie ici.',
+      customTitle: 'Variables ajoutées à la main',
+      customLabel: 'Nom de la variable',
+      customPlaceholder: 'MA_VARIABLE',
+      customAdd: 'Ajouter',
+      customRemove: (name: string) => `Retirer ${name}`,
+      customHint:
+        'Le nom seulement : il est écrit vide (NOM=) dans .env.example. Renseignez la valeur plus tard, dans .env.local.',
+      customInvalid: 'Majuscules, chiffres et soulignés, une lettre en tête (ex. API_URL).',
+      customDuplicate: 'Cette variable est déjà listée.',
+      customEmpty: 'Aucune variable ajoutée.',
     },
 
     /**
@@ -192,9 +202,20 @@ export const EN_BUILD: Widen<typeof FR_BUILD> = {
       gitignoreBefore: 'This file is never committed: it is listed in the',
       gitignoreAfter: 'generated with the project.',
       namesOnly:
-        'The draft keeps the names only, and this page offers no input field: no value goes through the interface, nor through the share link.',
+        'The draft keeps the names only: no value goes through the interface, nor through the share link.',
       engineMarked:
         'Values added by the engine are marked: they come from a requirement pulled in by your choices, not from a line typed here.',
+      customTitle: 'Variables added by hand',
+      customLabel: 'Variable name',
+      customPlaceholder: 'MY_VARIABLE',
+      customAdd: 'Add',
+      customRemove: (name: string) => `Remove ${name}`,
+      customHint:
+        'The name only: it is written empty (NAME=) in .env.example. Fill in the value later, in .env.local.',
+      customInvalid:
+        'Uppercase letters, digits and underscores, starting with a letter (e.g. API_URL).',
+      customDuplicate: 'This variable is already listed.',
+      customEmpty: 'No variable added.',
     },
 
     infrastructure: {

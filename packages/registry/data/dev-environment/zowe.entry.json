@@ -1,0 +1,12 @@
+{
+  "id": "zowe",
+  "name": "Zowe",
+  "category": "dev-environment",
+  "targets": ["api", "library"],
+  "status": "stable",
+  "generation": "declared",
+  "license": "EPL-2.0",
+  "lastReviewedAt": "2026-10-13",
+  "compatibleWith": ["cobol", "db2"],
+  "docs": "https://docs.zowe.org"
+}

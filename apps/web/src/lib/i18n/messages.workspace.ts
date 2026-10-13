@@ -20,7 +20,33 @@ export const FR_WORKSPACE = {
     browserNote:
       'Le dossier est lu dans votre navigateur : BuildIt reconnaît le projet, mais n’installe rien sur votre machine depuis cette page. La commande est affichée, à lancer dans votre terminal.',
     noPickerNote:
-      'Ce navigateur ne sait pas ouvrir de dossier. Utilisez Chrome ou Edge, ou lancez BuildIt en local avec « pf web ».',
+      'Ce navigateur ne sait pas ouvrir de dossier (navigateur mobile ?). Utilisez un navigateur de bureau — Chrome, Edge, Firefox ou Safari — ou lancez BuildIt en local avec « pf web ».',
+    /* Firefox, Safari : le dossier se choisit par le sélecteur du navigateur,
+       en lecture seule. Le navigateur peut demander de confirmer « l'envoi » :
+       rien ne quitte la machine hormis les noms et package.json. */
+    inputNote:
+      'Le dossier est lu dans votre navigateur, en lecture seule : le navigateur peut vous demander de confirmer, mais seuls les noms de fichiers et package.json sont analysés. Les fichiers de base manquants se téléchargent en archive.',
+    fallbackNote:
+      'Ce navigateur a refusé l’accès direct au dossier. Appuyez de nouveau : le choix passera par le sélecteur de dossier du navigateur.',
+    inspectFailed:
+      'L’analyse n’a pas pu joindre BuildIt (réseau ou mise à jour du site). Réessayez avec « Analyser à nouveau ».',
+    baseTitle: 'Dossiers et fichiers de base',
+    baseShape: (architecture: string, fromManifest: boolean) =>
+      `Architecture ${fromManifest ? 'déclarée dans pf.manifest.json' : 'déduite des fichiers'} : ${architecture}.`,
+    baseNone: 'Tous les dossiers et fichiers de base sont déjà là.',
+    baseMissing: (count: number) =>
+      `${count} fichier${count > 1 ? 's' : ''} de base manque${count > 1 ? 'nt' : ''} (README par dossier, vue d’architecture, ADR, CONTRIBUTING, SECURITY). Aucun fichier existant n’est modifié.`,
+    baseWrite: 'Créer les fichiers manquants',
+    baseDownload: 'Télécharger les fichiers manquants (.zip)',
+    baseZipNote:
+      'Décompressez l’archive à la racine du projet : elle ne contient que ce qui manque.',
+    baseWriting: 'Écriture des fichiers de base…',
+    baseWritten: (count: number) =>
+      `${count} fichier${count > 1 ? 's' : ''} de base créé${count > 1 ? 's' : ''}.`,
+    baseZipped: (count: number) =>
+      `Archive de ${count} fichier${count > 1 ? 's' : ''} téléchargée.`,
+    baseFailed: 'Les fichiers de base n’ont pas pu être écrits',
+    baseDenied: 'Le navigateur n’a pas accordé l’écriture dans ce dossier.',
     pick: 'Choisir un dossier',
     picking: 'Explorateur ouvert…',
     analysing: 'Analyse du dossier…',
@@ -267,7 +293,27 @@ export const EN_WORKSPACE: Widen<typeof FR_WORKSPACE> = {
     browserNote:
       'The folder is read inside your browser: BuildIt recognises the project, but installs nothing on your machine from this page. The command is shown, to run in your own terminal.',
     noPickerNote:
-      'This browser cannot open a folder. Use Chrome or Edge, or run BuildIt locally with “pf web”.',
+      'This browser cannot open a folder (mobile browser?). Use a desktop browser — Chrome, Edge, Firefox or Safari — or run BuildIt locally with “pf web”.',
+    inputNote:
+      'The folder is read inside your browser, read-only: the browser may ask you to confirm, but only file names and package.json are analysed. Missing base files download as an archive.',
+    fallbackNote:
+      'This browser refused direct folder access. Press again: the choice will go through the browser’s folder selector.',
+    inspectFailed:
+      'The analysis could not reach BuildIt (network or site update). Try again with “Analyse again”.',
+    baseTitle: 'Base folders and files',
+    baseShape: (architecture: string, fromManifest: boolean) =>
+      `Architecture ${fromManifest ? 'declared in pf.manifest.json' : 'inferred from the files'}: ${architecture}.`,
+    baseNone: 'All base folders and files are already there.',
+    baseMissing: (count: number) =>
+      `${count} base file${count > 1 ? 's are' : ' is'} missing (README per folder, architecture view, ADR, CONTRIBUTING, SECURITY). No existing file is changed.`,
+    baseWrite: 'Create the missing files',
+    baseDownload: 'Download the missing files (.zip)',
+    baseZipNote: 'Unzip the archive at the project root: it only holds what is missing.',
+    baseWriting: 'Writing the base files…',
+    baseWritten: (count: number) => `${count} base file${count > 1 ? 's' : ''} created.`,
+    baseZipped: (count: number) => `Archive of ${count} file${count > 1 ? 's' : ''} downloaded.`,
+    baseFailed: 'The base files could not be written',
+    baseDenied: 'The browser did not grant write access to this folder.',
     pick: 'Choose a folder',
     picking: 'Explorer open…',
     analysing: 'Analysing the folder…',

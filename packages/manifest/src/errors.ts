@@ -23,6 +23,7 @@ export const MANIFEST_ISSUE_CODES = [
   'MANIFEST_SLUG_INVALID',
   'MANIFEST_DUPLICATE_ENTRY',
   'MANIFEST_APPS_NEED_MONOREPO',
+  'MANIFEST_ENV_NAME_INVALID',
 ] as const;
 
 export type ManifestIssueCode = (typeof MANIFEST_ISSUE_CODES)[number];
@@ -37,6 +38,8 @@ export type ManifestIssue = Issue<ManifestIssueCode>;
  * C'est le seul endroit du paquet où vit une phrase destinée à un humain.
  */
 const MESSAGES: Readonly<Record<ManifestIssueCode, string>> = {
+  MANIFEST_ENV_NAME_INVALID:
+    'Nom de variable d’environnement invalide : {value}. Attendu des majuscules, chiffres et soulignés, une lettre en tête, par exemple « API_URL ».',
   MANIFEST_NOT_AN_OBJECT: 'Le manifest doit être un objet JSON, pas {actual}.',
   MANIFEST_VERSION_MISSING:
     "Le champ « manifestVersion » est absent. Ce manifest n'a pas été produit par BuildIt.",

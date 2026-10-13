@@ -6,6 +6,7 @@ import type { Manifest } from '@buildit/manifest';
 import { loadRecipeCatalogue, type Recipe, type RecipeCatalogue } from '@buildit/recipes';
 import { loadCatalogue, type Registry, type RegistryEntry } from '@buildit/registry';
 import { fail, type Issue, ok, type ParseFailure, type ParseResult } from '@buildit/validation';
+import { withArchitectureSkeleton } from './architecture.js';
 import { type GeneratedFiles, planMonorepo } from './monorepo.js';
 import { type FilePlan, planFiles } from './plan.js';
 import {
@@ -268,7 +269,12 @@ export function planProject(
 
   // Un template qui viserait un fichier du socle est un conflit : planFiles le
   // détecte avant toute écriture, avec les deux origines.
-  const plan = planFiles(targetDir, generated.value.files);
+  // Le squelette de l'architecture vient après : un chemin déjà planifié par
+  // un template n'est jamais réécrit, donc planFiles ne voit aucun conflit.
+  const plan = planFiles(
+    targetDir,
+    withArchitectureSkeleton(generated.value.files, manifest, entries),
+  );
   if (!plan.ok) {
     return fail(toIssues(plan.issues));
   }

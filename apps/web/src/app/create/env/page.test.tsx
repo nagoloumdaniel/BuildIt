@@ -22,15 +22,17 @@ describe('écran Environment & Secrets (§6.8, §24)', () => {
     expect(html).toContain('commit');
   });
 
-  it('ne contient aucun champ de saisie : une valeur ne peut pas transiter par l’écran', () => {
+  it('n’offre qu’un champ : le **nom** d’une variable, jamais sa valeur', () => {
     const html = renderToStaticMarkup(
       <DraftProvider>
         <EnvPage />
       </DraftProvider>,
     );
 
-    expect(html).not.toContain('<input');
+    expect(html.match(/<input/g)).toHaveLength(1);
+    expect(html).toContain('Nom de la variable');
     expect(html).not.toContain('<textarea');
+    expect(html).not.toMatch(/type="password"/);
   });
 
   it('dit que seuls les noms sont conservés, et où mettre les valeurs', () => {

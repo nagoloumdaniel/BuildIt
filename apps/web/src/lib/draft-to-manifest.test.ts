@@ -324,6 +324,18 @@ describe('draftToManifest — le manifest produit est celui du moteur (§9, §10
   });
 });
 
+describe('draftToManifest — variables ajoutées à la main', () => {
+  it('passent dans `env`, triées, sans doublon', () => {
+    const result = draftToManifest({ ...saasDraft(), customEnv: ['ZETA', 'ALPHA', 'ZETA'] });
+    expect(result.ok ? result.value.env : result.issues).toEqual(['ALPHA', 'ZETA']);
+  });
+
+  it('absentes, aucun champ `env`', () => {
+    const result = draftToManifest(saasDraft());
+    expect(result.ok && 'env' in result.value).toBe(false);
+  });
+});
+
 describe('draftToManifest — garde-fous', () => {
   it('aucune variable d’environnement n’entre dans le manifest (§6.8, §24)', () => {
     const draft = { ...saasDraft(), envVarNames: ['DATABASE_URL', 'sk_live_51H8xQ'] };

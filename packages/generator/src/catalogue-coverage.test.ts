@@ -81,6 +81,15 @@ const API_BASE: Readonly<
   ruby: ['rails', 'ruby'],
   jvm: ['spring-boot', 'java'],
   dotnet: ['aspnet-core', 'csharp'],
+  // COBOL n'a aucun backend HTTP au catalogue : ses fiches se planifient en
+  // bibliothèque (programme batch), voir `minimalDraft`.
+  cobol: undefined,
+};
+
+/** Le socle d'une application native, par cible : un framework et son langage. */
+const NATIVE_BASE: Readonly<Record<'mobile' | 'desktop', readonly string[]>> = {
+  mobile: ['expo', 'typescript'],
+  desktop: ['electron', 'typescript'],
 };
 
 /** Les catégories dont un projet n'a qu'un représentant (`arity.ts`). */
@@ -123,9 +132,21 @@ interface Draft {
  */
 function minimalDraft(item: RegistryEntry): Draft | undefined {
   const runtime = runtimeOf(item);
-  const onApi = runtime !== undefined || !item.targets.includes('web');
+  const native = (['mobile', 'desktop'] as const).find(
+    (target) =>
+      item.targets.includes(target) &&
+      !item.targets.some((other) => other === 'web' || other === 'api' || other === 'library'),
+  );
+  const onLibrary =
+    runtime !== undefined && API_BASE[runtime] === undefined && item.targets.includes('library');
+  const onApi = !onLibrary && (runtime !== undefined || !item.targets.includes('web'));
   let base: readonly string[] | undefined;
-  if (onApi) {
+  if (native !== undefined) {
+    // Dart n'a qu'un framework au catalogue : Flutter.
+    base = item.id === 'dart' ? ['flutter'] : NATIVE_BASE[native];
+  } else if (onLibrary) {
+    base = [];
+  } else if (onApi) {
     base = API_BASE[runtime ?? 'node'];
   } else if (item.category === 'language') {
     // Un langage choisi seul : un framework qui n'en impose pas d'autre.
@@ -152,14 +173,19 @@ function minimalDraft(item: RegistryEntry): Draft | undefined {
   if (item.category === 'orm') {
     technologies.add(item.id === 'mongoose' ? 'mongodb' : 'postgresql');
   }
-  return { targets: [onApi ? 'api' : 'web'], technologies: [...technologies] };
+  const target: Target = native ?? (onLibrary ? 'library' : onApi ? 'api' : 'web');
+  return { targets: [target], technologies: [...technologies] };
 }
 
 /** Les applications du §10 et la cible qui les fait exister. */
 const APPS = [
   { key: 'frontend', target: 'web', fields: ['framework', 'language', 'styling', 'ui'] },
   { key: 'backend', target: 'api', fields: ['framework', 'language'] },
+  { key: 'mobile', target: 'mobile', fields: ['framework', 'language', 'styling'] },
+  { key: 'desktop', target: 'desktop', fields: ['framework'] },
 ] as const;
+
+type AppKey = (typeof APPS)[number]['key'];
 
 type AppValues = Partial<Record<'framework' | 'language' | 'styling' | 'ui', string>>;
 
@@ -173,7 +199,7 @@ type AppValues = Partial<Record<'framework' | 'language' | 'styling' | 'ui', str
  */
 function toManifest(draft: Draft, ids: readonly string[]): Manifest {
   const targets = new Set<string>(draft.targets);
-  const apps: Record<'frontend' | 'backend', AppValues> = { frontend: {}, backend: {} };
+  const apps: Record<AppKey, AppValues> = { frontend: {}, backend: {}, mobile: {}, desktop: {} };
   const singles: Partial<Record<'engine' | 'orm' | 'provider', string>> = {};
   const lists = {
     services: new Set<string>(),
@@ -712,6 +738,42 @@ const COMBINATIONS: readonly (readonly [string, Draft])[] = [
       technologies: ['nuxt', 'nestjs', 'typescript', 'postgresql', 'drizzle', 'nx', 'vitest'],
     },
   ],
+  [
+    'COBOL : GnuCOBOL + ESQL PostgreSQL',
+    {
+      targets: ['library'],
+      technologies: [
+        'cobol',
+        'gnucobol',
+        'cobol-check',
+        'make',
+        'postgresql',
+        'ocesql',
+        'cobol-language-support',
+        'zowe',
+        'docker',
+        'github-actions',
+      ],
+    },
+  ],
+  [
+    'COBOL : Db2 + CMake',
+    { targets: ['library'], technologies: ['cobol', 'gnucobol', 'cmake', 'db2', 'gitlab-ci'] },
+  ],
+  [
+    'Mobile : Expo',
+    { targets: ['mobile'], technologies: ['expo', 'typescript', 'biome', 'github-actions'] },
+  ],
+  ['Mobile : React Native', { targets: ['mobile'], technologies: ['react-native', 'javascript'] }],
+  [
+    'Mobile : Flutter',
+    { targets: ['mobile'], technologies: ['flutter', 'dart', 'github-actions'] },
+  ],
+  [
+    'Desktop : Electron',
+    { targets: ['desktop'], technologies: ['electron', 'typescript', 'vitest', 'github-actions'] },
+  ],
+  ['Desktop : Tauri', { targets: ['desktop'], technologies: ['tauri', 'typescript'] }],
 ];
 
 describe('couverture du catalogue : combinaisons par écosystème', () => {

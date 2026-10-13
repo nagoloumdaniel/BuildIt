@@ -2,7 +2,15 @@ import { describe, expect, it } from 'vitest';
 import { freshDraft } from '../../../lib/draft';
 import type { EnvVarView } from '../../../lib/engine';
 import { loadEnvVarsAction } from '../../actions';
-import { envSelection, isEngineAdded, namesOf, sameNames } from './env-model';
+import {
+  customEnvError,
+  envSelection,
+  isEngineAdded,
+  namesOf,
+  sameNames,
+  withCustomEnv,
+  withoutCustomEnv,
+} from './env-model';
 
 const DATABASE: EnvVarView = { name: 'DATABASE_URL', technologies: ['prisma', 'postgresql'] };
 const STRIPE: EnvVarView = { name: 'STRIPE_SECRET_KEY', technologies: ['stripe'] };
@@ -98,5 +106,28 @@ describe('la source réelle des noms (Server Action)', () => {
 
   it('ne rend rien pour un brouillon vide, sans inventer de variable', async () => {
     expect(await loadEnvVarsAction(envSelection(freshDraft()))).toEqual([]);
+  });
+});
+
+describe('variables ajoutées à la main', () => {
+  it('accepte un nom en majuscules, refuse le reste', () => {
+    expect(customEnvError('API_URL', [])).toBeUndefined();
+    expect(customEnvError('api_url', [])).toBe('invalid');
+    expect(customEnvError('1API', [])).toBe('invalid');
+    expect(customEnvError('API=secret', [])).toBe('invalid');
+    expect(customEnvError('', [])).toBe('invalid');
+  });
+
+  it('refuse un doublon avec la stack ou une saisie précédente', () => {
+    expect(customEnvError('DATABASE_URL', ['DATABASE_URL'])).toBe('duplicate');
+  });
+
+  it('ajoute trié, retire, et efface la liste vide du brouillon', () => {
+    const one = withCustomEnv(freshDraft(), 'ZETA');
+    const two = withCustomEnv(one, 'ALPHA');
+    expect(two.customEnv).toEqual(['ALPHA', 'ZETA']);
+    expect(withCustomEnv(two, 'ALPHA')).toBe(two);
+    const back = withoutCustomEnv(withoutCustomEnv(two, 'ALPHA'), 'ZETA');
+    expect('customEnv' in back).toBe(false);
   });
 });

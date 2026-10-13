@@ -70,16 +70,11 @@ describe('canAdvance — bloquants du §6', () => {
     expect(canAdvance({ ...freshDraft(), step: 'target', targets: ['web'] })).toBe(true);
   });
 
-  it('target : une cible sans framework au catalogue est refusée avec sa raison', () => {
-    // Le refus existait déjà, mais trois écrans plus loin et sous la forme d'un
-    // champ de manifest absent (« mobile.framework »). Ici, il est nommé à
-    // l'endroit du choix, et il dit pourquoi (test négatif, §7.9, §7.10).
+  it('target : mobile et desktop passent, le catalogue leur offre un framework', () => {
+    // Expo, React Native, Flutter (mobile) ; Electron, Tauri (desktop).
     for (const target of ['mobile', 'desktop']) {
       const draft = { ...freshDraft(), step: 'target' as const, targets: [target] };
-      const reason = blockedReason(draft);
-      expect(canAdvance(draft), `${target} ne devrait pas être franchissable`).toBe(false);
-      expect(reason, `${target} devrait être refusée en la nommant`).toContain(target);
-      expect(reason).toContain('framework');
+      expect(canAdvance(draft), `${target} devrait être franchissable`).toBe(true);
     }
   });
 

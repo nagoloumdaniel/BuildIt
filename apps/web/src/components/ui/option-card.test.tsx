@@ -135,3 +135,16 @@ describe('refusalAdvice', () => {
     ).toContain('npm');
   });
 });
+
+describe('OptionCard — contenu de la carte', () => {
+  it('ne répète pas le nom sous la carte : seul le libellé est écrit', () => {
+    const html = render({
+      option: option({ id: 'prisma-orm-x', label: 'Prisma' }),
+      onToggle: () => {},
+    });
+    expect(html).toContain('Prisma');
+    // L'identifiant n'apparaît que dans les attributs, jamais comme texte visible.
+    expect(html).not.toContain('>prisma-orm-x<');
+    expect(html).not.toContain('pf-mono');
+  });
+});

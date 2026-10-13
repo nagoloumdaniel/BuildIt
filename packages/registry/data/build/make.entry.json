@@ -1,0 +1,11 @@
+{
+  "id": "make",
+  "name": "GNU Make",
+  "category": "build",
+  "targets": ["web", "mobile", "desktop", "api", "library"],
+  "status": "stable",
+  "generation": "declared",
+  "license": "GPL-3.0",
+  "lastReviewedAt": "2026-10-13",
+  "docs": "https://www.gnu.org/software/make"
+}

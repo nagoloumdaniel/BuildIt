@@ -1,0 +1,12 @@
+{
+  "id": "tauri",
+  "name": "Tauri",
+  "category": "frontend",
+  "targets": ["desktop"],
+  "status": "stable",
+  "generation": "declared",
+  "license": "MIT",
+  "lastReviewedAt": "2026-10-13",
+  "compatibleWith": ["rust", "typescript"],
+  "docs": "https://v2.tauri.app"
+}

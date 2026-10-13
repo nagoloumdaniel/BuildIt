@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import type { ReactElement } from 'react';
 import { useMessages } from '../../lib/i18n/provider';
+import { NEW_PROJECT_HREF } from '../../lib/new-project';
 import { Icon, type IconName } from './icon';
 
 /**
@@ -28,7 +29,7 @@ interface Destination {
 
 const DESTINATIONS: readonly Destination[] = [
   { href: '/', icon: 'home', key: 'home' },
-  { href: '/create', icon: 'sparkles', key: 'create' },
+  { href: NEW_PROJECT_HREF, icon: 'sparkles', key: 'create' },
   { href: '/clone', icon: 'gitBranch', key: 'clone' },
   { href: '/open', icon: 'folderOpen', key: 'open' },
   { href: '/projects', icon: 'layers', key: 'projects' },
@@ -49,7 +50,7 @@ export function BubbleNav(): ReactElement {
       <ul className="pf-pod pf-bubbles">
         {DESTINATIONS.map((destination) => {
           const label = t.nav[destination.key];
-          const active = isCurrent(pathname, destination.href);
+          const active = isCurrent(pathname, destination.href.split('?')[0] ?? destination.href);
           return (
             <li key={destination.href}>
               <Link

@@ -1,11 +1,10 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { Icon } from '../../components/ui/icon';
+import { Suspense } from 'react';
 import { useDraft, useSession } from '../../components/wizard/draft-provider';
 import { StepShell } from '../../components/wizard/shell';
 import { useMessages } from '../../lib/i18n/provider';
-import { loadPresetsAction } from '../actions';
+import { FreshStart } from './fresh-start';
 
 /**
  * Écran 1 — Create Project (§6.2).
@@ -18,21 +17,6 @@ export default function CreatePage() {
   const t = useMessages();
   const draft = useDraft();
   const session = useSession();
-  // Les presets certifiés viennent du serveur (§8) : le client ne connaît que
-  // la vue, jamais le moteur. C'est le motif que suivent tous les écrans.
-  const [presets, setPresets] = useState<readonly { id: string; name: string }[]>([]);
-
-  useEffect(() => {
-    let alive = true;
-    void loadPresetsAction().then((loaded) => {
-      if (alive) {
-        setPresets(loaded);
-      }
-    });
-    return () => {
-      alive = false;
-    };
-  }, []);
 
   // Les deux modes du §5 : peu d'options, ou tout le catalogue.
   const modes = [
@@ -50,6 +34,10 @@ export default function CreatePage() {
 
   return (
     <StepShell step="create" title={t.wizard.name.title} description={t.wizard.name.description}>
+      {/* « Nouveau projet » arrive ici avec `?new=1` : brouillon neuf. */}
+      <Suspense fallback={null}>
+        <FreshStart />
+      </Suspense>
       <label className="pf-label" htmlFor="pf-project-name">
         {t.wizard.name.label}
       </label>
@@ -84,20 +72,6 @@ export default function CreatePage() {
           ))}
         </div>
       </fieldset>
-
-      <div className="mt-6 flex flex-wrap items-center gap-3">
-        <button type="button" className="pf-btn pf-btn-ghost" onClick={() => session.reset()}>
-          <Icon name="refresh" />
-          {t.wizard.name.reset}
-        </button>
-        <span className="pf-hint min-w-0">{t.wizard.name.draftNote}</span>
-      </div>
-
-      {presets.length === 0 ? null : (
-        <p className="pf-hint mt-4">
-          {t.wizard.name.presets(presets.map((preset) => preset.name).join(', '))}
-        </p>
-      )}
     </StepShell>
   );
 }

@@ -28,3 +28,4 @@ Thumbs.db
 apps/cli/templates/
 
 .vercel
+.next-e2e/

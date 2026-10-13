@@ -163,8 +163,9 @@ async function mouseJourney(page, workspace) {
   await continueLink(page).click();
   await page.waitForURL('**/create/env');
   check(
-    (await page.locator('input, textarea').count()) === 0,
-    'L’écran Environment ne doit contenir aucun champ de saisie : une valeur sensible ne se saisit pas ici (§6.8).',
+    (await page.locator('textarea, input[type="password"]').count()) === 0 &&
+      (await page.locator('main input').count()) === 1,
+    'L’écran Environment n’offre qu’un champ, pour le **nom** d’une variable : une valeur sensible ne se saisit pas ici (§6.8).',
   );
   await continueLink(page).click();
   await page.waitForURL('**/create/infrastructure');

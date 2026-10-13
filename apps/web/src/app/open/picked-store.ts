@@ -1,6 +1,6 @@
 'use client';
 
-import type { PickedFolder } from './browser-picker';
+import type { PickedAccess, PickedFolder } from './browser-picker';
 
 /**
  * Le dossier qu'on vient de choisir, en attente d'être analysé par l'écran
@@ -23,7 +23,12 @@ export type PickedTarget =
   /** Le chemin absolu rendu par l'explorateur de la machine (mode local). */
   | { readonly kind: 'path'; readonly path: string }
   /** Ce que le navigateur du visiteur a laissé lire (mode hébergé). */
-  | { readonly kind: 'entries'; readonly value: PickedFolder };
+  | {
+      readonly kind: 'entries';
+      readonly value: PickedFolder;
+      /** Écrire par la poignée (Chromium), ou seulement lire (repli `<input>`). */
+      readonly access: PickedAccess;
+    };
 
 let pending: PickedTarget | null = null;
 

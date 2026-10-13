@@ -112,6 +112,7 @@ interface ManifestDraft {
   services?: string[];
   quality?: string[];
   infra?: string[];
+  env?: string[];
 }
 
 let loaded: Registry | undefined;
@@ -233,6 +234,19 @@ function toManifest(
     }
   }
 
+  // Deux applications (un framework front ET un back) imposent le monorepo
+  // (MANIFEST_APPS_NEED_MONOREPO). L'architecture se choisit avant la stack :
+  // sans ce report, le brouillon échouait seulement au moment de générer.
+  const hasFramework = (app: AppValues | undefined) => app?.framework !== undefined;
+  if (
+    manifest.architecture !== undefined &&
+    manifest.architecture !== 'monorepo' &&
+    hasFramework(manifest.frontend) &&
+    hasFramework(manifest.backend)
+  ) {
+    manifest.architecture = 'monorepo';
+  }
+
   // Une base ou un ORM sans l'autre n'a pas de sens : l'objet est créé dès qu'un
   // des deux existe, et le schéma réclame celui qui manque (« pf add » dit la
   // même chose à l'utilisateur).
@@ -260,6 +274,11 @@ function toManifest(
   }
   if (assembly.lists.infra.size > 0) {
     manifest.infra = [...assembly.lists.infra].sort();
+  }
+  // Les variables ajoutées à la main : des noms seulement, le générateur les
+  // écrit vides dans `.env.example`, à côté de celles de la stack.
+  if (draft.customEnv !== undefined && draft.customEnv.length > 0) {
+    manifest.env = [...new Set(draft.customEnv)].sort();
   }
 
   return manifest;

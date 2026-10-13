@@ -9,6 +9,7 @@ import { ProjectCard } from '../components/ui/project-card';
 import type { DraftState } from '../lib/draft';
 import { STEP_ORDER, type StepId } from '../lib/flow';
 import { useMessages } from '../lib/i18n/provider';
+import { NEW_PROJECT_HREF } from '../lib/new-project';
 import { recentProjects, type StoredProject } from '../lib/projects';
 import type { GenerationReport } from './create/report/result';
 import { PickCard } from './open/pick-card';
@@ -125,7 +126,7 @@ export function DashboardView({
   return (
     <>
       <nav aria-label={t.dashboard.pathsLabel} className="pf-grid">
-        <Link className="pf-choice no-underline" href="/create">
+        <Link className="pf-choice no-underline" href={NEW_PROJECT_HREF}>
           <span className="pf-choice-name">
             <span aria-hidden="true" style={{ color: 'var(--pf-accent)' }}>
               <Icon name="hammer" size={16} />
@@ -212,7 +213,7 @@ export function DashboardView({
             {list.length === 0 && !showCompletedCard ? (
               <EmptyState
                 actions={
-                  <Link className="pf-btn" href="/create">
+                  <Link className="pf-btn" href={NEW_PROJECT_HREF}>
                     <Icon name="plus" size={15} />
                     {t.dashboard.createTitle}
                   </Link>
@@ -312,7 +313,9 @@ export function LocalOpenCard({ handoff }: LocalOpenCardProps): ReactElement {
         onPick={handoff.start}
         title={t.dashboard.openTitle}
       />
-      {handoff.notice === null ? null : (
+      {/* Fermer l'explorateur sans choisir n'est pas un événement à
+          annoncer : l'accueil reste tel quel, sans « Aucun dossier choisi ». */}
+      {handoff.notice === null || handoff.notice === t.picker.cancelled ? null : (
         <p aria-live="polite" className="pf-hint mt-2" role="status">
           {handoff.notice}
         </p>

@@ -8,6 +8,7 @@ import { LoadingLine } from '../../components/ui/loading';
 import { ProjectCard } from '../../components/ui/project-card';
 import { ScreenShell } from '../../components/wizard/shell';
 import { useMessages } from '../../lib/i18n/provider';
+import { NEW_PROJECT_HREF } from '../../lib/new-project';
 import type { StoredProject } from '../../lib/projects';
 import type { GenerationView } from '../actions';
 
@@ -81,7 +82,7 @@ export function ProjectsView({
       {ordered.length === 0 ? (
         <EmptyState
           actions={
-            <Link className="pf-btn pf-btn-primary" href="/create">
+            <Link className="pf-btn pf-btn-primary" href={NEW_PROJECT_HREF}>
               <Icon name="plus" size={15} />
               {t.projects.emptyAction}
             </Link>

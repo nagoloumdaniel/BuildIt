@@ -54,24 +54,16 @@ describe('couverture du catalogue réel', () => {
     expect(coverageOf('api').frameworks).toBeGreaterThan(0);
   });
 
-  it('mobile et desktop sont citées par des fiches, mais aucune ne peut en être le framework', () => {
-    // Le chiffre qui trompe : 46 fiches citent chacune. Le chiffre qui décide :
-    // zéro. Des linters, des CI et des langages ne font pas une application.
-    expect(coverageOf('mobile').entries).toBeGreaterThan(0);
-    expect(coverageOf('desktop').entries).toBeGreaterThan(0);
-    expect(coverageOf('mobile').frameworks).toBe(0);
-    expect(coverageOf('desktop').frameworks).toBe(0);
+  it('mobile et desktop ont chacune de quoi fournir un framework', () => {
+    // Expo, React Native et Flutter pour mobile ; Electron et Tauri pour desktop.
+    expect(coverageOf('mobile').frameworks).toBeGreaterThanOrEqual(3);
+    expect(coverageOf('desktop').frameworks).toBeGreaterThanOrEqual(2);
   });
 
   it('nomme les cibles sans framework, dans l’ordre du manifest', () => {
-    // `library` en fait partie : le §10 ne la décrit par aucune application,
-    // donc aucun framework ne lui est demandé. À l'appelant de croiser cette
-    // réponse avec les cibles que le §10 décrit par une application.
-    expect([...targetsWithoutFramework(requireEntries())]).toEqual([
-      'mobile',
-      'desktop',
-      'library',
-    ]);
+    // `library` seule reste : le §10 ne la décrit par aucune application,
+    // donc aucun framework ne lui est demandé.
+    expect([...targetsWithoutFramework(requireEntries())]).toEqual(['library']);
   });
 });
 

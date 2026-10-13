@@ -7,6 +7,7 @@ import { CommandLine } from '../components/ui/copy';
 import { Icon } from '../components/ui/icon';
 import { Illustration } from '../components/ui/illustration';
 import { useMessages } from '../lib/i18n/provider';
+import { NEW_PROJECT_HREF } from '../lib/new-project';
 
 /**
  * L'écran 404.
@@ -73,7 +74,7 @@ export default function NotFound(): ReactElement {
             <Icon name="home" />
             {t.errors.notFoundHome}
           </Link>
-          <Link className="pf-btn pf-btn-lg" href="/create">
+          <Link className="pf-btn pf-btn-lg" href={NEW_PROJECT_HREF}>
             <Icon name="sparkles" />
             {t.errors.notFoundCreate}
           </Link>

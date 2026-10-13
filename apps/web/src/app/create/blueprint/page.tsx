@@ -151,14 +151,17 @@ export default function BlueprintPage() {
         </p>
       )}
 
-      <div className="mt-5">
-        <Link className="pf-btn" href="/graph">
-          <Icon name="gitBranch" />
-          {t.build.blueprint.graphLink}
-        </Link>
-      </div>
-
-      <ShareLinkRow className="mt-3" link={shareLink} onCreate={createShareLink} />
+      <ShareLinkRow
+        className="mt-5"
+        leading={
+          <Link className="pf-btn" href="/graph">
+            <Icon name="gitBranch" />
+            {t.build.blueprint.graphLink}
+          </Link>
+        }
+        link={shareLink}
+        onCreate={createShareLink}
+      />
     </StepShell>
   );
 }

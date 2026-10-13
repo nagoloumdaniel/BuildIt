@@ -1,3 +1,4 @@
+import { ENV_NAME_PATTERN } from '@buildit/manifest';
 import { STEP_ORDER, type StepId } from './flow';
 
 /**
@@ -30,6 +31,12 @@ export interface DraftState {
   capabilities: string[];
   /** Noms des variables d'environnement requises — jamais leurs valeurs (§6.8). */
   envVarNames: string[];
+  /**
+   * Variables ajoutées à la main à l'écran Environnement — des **noms**
+   * seulement (`ENV_NAME_PATTERN`), écrits vides dans `.env.example`.
+   * Absent : aucune.
+   */
+  customEnv?: string[];
   infra: { docker: boolean; ci: boolean };
   /**
    * Le projet est généré (archive téléchargée ou dossier écrit) : plus rien ne
@@ -54,6 +61,7 @@ interface PersistedDraft {
   technologies: string[];
   capabilities: string[];
   envVarNames: string[];
+  customEnv?: string[];
   infra: { docker: boolean; ci: boolean };
   generated?: true;
 }
@@ -143,9 +151,11 @@ export function loadDraft(storage: Storage | null): DraftState {
     technologies,
     capabilities,
     envVarNames,
+    customEnv,
     infra: persistedInfra,
     generated,
   } = persisted;
+  const custom = strings(customEnv).filter((name) => ENV_NAME_PATTERN.test(name));
   const filled = optionalString(type);
   const shape = optionalString(architecture);
   return {
@@ -159,6 +169,7 @@ export function loadDraft(storage: Storage | null): DraftState {
     technologies: strings(technologies),
     capabilities: strings(capabilities),
     envVarNames: strings(envVarNames),
+    ...(custom.length === 0 ? {} : { customEnv: custom }),
     infra: infra(persistedInfra),
     ...(generated === true ? { generated: true as const } : {}),
   };
@@ -176,6 +187,9 @@ function toPersisted(draft: DraftState): PersistedDraft {
     technologies: [...draft.technologies],
     capabilities: [...draft.capabilities],
     envVarNames: [...draft.envVarNames],
+    ...(draft.customEnv === undefined || draft.customEnv.length === 0
+      ? {}
+      : { customEnv: [...draft.customEnv] }),
     infra: { ...draft.infra },
     ...(draft.generated === true ? { generated: true as const } : {}),
     // `resolution` n'est pas ici, et ne doit jamais y être : elle est
@@ -245,6 +259,7 @@ export function restorePersistedDraft(
   const type = keep(stored.type, current.type, baseline.type);
   const architecture = keep(stored.architecture, current.architecture, baseline.architecture);
   const generated = keep(stored.generated, current.generated, baseline.generated);
+  const customEnv = keep(stored.customEnv, current.customEnv, baseline.customEnv);
   return {
     version: stored.version,
     step: keep(stored.step, current.step, baseline.step),
@@ -256,6 +271,7 @@ export function restorePersistedDraft(
     technologies: keepList(stored.technologies, current.technologies, baseline.technologies),
     capabilities: keepList(stored.capabilities, current.capabilities, baseline.capabilities),
     envVarNames: keepList(stored.envVarNames, current.envVarNames, baseline.envVarNames),
+    ...(customEnv === undefined || customEnv.length === 0 ? {} : { customEnv }),
     infra: keep(stored.infra, current.infra, baseline.infra),
     ...(generated === true ? { generated: true as const } : {}),
     // `resolution` n'est jamais persistée : le brouillon relu ne la porte pas,

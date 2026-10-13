@@ -146,7 +146,7 @@ describe('ProjectsView — les états sans projet', () => {
 
     expect(html).toContain('Aucun projet généré pour l’instant');
     expect(html).toContain('Créer un premier projet');
-    expect(html).toContain('href="/create"');
+    expect(html).toContain('href="/create?new=1"');
     expect(html).toContain('href="/"');
   });
 });

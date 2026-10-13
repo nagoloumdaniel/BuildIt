@@ -242,6 +242,9 @@ export function planMonorepo(
     const generated = generateApp(
       {
         ...manifest,
+        // Les variables ajoutées à la main sont posées plus bas, dans une
+        // seule application : pas en double dans chaque `.env.example`.
+        env: undefined,
         name: `${manifest.name}-${app}`,
         architecture: 'single-app',
         targets: [app],
@@ -280,6 +283,14 @@ export function planMonorepo(
         : file,
     );
     files.splice(0, files.length, ...withEnv(linked, 'apps/web/', bridge.webEnv));
+  }
+
+  // Les variables ajoutées à la main vont à l'API quand il y en a une — le
+  // serveur est l'endroit des secrets —, sinon à la première application.
+  const custom = manifest.env ?? [];
+  const home = apps.has('api') ? 'api' : [...apps.keys()][0];
+  if (custom.length > 0 && home !== undefined) {
+    files.splice(0, files.length, ...withEnv(files, `apps/${home}/`, custom));
   }
 
   // La racine : le socle de ses propres fiches (Biome, Turborepo…), puis ce

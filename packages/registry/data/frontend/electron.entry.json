@@ -1,0 +1,12 @@
+{
+  "id": "electron",
+  "name": "Electron",
+  "category": "frontend",
+  "targets": ["desktop"],
+  "status": "stable",
+  "generation": "declared",
+  "license": "MIT",
+  "lastReviewedAt": "2026-10-13",
+  "compatibleWith": ["typescript", "javascript"],
+  "docs": "https://www.electronjs.org/docs"
+}

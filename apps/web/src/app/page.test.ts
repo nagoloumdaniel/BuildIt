@@ -42,7 +42,7 @@ describe('Dashboard — le menu d’accueil (§18bis)', () => {
     expect(html).toContain('Créer un projet');
     expect(html).toContain('Cloner un projet');
     expect(html).toContain('Ouvrir un projet local');
-    expect(html).toContain('href="/create"');
+    expect(html).toContain('href="/create?new=1"');
     expect(html).toContain('href="/clone"');
     // Volontairement absent : le nom et la promesse du produit sont dans
     // l'en-tête de l'application, l'accueil n'a pas de titre à lui.
@@ -91,7 +91,7 @@ describe('Dashboard — le brouillon en cours', () => {
     state.draft = { ...freshDraft(), name: 'mon-app' };
     const html = render();
 
-    expect(html).toContain('href="/create"');
+    expect(html).toContain('href="/create?new=1"');
     expect(html).not.toContain('/create/create');
   });
 

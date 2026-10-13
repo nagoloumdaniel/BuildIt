@@ -119,6 +119,20 @@ describe('createSessionStore', () => {
     expect(notifie).toBe(1);
   });
 
+  it('un reset avant le branchement oublie le brouillon stocké (« Nouveau projet »)', () => {
+    const storage = fakeStorage();
+    storage.setItem('pf-draft', JSON.stringify({ ...freshDraft(), name: 'ancien' }));
+    const session = createSessionStore(null);
+    session.reset();
+    session.attach(storage as unknown as Storage);
+
+    expect(session.get().name).toBe('');
+    expect(JSON.parse(storage.getItem('pf-draft') ?? '{}').name).toBe('');
+    // La suite est persistée normalement.
+    session.update((draft) => ({ ...draft, name: 'neuf' }));
+    expect(JSON.parse(storage.getItem('pf-draft') ?? '{}').name).toBe('neuf');
+  });
+
   it('attach à un stockage vide repart d’un brouillon frais', () => {
     const session = createSessionStore(null, { ...freshDraft(), name: 'à-oublier' });
     session.attach(fakeStorage() as unknown as Storage);

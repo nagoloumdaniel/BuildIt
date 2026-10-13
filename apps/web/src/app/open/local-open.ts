@@ -1,15 +1,26 @@
 'use client';
 
+import type { SkeletonFile } from '@buildit/manifest';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useMessages } from '../../lib/i18n/provider';
 import {
+  applyBaseFilesAction,
   inspectPickedFolderAction,
   inspectProjectAction,
   installProjectAction,
+  planBaseFilesAction,
 } from '../actions-node';
 import { canOpenNativePickerAction, pickerHomeAction, pickFolderAction } from '../actions-picker';
 import type { DialogOutcome } from '../picker/native-dialog';
-import { canUseBrowserPicker, pickFolderInBrowser } from './browser-picker';
+import { baseFilesFor, missingBaseFiles, type ProjectShape, projectShape } from './base-files';
+import { downloadMissing, missingInHandle, writeMissingToHandle } from './base-files-browser';
+import {
+  type BrowserPickOutcome,
+  canUseBrowserPicker,
+  canUseFileInput,
+  pickFolderInBrowser,
+  pickFolderWithInput,
+} from './browser-picker';
 import { type PickedTarget, targetLabel } from './picked-store';
 import type { InstallResultView, ProjectInspectionView } from './project';
 
@@ -59,7 +70,24 @@ export type LocalOpenPhase =
  * `null` tant que le serveur n'a pas répondu : l'écran n'affiche alors aucun
  * repli, parce qu'il ne sait pas encore s'il y en aura besoin.
  */
-export type PickMode = 'native' | 'browser' | 'none';
+export type PickMode = 'native' | 'browser' | 'input' | 'none';
+
+/**
+ * Qui ouvre l'explorateur, dans l'ordre : la boîte native (local), la File
+ * System Access API (Chromium), puis `<input webkitdirectory>` — que Firefox
+ * et Safari comprennent. `none` ne reste que pour un navigateur sans aucun
+ * moyen de choisir un dossier (mobile, surtout).
+ */
+export function choosePickMode(native: boolean, browser: boolean, input: boolean): PickMode {
+  if (native) return 'native';
+  if (browser) return 'browser';
+  return input ? 'input' : 'none';
+}
+
+/** Le mode du navigateur courant, côté hébergé. */
+export function browserPickMode(native: boolean): PickMode {
+  return choosePickMode(native, canUseBrowserPicker(), canUseFileInput());
+}
 
 /** La phase qui suit le retour de la boîte native. */
 export function pickOutcomePhase(
@@ -92,10 +120,11 @@ export async function pickProjectFolder(
   if (mode === 'none') {
     return { ok: false, reason: 'unavailable' };
   }
-  if (mode === 'browser') {
-    const outcome = await pickFolderInBrowser();
+  if (mode === 'browser' || mode === 'input') {
+    const outcome: BrowserPickOutcome =
+      mode === 'browser' ? await pickFolderInBrowser() : await pickFolderWithInput();
     return outcome.ok
-      ? { ok: true, target: { kind: 'entries', value: outcome.value } }
+      ? { ok: true, target: { kind: 'entries', value: outcome.value, access: outcome.access } }
       : { ok: false, reason: outcome.reason === 'unsupported' ? 'unavailable' : outcome.reason };
   }
   const outcome = await pickFolderAction(startAt === '' ? undefined : startAt);
@@ -130,6 +159,53 @@ export interface LocalOpenController {
   readonly setIgnoreScripts: (value: boolean) => void;
   readonly setConfirmed: (value: boolean) => void;
   readonly install: () => void;
+  /** Les fichiers de base manquants du dossier choisi ; `null` avant calcul. */
+  readonly base: BaseFilesView | null;
+  readonly baseBusy: boolean;
+  readonly baseResult: BaseFilesResult | null;
+  readonly applyBase: () => void;
+}
+
+/** Ce que l'écran sait des fichiers de base du dossier. */
+export interface BaseFilesView {
+  readonly shape: ProjectShape;
+  readonly missing: readonly SkeletonFile[];
+  /** `disk` : le serveur local écrit ; `handle` : le navigateur écrit ; `zip` : archive. */
+  readonly delivery: 'disk' | 'handle' | 'zip';
+}
+
+export type BaseFilesResult =
+  | { readonly kind: 'written'; readonly count: number }
+  | { readonly kind: 'zip'; readonly count: number }
+  | { readonly kind: 'failed'; readonly detail: string };
+
+/** Les fichiers de base d'une cible : calcul pur pour le navigateur, action en local. */
+export async function baseFilesOf(target: PickedTarget): Promise<BaseFilesView | null> {
+  if (target.kind === 'path') {
+    const plan = await planBaseFilesAction(target.path);
+    return plan.ok ? { ...plan.value, delivery: 'disk' } : null;
+  }
+  const shape = projectShape({
+    folder: target.value.name,
+    files: target.value.names,
+    dirs: target.value.dirs ?? [],
+    packageJson: target.value.packageJson,
+    manifest: target.value.manifest,
+  });
+  const wanted = baseFilesFor(shape);
+  if (target.access.kind === 'handle') {
+    return {
+      shape,
+      missing: await missingInHandle(target.access.handle, wanted),
+      delivery: 'handle',
+    };
+  }
+  const present = new Set(target.access.paths);
+  return {
+    shape,
+    missing: missingBaseFiles(wanted, (path) => present.has(path)),
+    delivery: 'zip',
+  };
 }
 
 export function useLocalProjectOpen(): LocalOpenController {
@@ -143,6 +219,9 @@ export function useLocalProjectOpen(): LocalOpenController {
   const [installing, setInstalling] = useState(false);
   const [notice, setNotice] = useState<string | null>(null);
   const [mode, setMode] = useState<PickMode | null>(null);
+  const [base, setBase] = useState<BaseFilesView | null>(null);
+  const [baseBusy, setBaseBusy] = useState(false);
+  const [baseResult, setBaseResult] = useState<BaseFilesResult | null>(null);
 
   // Le dernier dossier choisi sert de point de départ à la boîte suivante, et
   // la dernière cible sert à relancer l'analyse sans rechoisir.
@@ -155,7 +234,7 @@ export function useLocalProjectOpen(): LocalOpenController {
       if (!alive) {
         return;
       }
-      setMode(native ? 'native' : canUseBrowserPicker() ? 'browser' : 'none');
+      setMode(browserPickMode(native));
       if (!native) {
         return;
       }
@@ -170,21 +249,49 @@ export function useLocalProjectOpen(): LocalOpenController {
     };
   }, []);
 
-  const analyse = useCallback(async (next: PickedTarget): Promise<void> => {
-    target.current = next;
-    setDirectory(targetLabel(next));
-    setInspection(null);
-    setInstallResult(null);
-    setConfirmed(false);
-    setNotice(null);
-    setPhase('inspecting');
-    const result =
-      next.kind === 'path'
-        ? await inspectProjectAction(next.path)
-        : await inspectPickedFolderAction(next.value);
-    setInspection(result);
-    setPhase('ready');
-  }, []);
+  const analyse = useCallback(
+    async (next: PickedTarget): Promise<void> => {
+      target.current = next;
+      setDirectory(targetLabel(next));
+      setInspection(null);
+      setInstallResult(null);
+      setConfirmed(false);
+      setNotice(null);
+      setBase(null);
+      setBaseResult(null);
+      setPhase('inspecting');
+      // Seuls les noms et deux petits textes partent au serveur — jamais la
+      // poignée du dossier, qui ne se sérialise pas.
+      const picked =
+        next.kind === 'path'
+          ? undefined
+          : {
+              name: next.value.name,
+              names: next.value.names,
+              ...(next.value.packageJson === undefined
+                ? {}
+                : { packageJson: next.value.packageJson }),
+            };
+      let result: ProjectInspectionView;
+      try {
+        result =
+          picked === undefined
+            ? await inspectProjectAction(next.kind === 'path' ? next.path : '')
+            : await inspectPickedFolderAction(picked);
+      } catch {
+        // Réseau coupé, déploiement remplacé : dit, jamais une analyse sans fin.
+        result = { ok: false, issues: [t.open.inspectFailed] };
+      }
+      setInspection(result);
+      setPhase('ready');
+      try {
+        setBase(await baseFilesOf(next));
+      } catch {
+        setBase(null);
+      }
+    },
+    [t],
+  );
 
   const pick = useCallback((): void => {
     if (mode === null) {
@@ -194,6 +301,14 @@ export function useLocalProjectOpen(): LocalOpenController {
     setNotice(null);
     void (async () => {
       const result = await pickProjectFolder(mode, startAt.current);
+      if (!result.ok && mode === 'browser' && result.reason === 'failed' && canUseFileInput()) {
+        // L'API refusée (Brave, politique, dossier protégé) : le prochain
+        // appui passe par le sélecteur universel du navigateur.
+        setMode('input');
+        setPhase('failed');
+        setNotice(t.open.fallbackNote);
+        return;
+      }
       if (!result.ok) {
         setPhase(result.reason === 'cancelled' ? 'cancelled' : result.reason);
         setNotice(
@@ -227,8 +342,51 @@ export function useLocalProjectOpen(): LocalOpenController {
     })();
   }, [ignoreScripts]);
 
+  const applyBase = useCallback((): void => {
+    const current = target.current;
+    if (current === null || base === null || base.missing.length === 0) {
+      return;
+    }
+    setBaseBusy(true);
+    setBaseResult(null);
+    void (async () => {
+      try {
+        if (current.kind === 'path') {
+          const result = await applyBaseFilesAction(current.path);
+          setBaseResult(
+            result.ok
+              ? { kind: 'written', count: result.written.length }
+              : { kind: 'failed', detail: result.issues.join(' ') },
+          );
+        } else if (current.access.kind === 'handle') {
+          const result = await writeMissingToHandle(current.access.handle, base.missing);
+          setBaseResult(
+            result.ok
+              ? { kind: 'written', count: result.written.length }
+              : {
+                  kind: 'failed',
+                  detail: result.reason === 'denied' ? t.open.baseDenied : (result.detail ?? ''),
+                },
+          );
+        } else {
+          downloadMissing(current.value.name, base.missing);
+          setBaseResult({ kind: 'zip', count: base.missing.length });
+        }
+        if (current.kind === 'path' || current.access.kind === 'handle') {
+          setBase(await baseFilesOf(current));
+        }
+      } catch (error) {
+        setBaseResult({ kind: 'failed', detail: String(error) });
+      } finally {
+        setBaseBusy(false);
+      }
+    })();
+  }, [base, t]);
+
   const clear = useCallback((): void => {
     target.current = null;
+    setBase(null);
+    setBaseResult(null);
     setDirectory('');
     setInspection(null);
     setInstallResult(null);
@@ -262,5 +420,9 @@ export function useLocalProjectOpen(): LocalOpenController {
     setIgnoreScripts,
     setConfirmed,
     install,
+    base,
+    baseBusy,
+    baseResult,
+    applyBase,
   };
 }

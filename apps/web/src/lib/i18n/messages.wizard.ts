@@ -35,9 +35,6 @@ export const FR_WIZARD = {
       modeExpert: 'Expert',
       modeExpertNote:
         'Tout le catalogue, avec recherche et filtres, et les incompatibilités expliquées.',
-      reset: 'Repartir de zéro',
-      draftNote: 'Le brouillon se reprend tout seul si vous fermez l’onglet.',
-      presets: (names: string) => `Presets certifiés disponibles : ${names}.`,
     },
 
     /**
@@ -49,12 +46,8 @@ export const FR_WIZARD = {
       description: 'Ce choix détermine les technologies que les écrans suivants vous proposeront.',
       chosen: 'Choisie',
       empty: 'Aucune plateforme choisie pour l’instant.',
-      /** La conjonction d'une énumération : « Ordinateur et Mobile ». */
-      pairSeparator: ' et ',
       count: (count: number, list: string) =>
         `${count} plateforme${count > 1 ? 's' : ''} : ${list}.`,
-      withheld: (labels: string, plural: boolean) =>
-        `${labels} : ${plural ? 'ces plateformes ne sont' : 'cette plateforme n’est'} pas encore proposée${plural ? 's' : ''}. Le catalogue ne contient aucun framework pour ${plural ? 'elles' : 'elle'}. C’est la V1 (§23) ; le MVP génère des projets web, API et bibliothèque.`,
       labels: {
         web: { label: 'Web', note: 'Site, SPA, SSR, full-stack ou PWA.' },
         mobile: { label: 'Mobile', note: 'Android et iOS depuis une base de code unique.' },
@@ -72,12 +65,8 @@ export const FR_WIZARD = {
       title: 'Profil du projet',
       description:
         'Le profil oriente l’architecture et la stack proposées ensuite. Il n’entre pas dans le manifest : c’est une aide au choix, pas une contrainte du moteur.',
-      recommendedDefault: 'Recommandations par défaut : aucune plateforme n’est encore choisie.',
-      recommendedFor: (targets: string) => `Recommandations pour vos plateformes : ${targets}.`,
       legend: 'Profils disponibles',
-      recommendedBadge: 'Recommandé',
       chosenBadge: 'Choisi',
-      showAll: (count: number) => `Voir toutes les options (${count})`,
       none: 'Aucun profil choisi pour l’instant.',
       summary: (label: string, guides: string) => `${label} : ${guides}`,
       labels: {
@@ -138,57 +127,75 @@ export const FR_WIZARD = {
       title: 'Architecture',
       description:
         'La forme la plus souple n’est pas la moins chère à exploiter. L’architecture choisie part dans le manifest.',
-      recommendedFor: (label: string) => `Recommandations pour le profil « ${label} ».`,
-      recommendedDefault: 'Recommandations par défaut : aucun profil n’est encore choisi.',
       legend: 'Formes d’architecture disponibles',
-      recommendedBadge: 'Recommandé',
       chosenBadge: 'Choisie',
       impact: (complexity: string, cost: string) =>
         `Complexité : ${complexity} · Coût d’exploitation : ${cost}`,
-      showAll: (count: number) => `Voir toutes les options (${count})`,
       none: 'Aucune architecture choisie pour l’instant.',
       summary: (label: string, complexity: string, cost: string) =>
         `${label} : complexité ${complexity}, coût ${cost}`,
+      repoLabel: 'Dépôt',
+      runtimeLabel: 'Exécution',
+      treeLabel: 'Dossiers de base générés :',
       labels: {
         'single-app': {
           label: 'Application unique',
           note: 'Une seule application, un seul dépôt, un seul déploiement.',
           complexity: 'faible',
           cost: 'minimal : un seul service à héberger et à surveiller.',
+          repo: 'un seul dépôt, une application ; le code découpé par fonctionnalités et par modules.',
+          runtime: 'un seul processus déployé.',
         },
         monorepo: {
           label: 'Monorepo',
           note: 'Plusieurs applications et paquets partagés dans un même dépôt.',
           complexity: 'moyenne',
           cost: 'modéré : la CI doit être outillée pour ne construire que ce qui change.',
+          repo: 'apps/ (web, api), packages/ partagés (contrats), infra/ par environnement, docs/decisions.',
+          runtime: 'chaque application se déploie séparément.',
         },
         'modular-monolith': {
           label: 'Monolithe modulaire',
           note: 'Un seul déploiement, des modules internes aux frontières nettes.',
           complexity: 'moyenne',
           cost: 'faible : un seul déployable, mais une discipline de modules à tenir.',
+          repo: 'un seul dépôt ; modules hexagonaux (domaine, application, adaptateurs).',
+          runtime: 'un seul déployable, des frontières internes strictes.',
         },
         microservices: {
           label: 'Microservices',
           note: 'Des services indépendants, déployés et mis à l’échelle séparément.',
           complexity: 'élevée',
           cost: 'élevé : réseau, orchestration et observabilité à financer.',
+          repo: 'services/ (passerelle + services), packages/event-contracts, infra/.',
+          runtime: 'un processus par service, chacun propriétaire de ses données.',
         },
         serverless: {
           label: 'Serverless',
           note: 'Des fonctions exécutées à la demande, sans serveur à administrer.',
           complexity: 'moyenne',
           cost: 'variable : à l’usage, avec un plafond de facturation à surveiller.',
+          repo: 'functions/ (http, events, scheduled) et infra/.',
+          runtime: 'des fonctions à la demande, sans état.',
         },
         'event-driven': {
           label: 'Orienté événements',
           note: 'Des flux d’événements découplent producteurs et consommateurs.',
           complexity: 'élevée',
           cost: 'élevé : une file et une supervision de bout en bout.',
+          repo: 'src/events (producteurs, consommateurs, outbox, lettres mortes), packages/event-contracts.',
+          runtime: 'une file ou un bus de messages entre producteurs et consommateurs.',
         },
       } satisfies Record<
         Architecture,
-        { label: string; note: string; complexity: string; cost: string }
+        {
+          label: string;
+          note: string;
+          complexity: string;
+          cost: string;
+          repo: string;
+          runtime: string;
+        }
       >,
     },
 
@@ -237,6 +244,9 @@ export const FR_WIZARD = {
       searchLabel: 'Rechercher une technologie',
       searchPlaceholder: 'react, postgres, drizzle…',
       searchHint: 'La recherche parcourt tout le catalogue, sans changer de catégorie.',
+      back: 'Retour aux catégories',
+      chosenTitle: 'Technologies choisies',
+      removeChosen: (label: string) => `Retirer ${label}`,
       compatibleOnly: 'Compatible seulement : les options bloquées sont comptées, pas oubliées.',
       categories: {
         frontend: 'Frontend',
@@ -297,6 +307,13 @@ export const FR_WIZARD = {
       kept: 'Capacités retenues',
       none: 'Aucune capacité choisie pour l’instant.',
       remove: (id: string) => `Retirer ${id}`,
+      back: 'Retour aux familles',
+      searchLabel: 'Rechercher une capacité',
+      searchPlaceholder: 'stripe, s3, meilisearch…',
+      searchHint: 'La recherche parcourt toutes les familles.',
+      resultsLabel: 'Résultats de recherche',
+      resultsFor: (query: string) => `Résultats pour « ${query} »`,
+      noMatch: 'Aucune capacité ne correspond à cette recherche.',
       /** Le jeton technique reste au milieu, en chasse fixe, posé par l'écran. */
       servicesNoteBefore: 'Ces identifiants partent dans',
       servicesNoteAfter: ': le manifest ne porte aucune valeur, seulement des choix.',
@@ -361,9 +378,6 @@ export const EN_WIZARD: Widen<typeof FR_WIZARD> = {
       modeExpert: 'Expert',
       modeExpertNote:
         'The whole catalogue, with search and filters, and incompatibilities explained.',
-      reset: 'Start over',
-      draftNote: 'The draft comes back on its own if you close the tab.',
-      presets: (names: string) => `Certified presets available: ${names}.`,
     },
 
     targets: {
@@ -371,10 +385,7 @@ export const EN_WIZARD: Widen<typeof FR_WIZARD> = {
       description: 'This choice determines the technologies the next screens will offer.',
       chosen: 'Chosen',
       empty: 'No platform chosen yet.',
-      pairSeparator: ' and ',
       count: (count: number, list: string) => `${count} platform${count > 1 ? 's' : ''}: ${list}.`,
-      withheld: (labels: string, plural: boolean) =>
-        `${labels}: ${plural ? 'these platforms are' : 'this platform is'} not offered yet. The catalogue holds no framework for ${plural ? 'them' : 'it'}. That is V1 (§23); the MVP generates web, API and library projects.`,
       labels: {
         web: { label: 'Web', note: 'Site, SPA, SSR, full-stack or PWA.' },
         mobile: { label: 'Mobile', note: 'Android and iOS from a single codebase.' },
@@ -388,12 +399,8 @@ export const EN_WIZARD: Widen<typeof FR_WIZARD> = {
       title: 'Project profile',
       description:
         'The profile steers the architecture and stack offered next. It never enters the manifest: it is an aid to choice, not an engine constraint.',
-      recommendedDefault: 'Default recommendations: no platform chosen yet.',
-      recommendedFor: (targets: string) => `Recommendations for your platforms: ${targets}.`,
       legend: 'Available profiles',
-      recommendedBadge: 'Recommended',
       chosenBadge: 'Chosen',
-      showAll: (count: number) => `See all options (${count})`,
       none: 'No profile chosen yet.',
       summary: (label: string, guides: string) => `${label}: ${guides}`,
       labels: {
@@ -445,53 +452,64 @@ export const EN_WIZARD: Widen<typeof FR_WIZARD> = {
       title: 'Architecture',
       description:
         'The most flexible shape is not the cheapest to run. The chosen architecture goes into the manifest.',
-      recommendedFor: (label: string) => `Recommendations for the “${label}” profile.`,
-      recommendedDefault: 'Default recommendations: no profile chosen yet.',
       legend: 'Available architecture shapes',
-      recommendedBadge: 'Recommended',
       chosenBadge: 'Chosen',
       impact: (complexity: string, cost: string) =>
         `Complexity: ${complexity} · Operating cost: ${cost}`,
-      showAll: (count: number) => `See all options (${count})`,
       none: 'No architecture chosen yet.',
       summary: (label: string, complexity: string, cost: string) =>
         `${label} : ${complexity} complexity, ${cost} cost`,
+      repoLabel: 'Repository',
+      runtimeLabel: 'Runtime',
+      treeLabel: 'Base folders generated:',
       labels: {
         'single-app': {
           label: 'Single application',
           note: 'One application, one repository, one deployment.',
           complexity: 'low',
           cost: 'minimal: a single service to host and watch.',
+          repo: 'one repository, one application; code split by features and modules.',
+          runtime: 'a single deployed process.',
         },
         monorepo: {
           label: 'Monorepo',
           note: 'Several applications and shared packages in one repository.',
           complexity: 'medium',
           cost: 'moderate: CI must be tooled to build only what changed.',
+          repo: 'apps/ (web, api), shared packages/ (contracts), infra/ per environment, docs/decisions.',
+          runtime: 'each application deploys on its own.',
         },
         'modular-monolith': {
           label: 'Modular monolith',
           note: 'One deployment, internal modules with clear boundaries.',
           complexity: 'medium',
           cost: 'low: a single deployable, but module discipline to hold.',
+          repo: 'one repository; hexagonal modules (domain, application, adapters).',
+          runtime: 'one deployable, strict internal boundaries.',
         },
         microservices: {
           label: 'Microservices',
           note: 'Independent services, deployed and scaled separately.',
           complexity: 'high',
           cost: 'high: network, orchestration and observability to fund.',
+          repo: 'services/ (gateway + services), packages/event-contracts, infra/.',
+          runtime: 'one process per service, each owning its data.',
         },
         serverless: {
           label: 'Serverless',
           note: 'Functions run on demand, with no server to administer.',
           complexity: 'medium',
           cost: 'variable: pay as you go, with a billing cap to watch.',
+          repo: 'functions/ (http, events, scheduled) and infra/.',
+          runtime: 'stateless on-demand functions.',
         },
         'event-driven': {
           label: 'Event-driven',
           note: 'Event streams decouple producers and consumers.',
           complexity: 'high',
           cost: 'high: a queue and end-to-end supervision.',
+          repo: 'src/events (producers, consumers, outbox, dead letters), packages/event-contracts.',
+          runtime: 'a queue or message bus between producers and consumers.',
         },
       },
     },
@@ -535,6 +553,9 @@ export const EN_WIZARD: Widen<typeof FR_WIZARD> = {
       searchLabel: 'Search for a technology',
       searchPlaceholder: 'react, postgres, drizzle…',
       searchHint: 'The search walks the whole catalogue without changing category.',
+      back: 'Back to categories',
+      chosenTitle: 'Chosen technologies',
+      removeChosen: (label: string) => `Remove ${label}`,
       compatibleOnly: 'Compatible only: blocked options are counted, not forgotten.',
       categories: {
         frontend: 'Frontend',
@@ -589,6 +610,13 @@ export const EN_WIZARD: Widen<typeof FR_WIZARD> = {
       kept: 'Chosen capabilities',
       none: 'No capability chosen yet.',
       remove: (id: string) => `Remove ${id}`,
+      back: 'Back to families',
+      searchLabel: 'Search for a capability',
+      searchPlaceholder: 'stripe, s3, meilisearch…',
+      searchHint: 'The search walks every family.',
+      resultsLabel: 'Search results',
+      resultsFor: (query: string) => `Results for “${query}”`,
+      noMatch: 'No capability matches this search.',
       servicesNoteBefore: 'These identifiers go into',
       servicesNoteAfter: ': the manifest carries no value, only choices.',
       emptyFamily: 'No option in this family yet.',

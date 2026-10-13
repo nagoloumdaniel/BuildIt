@@ -1,0 +1,13 @@
+{
+  "id": "cobol-language-support",
+  "name": "COBOL Language Support (Che4z)",
+  "category": "dev-environment",
+  "targets": ["api", "library"],
+  "status": "stable",
+  "generation": "declared",
+  "license": "EPL-2.0",
+  "lastReviewedAt": "2026-10-13",
+  "requires": ["cobol"],
+  "ecosystems": ["cobol"],
+  "docs": "https://github.com/eclipse-che4z/che-che4z-lsp-for-cobol"
+}

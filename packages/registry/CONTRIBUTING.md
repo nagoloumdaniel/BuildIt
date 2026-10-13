@@ -125,6 +125,16 @@ Selon ce qu'apporte la technologie, la preuve prend trois formes :
 
 `docker` : le test de fumée construit l'image du preset API, la lance, vérifie `/health` et que le conteneur ne tourne pas en root.
 
+### Fiches `declared` hors Node : COBOL, mobile, desktop
+
+Le socle généré est un projet pnpm/Node. Comme Python, Go, Java ou .NET, les fiches suivantes sont donc `declared` : le générateur pose le socle (README, `.env.example`, CI, squelette d'architecture) mais aucun code applicatif.
+
+- **COBOL** (`cobol`, écosystème d'exécution `cobol`) : `gnucobol`, `cobol-check`, `ocesql` (ESQL vers PostgreSQL uniquement), `db2`, `cobol-language-support` (Eclipse Che4z), `zowe`, et les outils transverses `make`, `cmake`. Aucun backend HTTP COBOL n'est au catalogue : la stack se choisit sur la cible `library` (programme batch). L'écosystème `cobol` refuse toute fiche liée à Node, Python, la JVM…
+- **mobile** : `expo`, `react-native`, `flutter` (+ `dart`) — champ `mobile.framework` du manifest.
+- **desktop** : `electron`, `tauri` — champ `desktop.framework`.
+
+Les frameworks restent dans la catégorie `frontend`, exclusive : un projet porte un seul framework d'interface, web, mobile ou desktop.
+
 Une seule contrainte reste vérifiée par le schéma :
 
 - `declared` **avec** `template` → rejeté. Si le template existe et qu'un test le couvre, la fiche doit être promue.

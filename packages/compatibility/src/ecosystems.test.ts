@@ -38,6 +38,14 @@ describe('combinaisons standard qui étaient refusées à tort', () => {
     ['Lerna sur Nx', ['web'], ['next', 'lerna', 'nx']],
     ['Astro + composants Vue', ['web'], ['astro', 'vuetify']],
     ['Preact + bibliothèque React', ['web'], ['preact', 'zustand']],
+    [
+      'COBOL batch : GnuCOBOL, ESQL PostgreSQL, Docker',
+      ['library'],
+      ['cobol', 'gnucobol', 'cobol-check', 'ocesql', 'postgresql', 'make', 'docker'],
+    ],
+    ['Flutter exige Dart', ['mobile'], ['flutter']],
+    ['Expo en TypeScript', ['mobile'], ['expo', 'typescript']],
+    ['Tauri en TypeScript', ['desktop'], ['tauri', 'typescript']],
   ] as const)('%s', (_name, targets, technologies) => {
     const result = check(targets, technologies);
     expect(codes(result)).toEqual([]);
@@ -56,6 +64,10 @@ describe('combinaisons impossibles qui passaient', () => {
     ['Python + Go', ['api'], ['python', 'go']],
     ['Express + Python', ['api'], ['express', 'python']],
     ['htmx + composants React', ['web'], ['htmx', 'mantine']],
+    ['COBOL + Hono', ['api'], ['cobol', 'hono']],
+    ['COBOL + Prisma', ['api'], ['cobol', 'prisma']],
+    ['GnuCOBOL + Python', ['api'], ['gnucobol', 'python']],
+    ['Open COBOL ESQL + Express', ['api'], ['ocesql', 'express']],
   ] as const)('%s', (_name, targets, technologies) => {
     expect(codes(check(targets, technologies))).toContain('COMPAT_ECOSYSTEM_MISMATCH');
   });

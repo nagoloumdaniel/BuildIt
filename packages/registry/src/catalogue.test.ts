@@ -213,14 +213,20 @@ describe('contenu du catalogue', () => {
     }
   });
 
-  it('aucune fiche ne vise exclusivement mobile ou desktop — hors périmètre MVP (§23)', () => {
+  it('une fiche purement mobile ou desktop est un framework ou un langage de cette cible', () => {
     const registry = requireRegistry();
-    // Le MVP est « Web uniquement » (§23). Une technologie d'API entre dans le
-    // périmètre — elle sert l'application web — mais une technologie purement
-    // mobile ou desktop n'a rien à y faire avant la V1.
+    // Mobile et desktop entrent au catalogue par leurs applications (§10) :
+    // Expo, Flutter, Electron, Tauri et leurs langages. Un outil transverse
+    // (CI, linter) cite aussi web ou api, et n'apparaît donc pas ici.
     for (const entry of registry.entries()) {
-      const inScope = entry.targets.some((target) => target === 'web' || target === 'api');
-      expect(inScope, `hors périmètre MVP : ${entry.id}`).toBe(true);
+      const outsideWebApi = !entry.targets.some(
+        (target) => target === 'web' || target === 'api' || target === 'library',
+      );
+      if (outsideWebApi) {
+        expect(['frontend', 'language'], `fiche mobile/desktop hors rôle : ${entry.id}`).toContain(
+          entry.category,
+        );
+      }
     }
   });
 });

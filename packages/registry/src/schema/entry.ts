@@ -89,6 +89,7 @@ export const RUNTIME_ECOSYSTEMS = [
   'ruby',
   'jvm',
   'dotnet',
+  'cobol',
 ] as const;
 
 export type UiEcosystem = (typeof UI_ECOSYSTEMS)[number];

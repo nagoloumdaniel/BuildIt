@@ -26,6 +26,15 @@ export const projectNameSchema: z.ZodString = z
  * Identifiant de technologie : minuscules et chiffres séparés par des tirets
  * simples. Correspond à la clé `id` des fiches du registry (§11).
  */
+/**
+ * Nom d'une variable d'environnement ajoutée à la main (`env` du manifest) :
+ * majuscules, chiffres et soulignés, une lettre en tête. Jamais de `=` — donc
+ * jamais de valeur : le manifest ne porte que des noms.
+ */
+export const ENV_NAME_PATTERN: RegExp = /^[A-Z][A-Z0-9_]*$/;
+
+export const envNameSchema: z.ZodString = z.string().max(128).regex(ENV_NAME_PATTERN);
+
 export const TECH_SLUG_PATTERN: RegExp = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 
 export const techSlugSchema: z.ZodString = z.string().regex(TECH_SLUG_PATTERN);

@@ -46,6 +46,24 @@ describe('saveDraft / loadDraft — aller-retour', () => {
   });
 });
 
+describe('variables ajoutées à la main (`customEnv`)', () => {
+  it('survivent au rechargement, et un nom invalide relu est écarté', () => {
+    const storage = fakeStorage() as unknown as Storage;
+    saveDraft(storage, { ...freshDraft(), name: 'app', customEnv: ['API_URL'] });
+    expect(loadDraft(storage).customEnv).toEqual(['API_URL']);
+
+    const raw = JSON.parse(storage.getItem('pf-draft') ?? '{}') as Record<string, unknown>;
+    storage.setItem('pf-draft', JSON.stringify({ ...raw, customEnv: ['ok_non', 'BON'] }));
+    expect(loadDraft(storage).customEnv).toEqual(['BON']);
+  });
+
+  it('une liste vide n’est pas persistée', () => {
+    const storage = fakeStorage() as unknown as Storage;
+    saveDraft(storage, { ...freshDraft(), customEnv: [] });
+    expect('customEnv' in loadDraft(storage)).toBe(false);
+  });
+});
+
 describe('loadDraft — une reprise impossible rend un brouillon frais, jamais un crash', () => {
   it('sans storage', () => {
     expect(loadDraft(null)).toEqual(freshDraft());

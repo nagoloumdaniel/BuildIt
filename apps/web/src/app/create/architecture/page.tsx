@@ -4,7 +4,7 @@ import { type ReactElement, useEffect } from 'react';
 import { useDraft, useSession } from '../../../components/wizard/draft-provider';
 import { StepShell } from '../../../components/wizard/shell';
 import { useMessages } from '../../../lib/i18n/provider';
-import { ArchitectureChoices, defaultArchitecture, withArchitecture } from './options';
+import { ArchitectureChoices, DEFAULT_ARCHITECTURE, withArchitecture } from './options';
 
 /**
  * L'écran 4 du §6.5. Ce fichier ne porte **que** l'assemblage : la coquille
@@ -12,12 +12,10 @@ import { ArchitectureChoices, defaultArchitecture, withArchitecture } from './op
  * `default` dans un `page.tsx` (validateur engendré), donc les données et le
  * contenu vivent dans `options.tsx`.
  *
- * Préremplissage : à la première visite (`architecture` encore vide), la forme
- * la plus recommandée pour le profil (`defaultArchitecture`) est posée toute
- * seule — l'utilisateur voit tout de suite un choix cohérent, badgé
- * « Recommandé » **et** « Choisie », au lieu d'un écran vide à remplir. Il
- * reste libre d'en choisir une autre ; une fois posée (ici ou par un clic),
- * l'effet ne la touche plus jamais.
+ * Préremplissage : à la première visite (`architecture` encore vide), une
+ * forme par défaut (`DEFAULT_ARCHITECTURE`) est posée, parce que le manifest en
+ * exige une. Le test se fait **dans** le changement, sur l'état courant : un
+ * brouillon relu après un rechargement ne doit jamais être écrasé.
  */
 export default function ArchitecturePage(): ReactElement {
   const t = useMessages();
@@ -26,7 +24,11 @@ export default function ArchitecturePage(): ReactElement {
 
   useEffect(() => {
     if (draft.architecture === undefined) {
-      session.update((current) => withArchitecture(current, defaultArchitecture(current.type)));
+      session.update((current) =>
+        current.architecture === undefined
+          ? withArchitecture(current, DEFAULT_ARCHITECTURE)
+          : current,
+      );
     }
   }, [draft.architecture, session]);
 
@@ -37,9 +39,9 @@ export default function ArchitecturePage(): ReactElement {
       description={t.wizard.architecture.description}
     >
       <ArchitectureChoices
-        mode={draft.mode}
         selected={draft.architecture}
-        type={draft.type}
+        technologies={draft.technologies}
+        targets={draft.targets}
         onSelect={(architecture) =>
           session.update((current) => withArchitecture(current, architecture))
         }

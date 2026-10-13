@@ -4,7 +4,7 @@ import { DraftProvider } from '../../../components/wizard/draft-provider';
 import { freshDraft } from '../../../lib/draft';
 import { FR } from '../../../lib/i18n/messages';
 import TypePage from './page';
-import { PROJECT_TYPES, ProjectTypeChoices, recommendedTypes, withType } from './profiles';
+import { PROJECT_TYPES, ProjectTypeChoices, withType } from './profiles';
 
 /**
  * Vitest tourne sans DOM : on prouve le contrat par `renderToStaticMarkup`.
@@ -30,82 +30,29 @@ describe('profils du §6.4', () => {
       expect(note.guides.length).toBeGreaterThan(0);
     }
   });
-
-  it('recommande de 2 à 4 profils, jamais zéro ni le catalogue entier', () => {
-    const profiles: readonly (readonly string[])[] = [
-      [],
-      ['web'],
-      ['mobile'],
-      ['desktop'],
-      ['api'],
-      ['library'],
-      ['web', 'mobile'],
-    ];
-    for (const targets of profiles) {
-      const recommended = recommendedTypes(targets);
-      expect(recommended.length).toBeGreaterThanOrEqual(2);
-      expect(recommended.length).toBeLessThanOrEqual(4);
-      for (const type of recommended) {
-        expect(PROJECT_TYPES).toContain(type);
-      }
-    }
-  });
-
-  it('ne recommande que des profils connus et de façon déterministe', () => {
-    expect(recommendedTypes(['web'])).toEqual(recommendedTypes(['web']));
-    expect(recommendedTypes(['mobile']).length).toBeGreaterThan(0);
-  });
 });
 
 describe('ProjectTypeChoices', () => {
-  it('en guidé, n’affiche que les recommandés et garde le reste accessible', () => {
+  it('affiche tous les profils d’emblée, sans recommandation ni bouton « voir plus »', () => {
     const html = renderToStaticMarkup(
-      <ProjectTypeChoices
-        mode="guided"
-        selected={undefined}
-        targets={['web']}
-        onSelect={() => {}}
-      />,
-    );
-
-    expect(rendered(html)).toBe(recommendedTypes(['web']).length);
-    expect(html).toContain('Recommandé');
-    expect(html).toContain('Voir toutes les options');
-  });
-
-  it('en expert, affiche tout le catalogue d’emblée', () => {
-    const html = renderToStaticMarkup(
-      <ProjectTypeChoices
-        mode="expert"
-        selected={undefined}
-        targets={['web']}
-        onSelect={() => {}}
-      />,
+      <ProjectTypeChoices selected={undefined} onSelect={() => {}} />,
     );
 
     expect(rendered(html)).toBe(PROJECT_TYPES.length);
+    expect(html).not.toContain('Recommand');
     expect(html).not.toContain('Voir toutes les options');
   });
 
   it('marque le profil choisi, et lui seul', () => {
-    const html = renderToStaticMarkup(
-      <ProjectTypeChoices mode="expert" selected="saas" targets={['web']} onSelect={() => {}} />,
-    );
+    const html = renderToStaticMarkup(<ProjectTypeChoices selected="saas" onSelect={() => {}} />);
 
     expect(html).toMatch(/data-type="saas"[^>]*aria-pressed="true"/);
-    // Plus de badge « Choisi » : la carte appuyée le dit déjà.
-    expect(html).not.toContain('>Choisi<');
     expect(html.match(/aria-pressed="true"/g)).toHaveLength(1);
   });
 
-  it('ne rend aucune carte quand le profil est inconnu du brouillon', () => {
+  it('ne marque aucune carte quand le profil est inconnu du brouillon', () => {
     const html = renderToStaticMarkup(
-      <ProjectTypeChoices
-        mode="expert"
-        selected="profil-supprime"
-        targets={['web']}
-        onSelect={() => {}}
-      />,
+      <ProjectTypeChoices selected="profil-supprime" onSelect={() => {}} />,
     );
 
     expect(html.match(/aria-pressed="true"/g)).toBeNull();

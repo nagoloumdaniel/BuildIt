@@ -62,3 +62,51 @@ describe('page Stack Builder', () => {
     expect(guided).not.toContain('id="pf-stack-compatible"');
   });
 });
+
+describe('Stack Builder : catégories, recherche et cartes', () => {
+  it('liste les catégories en grille de trois colonnes, sans conteneur, avec le nombre de choix', () => {
+    const html = renderToStaticMarkup(
+      <DraftProvider>
+        <CategoryNav
+          blocks={[
+            block('frontend', [option('next', 'selected'), option('vue', 'available')]),
+            block('orm', [option('prisma', 'available')]),
+          ]}
+          current={undefined}
+          onSelect={() => undefined}
+        />
+      </DraftProvider>,
+    );
+    expect(html).toContain('aria-label="Catégories du catalogue"');
+    expect(html).toContain('pf-grid-3');
+    expect(html).not.toContain('pf-card');
+    expect(html).toContain('data-category="orm"');
+  });
+
+  it('porte une loupe dans le champ de recherche', () => {
+    const html = renderToStaticMarkup(
+      <DraftProvider>
+        <ExpertToolbar
+          query=""
+          onQueryChange={() => undefined}
+          compatibleOnly={false}
+          onCompatibleOnlyChange={() => undefined}
+          showCompatibleOnly={false}
+        />
+      </DraftProvider>,
+    );
+    expect(html).toContain('pf-search-icon');
+    expect(html).toContain('id="pf-stack-search"');
+  });
+
+  it('ouvre sur la liste des catégories et annonce la section des technologies choisies', () => {
+    const html = renderToStaticMarkup(
+      <DraftProvider>
+        <StackPage />
+      </DraftProvider>,
+    );
+    expect(html).toContain('Technologies choisies');
+    expect(html).not.toContain('Combinaison valide');
+    expect(html).not.toContain('Retour aux catégories');
+  });
+});

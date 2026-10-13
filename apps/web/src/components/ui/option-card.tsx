@@ -3,9 +3,9 @@
 import type { ReactElement } from 'react';
 import type { Messages } from '../../lib/i18n/messages';
 import { useMessages } from '../../lib/i18n/provider';
-import { categoryIcon } from './category-icon';
 import { Icon } from './icon';
 import { InfoTip } from './info-tip';
+import { hasBrand, TechIcon } from './tech-icon';
 
 /**
  * La carte d'une technologie — **une** pour le Stack Builder et les capacités.
@@ -22,6 +22,9 @@ import { InfoTip } from './info-tip';
  *   carte : trois lignes de refus sous chaque option noyaient la grille ;
  * - **toujours** : la pastille `!` ouvre la fiche — documentation officielle,
  *   et pour un refus, les technologies en cause, la conséquence et la solution.
+ *
+ * La carte ne porte que le logo et le nom : l'identifiant du catalogue, qui
+ * répétait le nom en dessous, n'apparaît plus — la fiche `!` dit le reste.
  *
  * Une option bloquée n'est **pas** `disabled` : elle resterait hors de l'ordre
  * de tabulation, et la personne au clavier n'atteindrait jamais l'explication.
@@ -133,17 +136,16 @@ export function OptionCard({
         {...(blocked ? { 'aria-describedby': `pf-option-${option.id}-state` } : {})}
       >
         <span className="pf-choice-name pf-option-name min-w-0 break-words">
-          {option.category === undefined ? null : (
+          {hasBrand(option.id) ? (
             <span aria-hidden="true" className="pf-option-icon">
-              <Icon name={categoryIcon(option.category)} size={15} />
+              <TechIcon id={option.id} name={option.label} size={16} />
             </span>
-          )}
-          {option.label}
+          ) : null}
+          <span className="min-w-0">{option.label}</span>
           {!blocked && !chosen && recommended ? (
             <span className="pf-badge pf-badge-accent">{card.recommended}</span>
           ) : null}
         </span>
-        <span className="pf-hint pf-mono mt-1 block break-all">{option.id}</span>
         {blocked ? (
           <span className="pf-sr-only" id={`pf-option-${option.id}-state`}>
             {card.incompatible}

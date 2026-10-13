@@ -20,9 +20,7 @@ export default function TypePage(): ReactElement {
   return (
     <StepShell step="type" title={t.wizard.types.title} description={t.wizard.types.description}>
       <ProjectTypeChoices
-        mode={draft.mode}
         selected={draft.type}
-        targets={draft.targets}
         onSelect={(type) => session.update((current) => withType(current, type))}
       />
     </StepShell>

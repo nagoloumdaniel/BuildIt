@@ -41,3 +41,17 @@ describe('écran Capabilities (§6.7)', () => {
     expect(html).toContain('Aucune capacité choisie');
   });
 });
+
+describe('Capabilities : recherche et exploration par famille', () => {
+  it('ouvre sur les familles en trois colonnes, avec une recherche à loupe et sans bouton Retour', () => {
+    const html = renderToStaticMarkup(
+      <DraftProvider>
+        <CapabilitiesPage />
+      </DraftProvider>,
+    );
+    expect(html).toContain('id="pf-capability-search"');
+    expect(html).toContain('pf-search-icon');
+    expect(html).toContain('pf-grid-3');
+    expect(html).not.toContain('Retour aux familles');
+  });
+});

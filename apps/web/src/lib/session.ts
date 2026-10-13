@@ -69,6 +69,10 @@ export function createSessionStore(storage: Storage | null, initial?: DraftState
   // l'étape de l'URL avant que le provider ne branche `localStorage`).
   const baseline = initial ?? loadDraft(current);
   let state = baseline;
+  // Un `reset` demandé avant le branchement du stockage (« Nouveau projet »
+  // chargé directement) : le brouillon relu au branchement est alors celui
+  // qu'on vient d'abandonner, il ne doit pas revenir.
+  let resetBeforeAttach = false;
   const listeners = new Set<() => void>();
 
   function commit(next: DraftState): DraftState {
@@ -88,6 +92,9 @@ export function createSessionStore(storage: Storage | null, initial?: DraftState
       return commit(next);
     },
     reset() {
+      if (current === null) {
+        resetBeforeAttach = true;
+      }
       clearDraft(current);
       return commit(freshDraft());
     },
@@ -99,6 +106,12 @@ export function createSessionStore(storage: Storage | null, initial?: DraftState
     },
     attach(nextStorage) {
       current = nextStorage;
+      if (resetBeforeAttach) {
+        resetBeforeAttach = false;
+        clearDraft(current);
+        saveDraft(current, state);
+        return state;
+      }
       const restored = restorePersistedDraft(loadDraft(current), state, baseline);
       // Un brouillon relu identique n'est pas un changement : le notifier ferait
       // rejouer les effets des écrans pour les mêmes valeurs — c'est ce qui

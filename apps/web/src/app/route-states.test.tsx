@@ -23,7 +23,7 @@ describe('NotFound', () => {
 
     expect(html).toContain('404');
     expect(html).toContain('href="/"');
-    expect(html).toContain('href="/create"');
+    expect(html).toContain('href="/create?new=1"');
     expect(html).toContain('href="/projects"');
   });
 

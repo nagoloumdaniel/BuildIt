@@ -29,7 +29,10 @@ function catalogueEntries(): readonly RegistryEntry[] {
 }
 
 const entries = catalogueEntries();
-const frontends = entries.filter((entry) => entry.category === 'frontend');
+// Les frameworks web seulement : Expo, Flutter, Electron… vont à `mobile` et `desktop`.
+const frontends = entries.filter(
+  (entry) => entry.category === 'frontend' && entry.targets.includes('web'),
+);
 const backends = entries.filter((entry) => entry.category === 'backend');
 
 describe('draftToManifest — chaque fiche frontend, seule, atterrit dans frontend.framework', () => {
@@ -104,4 +107,27 @@ describe('draftToManifest — web + api ensemble : chaque paire place les deux f
     expect(result.value.frontend?.framework).toBe(frontend.id);
     expect(result.value.backend?.framework).toBe(backend.id);
   });
+});
+
+describe('draftToManifest — front + back sans monorepo ne bloque plus la génération', () => {
+  // L'architecture se choisit (écran 4) **avant** la stack (écran 5) : un
+  // brouillon « single-app » qui reçoit ensuite next + hono était refusé au
+  // moment de générer (MANIFEST_APPS_NEED_MONOREPO). Deux applications
+  // imposent le monorepo : le brouillon y est porté au lieu d'échouer.
+  it.each(['single-app', 'modular-monolith', 'microservices', 'serverless', 'event-driven'])(
+    '%s devient monorepo',
+    (architecture) => {
+      const result = draftToManifest({
+        ...freshDraft(),
+        name: 'sonde-deux-apps',
+        targets: ['web', 'api'],
+        architecture,
+        technologies: ['next', 'typescript', 'hono'],
+      });
+      expect(result.ok, JSON.stringify(!result.ok ? result.issues : [])).toBe(true);
+      if (result.ok) {
+        expect(result.value.architecture).toBe('monorepo');
+      }
+    },
+  );
 });

@@ -2,6 +2,7 @@ import { z } from 'zod';
 import { MANIFEST_VERSION, type ManifestVersion } from '../version.js';
 import { type Architecture, architectureSchema, type Target, targetSchema } from './enums.js';
 import {
+  envNameSchema,
   nonEmptyUniqueArray,
   projectNameSchema,
   techSlugSchema,
@@ -79,6 +80,12 @@ export interface Manifest {
   services?: string[] | undefined;
   quality?: string[] | undefined;
   infra?: string[] | undefined;
+  /**
+   * Variables d'environnement ajoutées à la main, en plus de celles que la
+   * stack exige. Des **noms** seulement : le générateur les écrit vides dans
+   * `.env.example`, aucune valeur ne passe par le manifest.
+   */
+  env?: string[] | undefined;
   shareLink?: ManifestShareLink | undefined;
 }
 
@@ -148,6 +155,7 @@ export const manifestSchema: z.ZodType<Manifest, unknown> = z
     services: uniqueArray(techSlugSchema).optional(),
     quality: uniqueArray(techSlugSchema).optional(),
     infra: uniqueArray(techSlugSchema).optional(),
+    env: uniqueArray(envNameSchema).optional(),
     shareLink: shareLinkSchema.optional(),
   })
   .strict() as unknown as z.ZodType<Manifest, unknown>;
@@ -174,5 +182,6 @@ export const MANIFEST_KEY_ORDER: readonly (keyof Manifest)[] = [
   'services',
   'quality',
   'infra',
+  'env',
   'shareLink',
 ];

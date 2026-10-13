@@ -21,7 +21,6 @@ import {
   categoryLabel,
   categoryProgress,
   compatibleAlternatives,
-  defaultCategory,
   filterCatalogue,
   filterOptions,
   guidedView,
@@ -67,6 +66,11 @@ export default function StackPage() {
   const [requested, setRequested] = useState<string | null>(null);
   const [revealPending, setRevealPending] = useState(false);
   const optionsRef = useRef<HTMLDivElement>(null);
+  const backRef = useRef<HTMLButtonElement>(null);
+  const navRef = useRef<HTMLElement>(null);
+  // Le focus suit l'exploration : il va au bouton « Retour » à l'ouverture
+  // d'une catégorie, et revient sur la catégorie quittée au retour.
+  const [focusTarget, setFocusTarget] = useState<'back' | Category | null>(null);
 
   useEffect(() => {
     setRequested(currentDeepLink('category'));
@@ -151,7 +155,9 @@ export default function StackPage() {
     setRequested(null);
   }, [requested, blocks]);
 
-  const active = current ?? defaultCategory(blocks);
+  // Aucune catégorie ouverte par défaut : la liste des catégories d'abord, puis
+  // un clic n'affiche plus que celle-là, avec un bouton pour revenir.
+  const active = current ?? undefined;
   const activeBlock = blocks.find((block) => block.category === active);
   const activeOptions = activeBlock?.options ?? [];
   const progress = categoryProgress(activeOptions);
@@ -171,7 +177,35 @@ export default function StackPage() {
   const searching = query.trim() !== '';
   const results = filterCatalogue(blocks, { query, compatibleOnly: filtered });
   const chosen = selectedCount(blocks);
+  const labelOf = new Map<string, string>();
+  for (const block of blocks) {
+    for (const option of block.options) {
+      labelOf.set(option.id, option.label);
+    }
+  }
+  const chosenList = draft.technologies.map((id) => ({ id, label: labelOf.get(id) ?? id }));
+
+  function removeTechnology(id: string): void {
+    session.update((currentDraft) => ({
+      ...currentDraft,
+      technologies: currentDraft.technologies.filter((existing) => existing !== id),
+    }));
+  }
   const resolution = draft.resolution;
+
+  useEffect(() => {
+    if (focusTarget === null) {
+      return;
+    }
+    if (focusTarget === 'back') {
+      backRef.current?.focus({ preventScroll: true });
+    } else {
+      navRef.current
+        ?.querySelector<HTMLButtonElement>(`[data-category="${focusTarget}"]`)
+        ?.focus({ preventScroll: true });
+    }
+    setFocusTarget(null);
+  }, [focusTarget]);
 
   // Le défilement attend que la carte de la catégorie soit rendue.
   useEffect(() => {
@@ -223,25 +257,41 @@ export default function StackPage() {
         </div>
       </fieldset>
 
-      <div className="mt-4 flex flex-wrap items-center gap-2">
-        {resolution === undefined ? (
-          <span className="pf-badge">{t.wizard.stack.checking}</span>
-        ) : resolution.issues.length === 0 ? (
-          // Pas de « combinaison expérimentale » : le moteur accepte la
-          // sélection, c'est tout ce que l'écran a à dire. « Certifiée » reste
-          // l'information en plus quand un preset la porte.
-          <span className="pf-badge pf-badge-ok">
-            {resolution.status === 'certified' ? t.wizard.stack.certified : t.wizard.stack.valid}
-          </span>
+      <section className="mt-5" aria-label={t.wizard.stack.chosenTitle} aria-live="polite">
+        <div className="flex flex-wrap items-center gap-2">
+          <h2 className="pf-label">{t.wizard.stack.chosenTitle}</h2>
+          <span className="pf-badge">{chosenList.length}</span>
+          {resolution === undefined ? (
+            <span className="pf-badge">{t.wizard.stack.checking}</span>
+          ) : resolution.issues.length > 0 ? (
+            <span className="pf-badge pf-badge-danger">
+              {t.wizard.stack.issues(resolution.issues.length)}
+            </span>
+          ) : resolution.status === 'certified' ? (
+            <span className="pf-badge pf-badge-ok">{t.wizard.stack.certified}</span>
+          ) : null}
+        </div>
+        {chosenList.length === 0 ? (
+          <p className="pf-hint mt-1">{t.wizard.stack.chosenNone}</p>
         ) : (
-          <span className="pf-badge pf-badge-danger">
-            {t.wizard.stack.issues(resolution.issues.length)}
-          </span>
+          <ul className="pf-chips mt-2">
+            {chosenList.map((item) => (
+              <li key={item.id} className="pf-chip">
+                <span className="min-w-0 truncate">{item.label}</span>
+                <button
+                  type="button"
+                  className="pf-chip-remove"
+                  aria-label={t.wizard.stack.removeChosen(item.label)}
+                  title={t.wizard.stack.removeChosen(item.label)}
+                  onClick={() => removeTechnology(item.id)}
+                >
+                  <Icon name="close" size={12} />
+                </button>
+              </li>
+            ))}
+          </ul>
         )}
-        <span className="pf-hint min-w-0">
-          {chosen === 0 ? t.wizard.stack.chosenNone : t.wizard.stack.chosenCount(chosen)}
-        </span>
-      </div>
+      </section>
 
       {resolution === undefined || resolution.issues.length === 0 ? null : (
         <ErrorState
@@ -282,12 +332,12 @@ export default function StackPage() {
             <p className="pf-hint mt-2">{t.wizard.stack.noMatch}</p>
           ) : null}
           {results.blocks.map((block) => (
-            <div key={block.category} className="pf-card pf-card-pad mt-3">
+            <div key={block.category} className="mt-4">
               <p className="pf-label flex items-center gap-2">
                 {categoryLabel(t, block.category)}
                 <span className="pf-badge">{block.options.length}</span>
               </p>
-              <div className="pf-grid mt-2">
+              <div className="pf-grid-4 mt-2">
                 {block.options.map((option) => (
                   <OptionCard
                     key={option.id}
@@ -310,13 +360,33 @@ export default function StackPage() {
         </section>
       ) : (
         <section className="mt-4">
-          {blocks.length === 0 ? null : (
-            <CategoryNav blocks={blocks} current={active} onSelect={setCurrent} />
+          {blocks.length === 0 || activeBlock !== undefined ? null : (
+            <CategoryNav
+              ref={navRef}
+              blocks={blocks}
+              current={active}
+              onSelect={(category) => {
+                setFocusTarget('back');
+                setCurrent(category);
+              }}
+            />
           )}
 
           {activeBlock === undefined ? null : (
-            <div ref={optionsRef} className="pf-card pf-card-pad pf-deep-target mt-3">
-              <header className="flex flex-wrap items-start justify-between gap-3">
+            <div ref={optionsRef} className="pf-deep-target">
+              <button
+                type="button"
+                ref={backRef}
+                className="pf-btn pf-btn-ghost pf-btn-sm"
+                onClick={() => {
+                  setFocusTarget(activeBlock.category);
+                  setCurrent(null);
+                }}
+              >
+                <Icon name="arrowLeft" size={14} />
+                {t.wizard.stack.back}
+              </button>
+              <header className="mt-3 flex flex-wrap items-start justify-between gap-3">
                 <div className="min-w-0">
                   <h2 className="pf-label">{categoryLabel(t, activeBlock.category)}</h2>
                   <p className="pf-hint">
@@ -330,7 +400,7 @@ export default function StackPage() {
                 </span>
               </header>
 
-              <div className="pf-grid mt-3">
+              <div className="pf-grid-4 mt-3">
                 {shownOptions.map((option) => (
                   <OptionCard
                     key={option.id}

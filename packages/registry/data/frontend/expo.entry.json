@@ -1,0 +1,12 @@
+{
+  "id": "expo",
+  "name": "Expo",
+  "category": "frontend",
+  "targets": ["mobile"],
+  "status": "stable",
+  "generation": "declared",
+  "license": "MIT",
+  "lastReviewedAt": "2026-10-13",
+  "compatibleWith": ["typescript", "javascript"],
+  "docs": "https://docs.expo.dev"
+}

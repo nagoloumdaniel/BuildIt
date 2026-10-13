@@ -1,0 +1,14 @@
+{
+  "id": "gnucobol",
+  "name": "GnuCOBOL",
+  "category": "build",
+  "targets": ["api", "library"],
+  "status": "stable",
+  "generation": "declared",
+  "license": "GPL-3.0",
+  "lastReviewedAt": "2026-10-13",
+  "versionRange": ">=3.2.0",
+  "requires": ["cobol"],
+  "ecosystems": ["cobol"],
+  "docs": "https://gnucobol.sourceforge.io"
+}

@@ -9,9 +9,11 @@ import {
   useCallback,
   useEffect,
   useId,
+  useLayoutEffect,
   useRef,
   useState,
 } from 'react';
+import { createPortal } from 'react-dom';
 import { Icon, type IconName } from './icon';
 
 /**
@@ -35,6 +37,11 @@ import { Icon, type IconName } from './icon';
  * bulle ouverte en tabulant insère ses liens dans l'ordre de tabulation de la
  * grille, et la carte suivante arrive après la documentation de la précédente.
  * Ouvrir est un geste ; passer n'en est pas un.
+ *
+ * Ouvert, le panneau est **porté** dans `document.body` (portail) et placé en
+ * `position: fixed` sous le bouton : aucun `overflow` ni contexte d'empilement
+ * d'une carte ou d'une grille ne peut le couper ou le recouvrir. Fermé, il
+ * reste en place, masqué — le rendu serveur garde son contenu.
  *
  * Le panneau est un frère du bouton, jamais un enfant : un lien à l'intérieur
  * d'un `<button>` est du HTML invalide, et c'est exactement le piège où tombe
@@ -67,8 +74,57 @@ export function InfoTip({
   const [hovered, setHovered] = useState(false);
   const root = useRef<HTMLDivElement>(null);
   const trigger = useRef<HTMLButtonElement>(null);
+  const panel = useRef<HTMLElement>(null);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [mounted, setMounted] = useState(false);
+  const [place, setPlace] = useState<{ top: number; left: number } | null>(null);
   const open = pinned || hovered;
+
+  useEffect(() => setMounted(true), []);
+
+  // Le panneau est hors de l'arbre de la carte : `contains` doit regarder les deux.
+  const inside = useCallback(
+    (node: Node | null): boolean =>
+      node !== null &&
+      ((root.current?.contains(node) ?? false) || (panel.current?.contains(node) ?? false)),
+    [],
+  );
+
+  // La place du panneau : sous le bouton, aligné à droite, retourné au-dessus
+  // s'il déborde en bas, et toujours dans la fenêtre.
+  useLayoutEffect(() => {
+    if (!open || !mounted) {
+      setPlace(null);
+      return;
+    }
+    const update = (): void => {
+      const button = trigger.current?.getBoundingClientRect();
+      const box = panel.current?.getBoundingClientRect();
+      if (button === undefined) {
+        return;
+      }
+      const width = box?.width ?? 320;
+      const height = box?.height ?? 0;
+      const margin = 8;
+      let left = button.right - width;
+      left = Math.max(margin, Math.min(left, window.innerWidth - width - margin));
+      let top = button.bottom + 6;
+      if (top + height > window.innerHeight - margin && button.top - 6 - height > margin) {
+        top = button.top - 6 - height;
+      }
+      setPlace({ top, left });
+    };
+    update();
+    // Une seconde passe, une fois le panneau mesuré dans le portail.
+    const frame = requestAnimationFrame(update);
+    window.addEventListener('scroll', update, true);
+    window.addEventListener('resize', update);
+    return () => {
+      cancelAnimationFrame(frame);
+      window.removeEventListener('scroll', update, true);
+      window.removeEventListener('resize', update);
+    };
+  }, [open, mounted]);
 
   const cancelClose = useCallback((): void => {
     if (timer.current !== null) {
@@ -92,13 +148,13 @@ export function InfoTip({
       return;
     }
     const onPointer = (event: PointerEvent): void => {
-      if (root.current !== null && !root.current.contains(event.target as Node)) {
+      if (!inside(event.target as Node)) {
         setPinned(false);
       }
     };
     document.addEventListener('pointerdown', onPointer);
     return () => document.removeEventListener('pointerdown', onPointer);
-  }, [pinned]);
+  }, [pinned, inside]);
 
   // Les mêmes gestes sur le bouton **et** sur le panneau : on peut quitter l'un
   // pour l'autre (aller cliquer un lien) sans que la bulle se referme entre
@@ -119,12 +175,34 @@ export function InfoTip({
     // Quitter la bulle au clavier la referme : un panneau ouvert qu'on a
     // laissé derrière soi resterait affiché sur la carte suivante.
     onBlur: (event: ReactFocusEvent): void => {
-      if (root.current === null || !root.current.contains(event.relatedTarget as Node | null)) {
+      if (!inside(event.relatedTarget as Node | null)) {
         setPinned(false);
         setHovered(false);
       }
     },
     onKeyDown: (event: ReactKeyboardEvent): void => {
+      // Le panneau vit en fin de document : Tab y entre depuis le bouton, et
+      // en ressort vers le bouton, comme s'il était resté à côté.
+      if (event.key === 'Tab' && open && panel.current !== null) {
+        const stops = [...panel.current.querySelectorAll<HTMLElement>('a[href], button')];
+        const first = stops[0];
+        const last = stops[stops.length - 1];
+        if (event.target === trigger.current && !event.shiftKey && first !== undefined) {
+          event.preventDefault();
+          first.focus();
+          return;
+        }
+        if (event.shiftKey && event.target === first) {
+          event.preventDefault();
+          trigger.current?.focus();
+          return;
+        }
+        if (!event.shiftKey && event.target === last) {
+          // Le focus revient au bouton ; la tabulation par défaut continue après lui.
+          trigger.current?.focus();
+          return;
+        }
+      }
       if (event.key === 'Escape' && open) {
         event.stopPropagation();
         close();
@@ -158,9 +236,30 @@ export function InfoTip({
       >
         <Icon name={icon} size={16} />
       </button>
-      <section aria-label={label} className="pf-tip-panel" hidden={!open} id={id} {...handlers}>
-        {children}
-      </section>
+      {open && mounted ? (
+        createPortal(
+          <section
+            aria-label={label}
+            className="pf-tip-panel pf-tip-panel-floating"
+            data-tone={tone}
+            id={id}
+            ref={panel}
+            style={
+              place === null
+                ? { visibility: 'hidden', top: 0, left: 0 }
+                : { top: place.top, left: place.left }
+            }
+            {...handlers}
+          >
+            {children}
+          </section>,
+          document.body,
+        )
+      ) : (
+        <section aria-label={label} className="pf-tip-panel" hidden id={id}>
+          {children}
+        </section>
+      )}
     </div>
   );
 }

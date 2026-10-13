@@ -2,7 +2,7 @@
   "id": "docker",
   "name": "Docker",
   "category": "containers",
-  "targets": ["web", "api"],
+  "targets": ["web", "api", "library"],
   "status": "stable",
   "generation": "certified",
   "license": "Apache-2.0",

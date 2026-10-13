@@ -26,6 +26,12 @@ import { type RepositoryListView, repositoriesFor } from './github/repositories'
 import { sessionDeps } from './github/server-deps';
 import { type GithubStatusView, githubDisconnect, githubStatus } from './github/session';
 import {
+  type ApplyBaseFilesResult,
+  applyBaseFiles,
+  type BaseFilesPlan,
+  planBaseFiles,
+} from './open/base-files-node';
+import {
   type InstallResultView,
   inspectPickedEntries,
   inspectProject,
@@ -227,6 +233,37 @@ export async function inspectProjectAction(directory: unknown): Promise<ProjectI
  */
 export async function inspectPickedFolderAction(input: unknown): Promise<ProjectInspectionView> {
   return inspectPickedEntries(inputRecord(input));
+}
+
+/**
+ * Les fichiers de base manquants d'un projet du disque — local seulement : en
+ * hébergé, le serveur n'a pas le disque du visiteur (le navigateur s'en charge).
+ */
+export async function planBaseFilesAction(
+  directory: unknown,
+): Promise<
+  | { readonly ok: true; readonly value: BaseFilesPlan }
+  | { readonly ok: false; readonly issues: readonly string[] }
+> {
+  if (isHostedEnvironment()) {
+    return { ok: false, issues: ['Mode hébergé : le dossier est lu dans votre navigateur.'] };
+  }
+  const resolved = resolveLocalDirectory(directory);
+  if (!resolved.ok) {
+    return { ok: false, issues: resolved.issues };
+  }
+  return { ok: true, value: await planBaseFiles(resolved.value) };
+}
+
+export async function applyBaseFilesAction(directory: unknown): Promise<ApplyBaseFilesResult> {
+  if (isHostedEnvironment()) {
+    return { ok: false, written: [], issues: ['Mode hébergé : rien n’est écrit sur le serveur.'] };
+  }
+  const resolved = resolveLocalDirectory(directory);
+  if (!resolved.ok) {
+    return { ok: false, written: [], issues: resolved.issues };
+  }
+  return applyBaseFiles(resolved.value);
 }
 
 export async function installProjectAction(input: unknown): Promise<InstallResultView> {

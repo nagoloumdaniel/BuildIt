@@ -460,10 +460,16 @@ export function buildScaffold(
   }
 
   const { scripts, issues: scriptIssues } = collectScripts(entries);
+  // Les variables ajoutées à la main (`manifest.env`) rejoignent celles de la
+  // stack : mêmes fichiers, triées, sans doublon, et la même vérification — un
+  // manifest fabriqué à la main pourrait y glisser une valeur.
   const { names, issues: envIssues } = collectEnv([
     ...entries,
     ...integrationEnvSources(entries),
     ...recipes,
+    ...(manifest.env === undefined || manifest.env.length === 0
+      ? []
+      : [{ id: 'env', name: 'manifest.env', env: manifest.env }]),
   ]);
   const dependencies = resolveDependencies([
     ...entries,

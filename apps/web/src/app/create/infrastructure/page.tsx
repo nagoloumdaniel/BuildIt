@@ -177,7 +177,7 @@ export default function InfrastructurePage(): ReactElement {
         {loading || failure !== undefined ? null : hosts.length === 0 ? (
           <p className="pf-hint mt-2">{t.build.infrastructure.empty}</p>
         ) : (
-          <div className="pf-grid mt-2">
+          <div className="pf-grid-4 mt-2">
             {hosts.map((host) => {
               const chosen = host.id === current;
               return (

@@ -2,7 +2,7 @@
   "id": "postgresql",
   "name": "PostgreSQL",
   "category": "database",
-  "targets": ["web", "api"],
+  "targets": ["web", "api", "library"],
   "status": "stable",
   "generation": "certified",
   "license": "PostgreSQL",

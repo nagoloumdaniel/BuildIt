@@ -1,3 +1,4 @@
+import { ENV_NAME_PATTERN } from '@buildit/manifest';
 import type { DraftState } from '../../../lib/draft';
 import type { EnvVarView } from '../../../lib/engine';
 import { infrastructureIds } from '../infrastructure/infrastructure';
@@ -67,4 +68,38 @@ export function isEngineAdded(variable: EnvVarView, chosenIds: ReadonlySet<strin
     return false;
   }
   return variable.technologies.every((id) => !chosenIds.has(id));
+}
+
+/** Pourquoi un nom saisi à la main est refusé — ou `undefined` s'il passe. */
+export type CustomEnvError = 'invalid' | 'duplicate';
+
+/**
+ * Vérifie un nom de variable ajouté à la main : la grammaire du manifest
+ * (`ENV_NAME_PATTERN`), et pas de doublon avec ce qui est déjà listé — par la
+ * stack ou par une saisie précédente.
+ */
+export function customEnvError(
+  name: string,
+  listed: readonly string[],
+): CustomEnvError | undefined {
+  if (!ENV_NAME_PATTERN.test(name) || name.length > 128) {
+    return 'invalid';
+  }
+  return listed.includes(name) ? 'duplicate' : undefined;
+}
+
+/** Ajoute une variable au brouillon — la liste reste triée. */
+export function withCustomEnv(draft: DraftState, name: string): DraftState {
+  const current = draft.customEnv ?? [];
+  if (current.includes(name)) {
+    return draft;
+  }
+  return { ...draft, customEnv: [...current, name].sort() };
+}
+
+/** Retire une variable ajoutée à la main ; la liste vide disparaît du brouillon. */
+export function withoutCustomEnv(draft: DraftState, name: string): DraftState {
+  const rest = (draft.customEnv ?? []).filter((existing) => existing !== name);
+  const { customEnv: _removed, ...others } = draft;
+  return rest.length === 0 ? others : { ...others, customEnv: rest };
 }

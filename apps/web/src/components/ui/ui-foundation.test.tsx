@@ -18,7 +18,7 @@ describe('UI foundation', () => {
       expect(html).toContain(`aria-label="${label}"`);
     }
     expect(html).toContain(
-      'aria-label="Créer" class="pf-bubble" aria-current="page" href="/create"',
+      'aria-label="Créer" class="pf-bubble" aria-current="page" href="/create?new=1"',
     );
   });
 

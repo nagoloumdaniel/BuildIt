@@ -1,5 +1,14 @@
 # @nagoloum/cli
 
+## 0.4.0
+
+### Minor Changes
+
+- Squelettes d'architecture générés (dossiers, README, ADR, docs) et affichés dans l'arbre de l'aperçu.
+- Ouverture d'un projet local depuis n'importe quel navigateur (Chromium, Firefox, Safari), ajout des fichiers de base manquants.
+- Catalogue : COBOL et ses outils, mobile (Expo, React Native, Flutter) et ordinateur (Electron, Tauri).
+- Wizard : recherche, navigation par catégorie, grilles 4 colonnes, variables d'environnement manuelles, brouillon conservé au rechargement, « Nouveau projet » réinitialisé.
+
 ## 0.3.0
 
 ### Minor Changes

@@ -1,0 +1,11 @@
+{
+  "id": "cmake",
+  "name": "CMake",
+  "category": "build",
+  "targets": ["desktop", "api", "library"],
+  "status": "stable",
+  "generation": "declared",
+  "license": "BSD-3-Clause",
+  "lastReviewedAt": "2026-10-13",
+  "docs": "https://cmake.org/documentation"
+}

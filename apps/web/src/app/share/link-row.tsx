@@ -1,6 +1,6 @@
 'use client';
 
-import { type ReactElement, useEffect, useId, useRef, useState } from 'react';
+import { type ReactElement, type ReactNode, useEffect, useId, useRef, useState } from 'react';
 import { Icon } from '../../components/ui/icon';
 import { useMessages } from '../../lib/i18n/provider';
 
@@ -36,6 +36,12 @@ export interface ShareLinkRowProps {
   /** L'identifiant de la phrase qui dit pourquoi le bouton est grisé (§8). */
   readonly describedBy?: string;
   readonly className?: string;
+  /**
+   * Un geste posé **avant** le bouton, sur la même ligne (le plan y met « Voir
+   * le graphe de dépendances ») : la ligne se replie au besoin, rien ne se
+   * chevauche à l'étroit.
+   */
+  readonly leading?: ReactNode;
 }
 
 export function ShareLinkRow({
@@ -44,6 +50,7 @@ export function ShareLinkRow({
   disabled = false,
   describedBy,
   className,
+  leading,
 }: ShareLinkRowProps): ReactElement {
   const t = useMessages().blueprintShare;
   const inputId = useId();
@@ -97,6 +104,7 @@ export function ShareLinkRow({
 
   return (
     <div className={['pf-share-row', className].filter(Boolean).join(' ')}>
+      {leading}
       <button
         type="button"
         className="pf-btn pf-share-create"

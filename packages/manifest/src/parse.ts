@@ -74,7 +74,11 @@ function toManifestIssue(issue: NormalizedIssue): ManifestIssue {
 
     case 'format': {
       const code: ManifestIssueCode =
-        issue.path[0] === 'name' ? 'MANIFEST_NAME_INVALID' : 'MANIFEST_SLUG_INVALID';
+        issue.path[0] === 'name'
+          ? 'MANIFEST_NAME_INVALID'
+          : issue.path[0] === 'env'
+            ? 'MANIFEST_ENV_NAME_INVALID'
+            : 'MANIFEST_SLUG_INVALID';
       return {
         code,
         path: issue.path,

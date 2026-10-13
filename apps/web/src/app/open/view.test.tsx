@@ -60,6 +60,10 @@ function controller(overrides: Partial<LocalOpenController> = {}): LocalOpenCont
     setIgnoreScripts: () => undefined,
     setConfirmed: () => undefined,
     install: () => undefined,
+    base: null,
+    baseBusy: false,
+    baseResult: null,
+    applyBase: () => undefined,
     ...overrides,
   };
 }
@@ -234,5 +238,34 @@ describe('OpenView — le dossier non reconnu', () => {
     expect(html).toContain('Analyser à nouveau');
     expect(html).toContain('Accueil');
     expect(html).not.toContain('Installer les dépendances');
+  });
+});
+
+describe('OpenView — tout navigateur, et les fichiers de base', () => {
+  it('Firefox / Safari : la carte reste active, lecture par le sélecteur du navigateur', () => {
+    const html = render({ mode: 'input', runnable: false });
+    expect(html).toContain('lecture seule');
+    expect(html).not.toMatch(/<button[^>]*class="pf-choice"[^>]*disabled/);
+  });
+
+  it('propose les fichiers de base manquants, en archive quand le navigateur ne peut pas écrire', () => {
+    const html = render({
+      phase: 'ready',
+      directory: 'mon-app',
+      mode: 'input',
+      base: {
+        shape: {
+          name: 'mon-app',
+          architecture: 'single-app',
+          stack: { frontend: true, backend: false },
+          source: 'inferred',
+        },
+        missing: [{ path: 'SECURITY.md', contents: '#' }],
+        delivery: 'zip',
+      },
+    });
+    expect(html).toContain('SECURITY.md');
+    expect(html).toContain('Télécharger les fichiers manquants (.zip)');
+    expect(html).toContain('déduite des fichiers');
   });
 });

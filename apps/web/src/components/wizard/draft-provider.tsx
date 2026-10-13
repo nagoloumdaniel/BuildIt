@@ -6,6 +6,7 @@ import {
   type ReactNode,
   useContext,
   useEffect,
+  useLayoutEffect,
   useState,
   useSyncExternalStore,
 } from 'react';
@@ -16,6 +17,12 @@ import { browserStorage } from '../../lib/theme';
 const StoreContext = createContext<SessionStore | null>(null);
 
 /**
+ * `useLayoutEffect` au navigateur, `useEffect` au serveur (qui n'exécute ni
+ * l'un ni l'autre, mais React avertit sur le premier).
+ */
+const useBrowserLayoutEffect = typeof window === 'undefined' ? useEffect : useLayoutEffect;
+
+/**
  * Le brouillon du parcours, partagé par tous les écrans (§3).
  *
  * Le premier rendu se fait **sans stockage** : le serveur ne connaît pas
@@ -23,11 +30,17 @@ const StoreContext = createContext<SessionStore | null>(null);
  * React signale une divergence. Le stockage est branché dans un effet, une
  * fois l'hydratation terminée — et c'est là seulement que le brouillon repris
  * réapparaît.
+ *
+ * Ce branchement est un effet **de mise en page** : React exécute tous les
+ * effets de mise en page avant le moindre effet passif. Le brouillon relu est
+ * donc en place avant qu'un écran n'écrive quoi que ce soit (étape courante,
+ * architecture par défaut…) et avant que la page ne se peigne : un
+ * rechargement ne perd rien, et ne montre pas un instant l'écran vide.
  */
 export function DraftProvider({ children }: { children: ReactNode }): ReactElement {
   const [store] = useState(() => createSessionStore(null));
 
-  useEffect(() => {
+  useBrowserLayoutEffect(() => {
     store.attach(browserStorage());
   }, [store]);
 

@@ -58,6 +58,30 @@ export const FR_ARCHITECTURE = {
     },
 
     notes: {
+      contributing:
+        'Comment contribuer : lire l’architecture et les ADR, respecter la responsabilité de chaque dossier.',
+      security:
+        'La politique de sécurité : signaler une faille en privé, aucun secret dans le dépôt.',
+      docs: 'La documentation du projet, versionnée avec le code.',
+      docsArchitecture:
+        'La vue d’architecture : arborescence de base et responsabilité de chaque dossier.',
+      docsDecisions: 'Les décisions d’architecture (ADR) : l’ADR-001 explique la forme choisie.',
+      features:
+        'Le front par fonctionnalités : une fonctionnalité par dossier, sans import croisé.',
+      sharedCode:
+        'Le code partagé par les fonctionnalités : composants génériques et utilitaires purs.',
+      modules: 'Les modules métier hexagonaux : domaine pur, cas d’usage, adaptateurs.',
+      platform: 'Le socle technique partagé : base de données, observabilité. Aucune règle métier.',
+      events: 'Producteurs, consommateurs idempotents, outbox et lettres mortes.',
+      infra: 'L’infrastructure décrite en code, séparée du code applicatif.',
+      environments:
+        'Une configuration par environnement : développement, préproduction, production.',
+      crossTests:
+        'Les tests transverses : intégration entre applications et parcours de bout en bout.',
+      services: 'Les services indépendants, chacun propriétaire de ses données, et la passerelle.',
+      functions: 'Les fonctions serverless : HTTP, événements, tâches planifiées.',
+      contracts: 'Les contrats partagés entre applications : types et schémas d’API.',
+      eventContracts: 'Les schémas versionnés des événements échangés entre services.',
       // Racine
       readme:
         'Le point d’entrée du dépôt : ce que fait le projet, comment l’installer et le lancer, et la stack retenue.',
@@ -226,6 +250,24 @@ export const EN_ARCHITECTURE: Widen<typeof FR_ARCHITECTURE> = {
     },
 
     notes: {
+      contributing:
+        "How to contribute: read the architecture and ADRs, respect each folder's responsibility.",
+      security: 'The security policy: report a flaw privately, no secrets in the repository.',
+      docs: 'Project documentation, versioned with the code.',
+      docsArchitecture: "The architecture view: base tree and each folder's responsibility.",
+      docsDecisions: 'Architecture decision records (ADR): ADR-001 explains the chosen shape.',
+      features: 'Frontend by features: one feature per folder, no cross imports.',
+      sharedCode: 'Code shared by features: generic components and pure utilities.',
+      modules: 'Hexagonal business modules: pure domain, use cases, adapters.',
+      platform: 'Shared technical foundation: database, observability. No business rules.',
+      events: 'Producers, idempotent consumers, outbox and dead letters.',
+      infra: 'Infrastructure as code, kept apart from application code.',
+      environments: 'One configuration per environment: development, staging, production.',
+      crossTests: 'Cross-cutting tests: integration across applications and end-to-end journeys.',
+      services: 'Independent services, each owning its data, plus the gateway.',
+      functions: 'Serverless functions: HTTP, events, scheduled jobs.',
+      contracts: 'Contracts shared between applications: types and API schemas.',
+      eventContracts: 'Versioned schemas of the events exchanged between services.',
       readme:
         'The entry point of the repository: what the project does, how to install and run it, and the chosen stack.',
       packageJson:

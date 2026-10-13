@@ -11,7 +11,7 @@ import { MANIFEST_KEY_ORDER, type Manifest } from './schema/manifest.js';
  */
 
 /** Champs qui sont des ensembles : leur ordre ne porte aucun sens. */
-const SET_FIELDS = ['targets', 'apps', 'services', 'quality', 'infra'] as const;
+const SET_FIELDS = ['targets', 'apps', 'services', 'quality', 'infra', 'env'] as const;
 
 /** Ordre des clés des objets imbriqués, même principe que MANIFEST_KEY_ORDER. */
 const NESTED_KEY_ORDER: Readonly<Record<string, readonly string[]>> = {

@@ -68,7 +68,7 @@ describe('Dashboard — le menu des chemins', () => {
     expect(html).toContain('Créer un projet');
     expect(html).toContain('Cloner un projet');
     expect(html).toContain('Ouvrir un projet local');
-    expect(html).toContain('href="/create"');
+    expect(html).toContain('href="/create?new=1"');
     expect(html).toContain('href="/clone"');
     // L'ouverture locale n'est pas un lien : la carte entière est le bouton
     // qui ouvre l'explorateur, et c'est le dossier choisi qui mène à /open.
@@ -105,7 +105,7 @@ describe('Dashboard — les projets générés (§6.14)', () => {
     const html = render(freshDraft(), { projects: [] });
 
     expect(html).toContain('Aucun projet généré pour l’instant');
-    expect(html).toContain('href="/create"');
+    expect(html).toContain('href="/create?new=1"');
   });
 });
 
@@ -208,11 +208,15 @@ describe('LocalOpenCard — la carte est le bouton', () => {
     expect(html).toContain('disabled');
   });
 
-  it('reste calme après une annulation', () => {
+  it('reste muette après une annulation : pas de « Aucun dossier choisi. »', () => {
     const html = renderCard({ notice: 'Aucun dossier choisi.' });
 
-    expect(html).toContain('Aucun dossier choisi.');
+    expect(html).not.toContain('Aucun dossier choisi.');
     expect(html).not.toContain('role="alert"');
+  });
+
+  it('affiche les autres retours de l’explorateur', () => {
+    expect(renderCard({ notice: 'Échec.' })).toContain('Échec.');
   });
 
   it('grise la carte quand aucun explorateur ne peut s’ouvrir', () => {

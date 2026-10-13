@@ -167,6 +167,17 @@ describe('parseManifest — valeurs invalides', () => {
     ).toContain('MANIFEST_SLUG_INVALID');
   });
 
+  it('accepte des noms de variables d’environnement, triés et sans valeur', () => {
+    const result = parseManifest({ ...MINIMAL, env: ['STRIPE_KEY', 'API_URL'] });
+    expect(result.ok ? result.value.env : result.issues).toEqual(['API_URL', 'STRIPE_KEY']);
+  });
+
+  it('signale un nom de variable d’environnement invalide (minuscules, `=`)', () => {
+    expect(codesOf({ ...MINIMAL, env: ['api_url'] })).toContain('MANIFEST_ENV_NAME_INVALID');
+    expect(codesOf({ ...MINIMAL, env: ['API_URL=secret'] })).toContain('MANIFEST_ENV_NAME_INVALID');
+    expect(codesOf({ ...MINIMAL, env: ['API', 'API'] })).toContain('MANIFEST_DUPLICATE_ENTRY');
+  });
+
   it('signale un champ inconnu plutôt que de l’ignorer', () => {
     expect(codesOf({ ...MINIMAL, frontEnd: {} })).toContain('MANIFEST_UNKNOWN_FIELD');
   });

@@ -11,6 +11,8 @@
 const config = {
   // Le serveur de `pf web` est lancé en local : la sortie autonome suffit.
   output: 'standalone',
+  // Un build isolé (preuve E2E pendant qu'un `next dev` réécrit `.next`).
+  distDir: process.env['PF_NEXT_DIST_DIR'] ?? '.next',
   // Un outil de travail n'annonce pas sa pile dans chaque réponse.
   poweredByHeader: false,
   /**

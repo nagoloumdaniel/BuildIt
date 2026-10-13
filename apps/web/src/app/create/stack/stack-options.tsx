@@ -1,7 +1,7 @@
 'use client';
 
 import type { Category } from '@buildit/registry';
-import type { ReactElement } from 'react';
+import type { ReactElement, Ref } from 'react';
 import { categoryIcon } from '../../../components/ui/category-icon';
 import { Icon } from '../../../components/ui/icon';
 import { useMessages } from '../../../lib/i18n/provider';
@@ -24,15 +24,16 @@ export interface CategoryNavProps {
   readonly blocks: readonly CategoryBlock[];
   readonly current: Category | undefined;
   readonly onSelect: (category: Category) => void;
+  readonly ref?: Ref<HTMLElement>;
 }
 
 /** Les catégories du catalogue, avec le nombre de choix déjà faits sur chacune. */
-export function CategoryNav({ blocks, current, onSelect }: CategoryNavProps): ReactElement {
+export function CategoryNav({ blocks, current, onSelect, ref }: CategoryNavProps): ReactElement {
   const t = useMessages();
   return (
-    <nav className="pf-card pf-card-pad mt-4" aria-label={t.wizard.stack.navLabel}>
+    <nav ref={ref} className="mt-4" aria-label={t.wizard.stack.navLabel}>
       <p className="pf-eyebrow">{t.wizard.stack.navEyebrow}</p>
-      <div className="pf-grid mt-2">
+      <div className="pf-grid-3 mt-2">
         {blocks.map((block) => {
           const progress = categoryProgress(block.options);
           const active = block.category === current;
@@ -41,6 +42,7 @@ export function CategoryNav({ blocks, current, onSelect }: CategoryNavProps): Re
               key={block.category}
               type="button"
               className="pf-choice"
+              data-category={block.category}
               {...(active ? { 'aria-current': 'true' as const } : {})}
               aria-pressed={active}
               onClick={() => onSelect(block.category)}
@@ -86,16 +88,21 @@ export function ExpertToolbar({
       <label className="pf-label" htmlFor="pf-stack-search">
         {t.wizard.stack.searchLabel}
       </label>
-      <input
-        id="pf-stack-search"
-        className="pf-input"
-        type="search"
-        autoComplete="off"
-        spellCheck={false}
-        placeholder={t.wizard.stack.searchPlaceholder}
-        value={query}
-        onChange={(event) => onQueryChange(event.target.value)}
-      />
+      <div className="pf-search mt-1">
+        <span aria-hidden="true" className="pf-search-icon">
+          <Icon name="search" size={16} />
+        </span>
+        <input
+          id="pf-stack-search"
+          className="pf-input"
+          type="search"
+          autoComplete="off"
+          spellCheck={false}
+          placeholder={t.wizard.stack.searchPlaceholder}
+          value={query}
+          onChange={(event) => onQueryChange(event.target.value)}
+        />
+      </div>
       <p className="pf-hint mt-1">{t.wizard.stack.searchHint}</p>
       {showCompatibleOnly ? (
         <label className="pf-hint mt-3 flex items-center gap-2" htmlFor="pf-stack-compatible">

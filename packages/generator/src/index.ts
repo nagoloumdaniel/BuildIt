@@ -6,6 +6,7 @@
  * Le dry-run n'est pas un mode à part, c'est la première étape sans la seconde.
  */
 
+export { architectureSkeleton, withArchitectureSkeleton } from './architecture.js';
 export type {
   DependencyIssue,
   DependencyIssueCode,

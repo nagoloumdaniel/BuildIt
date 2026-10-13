@@ -28,7 +28,7 @@ export function CapabilityOptions({ options, onToggle }: CapabilityOptionsProps)
   }
 
   return (
-    <div className="pf-grid">
+    <div className="pf-grid-4">
       {options.map((option) => (
         <OptionCard
           key={option.id}

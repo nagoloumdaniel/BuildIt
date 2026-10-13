@@ -1,6 +1,6 @@
 'use client';
 
-import { type ReactElement, useEffect, useState } from 'react';
+import { type FormEvent, type ReactElement, useEffect, useId, useState } from 'react';
 import { ErrorState } from '../../../components/ui/error-state';
 import { Icon } from '../../../components/ui/icon';
 import { LoadingLine } from '../../../components/ui/loading';
@@ -9,7 +9,15 @@ import { StepShell } from '../../../components/wizard/shell';
 import type { EnvVarView } from '../../../lib/engine';
 import { useMessages } from '../../../lib/i18n/provider';
 import { loadEnvVarsAction } from '../../actions';
-import { envSelection, isEngineAdded, namesOf, sameNames } from './env-model';
+import {
+  customEnvError,
+  envSelection,
+  isEngineAdded,
+  namesOf,
+  sameNames,
+  withCustomEnv,
+  withoutCustomEnv,
+} from './env-model';
 
 /**
  * Écran 7 — Environment & Secrets (§6.8, §24).
@@ -17,7 +25,9 @@ import { envSelection, isEngineAdded, namesOf, sameNames } from './env-model';
  * Les noms viennent du moteur (`loadEnvVarsAction`), qui lit le champ `env` des
  * fiches du catalogue et suit la résolution — additions comprises. L'écran
  * n'affiche **aucune valeur** et n'offre aucun champ pour en saisir une : la
- * valeur n'a rien à faire dans le brouillon ni dans un lien de partage.
+ * valeur n'a rien à faire dans le brouillon ni dans un lien de partage. Seuls
+ * des **noms** peuvent être ajoutés à la main (`draft.customEnv`) : ils
+ * partent dans le manifest (`env`) et sont écrits vides dans `.env.example`.
  *
  * Seuls les noms sont recopiés dans `draft.envVarNames`, pour que les écrans
  * suivants sachent ce que le projet exigera. Une panne du moteur se dit et se
@@ -31,12 +41,19 @@ export default function EnvPage(): ReactElement {
   const [loading, setLoading] = useState(true);
   const [failure, setFailure] = useState<string | undefined>(undefined);
   const [attempt, setAttempt] = useState(0);
+  const [customName, setCustomName] = useState('');
+  const [customProblem, setCustomProblem] = useState<string | undefined>(undefined);
+  const customId = useId();
+  // Le moteur ne dépend que de la sélection : ajouter une variable à la main
+  // ne relance pas la lecture.
+  const selection = envSelection(draft);
+  const selectionKey = JSON.stringify(selection);
 
   // biome-ignore lint/correctness/useExhaustiveDependencies: `attempt` est la clé de relance : elle ne sert qu'à rejouer la lecture après une panne du moteur, sans perdre le brouillon.
   useEffect(() => {
     let alive = true;
     setLoading(true);
-    void loadEnvVarsAction(envSelection(draft))
+    void loadEnvVarsAction(JSON.parse(selectionKey) as typeof selection)
       .then((loaded) => {
         if (!alive) {
           return;
@@ -67,9 +84,25 @@ export default function EnvPage(): ReactElement {
     return () => {
       alive = false;
     };
-  }, [draft, session, attempt, t]);
+  }, [selectionKey, session, attempt, t]);
 
   const chosen = new Set([...draft.technologies, ...draft.capabilities]);
+  const custom = draft.customEnv ?? [];
+
+  const addCustom = (event: FormEvent<HTMLFormElement>): void => {
+    event.preventDefault();
+    const name = customName.trim().toUpperCase();
+    const problem = customEnvError(name, [...namesOf(variables), ...custom]);
+    if (problem !== undefined) {
+      setCustomProblem(
+        problem === 'duplicate' ? t.build.env.customDuplicate : t.build.env.customInvalid,
+      );
+      return;
+    }
+    session.update((current) => withCustomEnv(current, name));
+    setCustomName('');
+    setCustomProblem(undefined);
+  };
 
   return (
     <StepShell step="env" title={t.build.env.title} description={t.build.env.description}>
@@ -110,6 +143,63 @@ export default function EnvPage(): ReactElement {
                 {isEngineAdded(variable, chosen) ? (
                   <span className="pf-badge pf-badge-ok">{t.build.env.engineAdded}</span>
                 ) : null}
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
+
+      <section className="mt-6" aria-labelledby={`${customId}-title`}>
+        <h2 className="pf-label" id={`${customId}-title`}>
+          {t.build.env.customTitle}
+        </h2>
+        <form className="flex flex-wrap items-end gap-2" noValidate onSubmit={addCustom}>
+          <div className="min-w-0 flex-1" style={{ minWidth: '12rem' }}>
+            <label className="pf-hint" htmlFor={customId}>
+              {t.build.env.customLabel}
+            </label>
+            <input
+              id={customId}
+              className="pf-input pf-mono"
+              autoComplete="off"
+              spellCheck={false}
+              placeholder={t.build.env.customPlaceholder}
+              value={customName}
+              aria-invalid={customProblem !== undefined}
+              aria-describedby={`${customId}-hint`}
+              onChange={(event) => {
+                setCustomName(event.target.value);
+                setCustomProblem(undefined);
+              }}
+            />
+          </div>
+          <button type="submit" className="pf-btn" disabled={customName.trim() === ''}>
+            <Icon name="plus" />
+            {t.build.env.customAdd}
+          </button>
+        </form>
+        <p
+          className="pf-hint mt-1"
+          id={`${customId}-hint`}
+          role={customProblem ? 'alert' : undefined}
+        >
+          {customProblem ?? t.build.env.customHint}
+        </p>
+        {custom.length === 0 ? (
+          <p className="pf-hint mt-2">{t.build.env.customEmpty}</p>
+        ) : (
+          <ul className="mt-2 flex flex-wrap gap-2">
+            {custom.map((name) => (
+              <li key={name} className="pf-card flex items-center gap-2 px-3 py-1 min-w-0">
+                <span className="pf-mono break-all">{name}</span>
+                <button
+                  type="button"
+                  className="pf-btn pf-btn-sm pf-btn-ghost"
+                  aria-label={t.build.env.customRemove(name)}
+                  onClick={() => session.update((current) => withoutCustomEnv(current, name))}
+                >
+                  <Icon name="close" size={14} />
+                </button>
               </li>
             ))}
           </ul>

@@ -9,6 +9,7 @@ import { Icon } from '../../components/ui/icon';
 import { ProgressPanel } from '../../components/ui/loading';
 import { ScreenShell } from '../../components/wizard/shell';
 import { useMessages } from '../../lib/i18n/provider';
+import { BasePanel } from './base-panel';
 import { InstallPanel } from './install-panel';
 import type { LocalOpenController } from './local-open';
 import { PickCard } from './pick-card';
@@ -56,6 +57,10 @@ export function OpenView({ controller }: OpenViewProps): ReactElement {
         <p className="pf-callout pf-callout-steel mt-3">{t.open.browserNote}</p>
       ) : null}
 
+      {controller.mode === 'input' ? (
+        <p className="pf-callout pf-callout-steel mt-3">{t.open.inputNote}</p>
+      ) : null}
+
       {controller.mode === 'none' ? <p className="pf-callout mt-3">{t.open.noPickerNote}</p> : null}
 
       {controller.directory === '' ? null : (
@@ -64,7 +69,7 @@ export function OpenView({ controller }: OpenViewProps): ReactElement {
           <CommandLine
             className="mt-1"
             value={controller.directory}
-            what={controller.mode === 'browser' ? t.open.folderWhat : t.open.pathWhat}
+            what={controller.mode === 'native' ? t.open.pathWhat : t.open.folderWhat}
           />
           <div className="mt-2 flex flex-wrap items-center gap-2">
             <button
@@ -147,6 +152,15 @@ export function OpenView({ controller }: OpenViewProps): ReactElement {
           />
         </section>
       ) : null}
+
+      {controller.base === null || controller.phase !== 'ready' ? null : (
+        <BasePanel
+          base={controller.base}
+          busy={controller.baseBusy}
+          onApply={controller.applyBase}
+          result={controller.baseResult}
+        />
+      )}
     </ScreenShell>
   );
 }

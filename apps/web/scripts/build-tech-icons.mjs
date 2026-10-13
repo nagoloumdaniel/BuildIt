@@ -280,6 +280,8 @@ const ALIASES = {
   bruno: 'bruno',
   insomnia: 'insomnia',
   postman: 'postman',
+  gnucobol: 'gnu',
+  make: 'gnu',
 };
 
 /** Le nom de l'export `simple-icons` pour un slug : `nextdotjs` → `siNextdotjs`. */

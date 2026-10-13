@@ -1,0 +1,15 @@
+{
+  "id": "ocesql",
+  "name": "Open COBOL ESQL",
+  "category": "orm",
+  "targets": ["api", "library"],
+  "status": "stable",
+  "generation": "declared",
+  "license": "GPL-3.0",
+  "lastReviewedAt": "2026-10-13",
+  "requires": ["cobol"],
+  "compatibleWith": ["postgresql"],
+  "ecosystems": ["cobol"],
+  "env": ["OCDB_DATABASE", "OCDB_USER", "OCDB_PASSWORD"],
+  "docs": "https://github.com/opensourcecobol/Open-COBOL-ESQL"
+}

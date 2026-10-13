@@ -1,0 +1,13 @@
+{
+  "id": "cobol",
+  "name": "COBOL",
+  "category": "language",
+  "targets": ["api", "library"],
+  "status": "stable",
+  "generation": "declared",
+  "license": "Public-Domain",
+  "lastReviewedAt": "2026-10-13",
+  "compatibleWith": ["gnucobol", "cobol-check", "ocesql"],
+  "ecosystems": ["cobol"],
+  "docs": "https://gnucobol.sourceforge.io"
+}
