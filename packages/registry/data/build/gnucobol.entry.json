@@ -4,11 +4,12 @@
   "category": "build",
   "targets": ["api", "library"],
   "status": "stable",
-  "generation": "declared",
+  "generation": "certified",
+  "template": "cobol/gnucobol",
   "license": "GPL-3.0",
   "lastReviewedAt": "2026-10-13",
   "versionRange": ">=3.2.0",
-  "requires": ["cobol"],
+  "requires": ["cobol", "make"],
   "ecosystems": ["cobol"],
   "docs": "https://gnucobol.sourceforge.io"
 }

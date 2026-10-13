@@ -1,5 +1,7 @@
 'use client';
 
+import { listZipEntries, readZipEntry, ZipReadError } from '../../lib/zip-read-browser';
+
 /**
  * Choisir un dossier **depuis le navigateur**, quand le serveur ne peut pas.
  *
@@ -52,7 +54,12 @@ export type PickedAccess =
 
 export type BrowserPickOutcome =
   | { readonly ok: true; readonly value: PickedFolder; readonly access: PickedAccess }
-  | { readonly ok: false; readonly reason: 'cancelled' | 'unsupported' | 'failed' };
+  | {
+      readonly ok: false;
+      readonly reason: 'cancelled' | 'unsupported' | 'failed';
+      /** Ce qui a échoué, quand on le sait : `zip` = archive illisible. */
+      readonly detail?: 'zip';
+    };
 
 /**
  * Au-delà, on ne lit plus : un dossier de 10 000 fichiers n'a pas son manifeste
@@ -123,6 +130,11 @@ async function readEntries(handle: DirectoryHandle): Promise<PickedFolder> {
     ...(pkg === undefined ? {} : { packageJson: pkg }),
     ...(man === undefined ? {} : { manifest: man }),
   };
+}
+
+/** Lit le premier niveau d'un dossier déjà ouvert par sa poignée. */
+export function readHandleFolder(handle: DirectoryHandle): Promise<PickedFolder> {
+  return readEntries(handle);
 }
 
 /**
@@ -243,6 +255,194 @@ export function pickFolderWithInput(): Promise<BrowserPickOutcome> {
               : { ok: true, value: read.value, access: { kind: 'files', paths: read.paths } },
           ),
         () => settle({ ok: false, reason: 'failed' }),
+      );
+    });
+    document.body.append(input);
+    input.click();
+  });
+}
+
+/** Ce que dit le navigateur de l'appareil : de quoi reconnaître un mobile. */
+export interface DeviceHints {
+  readonly userAgent: string;
+  readonly maxTouchPoints?: number;
+}
+
+/**
+ * iPhone, iPad et Android : `<input webkitdirectory>` y existe parfois mais
+ * n'ouvre pas de dossier (iOS propose Photos et Fichiers, un fichier à la
+ * fois). On y propose une archive `.zip` du projet, ou plusieurs fichiers.
+ * iPadOS se présente en « Macintosh » : ses points de contact le trahissent.
+ */
+export function isMobileWithoutFolder(hints: DeviceHints): boolean {
+  const ua = hints.userAgent;
+  if (/iPhone|iPad|iPod|Android/i.test(ua)) return true;
+  return /Macintosh/.test(ua) && (hints.maxTouchPoints ?? 0) > 1;
+}
+
+export function deviceIsMobileWithoutFolder(): boolean {
+  if (typeof navigator === 'undefined') return false;
+  return isMobileWithoutFolder({
+    userAgent: navigator.userAgent,
+    maxTouchPoints: navigator.maxTouchPoints,
+  });
+}
+
+/** Le dossier racine commun à toutes les entrées (`projet/`), s'il y en a un. */
+function commonRoot(paths: readonly string[]): string | undefined {
+  const first = paths[0]?.split('/')[0];
+  if (first === undefined || !paths.every((path) => path.startsWith(`${first}/`))) {
+    return undefined;
+  }
+  return first;
+}
+
+type ReadProject = { readonly value: PickedFolder; readonly paths: readonly string[] };
+
+/**
+ * Lit l'archive `.zip` d'un projet : les chemins, et le texte de
+ * `package.json` / `pf.manifest.json` à la racine. Une archive d'un dossier
+ * (« projet/… », ce que fait « Compresser » sur iOS et macOS) est lue depuis
+ * ce dossier.
+ */
+export async function readZipProject(bytes: Uint8Array, zipName: string): Promise<ReadProject> {
+  const entries = listZipEntries(bytes).filter(
+    (entry) =>
+      !entry.path.endsWith('/') &&
+      !entry.path.startsWith('__MACOSX/') &&
+      !entry.path.split('/').includes('.DS_Store'),
+  );
+  const root = commonRoot(entries.map((entry) => entry.path));
+  const strip = root === undefined ? 0 : root.length + 1;
+  const names: string[] = [];
+  const dirs: string[] = [];
+  const paths: string[] = [];
+  let packageJson: string | undefined;
+  let manifest: string | undefined;
+  const decoder = new TextDecoder();
+  for (const entry of entries) {
+    const relative = entry.path.slice(strip);
+    if (relative === '' || relative.split('/').includes('..')) continue;
+    paths.push(relative);
+    const [head = ''] = relative.split('/');
+    if (relative.includes('/')) {
+      if (!dirs.includes(head)) dirs.push(head);
+      continue;
+    }
+    names.push(head);
+    const wanted = head === 'package.json' || head === MANIFEST_FILE;
+    if (wanted && entry.size <= MAX_TEXT_BYTES) {
+      const text = decoder.decode(await readZipEntry(bytes, entry));
+      if (head === 'package.json') packageJson = text;
+      else manifest = text;
+    }
+  }
+  return {
+    value: {
+      name: root ?? zipName.replace(/\.zip$/i, ''),
+      names: names.slice(0, MAX_ENTRIES),
+      dirs: dirs.slice(0, MAX_ENTRIES),
+      ...(packageJson === undefined ? {} : { packageJson }),
+      ...(manifest === undefined ? {} : { manifest }),
+    },
+    paths,
+  };
+}
+
+/** Un fichier choisi un par un : seulement son nom (pas de chemin sur mobile). */
+export interface PlainFile {
+  readonly name: string;
+  readonly size: number;
+  text: () => Promise<string>;
+}
+
+function packageName(text: string | undefined): string | undefined {
+  try {
+    const name: unknown = (JSON.parse(text ?? '{}') as Record<string, unknown>)['name'];
+    return typeof name === 'string' && name !== '' ? name : undefined;
+  } catch {
+    return undefined;
+  }
+}
+
+/** Plusieurs fichiers de la racine du projet, choisis ensemble. */
+export async function readPlainFiles(
+  files: ArrayLike<PlainFile>,
+): Promise<ReadProject | undefined> {
+  const list = Array.from(files);
+  if (list.length === 0) return undefined;
+  let packageJson: string | undefined;
+  let manifest: string | undefined;
+  for (const file of list) {
+    if (file.size > MAX_TEXT_BYTES) continue;
+    if (file.name === 'package.json') packageJson = await file.text();
+    if (file.name === MANIFEST_FILE) manifest = await file.text();
+  }
+  const names = list.map((file) => file.name);
+  return {
+    value: {
+      name: packageName(packageJson) ?? 'projet',
+      names: names.slice(0, MAX_ENTRIES),
+      dirs: [],
+      ...(packageJson === undefined ? {} : { packageJson }),
+      ...(manifest === undefined ? {} : { manifest }),
+    },
+    paths: names,
+  };
+}
+
+async function readPicked(
+  source: 'zip' | 'files',
+  files: readonly File[],
+): Promise<BrowserPickOutcome> {
+  const first = files[0];
+  if (first === undefined) return { ok: false, reason: 'cancelled' };
+  if (source === 'zip') {
+    try {
+      const read = await readZipProject(new Uint8Array(await first.arrayBuffer()), first.name);
+      return { ok: true, value: read.value, access: { kind: 'files', paths: read.paths } };
+    } catch (error) {
+      return error instanceof ZipReadError
+        ? { ok: false, reason: 'failed', detail: 'zip' }
+        : { ok: false, reason: 'failed' };
+    }
+  }
+  const read = await readPlainFiles(files);
+  return read === undefined
+    ? { ok: false, reason: 'cancelled' }
+    : { ok: true, value: read.value, access: { kind: 'files', paths: read.paths } };
+}
+
+/**
+ * Le choix mobile : une archive `.zip` du projet, ou plusieurs fichiers.
+ * Appelé dans le geste (aucun `await` avant `click()`).
+ */
+export function pickProjectFiles(source: 'zip' | 'files'): Promise<BrowserPickOutcome> {
+  if (typeof document === 'undefined') {
+    return Promise.resolve({ ok: false, reason: 'unsupported' });
+  }
+  return new Promise((resolve) => {
+    const input = document.createElement('input');
+    input.type = 'file';
+    if (source === 'zip') {
+      input.accept = '.zip,application/zip,application/x-zip-compressed';
+    } else {
+      input.multiple = true;
+    }
+    input.setAttribute('data-pf-project-input', source);
+    input.style.display = 'none';
+    let settled = false;
+    const settle = (outcome: BrowserPickOutcome): void => {
+      if (!settled) {
+        settled = true;
+        input.remove();
+        resolve(outcome);
+      }
+    };
+    input.addEventListener('cancel', () => settle({ ok: false, reason: 'cancelled' }));
+    input.addEventListener('change', () => {
+      void readPicked(source, Array.from(input.files ?? [])).then(settle, () =>
+        settle({ ok: false, reason: 'failed' }),
       );
     });
     document.body.append(input);

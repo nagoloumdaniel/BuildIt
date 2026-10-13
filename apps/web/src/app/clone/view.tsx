@@ -11,6 +11,7 @@ import { ScreenShell } from '../../components/wizard/shell';
 import type { Messages } from '../../lib/i18n/messages';
 import { useMessages } from '../../lib/i18n/provider';
 import type { RepositoryView } from '../github/repositories';
+import { BaseFilesSection } from '../open/base-files-section';
 import type { CloneStreamFailure } from './client';
 import type { CloneDestinationMode, ClonePreviewView, CloneResultView } from './clone';
 import { HostedCloneForm, type HostedCloneProps, HostedCloneRun } from './hosted-view';
@@ -570,6 +571,9 @@ export function CloneView(props: CloneViewProps): ReactElement {
               <NoteList className="mt-2" notes={result.warnings} />
             </section>
           )}
+          {result?.ok === true ? (
+            <BaseFilesSection source={{ kind: 'path', path: result.directory }} />
+          ) : null}
         </section>
       ) : null}
     </ScreenShell>

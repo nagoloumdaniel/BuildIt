@@ -9,8 +9,13 @@ import {
   type ParseResult,
 } from '@buildit/validation';
 import { type DependencySource, resolveDependencies } from './dependencies.js';
-import { buildInfrastructure, canRunInContainer } from './infrastructure.js';
-import { INTEGRATIONS, type Integration } from './integrations.data.js';
+import { buildInfrastructure, canRunInContainer, toolchainWorkflow } from './infrastructure.js';
+import {
+  type Command,
+  INTEGRATIONS,
+  type Integration,
+  type Toolchain,
+} from './integrations.data.js';
 import type { PlannedFile } from './plan.js';
 import { recipeAsDependencySource } from './recipes.js';
 
@@ -31,6 +36,7 @@ const OWN_CODES = [
   'GEN_SECRET_IN_ENV',
   'GEN_DOCKERFILE_DEFERRED',
   'GEN_INVALID_PROJECT_NAME',
+  'GEN_TOOLCHAIN_MIXED',
 ] as const;
 
 /**
@@ -56,6 +62,8 @@ const MESSAGES: Readonly<Record<(typeof OWN_CODES)[number], string>> = {
     'Docker est choisi, mais le projet n’a pas encore d’application à construire et démarrer (scripts build et start). Aucun Dockerfile n’est posé : il échouerait dès « docker build ». Il le sera quand un template certifié fournira l’application.',
   GEN_INVALID_PROJECT_NAME:
     'Le nom de projet {value} n’est pas un nom de paquet valide (minuscules, chiffres, « . », « _ », « - »). Le manifest n’a pas été validé avant la génération.',
+  GEN_TOOLCHAIN_MIXED:
+    'Un projet {first} n’a pas de package.json : {value} ne peut pas y vivre, ces technologies demandent Node. Retirez-les, ou placez-les dans une autre application du monorepo.',
   GEN_SECRET_IN_ENV:
     '{first} déclare « {value} » comme variable d’environnement. Ce n’est pas un nom de variable : une valeur ne doit jamais entrer dans un fichier généré.',
 };
@@ -279,8 +287,21 @@ function sortedRecord(record: Readonly<Record<string, string>>): Record<string, 
   return result;
 }
 
+/**
+ * Point d'entrée du paquet, apporté par une fiche certifiée (Expo, Electron) :
+ * comme les scripts d'application, il désigne du code que seul un template pose.
+ */
+function mainOf(entries: readonly RegistryEntry[]): string | undefined {
+  const stack = stackOf(entries);
+  return entries
+    .filter((entry) => entry.generation === 'certified')
+    .flatMap((entry) => integrationsFor(entry, stack))
+    .find((integration) => integration.main !== undefined)?.main;
+}
+
 function packageJson(
   manifest: Manifest,
+  main: string | undefined,
   scripts: Record<string, string>,
   dependencies: Readonly<Record<string, string>>,
   devDependencies: Readonly<Record<string, string>>,
@@ -292,6 +313,7 @@ function packageJson(
     version: '0.1.0',
     private: true,
     type: 'module',
+    ...(main === undefined ? {} : { main }),
     engines: { node: NODE_RANGE },
     packageManager: PACKAGE_MANAGER,
     scripts,
@@ -344,6 +366,7 @@ function readme(
 const GITIGNORE = `node_modules/
 dist/
 build/
+.expo/
 generated/
 coverage/
 .turbo/
@@ -437,6 +460,163 @@ export interface Scaffold {
    * qu'il donne l'illusion que le contrôle existe.
    */
   readonly warnings: readonly Issue<string>[];
+  /**
+   * Chaîne d'outils d'un projet hors Node : ce que le pipeline installe et
+   * vérifie à la place de pnpm. Absente pour un projet Node.
+   */
+  readonly toolchain?: ToolchainPlan;
+}
+
+/** Les commandes d'un projet hors Node, dans l'ordre où le pipeline les lance. */
+export interface ToolchainPlan {
+  readonly name: string;
+  readonly install?: Command;
+  readonly checks: readonly Command[];
+}
+
+/**
+ * La chaîne d'outils du projet, si une fiche certifiée en apporte une, avec
+ * les vérifications que les autres fiches y ajoutent (`make test`).
+ */
+function toolchainOf(
+  entries: readonly RegistryEntry[],
+): { toolchain: Toolchain; checks: Command[] } | undefined {
+  const stack = stackOf(entries);
+  const integrations = entries
+    .filter((entry) => entry.generation === 'certified')
+    .flatMap((entry) => integrationsFor(entry, stack));
+  const toolchain = integrations.find(
+    (integration) => integration.toolchain !== undefined,
+  )?.toolchain;
+  if (toolchain === undefined) {
+    return undefined;
+  }
+  return {
+    toolchain,
+    checks: [
+      ...toolchain.checks,
+      ...integrations.flatMap((integration) => integration.checks ?? []),
+    ],
+  };
+}
+
+/** Les fiches qui ont besoin d'un package.json : paquets npm, scripts, fichiers Node. */
+function nodeBound(entries: readonly RegistryEntry[]): RegistryEntry[] {
+  const stack = stackOf(entries);
+  return entries.filter(
+    (entry) =>
+      (entry.packages ?? []).length > 0 ||
+      (entry.devPackages ?? []).length > 0 ||
+      integrationsFor(entry, stack).some(
+        (integration) =>
+          integration.toolchain === undefined &&
+          integration.checks === undefined &&
+          (integration.scripts !== undefined ||
+            integration.appScripts !== undefined ||
+            integration.dependencies !== undefined ||
+            integration.devDependencies !== undefined ||
+            integration.files !== undefined),
+      ),
+  );
+}
+
+function nativeReadme(
+  manifest: Manifest,
+  entries: readonly RegistryEntry[],
+  toolchain: Toolchain,
+  checks: readonly Command[],
+): string {
+  const lines = [
+    `# ${manifest.name}`,
+    '',
+    '## Stack',
+    '',
+    ...entries.map((entry) => `- ${entry.name}`),
+    '',
+    '## Démarrer',
+    '',
+    `Prérequis : ${toolchain.name}.`,
+    '',
+    '```bash',
+    ...(toolchain.install === undefined ? [] : [toolchain.install.join(' ')]),
+    ...checks.map((command) => command.join(' ')),
+    '```',
+    '',
+    '---',
+    '',
+    'Ce projet a été généré par BuildIt. Il est **autonome** : aucune',
+    'dépendance à BuildIt ne subsiste. Vous pouvez désinstaller l’outil,',
+    'rien ne cassera.',
+    '',
+  ];
+  return lines.join('\n');
+}
+
+/**
+ * Le socle d'un projet hors Node : ni package.json, ni pnpm. Sa chaîne
+ * d'outils dit quoi ignorer, quoi lancer en CI et comment construire l'image.
+ */
+function nativeScaffold(
+  manifest: Manifest,
+  entries: readonly RegistryEntry[],
+  toolchain: Toolchain,
+  checks: readonly Command[],
+): Scaffold {
+  const chosen = stackOf(entries);
+  const files: PlannedFile[] = [
+    { path: '.gitignore', contents: toolchain.gitignore, source: 'scaffold:gitignore' },
+    {
+      path: 'README.md',
+      contents: nativeReadme(manifest, entries, toolchain, checks),
+      source: 'scaffold:readme',
+    },
+  ];
+  const { names } = collectEnv([
+    ...entries,
+    ...(manifest.env === undefined ? [] : [{ id: 'env', name: 'manifest.env', env: manifest.env }]),
+  ]);
+  if (names.length > 0) {
+    files.push({
+      path: '.env.example',
+      contents: envExample(names),
+      source: 'scaffold:env-example',
+    });
+  }
+  if (chosen.has('github-actions')) {
+    files.push({
+      path: '.github/workflows/ci.yml',
+      contents: toolchainWorkflow(toolchain, checks),
+      source: 'infra:github-actions',
+    });
+  }
+  const warnings: Issue<string>[] = [];
+  if (chosen.has('docker')) {
+    if (toolchain.dockerfile === undefined) {
+      warnings.push({
+        code: 'GEN_DOCKERFILE_DEFERRED',
+        path: ['docker'],
+        message: messageFor('GEN_DOCKERFILE_DEFERRED', {}),
+      });
+    } else {
+      files.push({ path: 'Dockerfile', contents: toolchain.dockerfile, source: 'infra:docker' });
+      if (toolchain.dockerignore !== undefined) {
+        files.push({
+          path: '.dockerignore',
+          contents: toolchain.dockerignore,
+          source: 'infra:docker',
+        });
+      }
+    }
+  }
+  return {
+    files,
+    warnings,
+    toolchain: {
+      name: toolchain.name,
+      ...(toolchain.install === undefined ? {} : { install: toolchain.install }),
+      checks,
+    },
+  };
 }
 
 /** Construit les fichiers racine d'un projet à partir de sa stack résolue. */
@@ -457,6 +637,24 @@ export function buildScaffold(
         message: messageFor('GEN_INVALID_PROJECT_NAME', { value: JSON.stringify(manifest.name) }),
       },
     ]);
+  }
+
+  const native = toolchainOf(entries);
+  if (native !== undefined) {
+    const node = nodeBound(entries);
+    if (node.length > 0) {
+      return fail([
+        {
+          code: 'GEN_TOOLCHAIN_MIXED',
+          path: node.map((entry) => entry.id),
+          message: messageFor('GEN_TOOLCHAIN_MIXED', {
+            first: native.toolchain.name,
+            value: node.map((entry) => entry.name).join(', '),
+          }),
+        },
+      ]);
+    }
+    return ok(nativeScaffold(manifest, entries, native.toolchain, native.checks));
   }
 
   const { scripts, issues: scriptIssues } = collectScripts(entries);
@@ -503,7 +701,13 @@ export function buildScaffold(
   const files: PlannedFile[] = [
     {
       path: 'package.json',
-      contents: packageJson(manifest, scripts, resolved.dependencies, resolved.devDependencies),
+      contents: packageJson(
+        manifest,
+        mainOf(entries),
+        scripts,
+        resolved.dependencies,
+        resolved.devDependencies,
+      ),
       source: 'scaffold:package-json',
     },
     { path: '.gitignore', contents: GITIGNORE, source: 'scaffold:gitignore' },

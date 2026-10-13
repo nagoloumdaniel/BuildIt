@@ -1,5 +1,10 @@
 import type { RegistryEntry } from '@buildit/registry';
-import { type DockerService, INTEGRATIONS } from './integrations.data.js';
+import {
+  type Command,
+  type DockerService,
+  INTEGRATIONS,
+  type Toolchain,
+} from './integrations.data.js';
 import type { PlannedFile } from './plan.js';
 
 /**
@@ -158,6 +163,34 @@ function githubWorkflow(scripts: Readonly<Record<string, string>>): string {
     '',
   ];
 
+  return lines.join('\n');
+}
+
+/**
+ * Workflow d'un projet hors Node : la chaîne d'outils s'installe (dans un
+ * conteneur quand elle le demande), puis les mêmes commandes que l'étape
+ * Validation du pipeline.
+ */
+export function toolchainWorkflow(toolchain: Toolchain, checks: readonly Command[]): string {
+  const lines = [
+    'name: CI',
+    '',
+    'on:',
+    '  push:',
+    '    branches: [main]',
+    '  pull_request:',
+    '',
+    'jobs:',
+    '  ci:',
+    '    runs-on: ubuntu-latest',
+    ...(toolchain.ciContainer === undefined ? [] : [`    container: ${toolchain.ciContainer}`]),
+    '    steps:',
+    '      - uses: actions/checkout@v5',
+    ...toolchain.ciSetup,
+    ...(toolchain.install === undefined ? [] : [`      - run: ${toolchain.install.join(' ')}`]),
+    ...checks.map((command) => `      - run: ${command.join(' ')}`),
+    '',
+  ];
   return lines.join('\n');
 }
 

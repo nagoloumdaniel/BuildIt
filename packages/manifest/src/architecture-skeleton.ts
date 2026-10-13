@@ -194,3 +194,27 @@ export function skeletonTree(
   }
   return [...dirs, ...DOCS];
 }
+
+/**
+ * Retire `shared/ui` et `shared/lib` quand l'application a déjà son
+ * équivalent : `components/` (pour `shared/ui`) ou `lib/` (pour `shared/lib`),
+ * au même niveau que `shared/` ou à la racine de l'application (au-dessus de
+ * `src/`). Next.js pose `components/` et `lib/` : pas de doublon.
+ *
+ * `existsDir` reçoit un chemin de dossier relatif POSIX, sans `/` final.
+ */
+export function withoutDuplicateShared(
+  dirs: readonly SkeletonDir[],
+  existsDir: (path: string) => boolean,
+): SkeletonDir[] {
+  const twins: Record<string, string> = { ui: 'components', lib: 'lib' };
+  return dirs.filter((dir) => {
+    const match = /^(.*?)shared\/(ui|lib)$/.exec(dir.path);
+    if (match === null) return true;
+    const root = match[1] ?? '';
+    const twin = twins[match[2] ?? ''] ?? '';
+    const candidates = [`${root}${twin}`];
+    if (root.endsWith('src/')) candidates.push(`${root.slice(0, -'src/'.length)}${twin}`);
+    return !candidates.some((path) => existsDir(path));
+  });
+}

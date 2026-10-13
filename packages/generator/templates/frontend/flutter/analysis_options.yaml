@@ -1,0 +1,2 @@
+# Règles recommandées par l'équipe Flutter : `flutter analyze` les applique.
+include: package:flutter_lints/flutter.yaml

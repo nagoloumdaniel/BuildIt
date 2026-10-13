@@ -477,3 +477,44 @@ describe('draftToManifest — garde-fous', () => {
     expect(planned.issues.map((issue) => issue.code)).toContain('COMPAT_UNKNOWN_TECHNOLOGY');
   });
 });
+
+describe('web, mobile et bureau dans un même projet', () => {
+  function multiDraft(): DraftState {
+    return {
+      ...freshDraft(),
+      step: 'preview',
+      name: 'trio',
+      targets: ['web', 'mobile', 'desktop'],
+      architecture: 'single-app',
+      technologies: ['next', 'typescript', 'tailwind', 'shadcn-ui', 'expo', 'electron', 'biome'],
+      infra: { docker: false, ci: true },
+    };
+  }
+
+  it('place chaque framework dans son application, et passe au monorepo', () => {
+    const result = draftToManifest(multiDraft());
+    expect(result.ok, result.ok ? '' : result.issues.map((i) => i.code).join()).toBe(true);
+    if (!result.ok) {
+      return;
+    }
+    expect(result.value.architecture).toBe('monorepo');
+    expect(result.value.frontend?.framework).toBe('next');
+    expect(result.value.mobile).toEqual({ framework: 'expo', language: 'typescript' });
+    expect(result.value.desktop).toEqual({ framework: 'electron' });
+  });
+
+  it('le manifest obtenu se planifie : apps/web, apps/mobile, apps/desktop', () => {
+    const result = draftToManifest(multiDraft());
+    if (!result.ok) {
+      throw new Error(result.issues.map((i) => i.code).join());
+    }
+    const planned = planProject(result.value, '/cible');
+    expect(planned.ok, planned.ok ? '' : planned.issues.map((i) => i.message).join()).toBe(true);
+    if (planned.ok) {
+      const paths = planned.value.plan.files.map((file) => file.path);
+      expect(paths).toContain('apps/mobile/package.json');
+      expect(paths).toContain('apps/desktop/package.json');
+      expect(paths).toContain('packages/contracts/package.json');
+    }
+  });
+});

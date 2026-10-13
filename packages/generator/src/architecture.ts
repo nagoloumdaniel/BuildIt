@@ -1,9 +1,11 @@
 import {
   type Architecture,
+  isoDate,
   type Manifest,
   type SkeletonDir,
   skeletonFiles,
   skeletonTree,
+  withoutDuplicateShared,
 } from '@buildit/manifest';
 import type { RegistryEntry } from '@buildit/registry';
 import type { PlannedFile } from './plan.js';
@@ -56,15 +58,35 @@ function followConvention(
   });
 }
 
+export interface SkeletonOptions {
+  /** Date de génération, inscrite dans l'ADR-001 (déterministe en test). */
+  readonly now?: Date | undefined;
+}
+
+/** Vrai si un fichier planifié se trouve sous ce dossier. */
+function plannedDir(planned: readonly PlannedFile[]) {
+  return (dir: string) => planned.some((file) => file.path.startsWith(`${dir}/`));
+}
+
 export function architectureSkeleton(
   manifest: Manifest,
   entries: readonly RegistryEntry[],
   planned: readonly PlannedFile[] = [],
+  options: SkeletonOptions = {},
 ): PlannedFile[] {
   const architecture = manifest.architecture;
   const source = `architecture:${architecture}`;
-  const dirs = followConvention(skeletonTree(architecture, stackOf(entries)), planned);
-  return skeletonFiles(manifest.name, architecture, dirs).map((file) => ({ ...file, source }));
+  // Le template a déjà `components/` ou `lib/` (Next.js) : pas de shared/ui
+  // ni shared/lib en doublon à côté.
+  const dirs = withoutDuplicateShared(
+    followConvention(skeletonTree(architecture, stackOf(entries)), planned),
+    plannedDir(planned),
+  );
+  const date = isoDate(options.now ?? new Date());
+  return skeletonFiles(manifest.name, architecture, dirs, { date }).map((file) => ({
+    ...file,
+    source,
+  }));
 }
 
 /** Ajoute le squelette sans jamais écraser un fichier déjà planifié : les templates gagnent. */
@@ -72,10 +94,13 @@ export function withArchitectureSkeleton(
   files: readonly PlannedFile[],
   manifest: Manifest,
   entries: readonly RegistryEntry[],
+  options: SkeletonOptions = {},
 ): PlannedFile[] {
   const taken = new Set(files.map((file) => file.path));
   return [
     ...files,
-    ...architectureSkeleton(manifest, entries, files).filter((file) => !taken.has(file.path)),
+    ...architectureSkeleton(manifest, entries, files, options).filter(
+      (file) => !taken.has(file.path),
+    ),
   ];
 }

@@ -46,7 +46,7 @@ const MESSAGES: Readonly<Record<PostInstallCode, string>> = {
   GEN_GIT_NESTED:
     'Le dossier {value} est à l’intérieur d’un dépôt Git existant : aucun dépôt imbriqué n’a été créé, et rien n’a été commité.',
   GEN_VALIDATION_FAILED:
-    'Le projet généré échoue à « pnpm run {command} ». C’est un défaut du générateur, pas de votre projet : signalez-le. Fin de la sortie :\n{output}',
+    'Le projet généré échoue à « {command} ». C’est un défaut du générateur, pas de votre projet : signalez-le. Fin de la sortie :\n{output}',
   GEN_COMMAND_UNAVAILABLE:
     'La commande « {command} » est introuvable. Installez-la puis relancez à partir de cette étape : les fichiers du projet sont en place.',
 };
@@ -87,10 +87,12 @@ async function attempt(
 export async function runInstall(
   runner: CommandRunner,
   cwd: string,
+  command: readonly string[] = ['pnpm', 'install'],
 ): Promise<StepFailure | undefined> {
-  const result = await attempt(runner, 'pnpm', ['install'], cwd);
+  const [tool = 'pnpm', ...args] = command;
+  const result = await attempt(runner, tool, args, cwd);
   if (result === undefined) {
-    return unavailable('pnpm');
+    return unavailable(tool);
   }
   if (result.exitCode === 0) {
     return undefined;
@@ -101,6 +103,7 @@ export async function runInstall(
       code: 'GEN_INSTALL_FAILED',
       path: ['install'],
       message: messageFor('GEN_INSTALL_FAILED', {
+        tool,
         retry: retryable
           ? 'erreur réseau probable : relancez à partir de l’installation'
           : 'erreur durable : relancer ne changera rien',
@@ -190,18 +193,40 @@ export async function runValidation(
   cwd: string,
   scripts: Readonly<Record<string, string>>,
 ): Promise<StepFailure | undefined> {
-  for (const name of CI_SCRIPTS.filter((script) => scripts[script] !== undefined)) {
-    const result = await attempt(runner, 'pnpm', ['run', name], cwd);
+  return runChecks(
+    runner,
+    cwd,
+    CI_SCRIPTS.filter((script) => scripts[script] !== undefined).map((name) => [
+      'pnpm',
+      'run',
+      name,
+    ]),
+  );
+}
+
+/**
+ * Lance des vérifications, dans l'ordre, jusqu'à la première qui échoue.
+ * Celles d'un projet Node (`pnpm run lint`…) comme celles d'une autre chaîne
+ * d'outils (`make test`, `flutter analyze`).
+ */
+export async function runChecks(
+  runner: CommandRunner,
+  cwd: string,
+  commands: readonly (readonly string[])[],
+): Promise<StepFailure | undefined> {
+  for (const command of commands) {
+    const [tool = '', ...args] = command;
+    const result = await attempt(runner, tool, args, cwd);
     if (result === undefined) {
-      return unavailable('pnpm');
+      return unavailable(tool);
     }
     if (result.exitCode !== 0) {
       return {
         issue: {
           code: 'GEN_VALIDATION_FAILED',
-          path: ['validate', name],
+          path: ['validate', args.at(-1) ?? tool],
           message: messageFor('GEN_VALIDATION_FAILED', {
-            command: name,
+            command: command.join(' '),
             output: tail(result.output),
           }),
         },

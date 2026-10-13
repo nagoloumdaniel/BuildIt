@@ -34,6 +34,8 @@ export const TEMPLATE_VARIABLES = [
   'year',
   'nodeVersion',
   'packageManager',
+  /** Nom en snake_case : paquet Dart, crate Rust — sans « - » ni « . ». */
+  'identifier',
 ] as const;
 
 export type TemplateVariable = (typeof TEMPLATE_VARIABLES)[number];

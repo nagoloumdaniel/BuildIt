@@ -10,6 +10,8 @@ import { CLONE_ARCHIVE_LIMITS } from '../../lib/clone-archive-limits';
 import { cloneCommands } from '../../lib/clone-commands';
 import type { Messages } from '../../lib/i18n/messages';
 import { useMessages } from '../../lib/i18n/provider';
+import { BaseFilesSection } from '../open/base-files-section';
+import type { DirectoryHandle } from '../open/browser-picker';
 import type { HostedCopyResult, HostedFailure, HostedProgress } from './hosted-client';
 import type { HostedPlanView } from './hosted-protocol';
 
@@ -44,7 +46,12 @@ export type HostedStatus =
   | 'unavailable';
 
 export type HostedOutcome =
-  | { readonly kind: 'folder'; readonly result: HostedCopyResult }
+  | {
+      readonly kind: 'folder';
+      readonly result: HostedCopyResult;
+      /** Le dossier copié, pour y compléter les fichiers de base. */
+      readonly handle?: DirectoryHandle;
+    }
   | { readonly kind: 'zip'; readonly fileName: string; readonly bytes: number };
 
 export interface HostedCloneProps {
@@ -436,6 +443,9 @@ export function HostedCloneRun(props: HostedCloneProps): ReactElement {
               ? { installCommand: outcome.result.installCommand }
               : {})}
           />
+          {outcome.kind === 'folder' && outcome.handle !== undefined ? (
+            <BaseFilesSection source={{ kind: 'handle', handle: outcome.handle }} />
+          ) : null}
         </>
       ) : null}
     </section>

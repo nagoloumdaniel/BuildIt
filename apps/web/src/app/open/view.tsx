@@ -44,14 +44,39 @@ export function OpenView({ controller }: OpenViewProps): ReactElement {
 
   return (
     <ScreenShell description={t.open.description} icon="folderOpen" title={t.open.title}>
-      <PickCard
-        busy={picking || controller.phase === 'inspecting'}
-        busyLabel={picking ? t.picker.openingHint : t.open.analysing}
-        disabled={controller.mode === 'none' || busy}
-        note={t.open.folderHint}
-        onPick={controller.pick}
-        title={controller.directory === '' ? t.open.pick : t.open.reanalyseFolder}
-      />
+      {controller.mode === 'mobile' ? (
+        <div className="grid gap-3" data-pick-mobile="">
+          <PickCard
+            busy={picking || controller.phase === 'inspecting'}
+            busyLabel={picking ? t.picker.openingHint : t.open.analysing}
+            disabled={busy}
+            icon="download"
+            note={t.open.pickZipNote}
+            onPick={controller.pickZip}
+            title={t.open.pickZip}
+          />
+          <PickCard
+            disabled={busy || picking}
+            icon="file"
+            note={t.open.pickFilesNote}
+            onPick={controller.pickFiles}
+            title={t.open.pickFiles}
+          />
+        </div>
+      ) : (
+        <PickCard
+          busy={picking || controller.phase === 'inspecting'}
+          busyLabel={picking ? t.picker.openingHint : t.open.analysing}
+          disabled={controller.mode === 'none' || busy}
+          note={t.open.folderHint}
+          onPick={controller.pick}
+          title={controller.directory === '' ? t.open.pick : t.open.reanalyseFolder}
+        />
+      )}
+
+      {controller.mode === 'mobile' ? (
+        <p className="pf-callout pf-callout-steel mt-3">{t.open.mobileNote}</p>
+      ) : null}
 
       {controller.mode === 'browser' ? (
         <p className="pf-callout pf-callout-steel mt-3">{t.open.browserNote}</p>

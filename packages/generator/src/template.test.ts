@@ -9,6 +9,7 @@ const CONTEXT: TemplateContext = {
   year: '2026',
   nodeVersion: '>=20.11.0',
   packageManager: 'pnpm@11.13.1',
+  identifier: 'quai3',
 };
 
 function render(source: string): string {

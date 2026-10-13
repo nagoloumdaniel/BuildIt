@@ -9,7 +9,7 @@
 
 export type { ParseResult } from '@buildit/validation';
 export type { SkeletonDir, SkeletonStack } from './architecture-skeleton.js';
-export { skeletonTree } from './architecture-skeleton.js';
+export { skeletonTree, withoutDuplicateShared } from './architecture-skeleton.js';
 export type { ManifestIssue, ManifestIssueCode, ManifestPathSegment } from './errors.js';
 export { MANIFEST_ISSUE_CODES, suggest } from './errors.js';
 export type { Migration } from './migrate.js';
@@ -30,6 +30,6 @@ export type {
 export { MANIFEST_KEY_ORDER } from './schema/manifest.js';
 export { ENV_NAME_PATTERN, PROJECT_NAME_PATTERN } from './schema/primitives.js';
 export { canonicalizeManifest, serializeManifest } from './serialize.js';
-export type { SkeletonFile } from './skeleton-files.js';
-export { skeletonFiles } from './skeleton-files.js';
+export type { SkeletonFile, SkeletonFilesOptions } from './skeleton-files.js';
+export { isoDate, skeletonFiles } from './skeleton-files.js';
 export { isSupportedManifestVersion, MANIFEST_VERSION } from './version.js';

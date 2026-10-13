@@ -54,6 +54,29 @@ describe('exclusivité de catégorie', () => {
     ).toEqual([]);
   });
 
+  it('un framework par plateforme : web, mobile et bureau coexistent', () => {
+    expect(
+      codes(
+        checkExclusiveCategories([
+          entry({ id: 'next', category: 'frontend', targets: ['web'] }),
+          entry({ id: 'expo', category: 'frontend', targets: ['mobile'] }),
+          entry({ id: 'electron', category: 'frontend', targets: ['desktop'] }),
+        ]),
+      ),
+    ).toEqual([]);
+  });
+
+  it('deux frameworks de la même plateforme restent exclusifs', () => {
+    expect(
+      codes(
+        checkExclusiveCategories([
+          entry({ id: 'expo', category: 'frontend', targets: ['mobile'] }),
+          entry({ id: 'flutter', category: 'frontend', targets: ['mobile'] }),
+        ]),
+      ),
+    ).toEqual(['COMPAT_EXCLUSIVE_CATEGORY']);
+  });
+
   it('refuse deux technologies d’une catégorie exclusive', () => {
     expect(
       codes(

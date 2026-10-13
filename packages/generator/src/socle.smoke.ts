@@ -747,3 +747,273 @@ describe('un projet généré passe sa propre CI — gate M3', () => {
     });
   }
 });
+
+/**
+ * Chaînes natives : COBOL, Flutter, Expo, Electron, Tauri.
+ *
+ * Chaque projet est généré par le pipeline réel, puis prouvé par **sa** chaîne
+ * d'outils. Quand elle manque sur la machine (cobc, cargo), la preuve tourne
+ * dans Docker, sur une image maintenue : elle n'est jamais sautée en silence.
+ */
+describe('chaînes natives : un projet généré se construit et se teste', () => {
+  async function generatedNative(
+    manifest: Manifest,
+    options: { install: boolean; validate: boolean },
+  ): Promise<string> {
+    const root = await mkdtemp(join(tmpdir(), 'pf-smoke-'));
+    roots.push(root);
+    const destination = join(root, manifest.name);
+    const result = await generateProject(manifest, destination, { git: true, ...options });
+    expect(result.ok, result.ok ? '' : result.issues.map((i) => i.message).join('\n')).toBe(true);
+    return destination;
+  }
+
+  /** Lance un script dans un conteneur, le projet monté sur /w. */
+  function inDocker(image: string, project: string, script: string, env: string[] = []): string {
+    return run(
+      'docker',
+      [
+        'run',
+        '--rm',
+        ...env.flatMap((value) => ['-e', value]),
+        '-v',
+        `${project}:/w`,
+        '-w',
+        '/w',
+        image,
+        'sh',
+        '-c',
+        script,
+      ],
+      project,
+    );
+  }
+
+  const COBOL_TOOLS =
+    'apt-get update -qq && DEBIAN_FRONTEND=noninteractive apt-get install -y -qq --no-install-recommends gnucobol3 make default-jre-headless curl unzip ca-certificates >/dev/null';
+
+  it.skipIf(SKIP_DOCKER)(
+    'COBOL : make build, make test (cobol-check), make start, image non root',
+    async () => {
+      requireDocker();
+      const project = await generatedNative(
+        {
+          manifestVersion: 1,
+          name: 'batch',
+          targets: ['library'],
+          architecture: 'single-app',
+          services: ['cobol', 'gnucobol', 'make'],
+          quality: ['cobol-check'],
+          infra: ['docker', 'github-actions'],
+        },
+        { install: false, validate: false },
+      );
+      // Mêmes commandes que la CI générée, dans la même image.
+      const output = inDocker(
+        'debian:trixie-slim',
+        project,
+        `${COBOL_TOOLS} && make build && make test && make start`,
+      );
+      expect(output).toContain('2 PASSED');
+      expect(output).toContain('Hello, COBOL!');
+
+      // Sonde négative : une attente fausse fait échouer `make test`.
+      const suite = join(project, 'src/test/cobol/HELLO/GreetingTest.cut');
+      const original = await readFile(suite, 'utf8');
+      await writeFile(suite, original.replace('"Hello, World!"', '"Hello, Faux!"'));
+      expect(() =>
+        inDocker('debian:trixie-slim', project, `${COBOL_TOOLS} && make test`),
+      ).toThrow();
+      await writeFile(suite, original);
+
+      const tag = `pf-smoke-${randomBytes(4).toString('hex')}`;
+      try {
+        run('docker', ['build', '-t', tag, '.'], project);
+        expect(run('docker', ['run', '--rm', tag], project)).toContain('Hello, COBOL!');
+        expect(run('docker', ['run', '--rm', tag, 'id', '-u'], project).trim()).not.toBe('0');
+      } finally {
+        execFileSync('docker', ['rmi', '-f', tag], { stdio: 'ignore' });
+      }
+    },
+  );
+
+  it('Flutter : pub get, analyze, test, build web', async () => {
+    const project = await generatedNative(
+      {
+        manifestVersion: 1,
+        name: 'mobile-app',
+        targets: ['mobile'],
+        architecture: 'single-app',
+        mobile: { framework: 'flutter', language: 'dart' },
+        infra: ['github-actions'],
+      },
+      { install: false, validate: false },
+    );
+    const script = 'flutter pub get && flutter analyze && flutter test && flutter build web';
+    let local = true;
+    try {
+      // `flutter` est un .bat sous Windows : chaîne constante, aucune saisie.
+      execFileSync('flutter --version', { stdio: 'ignore', shell: true });
+    } catch {
+      local = false;
+    }
+    let output: string;
+    if (local) {
+      output = execFileSync(script, { cwd: project, shell: true, stdio: 'pipe' }).toString();
+    } else {
+      // Pas de Flutter sur la machine : l'image maintenue par Cirrus Labs.
+      requireDocker();
+      output = inDocker('ghcr.io/cirruslabs/flutter:stable', project, script);
+    }
+    expect(output).toContain('All tests passed!');
+    expect(output).toMatch(/Built build[\\/]web/);
+  });
+
+  it('Expo : install, lint, typecheck, test, export Android, expo-doctor', async () => {
+    const project = await generatedNative(
+      {
+        manifestVersion: 1,
+        name: 'poche',
+        targets: ['mobile'],
+        architecture: 'single-app',
+        mobile: { framework: 'expo', language: 'typescript' },
+        quality: ['biome', 'vitest'],
+        infra: ['github-actions'],
+      },
+      { install: true, validate: true },
+    );
+    // `build` a produit le bundle Hermes Android.
+    const metadata = JSON.parse(await readFile(join(project, 'dist/metadata.json'), 'utf8')) as {
+      fileMetadata: { android?: { bundle: string } };
+    };
+    expect(metadata.fileMetadata.android?.bundle).toMatch(/\.hbc$/);
+    expect(run('pnpm', ['dlx', 'expo-doctor@1'], project)).toContain('checks passed');
+  });
+
+  it('Electron : install, lint, typecheck, test, build, la fenêtre démarre', async () => {
+    const project = await generatedNative(
+      {
+        manifestVersion: 1,
+        name: 'bureau',
+        targets: ['desktop'],
+        architecture: 'single-app',
+        desktop: { framework: 'electron' },
+        services: ['typescript'],
+        quality: ['biome', 'vitest'],
+        infra: ['github-actions'],
+      },
+      { install: true, validate: true },
+    );
+    await expect(readFile(join(project, 'dist/main.js'), 'utf8')).resolves.toContain(
+      'BrowserWindow',
+    );
+    // Lancement réel quand un écran existe : vivant après 8 s, sans erreur.
+    if (process.platform !== 'win32' && process.env['DISPLAY'] === undefined) {
+      return;
+    }
+    const env = { ...process.env };
+    // Posée par certains hôtes (éditeurs Electron) : elle ferait d'Electron un simple Node.
+    delete env['ELECTRON_RUN_AS_NODE'];
+    const start = resolveCommand('pnpm');
+    const app = spawn(start.file, [...start.prefix, 'exec', 'electron', '.'], {
+      cwd: project,
+      env,
+      detached: true,
+    });
+    let stderr = '';
+    app.stderr?.on('data', (chunk: Buffer) => {
+      stderr += chunk.toString();
+    });
+    try {
+      await new Promise((resolve) => setTimeout(resolve, 8_000));
+      expect(app.exitCode, stderr).toBeNull();
+      expect(stderr).not.toMatch(/Error/);
+    } finally {
+      if (app.pid !== undefined) {
+        killGroup(app.pid);
+      }
+    }
+  });
+
+  it.skipIf(SKIP_DOCKER)(
+    'Tauri : install, lint, typecheck, build Vite, puis cargo check et cargo test',
+    async () => {
+      const project = await generatedNative(
+        {
+          manifestVersion: 1,
+          name: 'fenetre',
+          targets: ['desktop'],
+          architecture: 'single-app',
+          desktop: { framework: 'tauri' },
+          services: ['typescript'],
+          quality: ['biome', 'vitest'],
+          infra: ['github-actions'],
+        },
+        { install: true, validate: true },
+      );
+      requireDocker();
+      run('pnpm', ['run', 'icons'], project);
+      const output = inDocker(
+        'rust:1-bookworm',
+        project,
+        'apt-get update -qq && DEBIAN_FRONTEND=noninteractive apt-get install -y -qq libwebkit2gtk-4.1-dev libxdo-dev libssl-dev libayatana-appindicator3-dev librsvg2-dev >/dev/null && cd src-tauri && cargo check && cargo test 2>&1',
+        ['CARGO_TARGET_DIR=/tmp/target'],
+      );
+      expect(output).toContain('test tests::greet_cite_le_nom ... ok');
+    },
+  );
+});
+
+describe('monorepo web + mobile + bureau', () => {
+  it('Next.js, Expo et Electron passent la CI ; packages/contracts est partagé', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'pf-smoke-'));
+    roots.push(root);
+    const project = join(root, 'trio');
+    const result = await generateProject(
+      {
+        manifestVersion: 1,
+        name: 'trio',
+        targets: ['web', 'mobile', 'desktop'],
+        architecture: 'monorepo',
+        frontend: {
+          framework: 'next',
+          language: 'typescript',
+          styling: 'tailwind',
+          ui: 'shadcn-ui',
+        },
+        mobile: { framework: 'expo', language: 'typescript' },
+        desktop: { framework: 'electron' },
+        quality: ['biome', 'vitest'],
+        infra: ['turborepo', 'docker', 'github-actions'],
+      },
+      project,
+      { install: true, git: true, validate: true },
+    );
+    expect(result.ok, result.ok ? '' : result.issues.map((i) => i.message).join('\n')).toBe(true);
+
+    // Chaque application a été construite par sa propre chaîne.
+    await expect(readFile(join(project, 'apps/web/.next/BUILD_ID'), 'utf8')).resolves.toBeTruthy();
+    await expect(
+      readFile(join(project, 'apps/mobile/dist/metadata.json'), 'utf8'),
+    ).resolves.toMatch(/\.hbc/);
+    await expect(readFile(join(project, 'apps/desktop/dist/main.js'), 'utf8')).resolves.toContain(
+      'BrowserWindow',
+    );
+
+    // Le contrat se type depuis chaque application ; un mauvais usage est refusé.
+    for (const app of ['web', 'mobile', 'desktop']) {
+      const probe = join(project, `apps/${app}/contract-probe.ts`);
+      await writeFile(
+        probe,
+        `import { appTitle } from 'trio-contracts';\nexport const title: string = appTitle('trio', '${app}');\n`,
+      );
+      expect(() => run('pnpm', ['run', 'typecheck'], join(project, `apps/${app}`))).not.toThrow();
+      await writeFile(
+        probe,
+        "import { appTitle } from 'trio-contracts';\nexport const title: string = appTitle('trio', 'tv');\n",
+      );
+      expect(() => run('pnpm', ['run', 'typecheck'], join(project, `apps/${app}`))).toThrow();
+      await rm(probe);
+    }
+  });
+});

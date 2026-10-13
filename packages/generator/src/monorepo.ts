@@ -17,7 +17,13 @@ import {
 import { envDeclaration } from './integrations.data.js';
 import { BRIDGES, ROLE_BY_CATEGORY, ROLE_BY_ID, type Role } from './monorepo.data.js';
 import type { PlannedFile } from './plan.js';
-import { buildScaffold, collectBuildPolicy, envExample, pnpmWorkspace } from './scaffold.js';
+import {
+  buildScaffold,
+  collectBuildPolicy,
+  envExample,
+  pnpmWorkspace,
+  type ToolchainPlan,
+} from './scaffold.js';
 
 /**
  * Monorepo multi-applications (spec 2026-09-28).
@@ -47,9 +53,15 @@ const MESSAGES: Readonly<Record<MonorepoIssueCode, string>> = {
 
 const messageFor = createMessageFormatter(MESSAGES);
 
-export type AppName = 'web' | 'api';
+export type AppName = 'web' | 'api' | 'mobile' | 'desktop';
 
-const APP_ORDER: readonly AppName[] = ['web', 'api'];
+const APP_ORDER: readonly AppName[] = ['web', 'api', 'mobile', 'desktop'];
+
+/** Les applications qui ont une interface : elles partagent packages/contracts. */
+const CLIENT_APPS: readonly AppName[] = ['web', 'mobile', 'desktop'];
+
+/** Seuls le web et l'API se servent depuis un conteneur. */
+const SERVED_APPS: ReadonlySet<AppName> = new Set(['web', 'api']);
 
 /** Fichiers qu'une application seule produit mais que la racine porte, une fois. */
 const ROOT_ONLY = new Set([
@@ -72,6 +84,8 @@ const APP_ONLY = new Set(['.env.example', 'env.d.ts', 'tsconfig.json']);
 export interface GeneratedFiles {
   readonly files: readonly PlannedFile[];
   readonly warnings: readonly Issue<string>[];
+  /** Projet hors Node : sa chaîne d'outils (voir `Scaffold`). */
+  readonly toolchain?: ToolchainPlan;
 }
 
 export type GenerateApp = (
@@ -121,7 +135,21 @@ function withEnv(
 }
 
 function roleOf(entry: RegistryEntry): Role {
-  return ROLE_BY_ID[entry.id] ?? ROLE_BY_CATEGORY[entry.category];
+  const explicit = ROLE_BY_ID[entry.id];
+  if (explicit !== undefined) {
+    return explicit;
+  }
+  // Un framework d'interface va à la plateforme qu'il vise : Expo au mobile,
+  // Electron au bureau. Le web garde ceux qui le visent.
+  if (entry.category === 'frontend' && !entry.targets.includes('web')) {
+    if (entry.targets.includes('mobile')) {
+      return 'mobile';
+    }
+    if (entry.targets.includes('desktop')) {
+      return 'desktop';
+    }
+  }
+  return ROLE_BY_CATEGORY[entry.category];
 }
 
 interface Partition {
@@ -197,6 +225,78 @@ function rootScripts(
     typecheck: delegate('typecheck'),
   };
   return Object.fromEntries(Object.entries(scripts).sort(([a], [b]) => a.localeCompare(b)));
+}
+
+/**
+ * `packages/contracts` : les types et constantes que les interfaces
+ * partagent. Compilé à l'installation (`prepare`) comme à la construction :
+ * chaque application le lit en JavaScript, quel que soit son outil — Next.js,
+ * Metro ou tsc — et ses types existent avant le premier `typecheck`.
+ */
+function contractsPackage(name: string, clients: readonly AppName[]): PlannedFile[] {
+  const source = 'monorepo:contracts';
+  const json = {
+    name,
+    version: '0.1.0',
+    private: true,
+    type: 'module',
+    exports: { '.': { types: './dist/index.d.ts', default: './dist/index.js' } },
+    scripts: {
+      build: 'tsc -p tsconfig.json',
+      prepare: 'tsc -p tsconfig.json',
+      typecheck: 'tsc --noEmit -p tsconfig.json',
+    },
+    devDependencies: { typescript: '>=5.5.0 <8.0.0' },
+  };
+  // Écrit à la main : Biome garde un tableau court sur une ligne, et le
+  // projet échouerait à son propre `pnpm lint`.
+  const tsconfig = [
+    '{',
+    '  "compilerOptions": {',
+    '    "target": "ES2022",',
+    '    "module": "ESNext",',
+    '    "moduleResolution": "Bundler",',
+    '    "strict": true,',
+    '    "declaration": true,',
+    '    "rootDir": "src",',
+    '    "outDir": "dist",',
+    '    "skipLibCheck": true',
+    '  },',
+    '  "include": ["src"]',
+    '}',
+    '',
+  ].join('\n');
+  const platforms = clients.map((app) => `'${app}'`).join(' | ');
+  const index = [
+    '/**',
+    ' * Contrats partagés entre les applications du dépôt : ce que le web, le',
+    ' * mobile et le bureau doivent dire de la même façon. Ajoutez-y vos types',
+    ' * de domaine ; chaque application les importe depuis ce paquet.',
+    ' */',
+    '',
+    `export type Platform = ${platforms};`,
+    '',
+    `export const PLATFORMS: readonly Platform[] = [${clients.map((app) => `'${app}'`).join(', ')}];`,
+    '',
+    '/** Le titre affiché par chaque application, identique partout. */',
+    'export function appTitle(product: string, platform: Platform): string {',
+    '  return `${product} (${platform})`;',
+    '}',
+    '',
+  ].join('\n');
+  return [
+    {
+      path: 'packages/contracts/package.json',
+      contents: `${JSON.stringify(json, null, 2)}\n`,
+      source,
+    },
+    {
+      path: 'packages/contracts/tsconfig.json',
+      contents: tsconfig,
+      source,
+    },
+    { path: 'packages/contracts/src/index.ts', contents: index, source },
+  ];
 }
 
 function applicationsSection(apps: ReadonlyMap<AppName, RegistryEntry[]>, shared: boolean): string {
@@ -285,6 +385,18 @@ export function planMonorepo(
     files.splice(0, files.length, ...withEnv(linked, 'apps/web/', bridge.webEnv));
   }
 
+  // Plusieurs interfaces (web, mobile, bureau) : un paquet de contrats
+  // partagé, dont chacune dépend.
+  const clients = CLIENT_APPS.filter((app) => apps.has(app));
+  if (clients.length > 1) {
+    const contracts = `${manifest.name}-contracts`;
+    const manifests = new Set(clients.map((app) => `apps/${app}/package.json`));
+    const linked = files.map((file) =>
+      manifests.has(file.path) ? withWorkspaceDependency(file, contracts) : file,
+    );
+    files.splice(0, files.length, ...linked, ...contractsPackage(contracts, clients));
+  }
+
   // Les variables ajoutées à la main vont à l'API quand il y en a une — le
   // serveur est l'endroit des secrets —, sinon à la première application.
   const custom = manifest.env ?? [];
@@ -343,7 +455,7 @@ export function planMonorepo(
   // .dockerignore, à la racine — le contexte de construction.
   if (entries.some((entry) => entry.id === 'docker')) {
     let images = 0;
-    for (const app of apps.keys()) {
+    for (const app of [...apps.keys()].filter((name) => SERVED_APPS.has(name))) {
       const manifestFile = files.find((file) => file.path === `apps/${app}/package.json`);
       const json = JSON.parse(manifestFile?.contents ?? '{}') as {
         name?: string;

@@ -1,0 +1,11 @@
+{
+  "expo": {
+    "name": "{{projectName}}",
+    "slug": "{{projectName}}",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "light",
+    "ios": { "supportsTablet": true },
+    "android": { "predictiveBackGestureEnabled": false }
+  }
+}

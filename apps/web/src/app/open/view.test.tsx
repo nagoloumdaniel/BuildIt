@@ -54,6 +54,8 @@ function controller(overrides: Partial<LocalOpenController> = {}): LocalOpenCont
     mode: 'native',
     runnable: true,
     pick: () => undefined,
+    pickZip: () => undefined,
+    pickFiles: () => undefined,
     analyse: () => undefined,
     reanalyse: () => undefined,
     clear: () => undefined,
@@ -267,5 +269,16 @@ describe('OpenView — tout navigateur, et les fichiers de base', () => {
     expect(html).toContain('SECURITY.md');
     expect(html).toContain('Télécharger les fichiers manquants (.zip)');
     expect(html).toContain('déduite des fichiers');
+  });
+});
+
+describe('OpenView — mobile : archive .zip ou fichiers', () => {
+  it('propose le .zip et les fichiers, explique pourquoi, sans carte dossier', () => {
+    const html = render({ mode: 'mobile', runnable: false });
+    expect(html).toContain('data-pick-mobile');
+    expect(html).toContain('archive .zip');
+    expect(html).toContain('Choisir des fichiers du projet');
+    expect(html).toContain('Compresser');
+    expect(html).not.toContain('>Choisir un dossier<');
   });
 });

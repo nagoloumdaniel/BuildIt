@@ -5,6 +5,7 @@ import {
   type SkeletonStack,
   skeletonFiles,
   skeletonTree,
+  withoutDuplicateShared,
 } from '@buildit/manifest';
 
 /**
@@ -171,12 +172,63 @@ export function projectShape(input: ShapeInput): ProjectShape {
   };
 }
 
-export function baseFilesFor(shape: ProjectShape): SkeletonFile[] {
-  return skeletonFiles(
-    shape.name,
-    shape.architecture,
-    skeletonTree(shape.architecture, shape.stack),
+/** La date du jour, locale, en `AAAA-MM-JJ` — celle inscrite dans l'ADR. */
+export function localIsoDate(date: Date = new Date()): string {
+  const pad = (value: number) => String(value).padStart(2, '0');
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
+}
+
+export interface BaseFilesOptions {
+  /** Vrai si ce dossier existe déjà dans le projet (`components`, `src/lib`…). */
+  readonly existsDir?: (path: string) => boolean;
+  /** Date de l'ADR ; par défaut, aujourd'hui. */
+  readonly date?: string;
+}
+
+/**
+ * Les dossiers dont l'existence change le squelette : les jumeaux de
+ * `shared/ui` et `shared/lib` (`components/`, `lib/`). À vérifier avant
+ * `baseFilesFor` quand la vérification est asynchrone (disque, poignée).
+ */
+export function dirsToProbe(shape: ProjectShape): string[] {
+  const asked: string[] = [...CONVENTION_DIRS];
+  withoutDuplicateShared(skeletonTree(shape.architecture, shape.stack), (path) => {
+    asked.push(path);
+    return false;
+  });
+  return asked;
+}
+
+/** Ce qui dit qu'un projet range son code à la racine, pas sous `src/`. */
+const CONVENTION_DIRS = ['src', 'app', 'pages', 'components', 'lib'] as const;
+
+export function baseFilesFor(shape: ProjectShape, options: BaseFilesOptions = {}): SkeletonFile[] {
+  const existsDir = options.existsDir ?? (() => false);
+  // Même convention que la génération : sans `src/` mais avec `app/`,
+  // `components/`… (Next.js), les dossiers vont à la racine.
+  const atRoot =
+    options.existsDir !== undefined &&
+    !existsDir('src') &&
+    CONVENTION_DIRS.some((dir) => dir !== 'src' && existsDir(dir));
+  const tree = skeletonTree(shape.architecture, shape.stack).map((dir) =>
+    atRoot && dir.path.startsWith('src/') ? { ...dir, path: dir.path.slice('src/'.length) } : dir,
   );
+  const dirs = withoutDuplicateShared(tree, existsDir);
+  return skeletonFiles(shape.name, shape.architecture, dirs, {
+    date: options.date ?? localIsoDate(),
+  });
+}
+
+/** Les dossiers qui contiennent au moins un de ces fichiers (chemins POSIX). */
+export function dirsOfPaths(paths: readonly string[]): Set<string> {
+  const dirs = new Set<string>();
+  for (const path of paths) {
+    const segments = path.split('/');
+    for (let end = 1; end < segments.length; end += 1) {
+      dirs.add(segments.slice(0, end).join('/'));
+    }
+  }
+  return dirs;
 }
 
 /** Seulement ce qui manque — un fichier présent n'est jamais réécrit. */

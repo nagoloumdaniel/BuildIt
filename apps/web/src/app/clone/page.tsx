@@ -9,6 +9,7 @@ import {
   githubRepositoriesAction,
 } from '../actions-node';
 import type { RepositoryView } from '../github/repositories';
+import type { DirectoryHandle } from '../open/browser-picker';
 import { type CloneStreamFailure, streamClone } from './client';
 import type { CloneDestinationMode, ClonePreviewView, CloneResultView } from './clone';
 import {
@@ -182,7 +183,15 @@ export default function ClonePage(): ReactElement {
         { signal: controller.signal },
       );
       if (outcome.kind === 'done') {
-        setHostedOutcome({ kind: 'folder', result: outcome.result });
+        const handle = await picked.handle
+          .getDirectoryHandle(plan.folder)
+          .then((dir) => dir as unknown as DirectoryHandle)
+          .catch(() => undefined);
+        setHostedOutcome({
+          kind: 'folder',
+          result: outcome.result,
+          ...(handle === undefined ? {} : { handle }),
+        });
         setHostedStatus('done');
         return;
       }

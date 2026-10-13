@@ -63,6 +63,16 @@ export function checkExclusiveCategories(entries: readonly RegistryEntry[]): Com
         if (first === undefined || second === undefined) {
           continue;
         }
+        // Un framework d'interface par **plateforme** : Next.js (web), Expo
+        // (mobile) et Electron (bureau) vivent ensemble dans un monorepo, une
+        // application chacun. Deux frameworks qui visent la même plateforme
+        // restent en concurrence.
+        if (
+          category === 'frontend' &&
+          !first.targets.some((target) => second.targets.includes(target))
+        ) {
+          continue;
+        }
         issues.push(
           error('COMPAT_EXCLUSIVE_CATEGORY', { first: first.name, second: second.name, category }, [
             first.id,

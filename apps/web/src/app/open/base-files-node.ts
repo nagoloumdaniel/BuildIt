@@ -3,6 +3,7 @@ import { basename, dirname, join } from 'node:path';
 import type { SkeletonFile } from '@buildit/manifest';
 import {
   baseFilesFor,
+  dirsToProbe,
   MANIFEST_FILE,
   missingBaseFiles,
   type ProjectShape,
@@ -46,6 +47,14 @@ async function exists(path: string): Promise<boolean> {
   }
 }
 
+async function isDirectory(path: string): Promise<boolean> {
+  try {
+    return (await stat(path)).isDirectory();
+  } catch {
+    return false;
+  }
+}
+
 export async function planBaseFiles(directory: string): Promise<BaseFilesPlan> {
   const entries = await readdir(directory, { withFileTypes: true }).catch(() => []);
   const shape = projectShape({
@@ -55,7 +64,13 @@ export async function planBaseFiles(directory: string): Promise<BaseFilesPlan> {
     packageJson: await readSmall(join(directory, 'package.json')),
     manifest: await readSmall(join(directory, MANIFEST_FILE)),
   });
-  const files = baseFilesFor(shape);
+  const existing = new Set<string>();
+  for (const dir of dirsToProbe(shape)) {
+    if (await isDirectory(join(directory, ...dir.split('/')))) {
+      existing.add(dir);
+    }
+  }
+  const files = baseFilesFor(shape, { existsDir: (dir) => existing.has(dir) });
   const present = new Set<string>();
   for (const file of files) {
     if (await exists(join(directory, ...file.path.split('/')))) {

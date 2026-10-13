@@ -331,3 +331,65 @@ describe('monorepo : contrat partagé entre Next.js et Hono', () => {
     ).toBe(false);
   });
 });
+
+describe('monorepo multi-plateforme : web, mobile et bureau', () => {
+  const MULTI: Manifest = {
+    manifestVersion: 1,
+    name: 'trio',
+    targets: ['web', 'mobile', 'desktop'],
+    architecture: 'monorepo',
+    frontend: { framework: 'next', language: 'typescript', styling: 'tailwind' },
+    mobile: { framework: 'expo', language: 'typescript' },
+    desktop: { framework: 'electron' },
+    quality: ['biome', 'vitest'],
+    infra: ['turborepo', 'docker', 'github-actions'],
+  };
+
+  function files(): Map<string, string> {
+    const result = planProject(MULTI, '/cible');
+    if (!result.ok) {
+      throw new Error(result.issues.map((issue) => `${issue.code} ${issue.message}`).join(' | '));
+    }
+    return new Map(result.value.plan.files.map((file) => [file.path, file.contents]));
+  }
+
+  function pkg(all: Map<string, string>, path: string) {
+    return JSON.parse(all.get(path) ?? '{}') as {
+      name?: string;
+      main?: string;
+      dependencies?: Record<string, string>;
+      devDependencies?: Record<string, string>;
+    };
+  }
+
+  it('une application par plateforme, chacune avec son framework', () => {
+    const all = files();
+    expect(pkg(all, 'apps/web/package.json').dependencies?.['next']).toBeDefined();
+    expect(pkg(all, 'apps/mobile/package.json').dependencies?.['expo']).toBeDefined();
+    expect(pkg(all, 'apps/mobile/package.json').main).toBe('index.ts');
+    expect(pkg(all, 'apps/desktop/package.json').devDependencies?.['electron']).toBeDefined();
+    expect(all.has('apps/mobile/App.tsx')).toBe(true);
+    expect(all.has('apps/desktop/src/main.ts')).toBe(true);
+    // Tailwind reste au web : Expo et Electron n'en ont rien à faire.
+    expect(pkg(all, 'apps/mobile/package.json').devDependencies?.['tailwindcss']).toBeUndefined();
+  });
+
+  it('packages/contracts est partagé par chaque application', () => {
+    const all = files();
+    const contracts = pkg(all, 'packages/contracts/package.json');
+    expect(contracts.name).toBe('trio-contracts');
+    expect(all.get('packages/contracts/src/index.ts')).toContain('export');
+    for (const app of ['web', 'mobile', 'desktop']) {
+      expect(pkg(all, `apps/${app}/package.json`).dependencies?.['trio-contracts']).toBe(
+        'workspace:*',
+      );
+    }
+  });
+
+  it('une image Docker pour le web seulement : mobile et bureau ne se servent pas', () => {
+    const all = files();
+    expect(all.has('apps/web/Dockerfile')).toBe(true);
+    expect(all.has('apps/mobile/Dockerfile')).toBe(false);
+    expect(all.has('apps/desktop/Dockerfile')).toBe(false);
+  });
+});

@@ -132,6 +132,40 @@ export interface Integration {
   readonly files?: readonly IntegrationFile[];
   /** Service local à ajouter à docker-compose.yml. */
   readonly docker?: DockerService;
+  /**
+   * Point d'entrée du paquet (`main` du package.json) : Expo y cherche
+   * l'application, Electron son processus principal. Émis pour une fiche
+   * certifiée seulement, comme les scripts d'application.
+   */
+  readonly main?: string;
+  /**
+   * Chaîne d'outils d'un projet **hors Node** (COBOL, Flutter) : le projet n'a
+   * pas de package.json, et ce sont ces commandes que le pipeline et la CI
+   * lancent. Une seule par projet.
+   */
+  readonly toolchain?: Toolchain;
+  /** Vérifications ajoutées à celles de la chaîne d'outils (`make test`). */
+  readonly checks?: readonly (readonly string[])[];
+}
+
+/** Une commande, en arguments : jamais une ligne de shell à interpréter. */
+export type Command = readonly string[];
+
+export interface Toolchain {
+  /** Nom lisible, pour le README. */
+  readonly name: string;
+  /** Installation des dépendances ; absente quand il n'y a rien à installer. */
+  readonly install?: Command;
+  /** Vérifications, dans l'ordre de la CI : ce qui échoue vite d'abord. */
+  readonly checks: readonly Command[];
+  readonly gitignore: string;
+  /** Image du job de CI, quand la chaîne s'installe mieux dans un conteneur. */
+  readonly ciContainer?: string;
+  /** Étapes GitHub Actions qui installent la chaîne, après le checkout. */
+  readonly ciSetup: readonly string[];
+  /** Image de production, posée quand Docker est choisi. */
+  readonly dockerfile?: string;
+  readonly dockerignore?: string;
 }
 
 /**
@@ -199,7 +233,16 @@ export function envDeclaration(context: IntegrationContext): string {
 const BIOME_JSON = `{
   "files": {
     "ignoreUnknown": true,
-    "includes": ["**", "!**/dist", "!**/.next", "!**/coverage", "!**/generated"]
+    "includes": [
+      "**",
+      "!**/dist",
+      "!**/.next",
+      "!**/.expo",
+      "!**/coverage",
+      "!**/generated",
+      "!**/src-tauri/target",
+      "!**/src-tauri/gen"
+    ]
   },
   "formatter": {
     "enabled": true,
@@ -465,6 +508,75 @@ export function redis(): ReturnType<typeof connect> {
 }
 `;
 
+const COBOL_GITIGNORE = `bin/
+testruns/
+.cobol-check/
+
+.env
+.env.*
+!.env.example
+
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/*
+!.vscode/extensions.json
+`;
+
+/**
+ * Image du programme COBOL. GnuCOBOL 3.2 vient du paquet Debian officiel
+ * (gnucobol3) : aucune image communautaire non maintenue. L'exécution ne
+ * garde que la bibliothèque d'exécution, sans compilateur, et jamais root.
+ */
+const COBOL_DOCKERFILE = `# syntax=docker/dockerfile:1
+
+FROM debian:trixie-slim AS build
+RUN apt-get update \\
+  && apt-get install -y --no-install-recommends gnucobol3 make \\
+  && rm -rf /var/lib/apt/lists/*
+WORKDIR /app
+COPY . .
+RUN make build
+
+FROM debian:trixie-slim AS runtime
+RUN apt-get update \\
+  && apt-get install -y --no-install-recommends libcob4t64 \\
+  && rm -rf /var/lib/apt/lists/* \\
+  && useradd --system --uid 10001 app
+COPY --from=build /app/bin/hello /usr/local/bin/hello
+# Jamais root : une faille du programme ne donne pas la main sur le conteneur.
+USER app
+CMD ["hello"]
+`;
+
+const COBOL_DOCKERIGNORE = `**/.env
+**/.env.*
+!**/.env.example
+.git
+bin
+testruns
+.cobol-check
+`;
+
+const FLUTTER_GITIGNORE = `.dart_tool/
+build/
+.flutter-plugins
+.flutter-plugins-dependencies
+.packages
+.pub-cache/
+.pub/
+coverage/
+*.iml
+.idea/
+
+.env
+.env.*
+!.env.example
+
+.DS_Store
+Thumbs.db
+`;
+
 /** Les frameworks web qui rendent du React : les paquets `@…/react` y vivent. */
 const REACT_FRONTENDS: readonly string[] = ['next', 'react', 'remix', 'preact'];
 
@@ -563,6 +675,92 @@ export const INTEGRATIONS: readonly Integration[] = [
     },
     // tsx embarque esbuild, qui installe son binaire natif.
     allowBuilds: ['esbuild'],
+  },
+  {
+    // Expo géré : l'application vient du template frontend/expo. `build`
+    // exporte le bundle Android avec Metro — la preuve que l'application
+    // compile, sans SDK Android ni Xcode.
+    id: 'expo',
+    main: 'index.ts',
+    // La version de TypeScript que le SDK valide (expo-doctor) : elle
+    // resserre la plage de la fiche TypeScript, sans la contredire.
+    devDependencies: { typescript: '~6.0.3' },
+    appScripts: {
+      dev: 'expo start',
+      start: 'expo start',
+      build: 'expo export --platform android --output-dir dist',
+    },
+  },
+  {
+    // Electron : le processus principal est compilé par tsc (tsconfig.build.json)
+    // vers dist/, que `main` désigne.
+    id: 'electron',
+    main: 'dist/main.js',
+    appScripts: {
+      build: 'tsc -p tsconfig.build.json',
+      start: 'electron .',
+      dev: 'tsc -p tsconfig.build.json && electron .',
+    },
+    // Le paquet electron télécharge son binaire à l'installation.
+    allowBuilds: ['electron'],
+    devDependencies: { '@types/node': '^24.0.0' },
+  },
+  {
+    // Tauri 2 : interface Vite, cœur Rust dans src-tauri/. Les icônes sont
+    // engendrées depuis app-icon.svg avant chaque compilation Rust — un
+    // template ne porte que du texte, et tauri-build les exige.
+    id: 'tauri',
+    appScripts: {
+      'dev:web': 'vite',
+      icons: 'tauri icon app-icon.svg',
+      dev: 'tauri icon app-icon.svg && tauri dev',
+      build: 'vite build',
+      bundle: 'tauri icon app-icon.svg && tauri build',
+      tauri: 'tauri',
+    },
+  },
+  {
+    id: 'gnucobol',
+    toolchain: {
+      name: 'GnuCOBOL et Make',
+      checks: [['make', 'build']],
+      gitignore: COBOL_GITIGNORE,
+      ciContainer: 'debian:trixie-slim',
+      ciSetup: [
+        '      - name: GnuCOBOL 3.2, Make, Java et outils de cobol-check',
+        '        run: |',
+        '          apt-get update',
+        '          apt-get install -y --no-install-recommends gnucobol3 make default-jre-headless curl unzip ca-certificates',
+      ],
+      dockerfile: COBOL_DOCKERFILE,
+      dockerignore: COBOL_DOCKERIGNORE,
+    },
+  },
+  {
+    // Les tests cobol-check : leur cible `make test` vit dans cobol-check.mk,
+    // que le Makefile de GnuCOBOL inclut quand il existe.
+    id: 'cobol-check',
+    when: 'gnucobol',
+    checks: [['make', 'test']],
+  },
+  {
+    id: 'flutter',
+    toolchain: {
+      name: 'Flutter',
+      install: ['flutter', 'pub', 'get'],
+      checks: [
+        ['flutter', 'analyze'],
+        ['flutter', 'test'],
+        ['flutter', 'build', 'web'],
+      ],
+      gitignore: FLUTTER_GITIGNORE,
+      ciSetup: [
+        '      - uses: subosito/flutter-action@v2',
+        '        with:',
+        '          channel: stable',
+        '          cache: true',
+      ],
+    },
   },
   {
     id: 'redis',

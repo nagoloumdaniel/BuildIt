@@ -1,0 +1,11 @@
+           TestSuite "Message d'accueil"
+
+           TestCase "compose le message a partir du nom"
+           MOVE "World" TO WS-NAME
+           PERFORM BUILD-GREETING
+           Expect WS-GREETING to be "Hello, World!"
+
+           TestCase "garde la valeur par defaut"
+           MOVE "COBOL" TO WS-NAME
+           PERFORM BUILD-GREETING
+           Expect WS-GREETING to be "Hello, COBOL!"

@@ -12,14 +12,28 @@ import {
 } from '../actions-node';
 import { canOpenNativePickerAction, pickerHomeAction, pickFolderAction } from '../actions-picker';
 import type { DialogOutcome } from '../picker/native-dialog';
-import { baseFilesFor, missingBaseFiles, type ProjectShape, projectShape } from './base-files';
-import { downloadMissing, missingInHandle, writeMissingToHandle } from './base-files-browser';
+import {
+  baseFilesFor,
+  dirsOfPaths,
+  dirsToProbe,
+  missingBaseFiles,
+  type ProjectShape,
+  projectShape,
+} from './base-files';
+import {
+  dirExistsInHandle,
+  downloadMissing,
+  missingInHandle,
+  writeMissingToHandle,
+} from './base-files-browser';
 import {
   type BrowserPickOutcome,
   canUseBrowserPicker,
   canUseFileInput,
+  deviceIsMobileWithoutFolder,
   pickFolderInBrowser,
   pickFolderWithInput,
+  pickProjectFiles,
 } from './browser-picker';
 import { type PickedTarget, targetLabel } from './picked-store';
 import type { InstallResultView, ProjectInspectionView } from './project';
@@ -70,7 +84,10 @@ export type LocalOpenPhase =
  * `null` tant que le serveur n'a pas répondu : l'écran n'affiche alors aucun
  * repli, parce qu'il ne sait pas encore s'il y en aura besoin.
  */
-export type PickMode = 'native' | 'browser' | 'input' | 'none';
+export type PickMode = 'native' | 'browser' | 'input' | 'mobile' | 'none';
+
+/** Sur mobile : l'archive du projet, ou quelques fichiers de sa racine. */
+export type MobileSource = 'zip' | 'files';
 
 /**
  * Qui ouvre l'explorateur, dans l'ordre : la boîte native (local), la File
@@ -78,15 +95,27 @@ export type PickMode = 'native' | 'browser' | 'input' | 'none';
  * et Safari comprennent. `none` ne reste que pour un navigateur sans aucun
  * moyen de choisir un dossier (mobile, surtout).
  */
-export function choosePickMode(native: boolean, browser: boolean, input: boolean): PickMode {
+export function choosePickMode(
+  native: boolean,
+  browser: boolean,
+  input: boolean,
+  mobile = false,
+): PickMode {
   if (native) return 'native';
+  // iOS, Android : `webkitdirectory` est là mais n'ouvre pas de dossier.
+  if (mobile) return 'mobile';
   if (browser) return 'browser';
   return input ? 'input' : 'none';
 }
 
 /** Le mode du navigateur courant, côté hébergé. */
 export function browserPickMode(native: boolean): PickMode {
-  return choosePickMode(native, canUseBrowserPicker(), canUseFileInput());
+  return choosePickMode(
+    native,
+    canUseBrowserPicker(),
+    canUseFileInput(),
+    deviceIsMobileWithoutFolder(),
+  );
 }
 
 /** La phase qui suit le retour de la boîte native. */
@@ -103,7 +132,11 @@ export function pickOutcomePhase(
 
 export type PickResult =
   | { readonly ok: true; readonly target: PickedTarget }
-  | { readonly ok: false; readonly reason: 'cancelled' | 'unavailable' | 'failed' };
+  | {
+      readonly ok: false;
+      readonly reason: 'cancelled' | 'unavailable' | 'failed';
+      readonly detail?: 'zip';
+    };
 
 /**
  * Ouvre le bon explorateur et rend ce qu'il a désigné.
@@ -116,16 +149,28 @@ export type PickResult =
 export async function pickProjectFolder(
   mode: PickMode,
   startAt?: string | undefined,
+  source: MobileSource = 'zip',
 ): Promise<PickResult> {
   if (mode === 'none') {
     return { ok: false, reason: 'unavailable' };
   }
-  if (mode === 'browser' || mode === 'input') {
+  if (mode === 'browser' || mode === 'input' || mode === 'mobile') {
     const outcome: BrowserPickOutcome =
-      mode === 'browser' ? await pickFolderInBrowser() : await pickFolderWithInput();
-    return outcome.ok
-      ? { ok: true, target: { kind: 'entries', value: outcome.value, access: outcome.access } }
-      : { ok: false, reason: outcome.reason === 'unsupported' ? 'unavailable' : outcome.reason };
+      mode === 'browser'
+        ? await pickFolderInBrowser()
+        : mode === 'input'
+          ? await pickFolderWithInput()
+          : await pickProjectFiles(source);
+    if (outcome.ok) {
+      return {
+        ok: true,
+        target: { kind: 'entries', value: outcome.value, access: outcome.access },
+      };
+    }
+    const reason = outcome.reason === 'unsupported' ? 'unavailable' : outcome.reason;
+    return outcome.detail === undefined
+      ? { ok: false, reason }
+      : { ok: false, reason, detail: outcome.detail };
   }
   const outcome = await pickFolderAction(startAt === '' ? undefined : startAt);
   if (outcome.ok) {
@@ -152,6 +197,10 @@ export interface LocalOpenController {
   /** Vrai quand BuildIt peut **lancer** l'installation (local seulement). */
   readonly runnable: boolean;
   readonly pick: () => void;
+  /** Mobile : choisir l'archive `.zip` du projet. */
+  readonly pickZip: () => void;
+  /** Mobile : choisir quelques fichiers de la racine. */
+  readonly pickFiles: () => void;
   /** Analyse une cible déjà choisie — celle que la carte du menu a passée. */
   readonly analyse: (target: PickedTarget) => void;
   readonly reanalyse: () => void;
@@ -192,8 +241,13 @@ export async function baseFilesOf(target: PickedTarget): Promise<BaseFilesView |
     packageJson: target.value.packageJson,
     manifest: target.value.manifest,
   });
-  const wanted = baseFilesFor(shape);
   if (target.access.kind === 'handle') {
+    const handle = target.access.handle;
+    const existing = new Set<string>();
+    for (const dir of dirsToProbe(shape)) {
+      if (await dirExistsInHandle(handle, dir)) existing.add(dir);
+    }
+    const wanted = baseFilesFor(shape, { existsDir: (dir) => existing.has(dir) });
     return {
       shape,
       missing: await missingInHandle(target.access.handle, wanted),
@@ -201,11 +255,41 @@ export async function baseFilesOf(target: PickedTarget): Promise<BaseFilesView |
     };
   }
   const present = new Set(target.access.paths);
+  const presentDirs = dirsOfPaths(target.access.paths);
+  const wanted = baseFilesFor(shape, { existsDir: (dir) => presentDirs.has(dir) });
   return {
     shape,
     missing: missingBaseFiles(wanted, (path) => present.has(path)),
     delivery: 'zip',
   };
+}
+
+/**
+ * Écrit (ou archive) les fichiers de base manquants d'une cible. Jamais
+ * d'écrasement : le serveur écrit en `wx`, la poignée saute ce qui existe.
+ */
+export async function applyBaseTo(
+  current: PickedTarget,
+  base: BaseFilesView,
+  deniedLabel: string,
+): Promise<BaseFilesResult> {
+  if (current.kind === 'path') {
+    const result = await applyBaseFilesAction(current.path);
+    return result.ok
+      ? { kind: 'written', count: result.written.length }
+      : { kind: 'failed', detail: result.issues.join(' ') };
+  }
+  if (current.access.kind === 'handle') {
+    const result = await writeMissingToHandle(current.access.handle, base.missing);
+    return result.ok
+      ? { kind: 'written', count: result.written.length }
+      : {
+          kind: 'failed',
+          detail: result.reason === 'denied' ? deniedLabel : (result.detail ?? ''),
+        };
+  }
+  downloadMissing(current.value.name, base.missing);
+  return { kind: 'zip', count: base.missing.length };
 }
 
 export function useLocalProjectOpen(): LocalOpenController {
@@ -293,39 +377,46 @@ export function useLocalProjectOpen(): LocalOpenController {
     [t],
   );
 
-  const pick = useCallback((): void => {
-    if (mode === null) {
-      return;
-    }
-    setPhase('picking');
-    setNotice(null);
-    void (async () => {
-      const result = await pickProjectFolder(mode, startAt.current);
-      if (!result.ok && mode === 'browser' && result.reason === 'failed' && canUseFileInput()) {
-        // L'API refusée (Brave, politique, dossier protégé) : le prochain
-        // appui passe par le sélecteur universel du navigateur.
-        setMode('input');
-        setPhase('failed');
-        setNotice(t.open.fallbackNote);
+  const pickFrom = useCallback(
+    (source: MobileSource): void => {
+      if (mode === null) {
         return;
       }
-      if (!result.ok) {
-        setPhase(result.reason === 'cancelled' ? 'cancelled' : result.reason);
-        setNotice(
-          result.reason === 'cancelled'
-            ? t.picker.cancelled
-            : result.reason === 'unavailable'
-              ? t.open.noPickerNote
-              : t.picker.failed,
-        );
-        return;
-      }
-      if (result.target.kind === 'path') {
-        startAt.current = result.target.path;
-      }
-      await analyse(result.target);
-    })();
-  }, [analyse, mode, t]);
+      setPhase('picking');
+      setNotice(null);
+      void (async () => {
+        const result = await pickProjectFolder(mode, startAt.current, source);
+        if (!result.ok && mode === 'browser' && result.reason === 'failed' && canUseFileInput()) {
+          // L'API refusée (Brave, politique, dossier protégé) : le prochain
+          // appui passe par le sélecteur universel du navigateur.
+          setMode('input');
+          setPhase('failed');
+          setNotice(t.open.fallbackNote);
+          return;
+        }
+        if (!result.ok) {
+          setPhase(result.reason === 'cancelled' ? 'cancelled' : result.reason);
+          setNotice(
+            result.reason === 'cancelled'
+              ? t.picker.cancelled
+              : result.detail === 'zip'
+                ? t.open.zipUnreadable
+                : result.reason === 'unavailable'
+                  ? t.open.noPickerNote
+                  : t.picker.failed,
+          );
+          return;
+        }
+        if (result.target.kind === 'path') {
+          startAt.current = result.target.path;
+        }
+        await analyse(result.target);
+      })();
+    },
+    [analyse, mode, t],
+  );
+  const pick = useCallback((): void => pickFrom('zip'), [pickFrom]);
+  const pickFiles = useCallback((): void => pickFrom('files'), [pickFrom]);
 
   const install = useCallback((): void => {
     const current = target.current;
@@ -351,27 +442,7 @@ export function useLocalProjectOpen(): LocalOpenController {
     setBaseResult(null);
     void (async () => {
       try {
-        if (current.kind === 'path') {
-          const result = await applyBaseFilesAction(current.path);
-          setBaseResult(
-            result.ok
-              ? { kind: 'written', count: result.written.length }
-              : { kind: 'failed', detail: result.issues.join(' ') },
-          );
-        } else if (current.access.kind === 'handle') {
-          const result = await writeMissingToHandle(current.access.handle, base.missing);
-          setBaseResult(
-            result.ok
-              ? { kind: 'written', count: result.written.length }
-              : {
-                  kind: 'failed',
-                  detail: result.reason === 'denied' ? t.open.baseDenied : (result.detail ?? ''),
-                },
-          );
-        } else {
-          downloadMissing(current.value.name, base.missing);
-          setBaseResult({ kind: 'zip', count: base.missing.length });
-        }
+        setBaseResult(await applyBaseTo(current, base, t.open.baseDenied));
         if (current.kind === 'path' || current.access.kind === 'handle') {
           setBase(await baseFilesOf(current));
         }
@@ -414,6 +485,8 @@ export function useLocalProjectOpen(): LocalOpenController {
     mode,
     runnable: mode === 'native',
     pick,
+    pickZip: pick,
+    pickFiles,
     analyse: (next: PickedTarget) => void analyse(next),
     reanalyse,
     clear,

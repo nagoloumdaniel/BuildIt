@@ -21,6 +21,8 @@ import {
 } from '../../app/create/generate/stream-client';
 import { InstallGuide } from '../../app/create/report/install-guide';
 import { installSteps } from '../../app/create/report/install-steps';
+import { BaseFilesSection } from '../../app/open/base-files-section';
+import type { DirectoryHandle } from '../../app/open/browser-picker';
 import { PickCard } from '../../app/open/pick-card';
 import { canWriteInBrowser, pickWritableFolder, writeProject } from '../../lib/browser-write';
 import { downloadZip } from '../../lib/download-zip';
@@ -82,7 +84,13 @@ type Stage =
   | { readonly kind: 'zipFailed'; readonly issues: readonly string[] }
   /** Hébergé : le navigateur écrit lui-même dans le dossier choisi. */
   | { readonly kind: 'browserWriting'; readonly written: number; readonly total: number }
-  | { readonly kind: 'browserDone'; readonly directory: string; readonly written: number }
+  | {
+      readonly kind: 'browserDone';
+      readonly directory: string;
+      readonly written: number;
+      /** Le dossier du projet écrit, pour y compléter les fichiers de base. */
+      readonly handle?: DirectoryHandle;
+    }
   | {
       readonly kind: 'browserFailed';
       readonly message: string;
@@ -394,7 +402,16 @@ export function ProjectExport({
         });
         return;
       }
-      setStage({ kind: 'browserDone', directory: outcome.directory, written: outcome.written });
+      const project = await picked.handle
+        .getDirectoryHandle(projectName)
+        .then((handle) => handle as unknown as DirectoryHandle)
+        .catch(() => undefined);
+      setStage({
+        kind: 'browserDone',
+        directory: outcome.directory,
+        written: outcome.written,
+        ...(project === undefined ? {} : { handle: project }),
+      });
       succeed({
         ok: true,
         directory: '',
@@ -659,6 +676,9 @@ export function ProjectExport({
             what={o.installWhat}
           />
         </section>
+        {stage.handle === undefined ? null : (
+          <BaseFilesSection source={{ kind: 'handle', handle: stage.handle }} />
+        )}
       </div>
     );
   }
@@ -839,6 +859,7 @@ export function ProjectExport({
           tone="error"
         />
         <IssueList className="mt-3" issues={result.installIssues} />
+        <BaseFilesSection source={{ kind: 'path', path: result.directory }} />
         <p className="pf-hint mt-3">{o.installFailedHint}</p>
         {result.installCommand === undefined ? null : (
           <p className="pf-hint mt-1">{o.manualWhere}</p>
@@ -875,6 +896,7 @@ export function ProjectExport({
         tone="ok"
         value={100}
       />
+      <BaseFilesSection source={{ kind: 'path', path: result.directory }} />
       <div className="mt-4 flex flex-wrap items-center gap-2">{otherOutput}</div>
     </div>
   );

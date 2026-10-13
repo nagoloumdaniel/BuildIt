@@ -30,6 +30,19 @@ async function existsIn(root: WritableDirectory, path: string): Promise<boolean>
   }
 }
 
+/** Vrai si ce sous-dossier existe sous la poignée. */
+export async function dirExistsInHandle(handle: DirectoryHandle, path: string): Promise<boolean> {
+  try {
+    let folder = handle as unknown as WritableDirectory;
+    for (const segment of path.split('/')) {
+      folder = await folder.getDirectoryHandle(segment);
+    }
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 export async function missingInHandle(
   handle: DirectoryHandle,
   files: readonly SkeletonFile[],

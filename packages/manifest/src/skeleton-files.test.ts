@@ -27,3 +27,17 @@ describe('skeletonFiles — le contenu des fichiers de base, sans fs', () => {
     expect(files[0]).toEqual({ path: 'functions/http/README.md', contents: '# http\n\nRôle.\n' });
   });
 });
+
+describe('skeletonFiles — date de l’ADR', () => {
+  it('inscrit la date fournie, jamais « à la génération »', () => {
+    const files = skeletonFiles('x', 'monorepo', [], { date: '2026-03-04' });
+    const adr = files.find((file) => file.path === 'docs/decisions/ADR-001-monorepo.md');
+    expect(adr?.contents).toContain('- Date : 2026-03-04');
+    expect(adr?.contents).not.toContain('à la génération');
+  });
+
+  it('par défaut, la date du jour (AAAA-MM-JJ)', () => {
+    const adr = skeletonFiles('x', 'monorepo', []).find((f) => f.path.includes('ADR-001'));
+    expect(adr?.contents).toMatch(/- Date : \d{4}-\d{2}-\d{2}\n/);
+  });
+});

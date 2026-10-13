@@ -143,7 +143,8 @@ function minimalDraft(item: RegistryEntry): Draft | undefined {
   let base: readonly string[] | undefined;
   if (native !== undefined) {
     // Dart n'a qu'un framework au catalogue : Flutter.
-    base = item.id === 'dart' ? ['flutter'] : NATIVE_BASE[native];
+    base =
+      item.id === 'dart' ? ['flutter'] : item.id === 'flutter' ? ['dart'] : NATIVE_BASE[native];
   } else if (onLibrary) {
     base = [];
   } else if (onApi) {
@@ -308,7 +309,7 @@ function planDraft(draft: Draft) {
  * SvelteKit). Données de test, pas de produit : elles décrivent les paquets
  * que le catalogue publie aujourd'hui.
  */
-const REACT_FRONTENDS = ['next', 'react', 'remix', 'preact'];
+const REACT_FRONTENDS = ['next', 'react', 'remix', 'preact', 'expo'];
 const FRAMEWORK_BOUND_PACKAGES: Readonly<Record<string, readonly string[]>> = {
   next: ['next'],
   '@sentry/nextjs': ['next'],
@@ -337,12 +338,14 @@ interface PackageJson {
 function expectCoherentPlan(
   files: readonly { path: string; contents: string }[],
   technologies: readonly string[],
+  native = false,
 ): void {
   const byPath = new Map(files.map((file) => [file.path, file.contents]));
   const manifests = files
     .filter((file) => file.path === 'package.json' || file.path.endsWith('/package.json'))
     .map((file) => JSON.parse(file.contents) as PackageJson);
-  expect(manifests.length).toBeGreaterThan(0);
+  // Un projet hors Node (COBOL, Flutter) n'a pas de package.json.
+  expect(manifests.length > 0 || native).toBe(true);
 
   const installed = new Set<string>();
   for (const pkg of manifests) {
@@ -428,8 +431,14 @@ describe('couverture du catalogue : chaque fiche se planifie', () => {
       const { resolution, plan } = planDraft(draft);
       expect(resolution.technologies).toContain(item.id);
       expect(plan.plan.files.length).toBeGreaterThan(0);
-      expect(plan.plan.files.map((file) => file.path)).toContain('package.json');
-      expectCoherentPlan(plan.plan.files, resolution.technologies);
+      // Un projet Node a son package.json ; un projet hors Node (COBOL,
+      // Flutter) a sa chaîne d'outils à la place.
+      if (plan.toolchain === undefined) {
+        expect(plan.plan.files.map((file) => file.path)).toContain('package.json');
+      } else {
+        expect(plan.plan.files.map((file) => file.path)).not.toContain('package.json');
+      }
+      expectCoherentPlan(plan.plan.files, resolution.technologies, plan.toolchain !== undefined);
       // Aucun avertissement de couverture de génération ne subsiste.
       expect(plan.warnings.map((warning) => warning.code)).not.toContain(
         'COMPAT_EXPERIMENTAL_COMBINATION',
@@ -783,7 +792,7 @@ describe('couverture du catalogue : combinaisons par écosystème', () => {
       expect(resolution.technologies).toContain(id);
     }
     expect(plan.plan.files.length).toBeGreaterThan(0);
-    expectCoherentPlan(plan.plan.files, resolution.technologies);
+    expectCoherentPlan(plan.plan.files, resolution.technologies, plan.toolchain !== undefined);
     expect(plan.warnings.map((warning) => warning.code)).not.toContain(
       'COMPAT_EXPERIMENTAL_COMBINATION',
     );
@@ -827,7 +836,18 @@ describe('couverture du catalogue : paires de fiches intégrées', () => {
     if (!resolution.ok) {
       return;
     }
+    // Une chaîne d'outils hors Node (COBOL, Flutter) dans la même application
+    // qu'une technologie Node : refus nommé du socle, au bon écran aussi.
+    const manifest = toManifest(draft, resolution.value.technologies);
+    const planned = planProject(manifest, '/couverture', { registry });
+    if (!planned.ok && planned.issues.every((issue) => issue.code === 'GEN_TOOLCHAIN_MIXED')) {
+      return;
+    }
     const { plan } = planDraft(draft);
-    expectCoherentPlan(plan.plan.files, resolution.value.technologies);
+    expectCoherentPlan(
+      plan.plan.files,
+      resolution.value.technologies,
+      plan.toolchain !== undefined,
+    );
   });
 });

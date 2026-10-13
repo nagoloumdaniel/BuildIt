@@ -10,12 +10,17 @@
  *    le dossier passe par `<input webkitdirectory>`, et les fichiers de base
  *    manquants partent en archive `.zip`.
  *
+ * 3. iPhone, iPad, Android (pas de dossier possible) : deux cartes, archive
+ *    `.zip` du projet ou fichiers ; l'archive est lue dans le navigateur
+ *    (deflate via DecompressionStream) et les fichiers de base partent en `.zip`.
+ *
  * Avant le correctif, le cas 2 rendait la carte grisée : aucun moyen d'ouvrir
  * un projet hors Chrome/Edge sur le site en production.
  */
 import { mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+import { crc32, deflateRawSync } from 'node:zlib';
 import { chromium, devices, firefox, webkit } from 'playwright-core';
 import {
   BASE,
@@ -170,6 +175,92 @@ async function inputWay(page, project, mask) {
   return `archive ${download.suggestedFilename()} (${zip.length} o)`;
 }
 
+/** Un `.zip` deflate minimal, comme celui de « Compresser » dans Fichiers (iOS). */
+function zipOf(entries) {
+  const locals = [];
+  const centrals = [];
+  let offset = 0;
+  for (const [path, text] of entries) {
+    const name = Buffer.from(path);
+    const data = Buffer.from(text);
+    const packed = deflateRawSync(data);
+    const local = Buffer.alloc(30);
+    local.writeUInt32LE(0x04034b50, 0);
+    local.writeUInt16LE(20, 4);
+    local.writeUInt16LE(8, 8);
+    local.writeUInt32LE(crc32(data), 14);
+    local.writeUInt32LE(packed.length, 18);
+    local.writeUInt32LE(data.length, 22);
+    local.writeUInt16LE(name.length, 26);
+    locals.push(local, name, packed);
+    const central = Buffer.alloc(46);
+    central.writeUInt32LE(0x02014b50, 0);
+    central.writeUInt16LE(20, 4);
+    central.writeUInt16LE(20, 6);
+    central.writeUInt16LE(8, 10);
+    central.writeUInt32LE(crc32(data), 16);
+    central.writeUInt32LE(packed.length, 20);
+    central.writeUInt32LE(data.length, 24);
+    central.writeUInt16LE(name.length, 28);
+    central.writeUInt32LE(offset, 42);
+    centrals.push(central, name);
+    offset += 30 + name.length + packed.length;
+  }
+  const directory = Buffer.concat(centrals);
+  const end = Buffer.alloc(22);
+  end.writeUInt32LE(0x06054b50, 0);
+  end.writeUInt16LE(entries.length, 8);
+  end.writeUInt16LE(entries.length, 10);
+  end.writeUInt32LE(directory.length, 12);
+  end.writeUInt32LE(offset, 16);
+  return Buffer.concat([...locals, directory, end]);
+}
+
+/**
+ * Mobile : pas de dossier. On choisit l'archive `.zip` du projet ; elle est
+ * lue sur l'appareil, et les fichiers de base manquants se téléchargent.
+ * Le projet Next a déjà `components/` et `lib/` : pas de shared/ui ni shared/lib.
+ */
+async function zipWay(page) {
+  await page.goto(`${BASE}/open`);
+  const mobile = page.locator('[data-pick-mobile]');
+  await mobile.waitFor({ timeout: 15_000 });
+  const card = mobile.locator('button.pf-choice').first();
+  await page.waitForFunction(
+    () => !document.querySelector('[data-pick-mobile] button.pf-choice')?.disabled,
+  );
+  const buffer = zipOf([
+    [
+      'demo-app/package.json',
+      JSON.stringify({ name: 'demo-app', dependencies: { next: '16.0.0' } }),
+    ],
+    ['demo-app/pnpm-lock.yaml', ''],
+    ['demo-app/app/page.tsx', 'export default function Page() { return null; }\n'],
+    ['demo-app/components/button.tsx', 'export {};\n'],
+    ['demo-app/lib/utils.ts', 'export {};\n'],
+  ]);
+  const [chooser] = await Promise.all([page.waitForEvent('filechooser'), card.click()]);
+  check(!chooser.isMultiple(), 'Le choix .zip attend une seule archive.');
+  await chooser.setFiles({ name: 'demo-app.zip', mimeType: 'application/zip', buffer });
+  await page.getByText('pnpm install').first().waitFor({ timeout: 15_000 });
+  const panel = page.locator('[data-base-files]');
+  await panel.waitFor({ timeout: 15_000 });
+  const [download] = await Promise.all([
+    page.waitForEvent('download'),
+    panel.getByRole('button', { name: /Télécharger les fichiers manquants/ }).click(),
+  ]);
+  const zip = await readFile(await download.path());
+  check(zip.subarray(0, 4).toString('hex') === '504b0304', 'Archive .zip illisible.');
+  check(zip.includes('SECURITY.md'), 'SECURITY.md absent de l’archive.');
+  check(!zip.includes('shared/ui'), 'shared/ui proposé alors que components/ existe.');
+  check(!zip.includes('shared/lib'), 'shared/lib proposé alors que lib/ existe.');
+  check(!zip.includes('src/features'), 'src/features proposé dans un projet sans src/.');
+  check(/- Date : \d{4}-\d{2}-\d{2}/.test(zip.toString('utf8')), 'ADR sans date.');
+  check(!zip.toString('utf8').includes('à la génération'), 'ADR non daté.');
+  await page.screenshot({ path: join(import.meta.dirname, 'shots', 'open-iphone-zip.png') });
+  return `archive lue sur l’appareil, ${download.suggestedFilename()} (${zip.length} o)`;
+}
+
 const project = join(await mkdtemp(join(tmpdir(), 'pf-open-')), 'demo-app');
 await mkdir(join(project, 'src'), { recursive: true });
 await writeFile(join(project, 'package.json'), JSON.stringify({ name: 'demo-app' }));
@@ -187,17 +278,12 @@ const RUNS = [
   ['Firefox — webkitdirectory réel', firefox, {}, (page) => inputWay(page, project, false)],
   ['WebKit — webkitdirectory réel', webkit, {}, (page) => inputWay(page, project, false)],
   // Android Chrome n'a pas showDirectoryPicker : on le masque comme lui.
+  ['Pixel 7 (Chromium mobile)', chromium, devices['Pixel 7'], (page) => zipWay(page)],
   [
-    'Pixel 7 (Chromium mobile)',
-    chromium,
-    devices['Pixel 7'],
-    (page) => inputWay(page, project, true),
-  ],
-  [
-    'iPhone 15 (WebKit mobile)',
+    'iPhone 15 (WebKit mobile) — archive .zip',
     webkit,
     devices['iPhone 15'],
-    (page) => inputWay(page, project, false),
+    (page) => zipWay(page),
   ],
 ];
 

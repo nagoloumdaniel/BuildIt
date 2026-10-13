@@ -146,9 +146,17 @@ describe('contenu du catalogue', () => {
     expect([...certified].sort()).toEqual([
       'better-auth',
       'biome',
+      'cobol',
+      'cobol-check',
+      'dart',
       'docker',
+      'electron',
+      'expo',
+      'flutter',
       'github-actions',
+      'gnucobol',
       'hono',
+      'make',
       'next',
       'openapi',
       'playwright',
@@ -162,6 +170,7 @@ describe('contenu du catalogue', () => {
       'shadcn-ui',
       'stripe',
       'tailwind',
+      'tauri',
       'turborepo',
       'typescript',
       'vercel',
@@ -187,7 +196,18 @@ describe('contenu du catalogue', () => {
       .query({ generation: 'certified' })
       .filter((entry) => entry.template !== undefined)
       .map((entry) => entry.id);
-    expect([...withTemplate].sort()).toEqual(['hono', 'next', 'shadcn-ui', 'tailwind']);
+    expect([...withTemplate].sort()).toEqual([
+      'cobol-check',
+      'electron',
+      'expo',
+      'flutter',
+      'gnucobol',
+      'hono',
+      'next',
+      'shadcn-ui',
+      'tailwind',
+      'tauri',
+    ]);
   });
 
   it('aucune fiche déclarée ne porte de template', () => {

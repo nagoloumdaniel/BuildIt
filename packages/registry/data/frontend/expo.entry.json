@@ -4,9 +4,22 @@
   "category": "frontend",
   "targets": ["mobile"],
   "status": "stable",
-  "generation": "declared",
+  "generation": "certified",
+  "template": "frontend/expo",
   "license": "MIT",
   "lastReviewedAt": "2026-10-13",
   "compatibleWith": ["typescript", "javascript"],
-  "docs": "https://docs.expo.dev"
+  "docs": "https://docs.expo.dev",
+  "versionRange": ">=57.0.0 <58.0.0",
+  "requires": ["typescript"],
+  "packages": ["expo", "expo-status-bar", "react", "react-native"],
+  "devPackages": ["@types/react"],
+  "packageRanges": {
+    "expo": "~57.0.28",
+    "expo-status-bar": "~57.0.1",
+    "react": "19.2.3",
+    "react-native": "0.86.3",
+    "@types/react": "~19.2.2"
+  },
+  "ecosystems": ["react"]
 }

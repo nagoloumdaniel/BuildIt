@@ -1,5 +1,14 @@
 # @nagoloum/cli
 
+## 0.5.0
+
+### Minor Changes
+
+- Templates certifiés : COBOL (GnuCOBOL, cobol-check, Make), Flutter, Expo, Electron, Tauri, prouvés par le test de fumée.
+- Monorepo web + mobile + desktop (apps/mobile, apps/desktop, packages/contracts).
+- Ouverture sur mobile par archive .zip ou fichiers ; fichiers de base proposés après génération, installation et clonage.
+- Plus de shared/ en doublon de components/ et lib/ ; ADR daté.
+
 ## 0.4.0
 
 ### Minor Changes

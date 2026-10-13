@@ -4,9 +4,16 @@
   "category": "frontend",
   "targets": ["desktop"],
   "status": "stable",
-  "generation": "declared",
+  "generation": "certified",
+  "template": "frontend/electron",
   "license": "MIT",
   "lastReviewedAt": "2026-10-13",
   "compatibleWith": ["typescript", "javascript"],
-  "docs": "https://www.electronjs.org/docs"
+  "docs": "https://www.electronjs.org/docs",
+  "versionRange": ">=44.0.0 <45.0.0",
+  "requires": ["typescript"],
+  "devPackages": ["electron"],
+  "packageRanges": {
+    "electron": "^44.7.0"
+  }
 }

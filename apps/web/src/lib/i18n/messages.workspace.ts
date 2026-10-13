@@ -47,6 +47,17 @@ export const FR_WORKSPACE = {
       `Archive de ${count} fichier${count > 1 ? 's' : ''} téléchargée.`,
     baseFailed: 'Les fichiers de base n’ont pas pu être écrits',
     baseDenied: 'Le navigateur n’a pas accordé l’écriture dans ce dossier.',
+    /* iPhone, iPad, Android : pas de dossier. Une archive du projet, ou
+       quelques fichiers de sa racine. */
+    mobileNote:
+      'Sur iPhone, iPad et Android, le navigateur ne sait pas ouvrir un dossier. Choisissez plutôt l’archive .zip du projet (dans Fichiers : appui long sur le dossier, puis « Compresser »), ou quelques fichiers de sa racine (package.json…). Tout est lu sur l’appareil ; les fichiers de base manquants se téléchargent en .zip.',
+    pickZip: 'Choisir l’archive .zip du projet',
+    pickZipNote: 'Lue entièrement sur l’appareil : la liste des fichiers et package.json.',
+    pickFiles: 'Choisir des fichiers du projet',
+    pickFilesNote:
+      'package.json, pf.manifest.json… de la racine du projet. Sans les dossiers, l’analyse est plus sommaire.',
+    zipUnreadable:
+      'Cette archive n’a pas pu être lue (pas un .zip, chiffrée ou trop ancienne). Recompressez le dossier et réessayez.',
     pick: 'Choisir un dossier',
     picking: 'Explorateur ouvert…',
     analysing: 'Analyse du dossier…',
@@ -314,6 +325,15 @@ export const EN_WORKSPACE: Widen<typeof FR_WORKSPACE> = {
     baseZipped: (count: number) => `Archive of ${count} file${count > 1 ? 's' : ''} downloaded.`,
     baseFailed: 'The base files could not be written',
     baseDenied: 'The browser did not grant write access to this folder.',
+    mobileNote:
+      'On iPhone, iPad and Android, the browser cannot open a folder. Choose the project’s .zip archive instead (in Files: long-press the folder, then “Compress”), or a few files from its root (package.json…). Everything is read on the device; missing base files download as a .zip.',
+    pickZip: 'Choose the project’s .zip archive',
+    pickZipNote: 'Read entirely on the device: the file list and package.json.',
+    pickFiles: 'Choose project files',
+    pickFilesNote:
+      'package.json, pf.manifest.json… from the project root. Without folders, the analysis is shallower.',
+    zipUnreadable:
+      'This archive could not be read (not a .zip, encrypted or too old). Compress the folder again and retry.',
     pick: 'Choose a folder',
     picking: 'Explorer open…',
     analysing: 'Analysing the folder…',

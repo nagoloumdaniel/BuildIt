@@ -4,7 +4,7 @@
   "category": "language",
   "targets": ["api", "library"],
   "status": "stable",
-  "generation": "declared",
+  "generation": "certified",
   "license": "Public-Domain",
   "lastReviewedAt": "2026-10-13",
   "compatibleWith": ["gnucobol", "cobol-check", "ocesql"],

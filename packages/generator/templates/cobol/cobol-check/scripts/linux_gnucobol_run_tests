@@ -1,0 +1,5 @@
+#!/bin/sh
+# Compile puis exécute le programme de test engendré par cobol-check.
+# GnuCOBOL (cobc) doit être sur le PATH.
+cd "$(dirname "$1")" || exit 1
+cobc -xj "$1"

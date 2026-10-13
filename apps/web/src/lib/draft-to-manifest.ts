@@ -238,11 +238,12 @@ function toManifest(
   // (MANIFEST_APPS_NEED_MONOREPO). L'architecture se choisit avant la stack :
   // sans ce report, le brouillon échouait seulement au moment de générer.
   const hasFramework = (app: AppValues | undefined) => app?.framework !== undefined;
+  // Même règle pour le web, le mobile et le bureau : une application chacun.
+  const withFramework = APP_KEYS.filter((app) => hasFramework(manifest[app])).length;
   if (
     manifest.architecture !== undefined &&
     manifest.architecture !== 'monorepo' &&
-    hasFramework(manifest.frontend) &&
-    hasFramework(manifest.backend)
+    withFramework > 1
   ) {
     manifest.architecture = 'monorepo';
   }

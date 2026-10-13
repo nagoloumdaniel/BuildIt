@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { skeletonTree } from './architecture-skeleton.js';
+import { skeletonTree, withoutDuplicateShared } from './architecture-skeleton.js';
 import { ARCHITECTURES } from './schema/enums.js';
 
 const FULL = { frontend: true, backend: true };
@@ -77,5 +77,32 @@ describe('skeletonTree — dossiers de base par architecture', () => {
 
   it('est déterministe', () => {
     expect(skeletonTree('monorepo', FULL)).toEqual(skeletonTree('monorepo', FULL));
+  });
+});
+
+describe('withoutDuplicateShared — pas de shared/ui à côté de components/', () => {
+  const dirs = skeletonTree('single-app', { frontend: true, backend: false });
+
+  it('garde shared/ui et shared/lib sans équivalent', () => {
+    const paths = withoutDuplicateShared(dirs, () => false).map((dir) => dir.path);
+    expect(paths).toContain('src/shared/ui');
+    expect(paths).toContain('src/shared/lib');
+  });
+
+  it('retire shared/ui si components/ existe, shared/lib si lib/ existe', () => {
+    const existing = new Set(['components', 'lib']);
+    const paths = withoutDuplicateShared(dirs, (path) => existing.has(path)).map((d) => d.path);
+    expect(paths).not.toContain('src/shared/ui');
+    expect(paths).not.toContain('src/shared/lib');
+    expect(paths).toContain('src/features');
+  });
+
+  it('regarde au même niveau (src/components) et par application en monorepo', () => {
+    const mono = skeletonTree('monorepo', { frontend: true, backend: true });
+    const paths = withoutDuplicateShared(mono, (path) => path === 'apps/web/src/components').map(
+      (d) => d.path,
+    );
+    expect(paths).not.toContain('apps/web/src/shared/ui');
+    expect(paths).toContain('apps/web/src/shared/lib');
   });
 });

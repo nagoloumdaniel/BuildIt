@@ -146,15 +146,19 @@ export function parseManifest(input: unknown): ParseResult<Manifest, ManifestIss
     // scripts `dev`, `build` et `start` : le générateur ne sait les séparer
     // qu'en monorepo. Le dire ici, à la validation, plutôt qu'au milieu de la
     // génération.
-    const { frontend, backend, architecture } = result.data;
-    if (frontend !== undefined && backend !== undefined && architecture !== 'monorepo') {
+    // Même règle pour le web, le mobile et le bureau : une application par
+    // plateforme, chacune dans son dossier.
+    const { frontend, backend, mobile, desktop, architecture } = result.data;
+    const apps = [frontend, backend, mobile, desktop].filter((app) => app !== undefined);
+    const [first, second] = apps;
+    if (first !== undefined && second !== undefined && architecture !== 'monorepo') {
       return fail([
         {
           code: 'MANIFEST_APPS_NEED_MONOREPO',
           path: ['architecture'],
           message: messageFor('MANIFEST_APPS_NEED_MONOREPO', {
-            frontend: frontend.framework,
-            backend: backend.framework,
+            frontend: first.framework,
+            backend: second.framework,
           }),
         },
       ]);

@@ -3,7 +3,8 @@ import type { Category } from '@buildit/registry';
 /**
  * Où va chaque technologie dans un monorepo (spec 2026-09-28).
  *
- * - `web`, `api` : l'application de ce nom ;
+ * - `web`, `api`, `mobile`, `desktop` : l'application de ce nom (un framework
+ *   d'interface va à la plateforme qu'il vise, voir `roleOf`) ;
  * - `data` : l'application web si elle existe — Better Auth y vit —, sinon l'API ;
  * - `both` : chaque application (TypeScript, Zod, Vitest) ;
  * - `root` : le dépôt entier (Biome, Turborepo, Docker, CI).
@@ -11,7 +12,7 @@ import type { Category } from '@buildit/registry';
  * Le type `Record<Category, …>` oblige à décider pour toute nouvelle catégorie :
  * le compilateur refuse une catégorie oubliée.
  */
-export type Role = 'web' | 'api' | 'data' | 'both' | 'root';
+export type Role = 'web' | 'api' | 'mobile' | 'desktop' | 'data' | 'both' | 'root';
 
 export const ROLE_BY_CATEGORY: Readonly<Record<Category, Role>> = {
   frontend: 'web',

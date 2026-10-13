@@ -49,11 +49,23 @@ function tree(dirs: readonly SkeletonDir[]): string {
   return dirs.map((dir) => `${dir.path}/`).join('\n');
 }
 
+export interface SkeletonFilesOptions {
+  /** Date de la décision (AAAA-MM-JJ) inscrite dans l’ADR-001. */
+  readonly date?: string;
+}
+
+/** `Date` → `AAAA-MM-JJ`, en UTC (déterministe quel que soit le fuseau). */
+export function isoDate(date: Date): string {
+  return date.toISOString().slice(0, 10);
+}
+
 export function skeletonFiles(
   name: string,
   architecture: Architecture,
   dirs: readonly SkeletonDir[],
+  options: SkeletonFilesOptions = {},
 ): SkeletonFile[] {
+  const date = options.date ?? isoDate(new Date());
   const title = TITLES[architecture];
   const files: { path: string; contents: string }[] = dirs.map((dir) => ({
     path: `${dir.path}/README.md`,
@@ -70,7 +82,7 @@ export function skeletonFiles(
   files.push(
     {
       path: `docs/decisions/ADR-001-${architecture}.md`,
-      contents: `# ADR-001 — Architecture : ${title}\n\n- Statut : acceptée\n- Date : à la génération du projet\n\n## Contexte\n\nLe projet ${name} est généré par BuildIt avec l’architecture « ${architecture} ».\n\n## Décision\n\n${RATIONALE[architecture]}\n\n## Conséquences\n\n- Chaque dossier de base porte un README qui fixe sa responsabilité et sa règle de dépendance.\n- Le domaine n’importe aucun framework : les adaptateurs dépendent du domaine, jamais l’inverse.\n- Toute évolution de cette décision passe par un nouvel ADR qui remplace celui-ci.\n`,
+      contents: `# ADR-001 — Architecture : ${title}\n\n- Statut : acceptée\n- Date : ${date}\n\n## Contexte\n\nLe projet ${name} est généré par BuildIt avec l’architecture « ${architecture} ».\n\n## Décision\n\n${RATIONALE[architecture]}\n\n## Conséquences\n\n- Chaque dossier de base porte un README qui fixe sa responsabilité et sa règle de dépendance.\n- Le domaine n’importe aucun framework : les adaptateurs dépendent du domaine, jamais l’inverse.\n- Toute évolution de cette décision passe par un nouvel ADR qui remplace celui-ci.\n`,
     },
     {
       path: 'CONTRIBUTING.md',

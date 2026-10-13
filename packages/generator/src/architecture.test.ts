@@ -86,3 +86,32 @@ describe('withArchitectureSkeleton', () => {
     expect(paths).toContain('apps/api/src/modules/README.md');
   });
 });
+
+describe('architectureSkeleton — pas de doublon avec le template, ADR daté', () => {
+  const single: Manifest = { ...BASE, architecture: 'single-app', targets: ['web'] };
+  const planned = (...paths: string[]) =>
+    paths.map((path) => ({ path, contents: 'x', source: 't' }));
+
+  it('Next.js pose components/ et lib/ : ni shared/ui ni shared/lib', () => {
+    const paths = architectureSkeleton(
+      single,
+      [NEXT],
+      planned('app/page.tsx', 'components/button.tsx', 'lib/utils.ts'),
+    ).map((file) => file.path);
+    expect(paths).toContain('features/README.md');
+    expect(paths.some((path) => path.includes('shared/'))).toBe(false);
+  });
+
+  it('sans components/ ni lib/, shared reste', () => {
+    const paths = architectureSkeleton(single, [NEXT], planned('app/page.tsx')).map((f) => f.path);
+    expect(paths).toContain('shared/ui/README.md');
+    expect(paths).toContain('shared/lib/README.md');
+  });
+
+  it('inscrit la date de génération dans l’ADR', () => {
+    const adr = architectureSkeleton(BASE, [NEXT, HONO], [], {
+      now: new Date('2026-01-02T10:00:00Z'),
+    }).find((file) => file.path === 'docs/decisions/ADR-001-monorepo.md');
+    expect(adr?.contents).toContain('- Date : 2026-01-02');
+  });
+});

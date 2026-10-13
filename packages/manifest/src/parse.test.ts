@@ -265,3 +265,25 @@ describe('un frontend et un backend exigent le monorepo', () => {
     expect(parseManifest({ ...base, architecture: 'monorepo' }).ok).toBe(true);
   });
 });
+
+describe('plusieurs interfaces (web, mobile, bureau) exigent le monorepo', () => {
+  const base = {
+    manifestVersion: 1,
+    name: 'demo',
+    targets: ['web', 'mobile', 'desktop'],
+    frontend: { framework: 'next', language: 'typescript' },
+    mobile: { framework: 'expo', language: 'typescript' },
+    desktop: { framework: 'electron' },
+  };
+
+  it('refuse un seul paquet', () => {
+    const result = parseManifest({ ...base, architecture: 'single-app' });
+    expect(result.ok ? [] : result.issues.map((issue) => issue.code)).toEqual([
+      'MANIFEST_APPS_NEED_MONOREPO',
+    ]);
+  });
+
+  it('accepte le monorepo', () => {
+    expect(parseManifest({ ...base, architecture: 'monorepo' }).ok).toBe(true);
+  });
+});

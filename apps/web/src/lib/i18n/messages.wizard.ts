@@ -43,7 +43,8 @@ export const FR_WIZARD = {
      */
     targets: {
       title: 'Plateformes cibles',
-      description: 'Ce choix détermine les technologies que les écrans suivants vous proposeront.',
+      description:
+        'Ce choix détermine les technologies que les écrans suivants vous proposeront. Web, mobile et ordinateur peuvent se combiner : chacun devient une application du même monorepo.',
       chosen: 'Choisie',
       empty: 'Aucune plateforme choisie pour l’instant.',
       count: (count: number, list: string) =>
@@ -382,7 +383,8 @@ export const EN_WIZARD: Widen<typeof FR_WIZARD> = {
 
     targets: {
       title: 'Target platforms',
-      description: 'This choice determines the technologies the next screens will offer.',
+      description:
+        'This choice determines the technologies the next screens will offer. Web, mobile and desktop can be combined: each becomes an app of the same monorepo.',
       chosen: 'Chosen',
       empty: 'No platform chosen yet.',
       count: (count: number, list: string) => `${count} platform${count > 1 ? 's' : ''}: ${list}.`,

@@ -1,0 +1,4 @@
+/target/
+/gen/schemas
+# Engendrées depuis ../app-icon.svg (pnpm icons).
+/icons/

@@ -1,5 +1,12 @@
 import { describe, expect, it } from 'vitest';
-import { baseFilesFor, missingBaseFiles, projectShape } from './base-files';
+import {
+  baseFilesFor,
+  dirsOfPaths,
+  dirsToProbe,
+  localIsoDate,
+  missingBaseFiles,
+  projectShape,
+} from './base-files';
 
 describe('projectShape — l’architecture d’un projet ouvert', () => {
   it('lit le manifest BuildIt quand il existe', () => {
@@ -90,5 +97,31 @@ describe('baseFilesFor / missingBaseFiles', () => {
     expect(paths).not.toContain('CONTRIBUTING.md');
     expect(paths).not.toContain('src/features/README.md');
     expect(paths).toContain('SECURITY.md');
+  });
+});
+
+describe('baseFilesFor — sans doublon, ADR daté', () => {
+  const next = projectShape({
+    folder: 'site',
+    files: ['package.json'],
+    dirs: ['app', 'components', 'lib'],
+    packageJson: JSON.stringify({ name: 'site', dependencies: { next: '16.0.0' } }),
+  });
+
+  it('components/ et lib/ présents : pas de shared/ui ni shared/lib', () => {
+    expect(dirsToProbe(next)).toEqual(
+      expect.arrayContaining(['src/components', 'components', 'src/lib', 'lib']),
+    );
+    const dirs = dirsOfPaths(['components/button.tsx', 'lib/utils.ts', 'app/page.tsx']);
+    const paths = baseFilesFor(next, { existsDir: (dir) => dirs.has(dir) }).map((f) => f.path);
+    expect(paths.some((path) => path.includes('shared/'))).toBe(false);
+    // Pas de src/ : les dossiers vont à la racine, comme à la génération.
+    expect(paths).toContain('features/README.md');
+  });
+
+  it('inscrit la date du jour dans l’ADR', () => {
+    const adr = baseFilesFor(next, { date: '2026-10-13' }).find((f) => f.path.includes('ADR'));
+    expect(adr?.contents).toContain('- Date : 2026-10-13');
+    expect(localIsoDate(new Date(2026, 0, 5))).toBe('2026-01-05');
   });
 });

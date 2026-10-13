@@ -12,13 +12,14 @@ import { type FilePlan, planFiles } from './plan.js';
 import {
   type CommandRunner,
   nodeCommandRunner,
+  runChecks,
   runGit,
   runInstall,
   runValidation,
   type StepFailure,
 } from './postinstall.js';
 import { resolveRecipes } from './recipes.js';
-import { buildScaffold, NODE_RANGE, PACKAGE_MANAGER } from './scaffold.js';
+import { buildScaffold, NODE_RANGE, PACKAGE_MANAGER, type ToolchainPlan } from './scaffold.js';
 import type { TemplateContext } from './template.js';
 import { loadTemplateFiles, type TemplateRequest } from './templates.js';
 import { type FileSystem, type GenerationReport, generate } from './write.js';
@@ -189,6 +190,7 @@ function templateContext(manifest: Manifest, now: Date): TemplateContext {
     year: String(now.getUTCFullYear()),
     nodeVersion: NODE_RANGE,
     packageManager: PACKAGE_MANAGER,
+    identifier: manifest.name.replace(/[^a-z0-9_]/g, '_'),
   };
 }
 
@@ -211,6 +213,8 @@ export interface ProjectPlan {
   readonly plan: FilePlan;
   /** Avertissements non bloquants, remontes de tous les etages traverses. */
   readonly warnings: readonly PipelineIssue[];
+  /** Projet hors Node : les commandes d'installation et de vérification. */
+  readonly toolchain?: ToolchainPlan;
 }
 
 export function planProject(
@@ -273,7 +277,7 @@ export function planProject(
   // un template n'est jamais réécrit, donc planFiles ne voit aucun conflit.
   const plan = planFiles(
     targetDir,
-    withArchitectureSkeleton(generated.value.files, manifest, entries),
+    withArchitectureSkeleton(generated.value.files, manifest, entries, { now: options.now }),
   );
   if (!plan.ok) {
     return fail(toIssues(plan.issues));
@@ -285,6 +289,7 @@ export function planProject(
   return ok({
     plan: plan.value,
     warnings: [...resolution.value.warnings, ...generated.value.warnings],
+    ...(generated.value.toolchain === undefined ? {} : { toolchain: generated.value.toolchain }),
   });
 }
 
@@ -334,6 +339,7 @@ function generateApp(
   return ok({
     files: [...scaffold.value.files, ...templates.value],
     warnings: scaffold.value.warnings,
+    ...(scaffold.value.toolchain === undefined ? {} : { toolchain: scaffold.value.toolchain }),
   });
 }
 
@@ -401,8 +407,16 @@ export async function generateProject(
   const runner = options.runner ?? nodeCommandRunner;
   const warnings: PipelineIssue[] = [...planned.value.warnings];
 
+  const toolchain = planned.value.toolchain;
   if (wanted('install', options.install === true)) {
-    const installFailure = await runInstall(runner, targetDir);
+    // Un projet hors Node sans dépendances à installer (COBOL) : l'étape est
+    // faite, il n'y a rien à lancer.
+    const installFailure =
+      toolchain === undefined
+        ? await runInstall(runner, targetDir)
+        : toolchain.install === undefined
+          ? undefined
+          : await runInstall(runner, targetDir, toolchain.install);
     if (installFailure !== undefined) {
       return fromStepFailure(installFailure, 'install', completed);
     }
@@ -422,11 +436,10 @@ export async function generateProject(
   }
 
   if (wanted('validate', options.validate === true)) {
-    const validationFailure = await runValidation(
-      runner,
-      targetDir,
-      plannedScripts(planned.value.plan),
-    );
+    const validationFailure =
+      toolchain === undefined
+        ? await runValidation(runner, targetDir, plannedScripts(planned.value.plan))
+        : await runChecks(runner, targetDir, toolchain.checks);
     if (validationFailure !== undefined) {
       return fromStepFailure(validationFailure, 'validate', completed);
     }
