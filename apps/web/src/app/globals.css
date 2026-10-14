@@ -1828,4 +1828,88 @@
     display: inline-block;
     flex: none;
   }
+
+  /* --- Popup de confirmation (ConfirmDeleteDialog) ---------------------- */
+
+  /* L'élément natif `<dialog>` porte ce qu'une `<div>` ne porte pas : le piège
+     du focus, l'Échap, le fond inerte. On ne lui donne donc que l'apparence.
+     Le fond est assombri par `::backdrop`, jamais par un voile ajouté au
+     document un second nœud à gérer, et un `z-index` à tenir. */
+  .pf-dialog {
+    background: var(--pf-surface);
+    border: 1px solid var(--pf-border);
+    border-radius: var(--pf-radius-lg);
+    box-shadow: var(--pf-shadow);
+    color: var(--pf-text);
+    margin: auto;
+    max-height: min(85vh, 44rem);
+    max-width: min(32rem, calc(100vw - 2rem));
+    overflow: auto;
+    padding: 0;
+  }
+
+  /* Le `dialog` fermé est en `display: none` par le navigateur : pas de règle
+     à écrire pour ça. `::backdrop` reste stylable même en mode modal. */
+  .pf-dialog::backdrop {
+    backdrop-filter: blur(2px);
+    -webkit-backdrop-filter: blur(2px);
+    background: rgb(22 24 27 / 45%);
+  }
+
+  .pf-dialog-box {
+    padding: 1rem 1.1rem 1.1rem;
+  }
+
+  /* Chaque cible est une ligne : une case, son libellé, et sous lui ce que la
+     suppression détruit vraiment. La note est dans le `<label>`, donc lire la
+     ligne entière annonce aussi la conséquence. */
+  .pf-dialog-targets {
+    display: flex;
+    flex-direction: column;
+    gap: 0.7rem;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  .pf-dialog-target {
+    align-items: flex-start;
+    display: flex;
+    gap: 0.55rem;
+  }
+
+  /* La case garde sa taille native : c'est un contrôle, pas une décoration, et
+     la cible tactile est la ligne entière (le libellé est cliquable). */
+  .pf-dialog-target input {
+    accent-color: var(--pf-accent);
+    flex: none;
+    height: 1rem;
+    margin: 0.15rem 0 0;
+    width: 1rem;
+  }
+
+  .pf-dialog-target label {
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    gap: 0.1rem;
+    min-width: 0;
+  }
+
+  .pf-dialog-target-label {
+    font-size: 0.875rem;
+    font-weight: 560;
+    letter-spacing: -0.006em;
+  }
+
+  /* Les deux issues sont à droite : « Annuler » puis le geste destructeur, qui
+     reste rouge même quand il est désactivé (une bordure neutre ferait
+     disparaître de quel écran il s'agit). */
+  .pf-dialog-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    justify-content: flex-end;
+    margin-top: 1.1rem;
+  }
 }

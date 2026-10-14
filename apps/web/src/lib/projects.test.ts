@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   attachRepository,
   browserProjectStorage,
+  detachRepository,
   forgetAllProjects,
   forgetProject,
   formatBytes,
@@ -331,6 +332,30 @@ describe('le manifest et le dépôt d’un projet', () => {
     expect(
       attachRepository(storage, '', 'https://github.com/a/b')[0]?.repositoryUrl,
     ).toBeUndefined();
+  });
+
+  it('détache le projet de son dépôt, et lui seul', () => {
+    // C'est le geste après une suppression GitHub (ou un dépôt introuvable) :
+    // garder une adresse morte ferait échouer chaque geste qui s'appuie dessus.
+    const storage = fakeStorage(
+      JSON.stringify([
+        { ...project(), repositoryUrl: 'https://github.com/octocat/mon-app' },
+        { ...project({ id: 'b', directory: 'D:autre' }), repositoryUrl: 'https://github.com/o/b' },
+      ]),
+    );
+
+    const next = detachRepository(storage, 'demo-1');
+
+    expect(next[0]?.repositoryUrl).toBeUndefined();
+    expect(next[1]?.repositoryUrl).toBe('https://github.com/o/b');
+    expect(loadProjects(storage)[0]?.repositoryUrl).toBeUndefined();
+    // Le projet reste dans la liste : il pourra être reconnecté.
+    expect(next.map((item) => item.id)).toEqual(['demo-1', 'b']);
+  });
+
+  it('détacher un identifiant inconnu ne change rien', () => {
+    const storage = fakeStorage(JSON.stringify([project()]));
+    expect(detachRepository(storage, 'inexistant')).toHaveLength(1);
   });
 
   it('une adresse invalide relue du stockage est ignorée', () => {

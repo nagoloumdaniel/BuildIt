@@ -92,18 +92,86 @@ export const FR_DASHBOARD = {
     copyShareLink: 'Copier le lien de partage',
     githubWhat: 'le lien GitHub',
     shareWhat: 'le lien de partage',
-    delete: 'Supprimer du disque',
-    deleteConfirmTitle: 'Supprimer les fichiers de ce projet ?',
-    deleteConfirmBody:
-      'Le dossier et tout ce qu’il contient seront effacés de cette machine. Il n’y a pas de corbeille : c’est définitif.',
-    deleteConfirmAction: 'Oui, supprimer les fichiers',
+    /**
+     * Le libellé de la poubelle : des points de suspension, parce que le geste
+     * **ouvre** une question (« supprimer quoi ? ») au lieu d'effacer. Le nom
+     * accessible et l'infobulle disent la même chose que le bouton.
+     */
+    delete: 'Supprimer…',
+    /**
+     * La popup de suppression d'une carte : un seul titre, une seule
+     * confirmation, et **les cibles à cocher**. Le projet n'est pas
+     * nécessairement aux trois endroits : une archive ZIP n'a pas de dossier,
+     * un projet jamais poussé n'a pas de dépôt. Les notes disent ce que chaque
+     * cible détruit, parce qu'aucune des trois n'est réversible.
+     */
+    deleteChoicesTitle: (name: string) => `Supprimer « ${name} » ?`,
+    deleteChoicesBody:
+      'Choisissez ce qui doit disparaître. Les cases cochées le seront définitivement : il n’y a pas de corbeille.',
+    deleteChoicesAction: 'Supprimer la sélection',
+    deleteTargetSite: 'Retirer de la liste BuildIt',
+    deleteTargetSiteNote: 'La ligne disparaît de « Projets créés ». Rien n’est effacé.',
+    deleteTargetGithub: 'Supprimer le dépôt GitHub',
+    deleteTargetGithubNote: 'Le dépôt et son historique seront supprimés sur github.com.',
+    deleteTargetLocal: 'Supprimer le dossier local',
+    deleteTargetLocalNote:
+      'Le dossier et tout ce qu’il contient seront effacés de cette machine. Définitif.',
+    deleteWorking: 'Suppression en cours…',
     deleting: 'Suppression des fichiers…',
     deleted: (name: string) => `Projet supprimé : ${name}.`,
+    deletedSite: 'Retiré de la liste BuildIt.',
+    deletedRepository: 'Dépôt GitHub supprimé.',
+    deletedLocal: 'Dossier local supprimé.',
+    /**
+     * Le suivi d'une suppression de dépôt : il ne referme pas la popup sur un
+     * silence. Le projet reste dans la liste, **détaché** de son adresse, et
+     * deux issues sont proposées créer un nouveau dépôt, ou laisser tel quel.
+     */
+    repositoryDeletedTitle: 'Dépôt GitHub supprimé',
+    repositoryDeletedBody:
+      'Le projet est détaché de GitHub : son ancienne adresse a été retirée de la liste, rien d’autre n’a changé.',
+    repositoryGoneTitle: 'Dépôt introuvable sur GitHub',
+    repositoryGoneBody:
+      'Le dépôt n’existe plus sur GitHub. Le projet est détaché : son ancienne adresse a été retirée de la liste, et l’application reste utilisable.',
+    repositoryMissingBody:
+      'Aucune adresse de dépôt n’est enregistrée pour ce projet. Vous pouvez en créer un nouveau, ou continuer sans GitHub.',
+    repositoryConnect: 'Connecter un nouveau dépôt',
+    repositoryArchiveOnly:
+      'Ce projet a été téléchargé en archive : il n’y a pas de copie locale à pousser sur un nouveau dépôt. « Passer » le laisse tel quel.',
+    repositoryFailed: (name: string) =>
+      `Le dépôt GitHub de ${name} n’a pas pu être supprimé : il est peut-être déjà parti, ou votre compte GitHub n’y a plus accès. La carte a été détachée pour ne pas garder une adresse morte.`,
+    deleteFailed: (message: string) => `La suppression n’a pas abouti : ${message}`,
     forgetHint: 'Retirer un projet d’ici ne supprime aucun fichier sur le disque.',
+    openInExplorer: 'Ouvrir dans l’explorateur',
+    openInExplorerLabel: (directory: string) =>
+      `Ouvrir dans l’explorateur de fichiers : ${directory}`,
+    openInExplorerFailed: 'L’explorateur de fichiers n’a pas pu s’ouvrir.',
+    /** Les refus de l’ouverture, dits en une phrase à côté de la carte. */
+    openInExplorerRefusals: {
+      hosted: 'BuildIt n’est pas lancé sur cette machine : le dossier ne peut pas s’ouvrir d’ici.',
+      empty: 'Aucun dossier n’a été indiqué.',
+      notRegistered: 'Ce dossier n’a pas été écrit par BuildIt : il ne sera pas ouvert d’ici.',
+      missing: 'Ce dossier n’existe plus à cet endroit.',
+      failed: 'L’explorateur de fichiers n’a pas pu s’ouvrir. Ouvrez le dossier vous-même.',
+    },
+    /** Le vidage de la liste demande **quelles plateformes** vider. */
     clearConfirmTitle: 'Vider la liste ?',
     clearConfirmBody:
-      'Les projets restent sur le disque : seule cette liste sera oubliée. Un projet régénéré y reviendra.',
-    clearConfirmAction: 'Oui, vider la liste',
+      'Choisissez ce qui doit disparaître. Par défaut, seule la liste BuildIt est vidée : les projets et leurs dépôts restent en place.',
+    clearConfirmAction: 'Vider la sélection',
+    clearTargetSite: 'Vider la liste BuildIt',
+    clearTargetSiteNote: 'Les lignes disparaissent. Un projet régénéré y reviendra.',
+    clearTargetGithub: 'Supprimer les dépôts GitHub',
+    clearTargetGithubNote: 'Tous les dépôts listés seront supprimés sur github.com. Définitif.',
+    clearTargetLocal: 'Supprimer les dossiers locaux',
+    clearTargetLocalNote: 'Tous les dossiers listés seront effacés de cette machine. Définitif.',
+    clearWorking: 'Suppression en cours…',
+    clearDone: 'Liste vidée.',
+    clearRemoved: (count: number) => `Projets retirés de la liste : ${count}.`,
+    clearRepositories: (count: number) => `Dépôts GitHub supprimés : ${count}.`,
+    clearGone: (count: number) => `Dépôts déjà absents sur GitHub : ${count}.`,
+    clearLocal: (count: number) => `Dossiers locaux supprimés : ${count}.`,
+    clearFailures: (count: number) => `Échecs : ${count}.`,
     sizeOf: (size: string) => `Poids : ${size}`,
     techLabel: 'Technologies',
     moreTech: (count: number) =>
@@ -185,18 +253,66 @@ export const EN_DASHBOARD: Widen<typeof FR_DASHBOARD> = {
     copyShareLink: 'Copy the share link',
     githubWhat: 'the GitHub link',
     shareWhat: 'the share link',
-    delete: 'Delete from disk',
-    deleteConfirmTitle: 'Delete this project’s files?',
-    deleteConfirmBody:
-      'The folder and everything in it will be erased from this machine. There is no recycle bin: this is final.',
-    deleteConfirmAction: 'Yes, delete the files',
+    delete: 'Delete…',
+    deleteChoicesTitle: (name: string) => `Delete “${name}”?`,
+    deleteChoicesBody:
+      'Choose what should disappear. The ticked boxes will be gone for good: there is no recycle bin.',
+    deleteChoicesAction: 'Delete the selection',
+    deleteTargetSite: 'Remove from the BuildIt list',
+    deleteTargetSiteNote: 'The row leaves “Projects created”. Nothing is erased.',
+    deleteTargetGithub: 'Delete the GitHub repository',
+    deleteTargetGithubNote: 'The repository and its history will be deleted on github.com.',
+    deleteTargetLocal: 'Delete the local folder',
+    deleteTargetLocalNote:
+      'The folder and everything in it will be erased from this machine. Final.',
+    deleteWorking: 'Deleting…',
     deleting: 'Deleting the files…',
     deleted: (name: string) => `Project deleted: ${name}.`,
+    deletedSite: 'Removed from the BuildIt list.',
+    deletedRepository: 'GitHub repository deleted.',
+    deletedLocal: 'Local folder deleted.',
+    repositoryDeletedTitle: 'GitHub repository deleted',
+    repositoryDeletedBody:
+      'The project is detached from GitHub: its old address was removed from the list, nothing else changed.',
+    repositoryGoneTitle: 'Repository not found on GitHub',
+    repositoryGoneBody:
+      'The repository no longer exists on GitHub. The project is detached: its old address was removed from the list, and the app keeps working.',
+    repositoryMissingBody:
+      'No repository address is stored for this project. You can create a new one, or carry on without GitHub.',
+    repositoryConnect: 'Connect a new repository',
+    repositoryArchiveOnly:
+      'This project was downloaded as an archive: there is no local copy to push to a new repository. “Skip” leaves it as is.',
+    repositoryFailed: (name: string) =>
+      `The GitHub repository of ${name} could not be deleted: it may already be gone, or your GitHub account no longer has access. The card was detached so it does not keep a dead address.`,
+    deleteFailed: (message: string) => `The deletion did not go through: ${message}`,
     forgetHint: 'Removing a project from here deletes no file on disk.',
+    openInExplorer: 'Open in the file explorer',
+    openInExplorerLabel: (directory: string) => `Open in the file explorer: ${directory}`,
+    openInExplorerFailed: 'The file explorer could not be opened.',
+    openInExplorerRefusals: {
+      hosted: 'BuildIt is not running on this machine: the folder cannot be opened from here.',
+      empty: 'No folder was given.',
+      notRegistered: 'This folder was not written by BuildIt: it will not be opened from here.',
+      missing: 'This folder no longer exists at that location.',
+      failed: 'The file explorer could not be opened. Open the folder yourself.',
+    },
     clearConfirmTitle: 'Clear the list?',
     clearConfirmBody:
-      'The projects stay on disk: only this list is forgotten. A regenerated project comes back to it.',
-    clearConfirmAction: 'Yes, clear the list',
+      'Choose what should disappear. By default only the BuildIt list is cleared: the projects and their repositories stay in place.',
+    clearConfirmAction: 'Clear the selection',
+    clearTargetSite: 'Clear the BuildIt list',
+    clearTargetSiteNote: 'The rows disappear. A regenerated project comes back to it.',
+    clearTargetGithub: 'Delete the GitHub repositories',
+    clearTargetGithubNote: 'Every listed repository will be deleted on github.com. Final.',
+    clearTargetLocal: 'Delete the local folders',
+    clearTargetLocalNote: 'Every listed folder will be erased from this machine. Final.',
+    clearWorking: 'Deleting…',
+    clearDone: 'List cleared.',
+    clearRemoved: (count: number) => `Projects removed from the list: ${count}.`,
+    clearRepositories: (count: number) => `GitHub repositories deleted: ${count}.`,
+    clearGone: (count: number) => `Repositories already gone on GitHub: ${count}.`,
+    clearLocal: (count: number) => `Local folders deleted: ${count}.`,
+    clearFailures: (count: number) => `Failures: ${count}.`,
     sizeOf: (size: string) => `Size: ${size}`,
     techLabel: 'Technologies',
     moreTech: (count: number) => `${count} more technolog${count > 1 ? 'ies' : 'y'}`,

@@ -4,16 +4,8 @@ import { type ReactElement, useCallback, useEffect, useState } from 'react';
 import { useDraft, useSession } from '../components/wizard/draft-provider';
 import { ScreenShell } from '../components/wizard/shell';
 import { downloadZip } from '../lib/download-zip';
-import { useMessages } from '../lib/i18n/provider';
 import { stepMemory } from '../lib/journey-transition';
-import {
-  browserProjectStorage,
-  forgetProject,
-  loadProjects,
-  type StoredProject,
-} from '../lib/projects';
-import { toast } from '../lib/toasts';
-import { deleteProjectAction } from './actions';
+import { browserProjectStorage, loadProjects, type StoredProject } from '../lib/projects';
 import { browserSessionStorage, type GenerationReport, loadReport } from './create/report/result';
 import { DashboardView } from './dashboard-view';
 import { usePickHandoff } from './open/pick-handoff';
@@ -40,10 +32,8 @@ import { SharedLink } from './shared-link';
 export default function Home(): ReactElement {
   const draft = useDraft();
   const session = useSession();
-  const t = useMessages();
   const [report, setReport] = useState<GenerationReport | null>(null);
   const [projects, setProjects] = useState<readonly StoredProject[] | null>(null);
-  const [deletingId, setDeletingId] = useState<string | null>(null);
   const openLocal = usePickHandoff();
 
   useEffect(() => {
@@ -54,41 +44,26 @@ export default function Home(): ReactElement {
     setProjects(loadProjects(browserProjectStorage()));
   }, []);
 
-  // La même suppression que l'écran « Tous les projets » : la carte ne quitte
-  // la liste qu'après un succès, et un échec laisse les fichiers sur le disque
-  // en le disant plutôt que de faire disparaître la carte en silence.
-  const remove = useCallback(
-    (project: StoredProject): void => {
-      setDeletingId(project.id);
-      void deleteProjectAction(project.directory)
-        .then((result) => {
-          if (result.ok) {
-            setProjects(forgetProject(browserProjectStorage(), project.id));
-            toast(t.projects.deleted(project.name), { kind: 'success' });
-            return;
-          }
-          toast(result.issues.join(' ') || t.errors.offline, { kind: 'error' });
-        })
-        .catch(() => {
-          toast(t.errors.offline, { kind: 'error' });
-        })
-        .finally(() => {
-          setDeletingId(null);
-        });
-    },
-    [t],
-  );
+  /**
+   * Relire la liste après une suppression faite depuis une carte. La carte a
+   * déjà écrit `localStorage` (elle seule sait quoi supprimer : la ligne, le
+   * dépôt, le dossier) ; l'accueil ne fait que réafficher ce qui reste. Une
+   * suppression qui échoue ne retire donc rien : la carte reste, avec sa
+   * phrase d'échec.
+   */
+  const changed = useCallback((): void => {
+    setProjects(loadProjects(browserProjectStorage()));
+  }, []);
 
   return (
     <ScreenShell back={null}>
       <DashboardView
         draft={draft}
-        deletingId={deletingId}
-        onDelete={remove}
-        openLocal={openLocal}
+        onChanged={changed}
         onReset={() => {
           session.reset();
         }}
+        openLocal={openLocal}
         projects={projects}
         report={report}
         {...(report?.zipBase64 === undefined

@@ -40,6 +40,7 @@ import {
   resolveLocalDirectory,
   withoutServerSecrets,
 } from './open/project';
+import { type DeleteRepositoryOutcome, deleteGithubRepository } from './repo/delete-repo';
 import {
   type AccessMutationView,
   type AccessView,
@@ -306,6 +307,18 @@ export async function createRepositoryAction(input: unknown): Promise<CreateRepo
     runner: projectRunner(),
     deps: sessionDeps(),
   });
+}
+
+/**
+ * Supprime le dépôt GitHub d'un projet, à partir de son adresse.
+ *
+ * Le refus de « dépôt introuvable » ne remonte pas comme une erreur : le module
+ * `repo/delete-repo.ts` le rend comme un **résultat** (`status: 'gone'`), pour
+ * que l'écran détache le projet et propose de le reconnecter au lieu d'afficher
+ * une panne.
+ */
+export async function deleteRepositoryAction(url: unknown): Promise<DeleteRepositoryOutcome> {
+  return deleteGithubRepository(sessionDeps(), url);
 }
 
 export async function accessListAction(directory: unknown): Promise<AccessView> {

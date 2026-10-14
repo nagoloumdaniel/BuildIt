@@ -2,14 +2,32 @@
 
 import type { Manifest } from '@buildit/manifest';
 import Link from 'next/link';
-import { type ReactElement, useCallback, useEffect, useRef, useState } from 'react';
-import type { GenerationView } from '../../app/actions';
+import { type ReactElement, type ReactNode, useCallback, useEffect, useRef, useState } from 'react';
+import {
+  deleteProjectAction,
+  type GenerationView,
+  openProjectFolderAction,
+} from '../../app/actions';
+import { deleteRepositoryAction } from '../../app/actions-node';
 import { shareLinkBaseAction } from '../../app/actions-share';
 import { encodeShareLink, shareOrigin } from '../../app/share/codec';
+import type { Messages } from '../../lib/i18n/messages';
 import { useLocale, useMessages } from '../../lib/i18n/provider';
-import { formatBytes, formatDate, type StoredProject } from '../../lib/projects';
+import {
+  browserProjectStorage,
+  detachRepository,
+  forgetProject,
+  formatBytes,
+  formatDate,
+  type StoredProject,
+} from '../../lib/projects';
 import { toast } from '../../lib/toasts';
 import { Card, CardHead } from './card';
+import {
+  ConfirmDeleteDialog,
+  type DeleteTarget,
+  type DeleteTargetId,
+} from './confirm-delete-dialog';
 import { DisclosureButton } from './disclosure-button';
 import { Icon, type IconName } from './icon';
 import { ProgressBar } from './loading';
@@ -36,8 +54,15 @@ import { TechIcon } from './tech-icon';
  *   pas perdu pour autant : chaque icône porte son `aria-label` (le nom lu par
  *   le lecteur d'écran) et son `title` (l'infobulle au survol), donc rien
  *   n'oblige à cliquer pour savoir ce qu'on clique. Les gestes **principaux**
- *   (ouvrir ou connecter GitHub, exporter, retirer, supprimer) gardent leur
- *   libellé : ils engagent le projet, et l'un d'eux efface des fichiers.
+ *   (ouvrir ou connecter GitHub, ouvrir le dossier, exporter, supprimer)
+ *   gardent leur libellé : ils engagent le projet, et l'un d'eux efface des
+ *   fichiers.
+ *
+ * Un seul geste destructeur, et il est **un** : la **poubelle rouge**, qui
+ * ouvre une popup où l'on choisit *ce qui* disparaît la liste BuildIt, le
+ * dépôt GitHub, le dossier local. La croix « Retirer de la liste » a été
+ * retirée : deux gestes de retrait pour un seul besoin faisaient hésiter, et
+ * la popup dit désormais lequel des deux on veut.
  *
  * Elle lit la langue par les hooks plutôt que par des props : hors fournisseur
  * (rendu statique d'un test), `useMessages`/`useLocale` rendent le français,
@@ -58,17 +83,13 @@ export interface ProjectCardProps {
    * derniers projets sans multiplier les gestes.
    */
   readonly onExported?: ((result: GenerationView) => void) | undefined;
-  /** Donné : la carte porte « Retirer de la liste » (écran Projets). */
-  readonly onForget?: (() => void) | undefined;
   /**
-   * Donné : la carte porte la **suppression du dossier**. Deux gestes distincts
-   * et nommés comme tels : retirer de la liste n'efface rien, supprimer efface
-   * tout. Les confondre sous un seul bouton « Supprimer » ferait perdre des
-   * fichiers à qui voulait seulement ranger sa liste.
+   * Appelé dès qu'une suppression a changé la **liste persistée** : le parent
+   * relit `localStorage` au lieu de garder une copie qu'il croirait à jour. La
+   * carte écrit elle-même (c'est le seul objet qui sait *quoi* supprimer), le
+   * parent ne fait que rafraîchir ce qu'il affiche.
    */
-  readonly onDelete?: (() => void) | undefined;
-  /** La suppression est partie et le disque travaille. */
-  readonly deleting?: boolean;
+  readonly onChanged?: (() => void) | undefined;
 }
 
 /** Le temps pendant lequel un bouton de copie reste « copié ». */
@@ -244,36 +265,316 @@ export function ProjectGestures({ project }: ProjectGesturesProps): ReactElement
   );
 }
 
-export function ProjectCard({
+/**
+ * Ce qu'une suppression de dépôt a laissé derrière elle.
+ *
+ * `gone` est traité **exactement** comme `deleted` : un dépôt déjà supprimé
+ * côté GitHub laisse le projet dans le même état qu'une suppression d'ici, et
+ * seule la phrase change. Les confondre dans deux flux différents aurait
+ * produit deux comportements pour une seule situation.
+ */
+interface RepositoryState {
+  readonly kind: 'deleted' | 'gone';
+}
+
+/**
+ * Une étape à exécuter, déduite de la cible cochée : retirer la ligne de la
+ * liste BuildIt (rien n'est effacé), supprimer le dépôt GitHub (le projet est
+ * détaché quoi qu'il arrive), ou effacer le dossier sur le disque.
+ */
+export type ProjectDeleteStep =
+  | { readonly kind: 'site' }
+  | { readonly kind: 'repository'; readonly url: string; readonly id: string }
+  | { readonly kind: 'local'; readonly directory: string };
+
+/** Une ligne du compte rendu, déjà écrite dans la langue de l'utilisateur. */
+interface StepLine {
+  readonly key: string;
+  readonly text: string;
+}
+
+/**
+ * Le déroulé d'une suppression, cible par cible, dans l'ordre où les gestes
+ * doivent partir.
+ *
+ * Fonction pure : c'est elle qui décide **ce qui est réellement exécuté**. Une
+ * cible cochée dont la donnée manque (une adresse ou un dossier disparus entre
+ * l'ouverture de la popup et la confirmation) n'entre pas dans le plan plutôt
+ * que de lancer une action sur du vide.
+ *
+ * L'ordre compte : le site part en premier pour que la carte ait quitté la
+ * liste pendant que le disque travaille, puis le dépôt (qui sera détaché dans
+ * tous les cas, voir `RepositoryState`), puis le dossier.
+ */
+export function projectDeletePlan(
+  project: StoredProject,
+  selected: readonly DeleteTargetId[],
+): readonly ProjectDeleteStep[] {
+  const url = project.repositoryUrl;
+  return [
+    ...(selected.includes('site') ? [{ kind: 'site' } as const] : []),
+    ...(selected.includes('github') && url !== undefined
+      ? [{ kind: 'repository' as const, url, id: project.id }]
+      : []),
+    ...(selected.includes('local') && project.directory !== ''
+      ? [{ kind: 'local' as const, directory: project.directory }]
+      : []),
+  ];
+}
+
+/**
+ * Le suivi après suppression du dépôt : le projet est détaché, et la popup
+ * propose de le reconnecter tout de suite.
+ *
+ * Rien n'est fait en silence : garder une adresse morte ferait échouer chaque
+ * geste qui s'appuie dessus, et faire disparaître la carte cacherait que le
+ * projet, lui, est toujours là. Le lien mène à `/repo`, le seul écran qui
+ * **crée** un dépôt et y pousse le dossier.
+ */
+function RepositoryFollowUp({
   project,
-  onExported,
-  onForget,
-  onDelete,
-  deleting = false,
-}: ProjectCardProps): ReactElement {
+  state,
+  lines,
+  t,
+}: {
+  readonly project: StoredProject;
+  readonly state: RepositoryState;
+  readonly lines: readonly StepLine[];
+  readonly t: Messages;
+}): ReactElement {
+  const m = t.projects;
+  const title = state.kind === 'gone' ? m.repositoryGoneTitle : m.repositoryDeletedTitle;
+  const body = state.kind === 'gone' ? m.repositoryGoneBody : m.repositoryDeletedBody;
+
+  return (
+    <>
+      <p className="pf-title-sm">{title}</p>
+      <p className="pf-hint mt-1">{body}</p>
+      {lines.length === 0 ? null : (
+        <ul className="pf-steps-list mt-2">
+          {lines.map((line) => (
+            <li className="pf-steps-item" key={line.key}>
+              <span className="pf-steps-index" aria-hidden="true">
+                ·
+              </span>
+              <span>{line.text}</span>
+            </li>
+          ))}
+        </ul>
+      )}
+      {/* Un projet téléchargé en ZIP n'a pas de copie locale : proposer de
+          créer un dépôt n'aurait rien à pousser. On le dit, et on n'offre que
+          la sortie. */}
+      {project.directory === '' ? (
+        <p className="pf-hint mt-2">{m.repositoryArchiveOnly}</p>
+      ) : (
+        <p className="mt-3">
+          <Link className="pf-btn pf-btn-sm" href="/repo">
+            <Icon name="github" size={14} />
+            {m.repositoryConnect}
+          </Link>
+        </p>
+      )}
+    </>
+  );
+}
+
+/**
+ * Un projet détaché garde une carte : elle dit qu'il n'a plus de dépôt et
+ * propose d'en connecter un. Sans cette phrase, le bouton « Connecter à
+ * GitHub » réapparaîtrait sans expliquer pourquoi l'ancien lien a disparu.
+ */
+function DetachedNotice({ project }: { readonly project: StoredProject }): ReactElement | null {
+  const t = useMessages();
+  if (project.repositoryUrl !== undefined) {
+    return null;
+  }
+  return (
+    <p className="pf-hint mt-2">
+      {project.directory === ''
+        ? t.projects.repositoryArchiveOnly
+        : t.projects.repositoryMissingBody}
+    </p>
+  );
+}
+
+/**
+ * Les cibles réellement proposées pour un projet : **seulement** les
+ * plateformes où il est présent.
+ *
+ * Le site toujours ; GitHub seulement s'il a une adresse ; le dossier local
+ * seulement s'il a été écrit sur le disque. Un projet **téléchargé en ZIP** a
+ * `directory === ''` : il n'a jamais eu de dossier ici, donc jamais d'option
+ * locale. Proposer une cible absente ferait échouer la suppression après le
+ * clic, ce qui est le pire moment pour l'apprendre.
+ *
+ * Fonction pure et exportée : c'est elle que les tests interrogent, plutôt que
+ * de cliquer dans une popup pour découvrir la même liste.
+ */
+export function projectDeleteTargets(project: StoredProject, t: Messages): readonly DeleteTarget[] {
+  const m = t.projects;
+  return [
+    { id: 'site', label: m.deleteTargetSite, note: m.deleteTargetSiteNote },
+    ...(project.repositoryUrl === undefined
+      ? []
+      : [{ id: 'github' as const, label: m.deleteTargetGithub, note: m.deleteTargetGithubNote }]),
+    ...(project.directory === ''
+      ? []
+      : [{ id: 'local' as const, label: m.deleteTargetLocal, note: m.deleteTargetLocalNote }]),
+  ];
+}
+
+export function ProjectCard({ project, onExported, onChanged }: ProjectCardProps): ReactElement {
   const t = useMessages();
   const { locale } = useLocale();
   const [confirming, setConfirming] = useState(false);
   const [exporting, setExporting] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | undefined>(undefined);
+  const [lines, setLines] = useState<readonly StepLine[]>([]);
+  const [gone, setGone] = useState<RepositoryState | undefined>(undefined);
+  const [step, setStep] = useState<'form' | 'result'>('form');
+  const [opening, setOpening] = useState(false);
+  const [refusal, setRefusal] = useState<string | undefined>(undefined);
   const manifest = project.manifest;
   const shown = project.technologies.slice(0, MAX_TECH_LOGOS);
   const hidden = project.technologies.length - shown.length;
-  // Sans dossier (mode hébergé : rien n'a été écrit), il n'y a rien à
-  // supprimer : le geste disparaît plutôt que d'échouer après le clic.
-  const deletable = onDelete !== undefined && project.directory !== '';
+  // Sans dossier, il n'y a rien à ouvrir : c'est le cas d'un projet téléchargé
+  // en ZIP, où le navigateur a reçu l'archive et n'a jamais écrit de dossier.
+  const openable = project.directory !== '';
+
+  /**
+   * Les cibles réellement proposées : **seulement** les plateformes où le
+   * projet est présent (voir `projectDeleteTargets`). Le site toujours ;
+   * GitHub s'il a une adresse ; le dossier local s'il a été écrit sur le
+   * disque.
+   */
+  const targets = projectDeleteTargets(project, t);
+
+  const open = useCallback(async (): Promise<void> => {
+    setOpening(true);
+    setRefusal(undefined);
+    let message: string | undefined;
+    try {
+      const outcome = await openProjectFolderAction(project.directory);
+      message = outcome.ok ? undefined : t.projects.openInExplorerRefusals[outcome.reason];
+    } catch {
+      // Une action qui ne répond pas est un échec d'ouverture, pas une carte
+      // cassée : la phrase le dit, le reste de la carte continue de vivre.
+      message = t.projects.openInExplorerFailed;
+    }
+    setOpening(false);
+    setRefusal(message);
+  }, [project.directory, t]);
+
+  const remove = useCallback(
+    async (selected: readonly DeleteTargetId[]): Promise<void> => {
+      setBusy(true);
+      setError(undefined);
+      const done: StepLine[] = [];
+      let repository: RepositoryState | undefined;
+      let failure: string | undefined;
+
+      // L'ordre et le contenu viennent du plan : une cible cochée dont la
+      // donnée manque n'y figure pas.
+      for (const step of projectDeletePlan(project, selected)) {
+        if (step.kind === 'site') {
+          // La copie locale est retirée tout de suite : c'est cette liste que
+          // le parent relit, et l'oublier après coup ferait réapparaître la
+          // carte.
+          forgetProject(browserProjectStorage(), project.id);
+          done.push({ key: 'site', text: t.projects.deletedSite });
+          continue;
+        }
+
+        if (step.kind === 'repository') {
+          try {
+            const outcome = await deleteRepositoryAction(step.url);
+            // `gone` est un succès : le dépôt n'est plus là, c'est tout ce que
+            // la suppression d'ici aurait obtenu.
+            detachRepository(browserProjectStorage(), step.id);
+            repository = { kind: outcome.ok ? outcome.status : 'gone' };
+            if (outcome.ok) {
+              done.push({ key: 'github', text: t.projects.deletedRepository });
+            } else {
+              failure = t.projects.repositoryFailed(project.name);
+            }
+          } catch {
+            // L'action ne répond pas : l'adresse est peut-être encore vivante,
+            // mais rien ne permet de le vérifier. On détache pour ne pas garder
+            // un lien sur lequel l'application ne peut plus agir.
+            detachRepository(browserProjectStorage(), step.id);
+            repository = { kind: 'gone' };
+            failure = t.projects.repositoryFailed(project.name);
+          }
+          continue;
+        }
+
+        try {
+          const outcome = await deleteProjectAction(step.directory);
+          if (outcome.ok) {
+            done.push({ key: 'local', text: t.projects.deletedLocal });
+          } else {
+            failure = t.projects.deleteFailed(outcome.issues.join(' '));
+          }
+        } catch {
+          failure = t.projects.deleteFailed(t.errors.offline);
+        }
+      }
+
+      setLines(done);
+      setGone(repository);
+      setError(failure);
+      setBusy(false);
+      setStep('result');
+      onChanged?.();
+    },
+    [onChanged, project, t],
+  );
+
+  const closed = (): void => {
+    setConfirming(false);
+    setStep('form');
+    setLines([]);
+    setGone(undefined);
+    setError(undefined);
+  };
+
+  /**
+   * Le suivi après une suppression GitHub. Un projet **détaché** — plus
+   * d'adresse, ou adresse qui vient d'être retirée — porte le même message
+   * hors de la popup : la carte ne doit pas sembler avoir perdu son dépôt sans
+   * raison.
+   */
+  const result: ReactNode =
+    step === 'form' ? undefined : (
+      <>
+        {gone === undefined ? null : (
+          <RepositoryFollowUp lines={lines} project={project} state={gone} t={t} />
+        )}
+        {gone === undefined && lines.length > 0 ? (
+          <ul className="pf-steps-list">
+            {lines.map((line) => (
+              <li className="pf-steps-item" key={line.key}>
+                <span className="pf-steps-index" aria-hidden="true">
+                  ·
+                </span>
+                <span>{line.text}</span>
+              </li>
+            ))}
+          </ul>
+        ) : null}
+        {error === undefined ? null : (
+          <p className="pf-error mt-2" role="status">
+            {error}
+          </p>
+        )}
+      </>
+    );
 
   return (
     <Card>
-      <CardHead
-        icon="package"
-        title={<span className="truncate">{project.name}</span>}
-        actions={
-          <span className="pf-badge pf-badge-ok flex-none">
-            <Icon name="check" size={11} />
-            {t.projects.done}
-          </span>
-        }
-      />
+      <CardHead icon="package" title={<span className="truncate">{project.name}</span>} />
 
       {/* Les mesures : une rangée de badges qui passe à la ligne plutôt qu'un
           tableau à 360 px, trois colonnes de valeurs ne tiennent pas. */}
@@ -322,8 +623,8 @@ export function ProjectCard({
           graphe, copies des liens), puis les principaux avec leur libellé. Ils
           passent à la ligne au lieu de déborder à 360 px. Un seul geste par
           destination : l'architecture, le graphe, GitHub (copier, ouvrir s'il
-          existe, connecter sinon), l'export ; puis, en retrait, retirer et
-          supprimer. */}
+          existe, connecter sinon), l'explorateur, l'export ; puis, à part, la
+          poubelle, qui est le seul geste destructeur. */}
       <div className="mt-3 flex flex-wrap items-center gap-2">
         <ProjectGestures project={project} />
         {project.repositoryUrl === undefined ? (
@@ -345,6 +646,18 @@ export function ProjectCard({
             <Icon name="externalLink" size={12} />
           </a>
         )}
+        {!openable ? null : (
+          <button
+            aria-label={t.projects.openInExplorerLabel(project.directory)}
+            className="pf-btn pf-btn-sm pf-btn-icon"
+            disabled={opening}
+            onClick={() => void open()}
+            title={t.projects.openInExplorer}
+            type="button"
+          >
+            <Icon name="folderOpen" size={14} />
+          </button>
+        )}
         {manifest === undefined || onExported === undefined ? null : (
           <DisclosureButton
             className="pf-btn-sm"
@@ -354,24 +667,27 @@ export function ProjectCard({
             onToggle={() => setExporting((value) => !value)}
           />
         )}
-        {onForget === undefined ? null : (
-          <button className="pf-btn pf-btn-sm" onClick={onForget} type="button">
-            <Icon name="close" size={14} />
-            {t.projects.forget}
-          </button>
-        )}
-        {!deletable ? null : (
-          <button
-            className="pf-btn pf-btn-sm pf-btn-danger"
-            disabled={deleting || confirming}
-            onClick={() => setConfirming(true)}
-            type="button"
-          >
-            <Icon name="trash" size={14} />
-            {t.projects.delete}
-          </button>
-        )}
+        <button
+          aria-label={t.projects.delete}
+          className="pf-btn pf-btn-sm pf-btn-danger pf-btn-icon"
+          disabled={busy}
+          onClick={() => setConfirming(true)}
+          title={t.projects.delete}
+          type="button"
+        >
+          <Icon name="trash" size={14} />
+        </button>
       </div>
+
+      <DetachedNotice project={project} />
+
+      {/* Le refus d'ouvrir l'explorateur ne casse pas la carte : la phrase se
+          pose sous les gestes, et le reste continue de fonctionner. */}
+      {refusal === undefined ? null : (
+        <p className="pf-hint mt-2" role="status">
+          {refusal}
+        </p>
+      )}
 
       {exporting && manifest !== undefined && onExported !== undefined ? (
         <div className="pf-card-progress">
@@ -384,46 +700,25 @@ export function ProjectCard({
         </div>
       ) : null}
 
-      {/* La confirmation reste **dans** la carte : on voit encore le nom et le
-          dossier qu'on s'apprête à effacer, ce qu'une fenêtre modale cacherait
-          justement au moment où il faut le lire. */}
-      {deleting ? (
-        <div className="pf-card-progress">
-          <ProgressBar label={t.projects.deleting} />
-          <p className="pf-hint mt-1.5">{t.projects.deleting}</p>
-        </div>
-      ) : confirming && deletable ? (
-        <div className="pf-card-progress" role="alert">
-          <p className="pf-title-sm flex items-center gap-2">
-            <span aria-hidden="true" style={{ color: 'var(--pf-danger)' }}>
-              <Icon name="warning" size={16} />
-            </span>
-            {t.projects.deleteConfirmTitle}
-          </p>
-          <p className="pf-hint mt-1">{t.projects.deleteConfirmBody}</p>
-          <div className="mt-3 flex flex-wrap items-center gap-2">
-            <button
-              className="pf-btn pf-btn-sm pf-btn-danger"
-              onClick={() => {
-                setConfirming(false);
-                onDelete?.();
-              }}
-              type="button"
-            >
-              <Icon name="trash" size={14} />
-              {t.projects.deleteConfirmAction}
-            </button>
-            <button
-              className="pf-btn pf-btn-sm pf-btn-ghost"
-              onClick={() => setConfirming(false)}
-              type="button"
-            >
-              <Icon name="close" size={14} />
-              {t.common.cancel}
-            </button>
-          </div>
-        </div>
-      ) : null}
+      {/* La popup n'est montée que lorsqu'elle est demandée : `<dialog>` doit
+          être dans le document avant `showModal()`, et un `renderToStaticMarkup`
+          n'a pas de document. Le composant ne s'ouvre donc jamais tout seul. */}
+      {!confirming ? null : (
+        <ConfirmDeleteDialog
+          busy={busy}
+          busyLabel={t.projects.deleteWorking}
+          cancelLabel={t.common.cancel}
+          closeLabel={t.common.close}
+          confirmLabel={t.projects.deleteChoicesAction}
+          description={t.projects.deleteChoicesBody}
+          error={error}
+          onClose={closed}
+          onConfirm={(selection) => void remove(selection)}
+          result={result}
+          targets={targets}
+          title={t.projects.deleteChoicesTitle(project.name)}
+        />
+      )}
     </Card>
   );
 }

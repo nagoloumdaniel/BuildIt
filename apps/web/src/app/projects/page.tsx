@@ -1,19 +1,14 @@
 'use client';
 
 import { type ReactElement, useCallback, useEffect, useState } from 'react';
-import { useMessages } from '../../lib/i18n/provider';
 import {
   browserProjectStorage,
-  forgetAllProjects,
-  forgetProject,
   loadProjects,
   projectId,
   rememberProject,
   type StoredProject,
 } from '../../lib/projects';
-import { toast } from '../../lib/toasts';
-import { deleteProjectAction, type GenerationView } from '../actions';
-import { browserSessionStorage, type GenerationReport, loadReport } from '../create/report/result';
+import type { GenerationView } from '../actions';
 import { ProjectsView } from './view';
 
 /**
@@ -24,58 +19,30 @@ import { ProjectsView } from './view';
  * qu'elle lit elle n'affiche pas « aucun projet », qui serait faux.
  *
  * Le re-téléchargement n'est proposé que pour le projet dont l'archive est
- * encore en main : le rapport vit en `sessionStorage` et ne concerne que la
- * génération de l'onglet courant.
+ * encore en main : le rapport vit en `sessionStorage`, et c'est `ProjectExport`
+ * qui porte ce geste.
  *
- * Deux gestes de retrait, et ils ne se confondent pas : `forget` oublie la
- * ligne (rien ne quitte le disque), `remove` supprime le dossier par une
- * Server Action, parce que le navigateur n'a aucun accès au disque, et avec un
- * retour explicite dans les deux cas. Le projet ne quitte la liste **qu'après**
- * un succès : une carte qui disparaît sur un échec laisserait croire que les
- * fichiers sont partis.
+ * Depuis que la poubelle de la carte choisit **ce qui** disparaît (la ligne
+ * BuildIt, le dépôt GitHub, le dossier local), les gestes ne vivent plus ici :
+ * `ProjectsView` exécute la suppression, écrit `localStorage`, puis appelle
+ * `onChanged`. La page relit alors la liste au lieu de garder une copie
+ * qu'elle croirait à jour c'est exactement le défaut que deux boutons séparés
+ * entretenaient.
  */
 export default function ProjectsPage(): ReactElement {
   const [projects, setProjects] = useState<readonly StoredProject[] | null>(null);
-  const [report, setReport] = useState<GenerationReport | null>(null);
-  const [confirmingClear, setConfirmingClear] = useState(false);
-  const [deletingId, setDeletingId] = useState<string | null>(null);
-  const t = useMessages();
 
   useEffect(() => {
     setProjects(loadProjects(browserProjectStorage()));
-    setReport(loadReport(browserSessionStorage()));
   }, []);
 
-  const forget = useCallback((id: string): void => {
-    setProjects(forgetProject(browserProjectStorage(), id));
+  /**
+   * Relire la liste après une suppression. C'est le seul chemin de mise à
+   * jour de ce côté-ci : la vue a déjà écrit ce qu'il fallait.
+   */
+  const changed = useCallback((): void => {
+    setProjects(loadProjects(browserProjectStorage()));
   }, []);
-
-  const forgetAll = useCallback((): void => {
-    setProjects(forgetAllProjects(browserProjectStorage()));
-    setConfirmingClear(false);
-  }, []);
-
-  const remove = useCallback(
-    (project: StoredProject): void => {
-      setDeletingId(project.id);
-      void deleteProjectAction(project.directory)
-        .then((result) => {
-          if (result.ok) {
-            setProjects(forgetProject(browserProjectStorage(), project.id));
-            toast(t.projects.deleted(project.name), { kind: 'success' });
-            return;
-          }
-          toast(result.issues.join(' ') || t.errors.offline, { kind: 'error' });
-        })
-        .catch(() => {
-          toast(t.errors.offline, { kind: 'error' });
-        })
-        .finally(() => {
-          setDeletingId(null);
-        });
-    },
-    [t],
-  );
 
   /**
    * Un projet réécrit dans un **autre** dossier est un nouvel exemplaire sur le
@@ -100,16 +67,8 @@ export default function ProjectsPage(): ReactElement {
     );
   }, []);
 
-  return (
-    <ProjectsView
-      confirmingClear={confirmingClear}
-      deletingId={deletingId}
-      onConfirmingClear={setConfirmingClear}
-      onDelete={remove}
-      onForget={forget}
-      onForgetAll={forgetAll}
-      onExported={exported}
-      projects={projects}
-    />
-  );
+  // Le rapport de session disait quelle archive restait téléchargeable ; le
+  // geste de re-téléchargement vit dans la carte ProjectExport, qui le porte
+  // elle-même. La page n'a donc plus à le lire.
+  return <ProjectsView onChanged={changed} onExported={exported} projects={projects} />;
 }

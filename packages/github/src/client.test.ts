@@ -275,4 +275,32 @@ describe('GitHubClient', () => {
       expect((await deleteFails.api.removeCollaborator(REPO, 'x')).ok).toBe(false);
     });
   });
+
+  describe('deleteRepository', () => {
+    it('supprime le dépôt par DELETE, et le dit', async () => {
+      const { api, fetch } = client({ 'DELETE /repos/octocat/demo': { status: 204 } });
+
+      expect(await api.deleteRepository(REPO)).toEqual({ ok: true, value: 'deleted' });
+      expect(fetch.requests.at(-1)?.method).toBe('DELETE');
+    });
+
+    it('un dépôt déjà absent (404) est un résultat « gone », pas une panne', async () => {
+      // C'est ce qui permet à l'écran de détacher le projet et de proposer un
+      // nouveau dépôt, au lieu d'afficher une erreur.
+      const { api } = client({
+        'DELETE /repos/octocat/demo': { status: 404, body: { message: 'Not Found' } },
+      });
+
+      expect(await api.deleteRepository(REPO)).toEqual({ ok: true, value: 'gone' });
+    });
+
+    it('un 403 remonte : le compte n’est pas administrateur', async () => {
+      const { api } = client({
+        'DELETE /repos/octocat/demo': { status: 403, body: { message: 'Forbidden' } },
+      });
+
+      const result = await api.deleteRepository(REPO);
+      expect(!result.ok && result.issues[0]?.code).toBe('GITHUB_FORBIDDEN');
+    });
+  });
 });

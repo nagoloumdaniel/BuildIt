@@ -295,6 +295,30 @@ export class GitHubClient {
     );
     return removed.ok ? ok('collaborator') : removed;
   }
+
+  /**
+   * Supprime un dépôt du compte connecté.
+   *
+   * `'gone'` : le dépôt n'existait déjà plus (404). C'est un **résultat**, pas
+   * un échec : un dépôt supprimé depuis GitHub ou introuvable pour ce compte
+   * laisse le projet local dans le même état que s'il venait d'être supprimé
+   * ici — l'appelant peut détacher le projet et proposer de le reconnecter.
+   * Un 403, lui, remonte : le compte connecté n'est pas administrateur.
+   */
+  async deleteRepository(repository: Repository): Promise<Result<'deleted' | 'gone'>> {
+    const result = await this.#request(
+      'DELETE',
+      `/repos/${repository.owner}/${repository.name}`,
+      undefined,
+      `${repository.owner}/${repository.name}`,
+    );
+    if (result.ok) {
+      return ok('deleted');
+    }
+    return result.issues.some((item) => item.code === 'GITHUB_NOT_FOUND')
+      ? ok('gone')
+      : fail(result.issues);
+  }
 }
 
 /** Sur un dépôt, un 403 veut presque toujours dire « pas administrateur ». */

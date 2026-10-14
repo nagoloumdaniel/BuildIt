@@ -153,6 +153,27 @@ export function attachRepository(
   return next;
 }
 
+/**
+ * Détache un projet de son dépôt GitHub, sans toucher au reste.
+ *
+ * C'est ce qui arrive quand le dépôt a disparu (supprimé depuis GitHub, ou
+ * introuvable pour le compte connecté) : garder une adresse morte ferait
+ * échouer chaque geste qui s'appuie dessus. Le projet reste dans la liste, prêt
+ * à être reconnecté à un nouveau dépôt.
+ */
+export function detachRepository(storage: ProjectStorage, id: string): readonly StoredProject[] {
+  const projects = loadProjects(storage);
+  const next = projects.map((project) => {
+    if (project.id !== id) {
+      return project;
+    }
+    const { repositoryUrl: _url, ...rest } = project;
+    return rest;
+  });
+  save(storage, next);
+  return next;
+}
+
 export function loadProjects(storage: ProjectStorage): readonly StoredProject[] {
   const raw = storage.read(PROJECTS_STORAGE_KEY);
   if (raw === null) {

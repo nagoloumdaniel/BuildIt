@@ -102,10 +102,12 @@ export interface DashboardViewProps {
   readonly projects?: readonly StoredProject[] | null;
   /** Le choix du dossier ; absent, la carte redevient un simple lien. */
   readonly openLocal?: PickHandoff | undefined;
-  /** La suppression du dossier sur le disque, depuis l'accueil. */
-  readonly onDelete?: ((project: StoredProject) => void) | undefined;
-  /** Le projet dont le dossier est en cours de suppression, s'il y en a un. */
-  readonly deletingId?: string | null;
+  /**
+   * La liste persistée a changé (une suppression depuis une carte) : le parent
+   * la relit. La carte écrit elle-même ce qu'il faut supprimer c'est le seul
+   * objet qui sait quoi.
+   */
+  readonly onChanged?: (() => void) | undefined;
 }
 
 export function DashboardView({
@@ -115,8 +117,7 @@ export function DashboardView({
   onRedownload,
   projects = [],
   openLocal,
-  onDelete,
-  deletingId = null,
+  onChanged,
 }: DashboardViewProps): ReactElement {
   const t = useMessages();
   const completed = isCompletedProject(draft, report, projects);
@@ -202,18 +203,7 @@ export function DashboardView({
                 </div>
                 <div className="mt-3 grid items-stretch gap-3 md:grid-cols-2">
                   {list.map((project) => (
-                    <ProjectCard
-                      key={project.id}
-                      deleting={deletingId === project.id}
-                      onDelete={
-                        onDelete === undefined
-                          ? undefined
-                          : () => {
-                              onDelete(project);
-                            }
-                      }
-                      project={project}
-                    />
+                    <ProjectCard key={project.id} onChanged={onChanged} project={project} />
                   ))}
                 </div>
               </>

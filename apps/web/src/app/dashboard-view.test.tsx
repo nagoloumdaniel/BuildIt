@@ -138,21 +138,18 @@ describe('Dashboard les projets générés (§6.14)', () => {
     expect(html).toContain('md:grid-cols-2');
   });
 
-  it('supprime un projet depuis l’accueil, avec l’état de progression', () => {
-    const html = render(freshDraft(), {
-      projects: [RECENT],
-      onDelete: () => undefined,
-    });
+  it('supprime un projet depuis l’accueil : la carte porte la poubelle, plus le badge « Terminé »', () => {
+    const html = render(freshDraft(), { projects: [RECENT] });
 
-    expect(html).toContain('Supprimer du disque');
-
-    const deleting = render(freshDraft(), {
-      projects: [RECENT],
-      onDelete: () => undefined,
-      deletingId: RECENT.id,
-    });
-
-    expect(deleting).toContain('Suppression des fichiers…');
+    // Le badge « Terminé » a disparu des cartes : toutes les cartes de la liste
+    // sont des projets terminés, la pastille ne distinguait donc rien.
+    expect(html).not.toContain('pf-badge-ok');
+    // La croix « Retirer de la liste » aussi : la poubelle demande désormais
+    // **ce qui** disparaît.
+    expect(html).not.toContain('Retirer de la liste');
+    expect(html).not.toContain('Supprimer du disque');
+    expect(html).toContain('title="Supprimer…"');
+    expect(html).toContain('pf-btn-danger');
   });
 });
 
