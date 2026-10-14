@@ -11,6 +11,7 @@ import { StackIcon } from '../../../components/ui/stack-icon';
 import { useDraft, useSession } from '../../../components/wizard/draft-provider';
 import { StepShell } from '../../../components/wizard/shell';
 import { useMessages } from '../../../lib/i18n/provider';
+import { selectionFor } from '../../../lib/selection';
 import { toggleExclusive } from '../../../lib/session';
 import { checkSelectionAction } from '../../actions';
 import { currentDeepLink, revealSection } from '../blueprint/deep-link';
@@ -74,13 +75,19 @@ export default function StackPage() {
     setRequested(currentDeepLink('category'));
   }, []);
 
-  // Le brouillon ne porte que `targets` et `technologies` : c'est la sélection
-  // que le moteur revalide. `useMemo` sur les deux tableaux garde la référence
-  // stable à travers les écritures de `resolution`, qui ne doivent pas
-  // relancer les chargements.
+  // La sélection que le moteur revalide : technologies, capacités **et** choix
+  // d'infrastructure (`lib/selection.ts`). `useMemo` porte sur les pièces, pas
+  // sur le brouillon : les écritures de `resolution` ne doivent pas relancer le
+  // chargement.
   const selection = useMemo(
-    () => ({ targets: draft.targets, technologies: draft.technologies }),
-    [draft.targets, draft.technologies],
+    () =>
+      selectionFor({
+        targets: draft.targets,
+        technologies: draft.technologies,
+        capabilities: draft.capabilities,
+        infra: draft.infra,
+      }),
+    [draft.targets, draft.technologies, draft.capabilities, draft.infra],
   );
 
   useEffect(() => {

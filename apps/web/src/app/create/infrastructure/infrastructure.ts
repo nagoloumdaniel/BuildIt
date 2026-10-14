@@ -1,4 +1,5 @@
 import type { DraftState } from '../../../lib/draft';
+import { CI_ID, DOCKER_ID, draftInfraIds } from '../../../lib/infrastructure-ids';
 
 /**
  * L'écran 9 Infrastructure (§6.9) : Docker, CI/CD, cloud cible.
@@ -9,25 +10,16 @@ import type { DraftState } from '../../../lib/draft';
  * `draft.technologies` c'est ce que `lib/draft-to-manifest.ts` attend, et il
  * n'y a rien à réinventer ici.
  *
- * Les deux identifiants ci-dessous sont exactement ceux que `draftToManifest`
- * ajoute à partir des booléens (`containers/docker`, `ci-cd/github-actions`).
- * Ils sont nommés ici parce que l'écran doit **dire** ce qu'il écrit ; un test
- * les confronte au mapping canonique.
+ * Les deux identifiants sont ceux de `lib/infrastructure-ids.ts`, le seul
+ * endroit qui les nomme : l'écran doit **dire** ce qu'il écrit, pas le
+ * redéclarer. Il les ré-exporte pour ses lecteurs historiques.
  */
 
-export const DOCKER_ID = 'docker';
-export const CI_ID = 'github-actions';
+export { CI_ID, DOCKER_ID };
 
 /** Les identifiants que les booléens ajoutent à la sélection, dans l'ordre. */
 export function infrastructureIds(draft: DraftState): string[] {
-  const ids: string[] = [];
-  if (draft.infra.docker) {
-    ids.push(DOCKER_ID);
-  }
-  if (draft.infra.ci) {
-    ids.push(CI_ID);
-  }
-  return ids;
+  return [...draftInfraIds(draft)];
 }
 
 /**

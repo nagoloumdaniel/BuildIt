@@ -6,8 +6,11 @@ import { allowedHosts, isAllowedHost, isHostedEnvironment } from './hosting';
  *
  * Décision : le mode local (décision 8B.6) n'est **jamais** élargi même si
  * `PF_SITE_URL` est définie par erreur sur une machine locale, seuls
- * `127.0.0.1`/`localhost`/`::1` passent. Seul `VERCEL=1` (ou `PF_HOSTED=1`,
- * pour les tests/autres hébergeurs) ouvre la porte à un domaine public.
+ * `127.0.0.1`/`localhost`/`::1` passent. Seul `VERCEL=1` sur un vrai
+ * déploiement (ou `PF_HOSTED=1`, pour les tests/autres hébergeurs) ouvre la
+ * porte à un domaine public. Un serveur lancé par `vercel dev` porte
+ * `VERCEL=1` **et** `VERCEL_ENV=development` : il tourne sur la machine de
+ * l'utilisateur, donc il reste local et `pf web` ne change pas de comportement.
  */
 
 describe('isHostedEnvironment', () => {
@@ -22,11 +25,41 @@ describe('isHostedEnvironment', () => {
   it('est hébergée quand PF_HOSTED=1 (hors Vercel)', () => {
     expect(isHostedEnvironment({ PF_HOSTED: '1' })).toBe(true);
   });
+
+  it('reste locale sur un `vercel dev` : VERCEL=1 mais VERCEL_ENV=development', () => {
+    // Le serveur tourne alors sur la machine de l'utilisateur : le sélecteur
+    // natif et l'installation doivent rester disponibles.
+    expect(isHostedEnvironment({ VERCEL: '1', VERCEL_ENV: 'development' })).toBe(false);
+  });
+
+  it('est hébergée sur un vrai déploiement (VERCEL_ENV=production)', () => {
+    expect(isHostedEnvironment({ VERCEL: '1', VERCEL_ENV: 'production' })).toBe(true);
+  });
+
+  it('est hébergée sur une prévisualisation (VERCEL_ENV=preview)', () => {
+    expect(isHostedEnvironment({ VERCEL: '1', VERCEL_ENV: 'preview' })).toBe(true);
+  });
+
+  it('est hébergée quand PF_HOSTED=1, même avec VERCEL_ENV=development', () => {
+    // L'interrupteur explicite gagne : c'est lui qui sert aux tests et aux
+    // autres hébergeurs.
+    expect(isHostedEnvironment({ PF_HOSTED: '1', VERCEL_ENV: 'development' })).toBe(true);
+  });
 });
 
 describe('allowedHosts mode local', () => {
   it('ignore PF_SITE_URL en local : seuls les hôtes de boucle locale passent', () => {
     const hosts = allowedHosts({ PF_SITE_URL: 'https://trybuildit.vercel.app' });
+    expect(hosts.has('127.0.0.1')).toBe(true);
+    expect(hosts.has('trybuildit.vercel.app')).toBe(false);
+  });
+
+  it('ignore PF_SITE_URL sur un `vercel dev` local', () => {
+    const hosts = allowedHosts({
+      VERCEL: '1',
+      VERCEL_ENV: 'development',
+      PF_SITE_URL: 'https://trybuildit.vercel.app',
+    });
     expect(hosts.has('127.0.0.1')).toBe(true);
     expect(hosts.has('trybuildit.vercel.app')).toBe(false);
   });

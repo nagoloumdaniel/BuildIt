@@ -60,18 +60,22 @@ export const FR_BUILD = {
     },
 
     /**
-     * Écran 8 Infrastructure : les deux booléens (Docker, CI), le cloud cible
-     * et la traduction assumée dans le champ `infra` du manifest.
+     * Écran 8 Infrastructure : les deux booléens (Docker, CI) et **les six
+     * catégories d'infrastructure** du catalogue, chacune filtrée par
+     * compatibilité avec le reste de la sélection.
      */
     infrastructure: {
       title: 'Infrastructure',
       description:
-        'Ce qui fait tourner et livrer le projet : conteneurs, intégration continue et hébergement. Ces choix rejoignent le champ infra du manifest.',
+        'Ce qui fait tourner et livrer le projet : gestionnaire de paquets, monorepo, conteneurs, environnement de développement, intégration continue et hébergement. Ces choix rejoignent le champ infra du manifest.',
       legend: 'Ce que le projet embarque',
       docker: 'Docker',
       dockerNote: 'Un Dockerfile et un environnement de développement reproductible.',
       ci: 'Intégration continue',
       ciNote: 'Un workflow GitHub Actions : lint, types et tests à chaque poussée.',
+      pickHint:
+        'Chaque option est vérifiée contre la pile, les capacités et les autres choix d’infrastructure.',
+      nothingCompatible: 'Aucune option compatible avec le reste de la sélection.',
       cloudLegend: 'Cloud cible',
       cloudTitle: 'Cloud cible',
       cloudHintBefore: 'L’hébergeur est un choix de la catégorie',
@@ -232,12 +236,15 @@ export const EN_BUILD: Widen<typeof FR_BUILD> = {
     infrastructure: {
       title: 'Infrastructure',
       description:
-        'What runs and ships the project: containers, continuous integration and hosting. These choices join the infra field of the manifest.',
+        'What runs and ships the project: package manager, monorepo, containers, development environment, continuous integration and hosting. These choices join the infra field of the manifest.',
       legend: 'What the project ships with',
       docker: 'Docker',
       dockerNote: 'A Dockerfile and a reproducible development environment.',
       ci: 'Continuous integration',
       ciNote: 'A GitHub Actions workflow: lint, types and tests on every push.',
+      pickHint:
+        'Every option is checked against the stack, the capabilities and the other infrastructure choices.',
+      nothingCompatible: 'No option compatible with the rest of the selection.',
       cloudLegend: 'Target cloud',
       cloudTitle: 'Target cloud',
       cloudHintBefore: 'The host is a choice in the',

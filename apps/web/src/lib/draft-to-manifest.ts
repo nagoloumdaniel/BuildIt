@@ -8,6 +8,7 @@ import {
 import { type RegistryEntry, slotFor } from '@buildit/registry';
 import { catalogue as catalogueRegistry } from './catalogue';
 import type { DraftState } from './draft';
+import { CI_ID, DOCKER_ID } from './infrastructure-ids';
 import { APP_TARGET, type AppKey } from './targets';
 
 /**
@@ -60,15 +61,12 @@ const APP_KEYS: readonly AppKey[] = ['frontend', 'mobile', 'desktop', 'backend']
  */
 
 /**
- * Les deux seuls ids que le brouillon nomme lui-même : l'écran Infrastructure
- * (§6.9) pose des booléens, pas des technologies. Les deux existent au
- * catalogue (`containers/docker.entry.json`, `ci-cd/github-actions.entry.json`)
- * et suivent donc le chemin commun. `github-actions` est le seul fournisseur de
- * CI du produit : les quatre presets le posent, et le fichier engendré est un
- * workflow GitHub.
+ * Les deux ids que le brouillon nomme lui-même viennent de
+ * `lib/infrastructure-ids.ts`, avec `lib/selection.ts` et l'écran
+ * Infrastructure : une seule table pour les trois. Ils existent au catalogue
+ * (`containers/docker.entry.json`, `ci-cd/github-actions.entry.json`) et suivent
+ * donc le chemin commun.
  */
-const DOCKER_ID = 'docker';
-const CI_ID = 'github-actions';
 
 interface AppValues {
   framework?: string;

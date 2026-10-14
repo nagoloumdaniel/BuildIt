@@ -1,12 +1,22 @@
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
 import { saasManifest } from '../../app/create/generate/fixtures';
-import { OutputProgress, ProjectExport, ProjectFolder, toGenerationView } from './project-export';
+import {
+  OutputChoices,
+  OutputProgress,
+  ProjectExport,
+  ProjectFolder,
+  toGenerationView,
+} from './project-export';
 
 /**
  * La sortie d'un projet, rendue sans navigateur : le premier geste unique, les
  * deux sorties distinctes, et l'avancement sur une seule ligne au-dessus d'une
  * seule barre. Sans fournisseur de langue, le rendu sort le français.
+ *
+ * `OutputChoices` est rendu avec ses propriétés : c'est lui qui porte la
+ * matrice local / navigateur, et c'est la seule façon de la prouver sans monter
+ * les Server Actions que `ProjectExport` appelle dans ses effets.
  */
 
 describe('ProjectExport', () => {
@@ -19,20 +29,78 @@ describe('ProjectExport', () => {
     expect(html).not.toContain('Générer le ZIP');
   });
 
-  it('ouvert d’emblée, propose deux sorties distinctes, chacune avec sa note', () => {
+  it('ouvert d’emblée, propose le ZIP tout de suite et jamais un bouton grisé', () => {
     const html = renderToStaticMarkup(
       <ProjectExport initiallyOpen manifest={saasManifest()} projectName="mon-projet" />,
     );
     expect(html).toContain('Générer le ZIP');
     expect(html).toContain('Une archive à télécharger');
-    expect(html).toContain('Choisir un dossier et installer');
     expect(html).toContain('<fieldset');
     expect(html).toContain('Comment récupérer le projet');
-    // Tant que le serveur n'a pas dit s'il est local, le dossier attend : on
-    // ne propose pas un geste qui pourrait échouer.
-    expect(html).toMatch(/<button[^>]*disabled=""[^>]*>(?:(?!<\/button>).)*Choisir un dossier/);
+    // Tant que le serveur n'a pas dit s'il est local, la carte dossier n'est
+    // pas rendue du tout : elle ne peut donc pas apparaître grisée.
+    expect(html).not.toContain('Choisir un dossier et installer');
+    expect(html).not.toContain('disabled');
     // Aucun chemin à taper.
     expect(html).not.toContain('<input');
+  });
+});
+
+describe('OutputChoices la matrice local / navigateur', () => {
+  function choices(local: boolean | null, browserWrite: boolean, picking = false): string {
+    return renderToStaticMarkup(
+      <OutputChoices
+        browserWrite={browserWrite}
+        local={local}
+        onBrowserFolder={() => undefined}
+        onNativeFolder={() => undefined}
+        onZip={() => undefined}
+        picking={picking}
+      />,
+    );
+  }
+
+  it('en local, la carte dossier est active sans dépendre du navigateur', () => {
+    const html = choices(true, false);
+    expect(html).toContain('Choisir un dossier et installer');
+    expect(html).toContain('puis ses dépendances sont installées');
+    // Aucun bouton grisé : le serveur sait ouvrir l'explorateur de la machine.
+    expect(html).not.toContain('disabled');
+    expect(html).not.toContain('ne sait pas écrire');
+    expect(html).not.toContain('pf web');
+    expect(html).toContain('Générer le ZIP');
+  });
+
+  it('hébergé sans API d’écriture : pas de carte dossier, pas de callout, le ZIP reste', () => {
+    const html = choices(false, false);
+    expect(html).not.toContain('Choisir un dossier et installer');
+    expect(html).not.toContain('ne sait pas écrire');
+    expect(html).not.toContain('pf web');
+    expect(html).not.toContain('Chrome');
+    expect(html).not.toContain('disabled');
+    expect(html).toContain('Générer le ZIP');
+    expect(html).toContain('Une archive à télécharger');
+  });
+
+  it('hébergé avec API d’écriture : la carte navigateur est active et dit qui écrit', () => {
+    const html = choices(false, true);
+    expect(html).toContain('Choisir un dossier et installer');
+    expect(html).toContain('ne peut pas se lancer depuis une page web');
+    expect(html).not.toContain('disabled');
+    expect(html).toContain('Générer le ZIP');
+  });
+
+  it('en attente de la réponse du serveur : la carte dossier n’existe pas encore', () => {
+    const html = choices(null, true);
+    expect(html).not.toContain('Choisir un dossier et installer');
+    expect(html).not.toContain('disabled');
+    expect(html).toContain('Générer le ZIP');
+  });
+
+  it('pendant l’ouverture de l’explorateur local, la carte dit ce qu’elle attend', () => {
+    const html = choices(true, false, true);
+    expect(html).toContain('aria-busy="true"');
+    expect(html).toContain('Fenêtre de l’explorateur ouverte sur le bureau de cette machine');
   });
 });
 

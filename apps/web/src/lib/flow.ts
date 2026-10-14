@@ -88,20 +88,34 @@ export function blockedReason(draft: DraftState, t: Messages): string | undefine
       );
     }
     case 'stack':
-      if (draft.resolution === undefined) {
-        return t.journey.blocked.compatibility;
-      }
-      // `experimental` passe : c'est un avertissement, pas un refus (§12).
-      if (draft.resolution.issues.length > 0) {
-        return draft.resolution.issues.join(' ');
-      }
-      return requirementBlocker(draft, t);
+      // L'étape Stack est celle où la vérification du moteur se fait : sans
+      // verdict, on ne peut pas dire si la sélection tient.
+      return resolutionBlocker(draft, t, true) ?? requirementBlocker(draft, t);
     default:
-      // Les autres écrans n'ont pas de refus écrit, mais ils héritent des
-      // minimums des écrans déjà passés : un accès direct à une adresse ne doit
-      // pas contourner ce qu'un écran précédent exige.
-      return requirementBlocker(draft, t);
+      // Les autres écrans n'ont pas de refus écrit, mais ils héritent du verdict
+      // du moteur **et** des minimums des écrans déjà passés : un refus né d'une
+      // capacité ou d'un choix d'infrastructure ne doit pas attendre la
+      // génération, et un accès direct à une adresse ne doit pas contourner ce
+      // qu'un écran précédent exige. Un verdict **absent** ne bloque pas ici :
+      // les écrans Capacités et Infrastructure le recalculent à leur montage, et
+      // un rechargement direct sur un écran avancé ne doit pas rester coincé sur
+      // une vérification que personne n'a encore relancée.
+      return resolutionBlocker(draft, t, false) ?? requirementBlocker(draft, t);
   }
+}
+
+/**
+ * Le verdict du moteur, quand il refuse la sélection.
+ *
+ * `required` dit si l'**absence** de verdict est elle-même un blocage : oui au
+ * Stack (c'est là qu'il se calcule), non ailleurs.
+ */
+function resolutionBlocker(draft: DraftState, t: Messages, required: boolean): string | undefined {
+  if (draft.resolution === undefined) {
+    return required ? t.journey.blocked.compatibility : undefined;
+  }
+  // `experimental` passe : c'est un avertissement, pas un refus (§12).
+  return draft.resolution.issues.length === 0 ? undefined : draft.resolution.issues.join(' ');
 }
 
 /**

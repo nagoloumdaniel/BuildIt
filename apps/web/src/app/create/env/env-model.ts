@@ -1,7 +1,7 @@
 import { ENV_NAME_PATTERN } from '@buildit/manifest';
 import type { DraftState } from '../../../lib/draft';
 import type { EnvVarView } from '../../../lib/engine';
-import { infrastructureIds } from '../infrastructure/infrastructure';
+import { type EngineSelection, selectionOf } from '../../../lib/selection';
 
 /**
  * L'écran 8 Environment & Secrets (§6.8, §24).
@@ -13,26 +13,19 @@ import { infrastructureIds } from '../infrastructure/infrastructure';
  */
 
 /** Ce que le moteur attend pour calculer les variables requises. */
-export interface EnvSelection {
-  readonly targets: readonly string[];
-  readonly technologies: readonly string[];
-}
+export type EnvSelection = EngineSelection;
 
 /**
- * La sélection complète, **infra comprise**.
+ * La sélection complète, **infra comprise**, telle que `lib/selection.ts` la
+ * définit pour tout le parcours.
  *
  * `requiredEnvVars` part de la résolution du moteur : une technologie ajoutée
  * pour tenir une exigence apporte ses variables, et les booléens de l'écran 9
- * appartiennent à la même sélection (`docker`, `github-actions` la règle de
- * `chosenIds` dans `lib/draft-to-manifest.ts`).
+ * appartiennent à la même sélection. Cette fonction n'était qu'une quatrième
+ * copie de l'union ; elle délègue désormais.
  */
 export function envSelection(draft: DraftState): EnvSelection {
-  return {
-    targets: [...draft.targets],
-    technologies: [
-      ...new Set([...draft.technologies, ...draft.capabilities, ...infrastructureIds(draft)]),
-    ].sort(),
-  };
+  return selectionOf(draft);
 }
 
 /** Les noms seuls c'est tout ce que le brouillon a le droit de retenir. */

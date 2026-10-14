@@ -27,6 +27,11 @@ import { browserSessionStorage, clearReport, type GenerationReport, loadReport }
  * dossier porte une adresse de dépôt valide (`isGithubUrl`) : l'adresse n'est
  * jamais construite à partir du nom, qui mènerait chez un inconnu ou à une 404.
  *
+ * Le projet retenu est aussi ce qui donne son **identifiant** au rapport : les
+ * boutons « Architecture du projet » et « Graphe de dépendances » mènent aux
+ * pages du projet (`?id=`), seules joignables une fois le parcours refermé.
+ * Un rapport refusé n'a rien écrit : il n'en reçoit aucun.
+ *
  * « Terminer » est la seule sortie : il range le rapport, remet le brouillon à
  * zéro (le projet verrouillé ne doit pas être repris comme un brouillon en
  * cours), puis recharge l'accueil **entièrement**, pour que la liste des
@@ -40,6 +45,7 @@ export default function ReportPage() {
   const [report, setReport] = useState<GenerationReport | null>(null);
   const [ready, setReady] = useState(false);
   const [repositoryUrl, setRepositoryUrl] = useState<string | undefined>(undefined);
+  const [projectId, setProjectId] = useState<string | undefined>(undefined);
 
   useEffect(() => {
     const loaded = loadReport(browserSessionStorage());
@@ -48,19 +54,33 @@ export default function ReportPage() {
     // dossier. Sinon, on retombe sur la liste des projets : un projet
     // régénéré ailleurs peut avoir été connecté depuis l'écran Dépôt.
     const fromReport = isGithubUrl(loaded?.repositoryUrl) ? loaded?.repositoryUrl : undefined;
+    // L'identifiant du projet écrit vit dans la liste, pas dans le rapport :
+    // c'est `rememberProject` qui l'y a rangé à la génération. Le dossier est
+    // la clé que les deux partagent quand la sortie a écrit un dossier ; une
+    // sortie en archive n'écrit rien (dossier vide), et le nom est alors le
+    // seul lien, la liste allant du plus récent au plus ancien. Un rapport
+    // refusé n'a rien écrit : il n'a pas d'identifiant à désigner, même si ce
+    // dossier porte déjà un projet d'une génération précédente.
+    const directory = loaded?.ok === true ? loaded.directory : undefined;
+    const written =
+      directory === undefined
+        ? undefined
+        : loadProjects(browserProjectStorage()).find((item) =>
+            directory === '' ? item.name === draft.name : item.directory === directory,
+          );
+    if (written !== undefined) {
+      setProjectId(written.id);
+    }
     if (fromReport !== undefined) {
       setRepositoryUrl(fromReport);
       setReady(true);
       return;
     }
-    if (loaded !== null && loaded.directory !== '') {
-      const project = loadProjects(browserProjectStorage()).find(
-        (item) => item.directory === loaded.directory,
-      );
-      setRepositoryUrl(isGithubUrl(project?.repositoryUrl) ? project?.repositoryUrl : undefined);
-    }
+    setRepositoryUrl(isGithubUrl(written?.repositoryUrl) ? written?.repositoryUrl : undefined);
     setReady(true);
-  }, []);
+    // Le nom ne change plus une fois le projet écrit : cette dépendance ne
+    // relance pas la lecture du rapport, elle dit seulement ce que l'effet lit.
+  }, [draft.name]);
 
   return (
     <StepShell
@@ -87,6 +107,7 @@ export default function ReportPage() {
           docker={draft.infra.docker}
           envVarNames={draft.envVarNames}
           {...(repositoryUrl === undefined ? {} : { repositoryUrl })}
+          {...(projectId === undefined ? {} : { projectId })}
           onFinish={() => {
             clearReport(browserSessionStorage());
             session.reset();

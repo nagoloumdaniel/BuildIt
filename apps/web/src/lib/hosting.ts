@@ -11,12 +11,25 @@
  * `VERCEL=1` est la variable que Vercel définit lui-même sur tout déploiement
  * (build et runtime) : la détecter ne demande aucune configuration. `PF_HOSTED`
  * est le même interrupteur pour un autre hébergeur ou pour les tests.
+ *
+ * `VERCEL=1` seul ne suffit pas : la CLI Vercel pose aussi `VERCEL=1` quand on
+ * lance `vercel dev` **sur sa propre machine**, et le serveur y voit bien le
+ * disque de l'utilisateur. Le classer « hébergé » supprimait le sélecteur natif
+ * et l'installation, c'est-à-dire le seul chemin qui marche dans tous les
+ * navigateurs. `VERCEL_ENV=development` est exactement cette signature : un
+ * vrai déploiement vaut `production` ou `preview`.
  */
 
 export type EnvLike = Readonly<Record<string, string | undefined>>;
 
 export function isHostedEnvironment(env: EnvLike = process.env): boolean {
-  return env['VERCEL'] === '1' || env['PF_HOSTED'] === '1';
+  if (env['PF_HOSTED'] === '1') {
+    return true;
+  }
+  if (env['VERCEL'] !== '1') {
+    return false;
+  }
+  return env['VERCEL_ENV'] !== 'development';
 }
 
 /** Les hôtes de boucle locale seuls autorisés tant que le mode n'est pas hébergé. */

@@ -1,3 +1,4 @@
+import type { Manifest } from '@buildit/manifest';
 import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
@@ -17,6 +18,15 @@ const SUCCESS: GenerationReport = {
   warnings: [],
   steps: ['plan', 'write'],
   issues: [],
+};
+
+/** Un manifest gardé : c'est lui qui ouvre l'architecture, le graphe, le partage. */
+const MANIFEST: Manifest = {
+  manifestVersion: 1,
+  name: 'archived-app',
+  targets: ['web'],
+  architecture: 'single-app',
+  frontend: { framework: 'next', language: 'typescript' },
 };
 
 function project(overrides: Partial<StoredProject> = {}): StoredProject {
@@ -42,6 +52,20 @@ const THIRD = project({
   id: 'third',
   name: 'third-app',
   generatedAt: '2025-12-01T09:00:00.000Z',
+});
+
+/**
+ * Un projet plus ancien que les deux derniers, avec ses choix gardés : c'est le
+ * cas où l'accueil montre encore la carte « projet terminé » alors que le
+ * projet **est** dans la liste persistée.
+ */
+const ARCHIVED = project({
+  id: 'archived',
+  name: 'archived-app',
+  directory: 'C:\\projets\\archived-app',
+  generatedAt: '2025-11-01T09:00:00.000Z',
+  manifest: MANIFEST,
+  repositoryUrl: 'https://github.com/octocat/archived-app',
 });
 
 function handoff(overrides: Partial<PickHandoff> = {}): PickHandoff {
@@ -129,6 +153,47 @@ describe('Dashboard les projets générés (§6.14)', () => {
     });
 
     expect(deleting).toContain('Suppression des fichiers…');
+  });
+});
+
+describe('Dashboard la carte « projet terminé » emprunte les gestes courts', () => {
+  /**
+   * `rememberGeneratedProject` écrit le projet dans la liste persistée : c'est
+   * elle qui porte son identifiant, son manifest et son dépôt. La carte
+   * « projet terminé » n'est qu'un repli pour le rapport de session, quand la
+   * liste ne montre pas encore le projet — elle le retrouve par son dossier et
+   * lui emprunte ses quatre gestes plutôt que d'inventer un identifiant.
+   */
+  it('retrouve le projet dans la liste et lui prend architecture, graphe et copies', () => {
+    const draft: DraftState = { ...freshDraft(), name: ARCHIVED.name, step: 'report' };
+    const html = render(draft, {
+      // ARCHIVED est hors des deux derniers : la liste le connaît, la grille ne
+      // le montre pas, et c'est exactement le cas que la carte de repli couvre.
+      projects: [RECENT, OLDER, ARCHIVED],
+      report: { ...SUCCESS, directory: ARCHIVED.directory },
+    });
+
+    expect(html).toContain(`href="/projects/architecture?id=${ARCHIVED.id}"`);
+    expect(html).toContain(`href="/projects/graph?id=${ARCHIVED.id}"`);
+    expect(html).toContain('aria-label="Copier le lien GitHub"');
+    expect(html).toContain('aria-label="Copier le lien de partage"');
+    expect(html).toContain('aria-label="Architecture du projet"');
+    expect(html).toContain('aria-label="Graphe de dépendances"');
+    // Les gestes principaux gardent leur libellé.
+    expect(html).toContain('Connecter à GitHub');
+    expect(html).toContain('la doc d’installation');
+  });
+
+  it('n’invente aucun identifiant quand le projet n’est pas dans la liste', () => {
+    const draft: DraftState = { ...freshDraft(), name: 'projet-perdu', step: 'report' };
+    const html = render(draft, {
+      projects: [RECENT],
+      report: { ...SUCCESS, directory: 'C:\\projets\\projet-perdu' },
+    });
+
+    expect(html).toContain('la doc d’installation');
+    expect(html).not.toContain('href="/projects/graph?id=');
+    expect(html).not.toContain('href="/projects/architecture?id=');
   });
 });
 

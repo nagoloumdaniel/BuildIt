@@ -11,14 +11,10 @@ import { useDraft, useSession } from '../../../components/wizard/draft-provider'
 import { StepShell } from '../../../components/wizard/shell';
 import type { OptionView } from '../../../lib/engine';
 import { useMessages } from '../../../lib/i18n/provider';
-import { loadOptionsAction } from '../../actions';
+import { selectionFor } from '../../../lib/selection';
+import { checkSelectionAction, loadOptionsAction } from '../../actions';
 import { currentDeepLink, revealSection } from '../blueprint/deep-link';
-import {
-  CAPABILITY_FAMILIES,
-  type CapabilityCategory,
-  engineSelection,
-  toggleCapability,
-} from './capabilities';
+import { CAPABILITY_FAMILIES, type CapabilityCategory, toggleCapability } from './capabilities';
 import { CapabilityOptions } from './option-list';
 
 /**
@@ -99,6 +95,21 @@ export default function CapabilitiesPage(): ReactElement {
   // Le brouillon est dans les dépendances : chaque bascule change la sélection,
   // donc l'état des options (une capacité peut en débloquer ou en bloquer une
   // autre). La réponse tardive d'un état quitté est ignorée.
+  // La même sélection qu'au Stack Builder : technologies, capacités **et**
+  // choix d'infrastructure (`lib/selection.ts`). Mémoïsée sur les pièces du
+  // brouillon, pas sur le brouillon, pour que l'écriture du verdict ne relance
+  // pas le chargement.
+  const selection = useMemo(
+    () =>
+      selectionFor({
+        targets: draft.targets,
+        technologies: draft.technologies,
+        capabilities: draft.capabilities,
+        infra: draft.infra,
+      }),
+    [draft.targets, draft.technologies, draft.capabilities, draft.infra],
+  );
+
   // biome-ignore lint/correctness/useExhaustiveDependencies: `attempt` est la clé de relance : elle ne sert qu'à rejouer le chargement après une panne, sans quitter la famille ni perdre le brouillon.
   useEffect(() => {
     if (wanted.length === 0) {
@@ -107,7 +118,6 @@ export default function CapabilitiesPage(): ReactElement {
     }
     let alive = true;
     setLoading(true);
-    const selection = engineSelection(draft);
     void Promise.all(
       wanted.map(
         async (category) => [category, await loadOptionsAction(category, selection)] as const,
@@ -136,7 +146,22 @@ export default function CapabilitiesPage(): ReactElement {
     return () => {
       alive = false;
     };
-  }, [wanted, draft, attempt, t]);
+  }, [wanted, selection, attempt, t]);
+
+  // Le verdict du moteur, écrit ici comme au Stack Builder : sans lui, un refus
+  // né d'une capacité ne bloquerait aucune étape (`lib/flow.ts` lit `resolution`).
+  // biome-ignore lint/correctness/useExhaustiveDependencies: `attempt` est la clé de relance : elle ne sert qu'à rejouer la vérification après un refus.
+  useEffect(() => {
+    let alive = true;
+    void checkSelectionAction(selection).then((resolution) => {
+      if (alive) {
+        session.update((currentDraft) => ({ ...currentDraft, resolution }));
+      }
+    });
+    return () => {
+      alive = false;
+    };
+  }, [selection, session, attempt]);
 
   // Qui appartient à quelle famille ce que `toggleCapability` consulte pour
   // retirer un choix concurrent sans se tromper.

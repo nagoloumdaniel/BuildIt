@@ -5,6 +5,7 @@ import { FR } from '../../../lib/i18n/messages';
 import {
   CAPABILITY_CATEGORIES,
   CAPABILITY_FAMILIES,
+  categoriesWithRole,
   DEFAULT_CAPABILITY_CATEGORY,
   engineSelection,
   SCREEN_ROLE,
@@ -107,9 +108,41 @@ describe('sélection envoyée au moteur', () => {
     });
   });
 
+  it('porte aussi les choix d’infrastructure : le cycle des écrans est fermé', () => {
+    // Sans ces deux identifiants, un refus causé par Docker ou la CI
+    // n'apparaîtrait qu'à la génération.
+    const draft = { ...freshDraft(), targets: ['api'], infra: { docker: true, ci: true } };
+
+    expect(engineSelection(draft).technologies).toEqual(['docker', 'github-actions']);
+  });
+
   it('ne porte aucune valeur : des identifiants, rien d’autre', () => {
     const selection = engineSelection(freshDraft());
     expect(selection).toEqual({ targets: [], technologies: [] });
+  });
+});
+
+describe('les catégories d’un écran', () => {
+  it('rend les six catégories d’infrastructure, dans l’ordre de la table', () => {
+    expect(categoriesWithRole('infrastructure')).toEqual([
+      'package-manager',
+      'monorepo',
+      'containers',
+      'dev-environment',
+      'ci-cd',
+      'hosting',
+    ]);
+  });
+
+  it('couvre chaque catégorie du catalogue, sans trou ni doublon', () => {
+    const all = [
+      ...categoriesWithRole('stack'),
+      ...categoriesWithRole('capabilities'),
+      ...categoriesWithRole('infrastructure'),
+    ];
+
+    expect(new Set(all).size).toBe(all.length);
+    expect([...all].sort()).toEqual([...Object.keys(SCREEN_ROLE)].sort());
   });
 });
 

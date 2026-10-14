@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 import { type DraftState, freshDraft } from '../../../lib/draft';
 import { draftToManifest } from '../../../lib/draft-to-manifest';
 import { loadOptionsAction } from '../../actions';
+import { loadInfrastructureBlocksAction } from './actions';
 import { chooseHosting, infrastructureIds, selectedHosting } from './infrastructure';
 
 /** Un brouillon complet : les mêmes choix que le preset SaaS, saisis aux écrans. */
@@ -131,5 +132,50 @@ describe('la source réelle du cloud cible (Server Action)', () => {
       }
     }
     expect(hosts.map((host) => host.id)).toContain('vercel');
+  });
+});
+
+describe('la source réelle des six catégories d’infrastructure (Server Action)', () => {
+  it('rend chaque catégorie d’infrastructure avec ses options et leurs états', async () => {
+    const blocks = await loadInfrastructureBlocksAction({
+      targets: ['web'],
+      technologies: ['next', 'typescript'],
+    });
+    const categories = blocks.map((block) => block.category);
+
+    expect(categories).toContain('hosting');
+    expect(categories).toContain('package-manager');
+    expect(categories).toContain('containers');
+    // Aucune catégorie d'un autre écran ne doit fuiter ici : le Stack garde les
+    // siennes, les Capacités les leurs.
+    expect(categories).not.toContain('frontend');
+    expect(categories).not.toContain('queue');
+
+    for (const block of blocks) {
+      expect(block.options.length).toBeGreaterThan(0);
+      for (const option of block.options) {
+        expect(option.category).toBe(block.category);
+        expect(['selected', 'available', 'blocked']).toContain(option.state);
+        if (option.state === 'blocked') {
+          expect(option.reason).toBeDefined();
+        }
+      }
+    }
+  });
+
+  it('filtre par compatibilité : Docker ne sort pas sur des cibles mobiles', async () => {
+    // `docker` cible web/api/library (§10) : sur mobile, le moteur doit le
+    // refuser et **dire pourquoi**, au lieu de le laisser passer jusqu'à la
+    // génération.
+    const blocks = await loadInfrastructureBlocksAction({
+      targets: ['mobile'],
+      technologies: ['expo', 'typescript'],
+    });
+    const containers = blocks.find((block) => block.category === 'containers');
+
+    expect(containers).toBeDefined();
+    const docker = containers?.options.find((option) => option.id === 'docker');
+    expect(docker?.state).toBe('blocked');
+    expect(docker?.reason).toBeDefined();
   });
 });

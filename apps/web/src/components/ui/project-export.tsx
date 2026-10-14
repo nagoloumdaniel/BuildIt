@@ -11,6 +11,7 @@ import {
 } from '../../app/actions';
 import { installProjectAction } from '../../app/actions-node';
 import { canOpenNativePickerAction, pickFolderAction } from '../../app/actions-picker';
+import { folderOutputMode } from '../../app/create/generate/folder-output-mode';
 import type { OpenFolderRefusal } from '../../app/create/generate/open-folder';
 import { targetDirectory } from '../../app/create/generate/steps';
 import {
@@ -46,10 +47,13 @@ import { LoadingLine, ProgressBar, Spinner } from './loading';
  * Deux sorties, deux gestes distincts, jamais deux boutons jumeaux :
  * - **ZIP** : une Server Action écrit le projet dans un répertoire temporaire
  *   isolé, l'archive, et le navigateur la télécharge. Marche partout.
- * - **Dossier** : local seulement. L'explorateur de la machine donne le
- *   dossier parent (jamais un champ où taper un chemin), le serveur vérifie
- *   `parent/<nom>`, puis la route `/api/generate` écrit et installe en
- *   poussant chaque passage réel.
+ * - **Dossier** : le serveur tourne-t-il sur cette machine ? Si oui,
+ *   l'explorateur de la machine donne le dossier parent (jamais un champ où
+ *   taper un chemin), le serveur vérifie `parent/<nom>`, puis la route
+ *   `/api/generate` écrit et installe en poussant chaque passage réel. C'est le
+ *   seul chemin qui ne dépend pas du navigateur. Sinon, en hébergé, c'est le
+ *   navigateur qui écrit — et seulement s'il en est capable ; sinon la carte
+ *   dossier n'existe pas et le ZIP reste.
  *
  * L'avancement tient sur **une** ligne d'état au-dessus d'**une** barre. La
  * barre n'est déterminée que lorsqu'il y a une vraie mesure : ni le moteur ni
@@ -278,6 +282,71 @@ export function OutputProgress({
           <p className="pf-hint">{o.writtenIn}</p>
           <CommandLine className="mt-1" value={directory} what={o.writtenWhat} />
         </div>
+      )}
+    </div>
+  );
+}
+
+export interface OutputChoicesProps {
+  /** `null` tant que le serveur n'a pas dit s'il tourne sur cette machine. */
+  readonly local: boolean | null;
+  /** Le navigateur courant sait-il écrire dans un dossier ? */
+  readonly browserWrite: boolean;
+  readonly picking: boolean;
+  readonly notice?: string;
+  /** Local : l'explorateur de la machine s'ouvre côté serveur, écriture + installation. */
+  readonly onNativeFolder: () => void;
+  /** Hébergé, navigateur capable : il écrit lui-même, sans installation. */
+  readonly onBrowserFolder: () => void;
+  readonly onZip: () => void;
+}
+
+/**
+ * Les sorties proposées, déduites de la seule matrice `folderOutputMode` : c'est
+ * ici, et nulle part ailleurs, que l'écran décide ce qu'il montre.
+ *
+ * La carte dossier n'est **rendue** que si un chemin d'écriture existe vraiment :
+ * en attente de la réponse du serveur, et en hébergé sur un navigateur sans
+ * File System Access API, elle disparaît au lieu d'apparaître grisée. Un bouton
+ * grisé promettait une capacité perdue. Le ZIP, lui, marche partout et reste
+ * toujours proposé.
+ *
+ * Extraite de `ProjectExport` pour être rendue telle quelle par les tests : la
+ * matrice se prouve sur des propriétés, sans monter d'action serveur.
+ */
+export function OutputChoices({
+  local,
+  browserWrite,
+  picking,
+  notice,
+  onNativeFolder,
+  onBrowserFolder,
+  onZip,
+}: OutputChoicesProps): ReactElement {
+  const o = useMessages().output;
+  const mode = folderOutputMode(local, browserWrite);
+  return (
+    <div>
+      <fieldset className="pf-output-fieldset">
+        <legend className="pf-label">{o.choicesLabel}</legend>
+        <div className="pf-output-choices mt-1">
+          <PickCard icon="download" note={o.zipNote} onPick={onZip} title={o.zipTitle} />
+          {mode === 'native' || mode === 'browser' ? (
+            <PickCard
+              busy={picking}
+              busyLabel={o.folderOpening}
+              icon="folderOpen"
+              note={mode === 'native' ? o.folderNote : o.browserNote}
+              onPick={mode === 'native' ? onNativeFolder : onBrowserFolder}
+              title={o.folderTitle}
+            />
+          ) : null}
+        </div>
+      </fieldset>
+      {notice === undefined ? null : (
+        <p aria-live="polite" className="pf-hint mt-2" role="status">
+          {notice}
+        </p>
       )}
     </div>
   );
@@ -610,40 +679,15 @@ export function ProjectExport({
 
   if (stage.kind === 'choose') {
     return (
-      <div>
-        <fieldset className="pf-output-fieldset">
-          <legend className="pf-label">{o.choicesLabel}</legend>
-          <div className="pf-output-choices mt-1">
-            <PickCard
-              icon="download"
-              note={o.zipNote}
-              onPick={() => void runZip()}
-              title={o.zipTitle}
-            />
-            <PickCard
-              busy={picking}
-              busyLabel={o.folderOpening}
-              disabled={local === null || (local === false && !browserWrite)}
-              icon="folderOpen"
-              note={local === false ? o.browserNote : o.folderNote}
-              onPick={() => void (local === false ? writeFromBrowser() : pick())}
-              title={o.folderTitle}
-            />
-          </div>
-        </fieldset>
-        {local === false && !browserWrite ? (
-          <div className="pf-callout pf-callout-steel mt-3">
-            <p className="pf-output-callout-title">{o.folderHostedTitle}</p>
-            <p className="mt-1">{o.folderHostedBody}</p>
-            <CommandLine className="mt-2" prompt value="pf web" what={o.folderHostedWhat} />
-          </div>
-        ) : null}
-        {stage.notice === undefined ? null : (
-          <p aria-live="polite" className="pf-hint mt-2" role="status">
-            {stage.notice}
-          </p>
-        )}
-      </div>
+      <OutputChoices
+        browserWrite={browserWrite}
+        local={local}
+        onBrowserFolder={() => void writeFromBrowser()}
+        onNativeFolder={() => void pick()}
+        onZip={() => void runZip()}
+        picking={picking}
+        {...(stage.notice === undefined ? {} : { notice: stage.notice })}
+      />
     );
   }
 

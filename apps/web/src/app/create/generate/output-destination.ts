@@ -15,6 +15,14 @@ import { destinationState, resolveAbsoluteDestination } from '../../clone/destin
  * confiance à la première, le disque a pu changer entre les deux.
  */
 
+/**
+ * La matrice local / navigateur réexportée : elle vit dans
+ * `folder-output-mode.ts`, un module sans import Node, parce que l'écran de
+ * génération est un composant **client** et ne peut pas charger ce fichier-ci
+ * (`node:fs`). Le réexport garde `output-destination` comme point d'entrée.
+ */
+export { type FolderOutputMode, folderOutputMode } from './folder-output-mode';
+
 export type OutputDestination =
   | { readonly ok: true; readonly directory: string }
   | { readonly ok: false; readonly directory: string; readonly issues: readonly string[] };

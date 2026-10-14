@@ -1,10 +1,21 @@
+import type { Manifest } from '@buildit/manifest';
 import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
-import { describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it } from 'vitest';
+import { projectShareLink } from '../../components/ui/project-card';
 import type { StoredProject } from '../../lib/projects';
 import { newestFirst, ProjectsView, type ProjectsViewProps } from './view';
 
 /** L'écran « Tous les projets », rendu sans DOM. */
+
+/** Un manifest gardé : c'est lui qui ouvre l'architecture, le graphe, le partage. */
+const MANIFEST: Manifest = {
+  manifestVersion: 1,
+  name: 'recent-app',
+  targets: ['web'],
+  architecture: 'single-app',
+  frontend: { framework: 'next', language: 'typescript' },
+};
 
 function project(overrides: Partial<StoredProject> = {}): StoredProject {
   return {
@@ -80,15 +91,8 @@ describe('ProjectsView la liste', () => {
   });
 
   it('propose l’export et l’architecture aux projets dont les choix sont gardés', () => {
-    const manifest = {
-      manifestVersion: 1,
-      name: 'recent-app',
-      targets: ['web'],
-      architecture: 'single-app',
-      frontend: { framework: 'next', language: 'typescript' },
-    } as const;
     const html = render({
-      projects: [{ ...RECENT, manifest } as never, OLD],
+      projects: [{ ...RECENT, manifest: MANIFEST }, OLD],
       onExported: () => undefined,
     });
 
@@ -97,6 +101,62 @@ describe('ProjectsView la liste', () => {
     // Un projet d'avant la version 0.2.0 n'a ni export ni architecture : la
     // carte compacte ne le dit plus, elle ne propose simplement rien à refaire.
     expect(html).not.toContain(`href="/projects/architecture?id=${OLD.id}"`);
+  });
+
+  it('mène au graphe de dépendances du projet, et seulement si ses choix sont gardés', () => {
+    const html = render({
+      projects: [{ ...RECENT, manifest: MANIFEST }, OLD],
+    });
+
+    expect(html).toContain(`href="/projects/graph?id=${RECENT.id}"`);
+    expect(html).toContain('aria-label="Graphe de dépendances"');
+    expect(html).toContain('title="Graphe de dépendances"');
+    // Sans manifest gardé, il n'y a pas de technologies à dessiner.
+    expect(html).not.toContain(`href="/projects/graph?id=${OLD.id}"`);
+  });
+
+  it('donne un nom accessible et une infobulle aux quatre gestes en icône seule', () => {
+    const html = render({
+      projects: [
+        {
+          ...RECENT,
+          manifest: MANIFEST,
+          repositoryUrl: 'https://github.com/octocat/recent-app',
+        },
+      ],
+    });
+
+    // Les quatre gestes courts n'ont plus de libellé visible : sans `aria-label`
+    // ils seraient muets pour un lecteur d'écran, sans `title` ils le seraient
+    // à la souris.
+    for (const name of [
+      'Copier le lien GitHub',
+      'Copier le lien de partage',
+      'Architecture du projet',
+      'Graphe de dépendances',
+    ]) {
+      expect(html).toContain(`aria-label="${name}"`);
+      expect(html).toContain(`title="${name}"`);
+    }
+    // Le libellé long ne traîne plus dans la rangée dense.
+    expect(html).not.toContain('>Architecture du projet<');
+
+    // Contrôle générique : **aucune** icône seule de la carte n'est muette.
+    const iconOnly = html.match(/<(?:a|button)[^>]*pf-btn-icon[^>]*>/g) ?? [];
+    expect(iconOnly).toHaveLength(4);
+    for (const tag of iconOnly) {
+      expect(tag).toMatch(/aria-label="[^"]+"/);
+      expect(tag).toMatch(/title="[^"]+"/);
+    }
+  });
+
+  it('n’invente pas de route sans identifiant de projet', () => {
+    // Un projet d'avant la version 0.2.0 n'a pas de manifest : aucun des deux
+    // liens ne doit apparaître avec un `id` vide.
+    const html = render({ projects: [OLD] });
+
+    expect(html).not.toContain('href="/projects/graph?id="');
+    expect(html).not.toContain('href="/projects/architecture?id="');
   });
 
   it('ouvre le dépôt GitHub seulement quand son adresse est connue', () => {
@@ -122,6 +182,42 @@ describe('ProjectsView la liste', () => {
 
     expect(html).toContain('aria-label="Copier le lien GitHub"');
     expect(html).toContain('title="Copier le lien GitHub"');
+  });
+
+  it('propose de copier le lien de partage dès que le manifest est gardé', () => {
+    const html = render({ projects: [{ ...RECENT, manifest: MANIFEST }] });
+
+    expect(html).toContain('aria-label="Copier le lien de partage"');
+    expect(html).toContain('title="Copier le lien de partage"');
+  });
+});
+
+/**
+ * La copie du lien de partage de la carte.
+ *
+ * Le geste vit dans un bouton ; ce qu'il copie, lui, se **calcule**. C'est donc
+ * ce calcul qui se prouve ici, sans DOM. Ce qui compte est l'origine, et elle
+ * était fausse : la carte encodait avec `window.location.origin`, donc un lien
+ * ouvert depuis `127.0.0.1` ne s'ouvrait que sur cette machine.
+ */
+describe('ProjectsView le lien de partage emploie l’origine publique', () => {
+  afterEach(() => {
+    delete process.env['PF_SHARE_BASE_URL'];
+  });
+
+  it('préfère l’origine publique du serveur à la boucle locale du navigateur', async () => {
+    process.env['PF_SHARE_BASE_URL'] = 'https://exemple.fr';
+
+    const link = await projectShareLink(MANIFEST, 'http://127.0.0.1:4173');
+
+    expect(link.startsWith('https://exemple.fr/share#')).toBe(true);
+    expect(link).not.toContain('127.0.0.1');
+  });
+
+  it('garde l’origine du navigateur quand le serveur n’en propose pas', async () => {
+    const link = await projectShareLink(MANIFEST, 'https://trybuildit.vercel.app');
+
+    expect(link.startsWith('https://trybuildit.vercel.app/share#')).toBe(true);
   });
 });
 

@@ -451,50 +451,55 @@ export function StepShell({
         </div>
       </div>
 
-      <nav
-        aria-label={t.a11y.stepNavigation}
-        className="mt-8 flex flex-wrap items-center justify-between gap-3 border-t border-border pt-4"
-      >
-        {/* Au rapport, « Terminer » est la seule sortie : un « Accueil » à
+      {/* Au rapport, le pied de page du rapport **est** la rangée d'actions :
+          il porte ses propres gestes sous son trait. Laisser ici une barre de
+          navigation vide ajoutait un second trait sous ces boutons. */}
+      {step === 'report' && (next === null || hidePrevious) ? null : (
+        <nav
+          aria-label={t.a11y.stepNavigation}
+          className="mt-8 flex flex-wrap items-center justify-between gap-3 border-t border-border pt-4"
+        >
+          {/* Au rapport, « Terminer » est la seule sortie : un « Accueil » à
             côté doublerait le geste sans remettre le brouillon à zéro. */}
-        {step === 'report' ? (
-          <span />
-        ) : previous === null || noWayBack ? (
-          <Link className="pf-btn" href="/">
-            <Icon name="home" />
-            {t.common.backHome}
-          </Link>
-        ) : (
-          <Link className="pf-btn" href={stepHref(previous)}>
-            <Icon name="arrowLeft" />
-            {t.common.previous}
-          </Link>
-        )}
-
-        {next === null || hidePrevious ? null : (
-          <span className="flex flex-wrap items-center justify-end gap-3">
-            {ready ? null : (
-              <span className="pf-error flex items-center gap-1.5" role="status">
-                <Icon name="warning" size={14} />
-                {reason}
-              </span>
-            )}
-            <Link
-              aria-disabled={!ready}
-              className={
-                ready
-                  ? 'pf-btn pf-btn-primary'
-                  : 'pf-btn pf-btn-primary pointer-events-none opacity-50'
-              }
-              href={stepHref(next)}
-              tabIndex={ready ? 0 : -1}
-            >
-              {t.common.continue}
-              <Icon name="arrowRight" />
+          {step === 'report' ? (
+            <span />
+          ) : previous === null || noWayBack ? (
+            <Link className="pf-btn" href="/">
+              <Icon name="home" />
+              {t.common.backHome}
             </Link>
-          </span>
-        )}
-      </nav>
+          ) : (
+            <Link className="pf-btn" href={stepHref(previous)}>
+              <Icon name="arrowLeft" />
+              {t.common.previous}
+            </Link>
+          )}
+
+          {next === null || hidePrevious ? null : (
+            <span className="flex flex-wrap items-center justify-end gap-3">
+              {ready ? null : (
+                <span className="pf-error flex items-center gap-1.5" role="status">
+                  <Icon name="warning" size={14} />
+                  {reason}
+                </span>
+              )}
+              <Link
+                aria-disabled={!ready}
+                className={
+                  ready
+                    ? 'pf-btn pf-btn-primary'
+                    : 'pf-btn pf-btn-primary pointer-events-none opacity-50'
+                }
+                href={stepHref(next)}
+                tabIndex={ready ? 0 : -1}
+              >
+                {t.common.continue}
+                <Icon name="arrowRight" />
+              </Link>
+            </span>
+          )}
+        </nav>
+      )}
     </main>
   );
 }

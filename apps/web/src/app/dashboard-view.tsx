@@ -5,7 +5,7 @@ import type { ReactElement } from 'react';
 import { EmptyState } from '../components/ui/empty-state';
 import { Icon } from '../components/ui/icon';
 import { LoadingLine } from '../components/ui/loading';
-import { ProjectCard } from '../components/ui/project-card';
+import { ProjectCard, ProjectGestures } from '../components/ui/project-card';
 import type { DraftState } from '../lib/draft';
 import { STEP_ORDER, type StepId } from '../lib/flow';
 import { useMessages } from '../lib/i18n/provider';
@@ -30,7 +30,10 @@ import type { PickHandoff } from './open/pick-handoff';
  * 2. **Ouvrir un projet local ouvre l'explorateur**, pas une page
  *    intermédiaire : la carte du menu porte tout le fil (choix, analyse,
  *    résultat, installation).
- * 3. **La carte d'un projet est la même partout** (`ProjectCard`).
+ * 3. **La carte d'un projet est la même partout** (`ProjectCard`). La carte
+ *    « projet terminé » n'existe que pour le rapport de session, quand la liste
+ *    ne montre pas encore le projet : elle lui emprunte alors ses gestes courts
+ *    (`ProjectGestures`) dès qu'elle le retrouve dans la liste persistée.
  */
 
 /** L'URL d'une étape : l'étape `create` vit à `/create`, pas à `/create/create`. */
@@ -128,6 +131,22 @@ export function DashboardView({
     report.directory !== '' &&
     (list ?? []).some((project) => project.directory === report.directory);
   const showCompletedCard = completed && !completedInList;
+  /**
+   * Le projet terminé **est** dans la liste persistée :
+   * `rememberGeneratedProject` l'y écrit à la génération. C'est elle, et elle
+   * seule, qui porte son identifiant, son manifest et l'adresse de son dépôt
+   * donc les gestes courts (architecture, graphe, copies des liens). On le
+   * retrouve par son **dossier** plutôt que par son nom : deux projets
+   * homonymes ne partagent pas le même dossier, et le rapport décrit un dossier.
+   *
+   * Il peut manquer deux cas honorables, et la carte reste alors sans gestes
+   * courts au lieu d'inventer un identifiant : la liste n'est pas encore lue
+   * (`projects === null`), ou elle a été vidée depuis la génération.
+   */
+  const completedProject =
+    report === null || report.directory === ''
+      ? undefined
+      : (projects ?? []).find((project) => project.directory === report.directory);
 
   return (
     <>
@@ -209,6 +228,11 @@ export function DashboardView({
                 </p>
                 <p className="pf-hint mt-1">{t.dashboard.projectDone}</p>
                 <div className="mt-3 flex flex-wrap items-center gap-3">
+                  {completedProject === undefined ? null : (
+                    <span className="flex flex-wrap items-center gap-2">
+                      <ProjectGestures project={completedProject} />
+                    </span>
+                  )}
                   <Link className="pf-btn" href="/repo">
                     <Icon name="github" size={15} />
                     {t.projects.connectGithub}

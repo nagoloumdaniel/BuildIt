@@ -1,8 +1,8 @@
 'use client';
 
-import { Badge, Button, buttonClassName } from '@buildit/ui';
+import { Button, buttonClassName } from '@buildit/ui';
 import Link from 'next/link';
-import { type ReactElement, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { type ReactElement, useMemo } from 'react';
 import { EmptyState } from '../../components/ui/empty-state';
 import { ErrorState } from '../../components/ui/error-state';
 import { Icon } from '../../components/ui/icon';
@@ -11,17 +11,9 @@ import { useDraft } from '../../components/wizard/draft-provider';
 import { ScreenShell } from '../../components/wizard/shell';
 import { draftToManifest } from '../../lib/draft-to-manifest';
 import { useMessages } from '../../lib/i18n/provider';
-import { loadGraphAction } from '../actions';
 import { manifestTechnologyIds } from '../create/blueprint/summary';
-import { GraphDiagram } from './GraphDiagram';
-import { GraphGuide } from './GraphGuide';
-import { layoutGraph, type RelationEdge, type RelationNode } from './relations';
-
-interface GraphState {
-  readonly nodes: readonly RelationNode[];
-  readonly edges: readonly RelationEdge[];
-  readonly status: 'certified' | 'experimental';
-}
+import { GraphPanel } from './GraphPanel';
+import { useGraphLoad } from './graph-load';
 
 /**
  * Dependency Graph (§6.11) la vue avancée, **accessible depuis le Blueprint,
@@ -35,6 +27,9 @@ interface GraphState {
  * le graphe montre alors exactement ce que le moteur a résolu, additions
  * comprises. Un brouillon incomplet montre ce qui a été coché imparfait mais
  * honnête, plutôt qu'un graphe vide.
+ *
+ * Le chargement et le dessin sont partagés avec `/projects/graph` (`useGraphLoad`,
+ * `GraphPanel`) : seul le point de départ de la sélection est propre à l'écran.
  */
 export default function GraphPage(): ReactElement {
   const t = useMessages();
@@ -54,46 +49,7 @@ export default function GraphPage(): ReactElement {
     };
   }, [draft]);
 
-  const [graph, setGraph] = useState<GraphState | null>(null);
-  const [failed, setFailed] = useState(false);
-
-  /**
-   * Chaque calcul porte un numéro : une réponse tardive la sélection a changé
-   * entre-temps, ou l'utilisateur a relancé ne doit pas écraser l'état
-   * courant. Le bouton « Recalculer » rappelle simplement `load`.
-   */
-  const requestId = useRef(0);
-  const load = useCallback((): void => {
-    const ticket = requestId.current + 1;
-    requestId.current = ticket;
-    setFailed(false);
-    setGraph(null);
-    void loadGraphAction(selection)
-      .then((value) => {
-        if (requestId.current === ticket) {
-          setGraph({ nodes: value.nodes, edges: value.edges, status: value.status });
-        }
-      })
-      .catch(() => {
-        if (requestId.current === ticket) {
-          setFailed(true);
-        }
-      });
-  }, [selection]);
-
-  useEffect(() => {
-    load();
-    return () => {
-      // La réponse en vol devient obsolète : elle ne touchera plus l'écran.
-      requestId.current += 1;
-    };
-  }, [load]);
-
-  const labels = useMemo(
-    () => new Map((graph?.nodes ?? []).map((node) => [node.id, node.label])),
-    [graph],
-  );
-  const layout = useMemo(() => layoutGraph(graph?.nodes ?? [], graph?.edges ?? []), [graph]);
+  const { graph, failed, reload: load } = useGraphLoad(selection);
 
   return (
     <ScreenShell
@@ -142,32 +98,7 @@ export default function GraphPage(): ReactElement {
           title={t.graph.emptyTitle}
         />
       ) : (
-        <div>
-          <p className="flex flex-wrap items-center gap-2">
-            <Badge tone={graph.status === 'certified' ? 'ok' : 'accent'}>
-              {graph.status === 'certified' ? t.graph.certified : t.graph.experimental}
-            </Badge>
-            <span className="pf-hint">
-              {t.graph.counts(graph.nodes.length, graph.edges.length)}
-            </span>
-          </p>
-
-          <section className="pf-card pf-graph-card mt-4">
-            <div className="pf-graph-card-head">
-              <h2 className="pf-label flex items-center gap-2">
-                <Icon name="gitBranch" size={14} />
-                {t.graph.diagramHeading}
-              </h2>
-              <p className="pf-hint">{t.graphGuide.diagramHint}</p>
-            </div>
-            <div className="pf-scroll-x pf-graph-stage">
-              <GraphDiagram labels={labels} layout={layout} />
-            </div>
-            <p className="pf-hint pf-graph-scroll-hint">{t.graphGuide.scrollHint}</p>
-          </section>
-
-          <GraphGuide edges={graph.edges} nodes={graph.nodes} />
-        </div>
+        <GraphPanel graph={graph} />
       )}
     </ScreenShell>
   );

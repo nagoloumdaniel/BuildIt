@@ -21,9 +21,6 @@ export const FR_OUTPUT = {
     folderNote:
       'Le projet est écrit dans un dossier de cette machine, puis ses dépendances sont installées si vous le souhaitez.',
     folderOpening: 'Fenêtre de l’explorateur ouverte sur le bureau de cette machine…',
-    folderHostedTitle: 'Ce navigateur ne sait pas écrire dans un dossier',
-    folderHostedBody:
-      'Ouvrez BuildIt dans Chrome ou Edge pour choisir un dossier, téléchargez le ZIP, ou lancez BuildIt en local avec la commande ci-dessous.',
     browserNote:
       'Le navigateur écrit les fichiers dans le dossier choisi. L’installation des dépendances ne peut pas se lancer depuis une page web : les commandes s’affichent à la fin, prêtes à copier.',
     browserWriting: (written: number, total: number) =>
@@ -39,7 +36,6 @@ export const FR_OUTPUT = {
     installHint:
       'Une page web ne peut pas lancer de programme sur votre machine : copiez ces commandes dans un terminal ouvert sur le dossier choisi.',
     installWhat: 'la commande',
-    folderHostedWhat: 'la commande pour lancer BuildIt en local',
     pickCancelled: 'Aucun dossier choisi.',
     pickFailed:
       'L’explorateur n’a pas pu s’ouvrir sur cette machine. Téléchargez le ZIP, ou réessayez.',
@@ -145,9 +141,6 @@ export const EN_OUTPUT: Widen<typeof FR_OUTPUT> = {
     folderNote:
       'The project is written into a folder on this machine, then its dependencies are installed if you wish.',
     folderOpening: 'Explorer window open on this machine’s desktop…',
-    folderHostedTitle: 'This browser cannot write to a folder',
-    folderHostedBody:
-      'Open BuildIt in Chrome or Edge to pick a folder, download the ZIP, or run BuildIt locally with the command below.',
     browserNote:
       'The browser writes the files into the chosen folder. Installing dependencies cannot start from a web page: the commands are shown at the end, ready to copy.',
     browserWriting: (written: number, total: number) =>
@@ -163,7 +156,6 @@ export const EN_OUTPUT: Widen<typeof FR_OUTPUT> = {
     installHint:
       'A web page cannot run programs on your machine: copy these commands into a terminal opened on the chosen folder.',
     installWhat: 'the command',
-    folderHostedWhat: 'the command to run BuildIt locally',
     pickCancelled: 'No folder chosen.',
     pickFailed: 'The explorer could not open on this machine. Download the ZIP, or try again.',
     destinationLabel: 'The project will be written to',

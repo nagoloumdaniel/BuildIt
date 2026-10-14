@@ -231,3 +231,35 @@ describe('blockedReason la phrase que l’écran affiche', () => {
     ).toBe('prisma exclut X');
   });
 });
+
+describe('le verdict du moteur est opposable partout', () => {
+  const refused = { status: 'certified' as const, issues: ['prisma exclut X'] };
+  const base = {
+    ...freshDraft(),
+    name: 'ok',
+    targets: ['web'],
+    technologies: ['next', 'typescript'],
+  };
+
+  it('bloque les écrans après le Stack : capacités, infrastructure, plan', () => {
+    for (const step of ['capabilities', 'infrastructure', 'blueprint'] as const) {
+      expect(blockedReason({ ...base, step, resolution: refused }, FR)).toBe('prisma exclut X');
+    }
+  });
+
+  it('laisse passer un verdict certifié', () => {
+    for (const step of ['capabilities', 'infrastructure'] as const) {
+      expect(
+        blockedReason({ ...base, step, resolution: { status: 'certified', issues: [] } }, FR),
+      ).toBeUndefined();
+    }
+  });
+
+  it('un verdict absent ne bloque pas un écran avancé : il y sera recalculé', () => {
+    // Seul le Stack exige que la vérification ait eu lieu : un rechargement
+    // direct sur un écran avancé ne doit pas rester coincé sur une vérification
+    // que personne n'a encore relancée.
+    expect(blockedReason({ ...base, step: 'infrastructure' }, FR)).toBeUndefined();
+    expect(blockedReason({ ...base, step: 'stack' }, FR)).toContain('compatibilité');
+  });
+});

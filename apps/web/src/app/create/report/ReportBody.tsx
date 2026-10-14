@@ -28,6 +28,15 @@ export interface ReportBodyProps {
    */
   readonly repositoryUrl?: string;
   /**
+   * L'identifiant du projet **écrit**, tel que la liste des projets le porte.
+   *
+   * C'est lui qui mène aux pages d'un projet (architecture, graphe) : les
+   * écrans d'aperçu du parcours sont refermés une fois le projet généré
+   * (§6.14), donc y renvoyer ne ferait rien. Absent quand rien n'a été écrit
+   * (rapport refusé) : l'aperçu reste alors la seule architecture possible.
+   */
+  readonly projectId?: string;
+  /**
    * Ce que fait « Terminer » (brouillon remis à zéro, retour à l'accueil).
    * Absent, pas de bouton : le rapport reste rendu sans effet de bord.
    */
@@ -41,10 +50,16 @@ export interface ReportBodyProps {
  *
  * Il dit d'abord si la génération a réussi, puis où et combien, puis ce qui
  * doit alerter, puis comment reprendre le projet. La liste des fichiers n'y
- * est plus : l'architecture du projet a son propre écran (étape 10), et un
- * seul bouton y mène. Aucun lien vers l'accueil ici : la seule sortie d'un
- * projet réussi est « Terminer », qui range le brouillon avant d'y retourner.
- * Un refus n'a pas de « Terminer » : rien n'a été écrit, il reste à corriger.
+ * est plus : l'architecture du projet a son propre écran, et un seul bouton y
+ * mène. Pour un projet **écrit**, ce bouton mène à sa page (`?id=`), pas à
+ * l'aperçu du parcours : une fois le projet généré, l'étape 10 est refermée et
+ * y renvoyer ne ferait rien. Aucun lien vers l'accueil ici : la seule sortie
+ * d'un projet réussi est « Terminer », qui range le brouillon avant d'y
+ * retourner. Un refus n'a pas de « Terminer » : rien n'a été écrit, il reste à
+ * corriger, et l'aperçu reste alors la seule architecture possible.
+ *
+ * Les gestes sont un pied de page : une rangée sous le trait qui ferme la
+ * lecture, jamais mêlée à la marche à suivre.
  */
 export function ReportBody({
   report,
@@ -54,12 +69,22 @@ export function ReportBody({
   envVarNames,
   onRedownload,
   repositoryUrl,
+  projectId,
   onFinish,
 }: ReportBodyProps): ReactElement {
   const { t, locale } = useLocale();
   const body = t.build.report;
   const o = t.output.report;
   const github = isGithubUrl(repositoryUrl) ? repositoryUrl : undefined;
+  /**
+   * Un projet écrit a une page attitrée ; sinon (refus, ou projet absent de la
+   * liste de ce navigateur) l'aperçu du parcours est le seul endroit où ses
+   * choix se relisent encore.
+   */
+  const projectQuery = projectId === undefined ? undefined : encodeURIComponent(projectId);
+  const architectureHref =
+    projectQuery === undefined ? '/create/preview' : `/projects/architecture?id=${projectQuery}`;
+  const graphHref = projectQuery === undefined ? undefined : `/projects/graph?id=${projectQuery}`;
 
   return (
     <div>
@@ -166,12 +191,25 @@ export function ReportBody({
         </section>
       )}
 
-      <div className="mt-5 flex flex-wrap items-center gap-3">
+      {/* Les gestes du rapport forment un pied de page : une seule rangée,
+          sous le trait qui ferme la lecture. Ce sont des sorties (un projet
+          écrit, un dépôt à ouvrir, une archive à reprendre), pas des étapes :
+          les glisser dans la marche à suivre ferait prendre « Terminer » pour
+          une commande de plus. */}
+      <footer className="mt-8 flex flex-wrap items-center gap-3 border-t border-border pt-4">
         {!report.ok || onFinish === undefined ? null : <FinishButton onFinish={onFinish} />}
-        <Link className="pf-btn" href="/create/preview">
+        <Link className="pf-btn" href={architectureHref}>
           <Icon name="layers" />
           {o.architecture}
         </Link>
+        {graphHref === undefined ? null : (
+          <Link className="pf-btn" href={graphHref}>
+            <Icon name="gitBranch" />
+            {/* Le libellé de la carte du projet et de sa page : la même
+                destination porte le même mot partout. */}
+            {t.projects.graph}
+          </Link>
+        )}
         {!report.ok ? null : github !== undefined ? (
           <a
             aria-label={o.openGithubLabel}
@@ -196,7 +234,7 @@ export function ReportBody({
             {body.download}
           </button>
         )}
-      </div>
+      </footer>
     </div>
   );
 }

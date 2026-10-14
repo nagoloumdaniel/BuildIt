@@ -1,9 +1,11 @@
 'use client';
 
+import type { Manifest } from '@buildit/manifest';
 import Link from 'next/link';
 import { type ReactElement, useCallback, useEffect, useRef, useState } from 'react';
 import type { GenerationView } from '../../app/actions';
-import { encodeShareLink } from '../../app/share/codec';
+import { shareLinkBaseAction } from '../../app/actions-share';
+import { encodeShareLink, shareOrigin } from '../../app/share/codec';
 import { useLocale, useMessages } from '../../lib/i18n/provider';
 import { formatBytes, formatDate, type StoredProject } from '../../lib/projects';
 import { toast } from '../../lib/toasts';
@@ -26,11 +28,16 @@ import { TechIcon } from './tech-icon';
  * - le **nom** est de la prose (Inter), c'est ce qu'on cherche du regard ;
  * - la **mesure** (date, nombre de fichiers, poids) est en chasse fixe : ce
  *   sont des valeurs, et la famille le dit mieux qu'une étiquette ;
- * - les **gestes** portent icône *et* libellé. Une rangée d'icônes nues
- *   obligerait à survoler pour savoir laquelle télécharge et laquelle oublie —
- *   sur un geste destructif, c'est inacceptable. Les deux seules exceptions
- *   sont les copies de liens (GitHub, partage) : leur icône nomme déjà la
- *   destination, et le libellé reste dans l'infobulle et l'`aria-label`.
+ * - les **gestes** sont de deux sortes, et la frontière est celle de
+ *   l'engagement. Les quatre gestes **courts** (architecture, graphe de
+ *   dépendances, copie du lien GitHub, copie du lien de partage) sont en
+ *   **icône seule** : à quatre, leurs libellés occupaient trois lignes de la
+ *   carte, et ce qui ouvre vraiment le projet se perdait dedans. Le geste n'est
+ *   pas perdu pour autant : chaque icône porte son `aria-label` (le nom lu par
+ *   le lecteur d'écran) et son `title` (l'infobulle au survol), donc rien
+ *   n'oblige à cliquer pour savoir ce qu'on clique. Les gestes **principaux**
+ *   (ouvrir ou connecter GitHub, exporter, retirer, supprimer) gardent leur
+ *   libellé : ils engagent le projet, et l'un d'eux efface des fichiers.
  *
  * Elle lit la langue par les hooks plutôt que par des props : hors fournisseur
  * (rendu statique d'un test), `useMessages`/`useLocale` rendent le français,
@@ -68,13 +75,23 @@ export interface ProjectCardProps {
 const COPY_FEEDBACK_MS = 1_600;
 
 interface IconCopyButtonProps {
-  readonly value: string;
   /** Ce qui est copié, nommé pour le lecteur d'écran : « le lien GitHub ». */
   readonly what: string;
   /** Le libellé complet, pour l'infobulle. */
   readonly label: string;
   /** L'icône qui identifie la destination : un lien GitHub ou un lien de partage. */
   readonly icon: IconName;
+  /**
+   * Le texte à copier, **préparé au clic**.
+   *
+   * Le lien de partage ne peut pas être calculé au rendu : il dépend de
+   * l'origine publique, que seul le serveur connaît (`shareLinkBaseAction`) et
+   * qui n'arrive que par un appel asynchrone. Le préparer ici, c'est rendre le
+   * bouton tout de suite utilisable, plutôt qu'un bouton grisé le temps d'un
+   * aller-retour ou pire, un lien encodé sur `window.location.origin` qui ne
+   * s'ouvrirait que sur cette machine.
+   */
+  readonly prepare: () => Promise<string> | string;
 }
 
 /**
@@ -84,7 +101,7 @@ interface IconCopyButtonProps {
  * dit) mais porte l'icône de ce qu'il copie : deux boutons marqués d'une même
  * icône de copie ne se distingueraient pas l'un de l'autre.
  */
-function IconCopyButton({ value, what, label, icon }: IconCopyButtonProps): ReactElement {
+function IconCopyButton({ what, label, icon, prepare }: IconCopyButtonProps): ReactElement {
   const t = useMessages();
   const [done, setDone] = useState(false);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -100,7 +117,7 @@ function IconCopyButton({ value, what, label, icon }: IconCopyButtonProps): Reac
 
   const copy = useCallback(async (): Promise<void> => {
     try {
-      await navigator.clipboard.writeText(value);
+      await navigator.clipboard.writeText(await prepare());
       setDone(true);
       if (timer.current !== null) {
         clearTimeout(timer.current);
@@ -109,7 +126,7 @@ function IconCopyButton({ value, what, label, icon }: IconCopyButtonProps): Reac
     } catch {
       toast(t.common.copyFailed, { kind: 'error' });
     }
-  }, [t, value]);
+  }, [t, prepare]);
 
   const accessible = done ? t.common.copied : t.a11y.copyWhat(what);
 
@@ -123,6 +140,107 @@ function IconCopyButton({ value, what, label, icon }: IconCopyButtonProps): Reac
     >
       <Icon name={done ? 'check' : icon} size={14} />
     </button>
+  );
+}
+
+interface IconLinkProps {
+  readonly href: string;
+  /** Le nom accessible : sans lui, un lien en icône n'a **aucun** nom. */
+  readonly label: string;
+  /** L'infobulle : le libellé long, que la rangée dense ne peut plus porter. */
+  readonly title: string;
+  readonly icon: IconName;
+}
+
+/**
+ * Un lien en icône seule, dans la rangée des gestes courts.
+ *
+ * `aria-label` et `title` reçoivent le même libellé : l'un est le nom du lien
+ * pour le lecteur d'écran, l'autre la phrase que le survol affiche. Laisser
+ * l'un des deux vide rendrait le geste muet pour qui n'a pas la souris.
+ */
+function IconLink({ href, label, title, icon }: IconLinkProps): ReactElement {
+  return (
+    <Link aria-label={label} className="pf-btn pf-btn-sm pf-btn-icon" href={href} title={title}>
+      <Icon name={icon} size={14} />
+    </Link>
+  );
+}
+
+/** Le projet dont on dessine les gestes courts : ses liens et ses choix gardés. */
+export interface ProjectGesturesProps {
+  readonly project: StoredProject;
+}
+
+/**
+ * Le lien de partage d'un projet : le manifest dans le fragment, l'origine
+ * **publique** devant.
+ *
+ * L'origine du navigateur ne suffit pas : ouverte depuis `127.0.0.1`, elle
+ * fabriquerait un lien qui ne s'ouvre que sur cette machine. Le serveur, lui,
+ * connaît le nom sous lequel le site est réellement atteint ; c'est la même
+ * règle que le plan du projet et l'écran Dépôt. Un échec de l'action n'empêche
+ * pas de partager : on retombe alors sur l'origine locale.
+ */
+export async function projectShareLink(manifest: Manifest, currentOrigin: string): Promise<string> {
+  const base = await shareLinkBaseAction().catch(() => '');
+  return encodeShareLink(manifest, shareOrigin(base, currentOrigin));
+}
+
+/**
+ * Les quatre gestes courts d'un projet, en icônes seules.
+ *
+ * Ils vivent dans un composant à part parce que **deux cartes** les portent :
+ * la carte d'un projet enregistré, et la carte « projet terminé » de l'accueil,
+ * qui retrouve le projet dans la liste pour lui emprunter son identifiant et
+ * son manifest. Un second dessin de ces quatre icônes aurait divergé au premier
+ * `aria-label` oublié.
+ *
+ * Chaque geste n'apparaît que si sa donnée existe : sans manifest gardé, rien
+ * ne mène à l'architecture ni au graphe ; sans dépôt, rien à copier.
+ */
+export function ProjectGestures({ project }: ProjectGesturesProps): ReactElement {
+  const t = useMessages();
+  const repositoryUrl = project.repositoryUrl;
+  const manifest = project.manifest;
+
+  return (
+    <>
+      {repositoryUrl === undefined ? null : (
+        <IconCopyButton
+          icon="github"
+          label={t.projects.copyGithubLink}
+          prepare={() => repositoryUrl}
+          what={t.projects.githubWhat}
+        />
+      )}
+      {manifest === undefined ? null : (
+        <IconCopyButton
+          icon="link"
+          label={t.projects.copyShareLink}
+          prepare={() => projectShareLink(manifest, window.location.origin)}
+          what={t.projects.shareWhat}
+        />
+      )}
+      {manifest === undefined ? null : (
+        <>
+          <IconLink
+            href={`/projects/architecture?id=${encodeURIComponent(project.id)}`}
+            icon="folderTree"
+            label={t.projects.architecture}
+            title={t.projects.architecture}
+          />
+          {/* Le graphe de dépendances, comme dans le parcours : la route est
+              dédiée, la carte ne fait que la pointer. */}
+          <IconLink
+            href={`/projects/graph?id=${encodeURIComponent(project.id)}`}
+            icon="gitBranch"
+            label={t.projects.graph}
+            title={t.projects.graph}
+          />
+        </>
+      )}
+    </>
   );
 }
 
@@ -143,12 +261,6 @@ export function ProjectCard({
   // Sans dossier (mode hébergé : rien n'a été écrit), il n'y a rien à
   // supprimer : le geste disparaît plutôt que d'échouer après le clic.
   const deletable = onDelete !== undefined && project.directory !== '';
-  // Le lien de partage n'existe que si le manifest est gardé **et** qu'une
-  // origine est connue : le serveur et les tests n'ont pas de `window`.
-  const shareLink =
-    manifest === undefined || typeof window === 'undefined'
-      ? undefined
-      : encodeShareLink(manifest, window.location.origin);
 
   return (
     <Card>
@@ -206,38 +318,14 @@ export function ProjectCard({
         </ul>
       )}
 
-      {/* Les gestes : tous de la même taille, icône **et** libellé, et ils
-          passent à la ligne au lieu de déborder à 360 px. Les deux copies de
-          liens ouvrent la rangée, en icône seule parce que leur destination
-          est déjà dans le dessin. Un seul geste par destination :
-          l'architecture, GitHub (copier, ouvrir s'il existe, connecter sinon),
-          l'export ; puis, en retrait, retirer et supprimer. */}
+      {/* Les gestes : les quatre courts en icônes seules (architecture,
+          graphe, copies des liens), puis les principaux avec leur libellé. Ils
+          passent à la ligne au lieu de déborder à 360 px. Un seul geste par
+          destination : l'architecture, le graphe, GitHub (copier, ouvrir s'il
+          existe, connecter sinon), l'export ; puis, en retrait, retirer et
+          supprimer. */}
       <div className="mt-3 flex flex-wrap items-center gap-2">
-        {project.repositoryUrl === undefined ? null : (
-          <IconCopyButton
-            icon="github"
-            label={t.projects.copyGithubLink}
-            value={project.repositoryUrl}
-            what={t.projects.githubWhat}
-          />
-        )}
-        {shareLink === undefined ? null : (
-          <IconCopyButton
-            icon="link"
-            label={t.projects.copyShareLink}
-            value={shareLink}
-            what={t.projects.shareWhat}
-          />
-        )}
-        {manifest === undefined ? null : (
-          <Link
-            className="pf-btn pf-btn-sm"
-            href={`/projects/architecture?id=${encodeURIComponent(project.id)}`}
-          >
-            <Icon name="folderTree" size={14} />
-            {t.projects.architecture}
-          </Link>
-        )}
+        <ProjectGestures project={project} />
         {project.repositoryUrl === undefined ? (
           project.directory === '' ? null : (
             <Link className="pf-btn pf-btn-sm" href="/repo">

@@ -68,6 +68,17 @@ export const FR_DASHBOARD = {
     generatedOn: (date: string) => `Généré le ${date}`,
     files: (count: number) => `${count} fichier${count > 1 ? 's' : ''}`,
     architecture: 'Architecture du projet',
+    graph: 'Graphe de dépendances',
+    /**
+     * La page `/projects/graph?id=` : les deux états sans équivalent côté
+     * graphe d'étape (un projet sans manifest, un manifest sans technologie).
+     * Le reste de ses phrases vient de `messages.graph.ts` et des états communs
+     * à toute page de projet (`architecture.project`) : pas de copie ici.
+     */
+    graphLegacyBody:
+      'Ce projet a été généré avant que BuildIt ne conserve ses choix : sans eux, le moteur ne peut pas recalculer son graphe. Le dossier sur le disque, lui, est intact.',
+    graphEmptyBody:
+      'Le manifest de ce projet ne nomme aucune technologie : il n’y a pas de graphe à dessiner.',
     connectGithub: 'Connecter à GitHub',
     openGithub: 'Ouvrir sur GitHub',
     exportMore: 'Télécharger le ZIP ou installer',
@@ -157,6 +168,10 @@ export const EN_DASHBOARD: Widen<typeof FR_DASHBOARD> = {
     generatedOn: (date: string) => `Generated on ${date}`,
     files: (count: number) => `${count} file${count > 1 ? 's' : ''}`,
     architecture: 'Project architecture',
+    graph: 'Dependency graph',
+    graphLegacyBody:
+      'This project was generated before BuildIt kept its choices: without them, the engine cannot recompute its graph. The folder on disk is untouched.',
+    graphEmptyBody: 'This project’s manifest names no technology: there is no graph to draw.',
     connectGithub: 'Connect to GitHub',
     openGithub: 'Open on GitHub',
     exportMore: 'Download the ZIP or install',

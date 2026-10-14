@@ -1,6 +1,7 @@
 'use client';
 
-import { type ReactElement, useEffect, useRef, useState } from 'react';
+import type { Category } from '@buildit/registry';
+import { type ReactElement, useEffect, useMemo, useRef, useState } from 'react';
 import { ErrorState } from '../../../components/ui/error-state';
 import { Icon } from '../../../components/ui/icon';
 import { LoadingLine } from '../../../components/ui/loading';
@@ -9,28 +10,40 @@ import { useDraft, useSession } from '../../../components/wizard/draft-provider'
 import { StepShell } from '../../../components/wizard/shell';
 import type { OptionView } from '../../../lib/engine';
 import { useMessages } from '../../../lib/i18n/provider';
-import { loadOptionsAction } from '../../actions';
+import { selectionFor } from '../../../lib/selection';
+import { toggleExclusive } from '../../../lib/session';
+import { checkSelectionAction } from '../../actions';
 import { currentDeepLink, revealSection } from '../blueprint/deep-link';
-import { chooseHosting, infrastructureIds, selectedHosting } from './infrastructure';
+import { categoriesWithRole } from '../capabilities/capabilities';
+import { categoryLabel } from '../stack/stack-view';
+import { type InfrastructureBlock, loadInfrastructureBlocksAction } from './actions';
+import { CI_ID, chooseHosting, DOCKER_ID, selectedHosting } from './infrastructure';
 
 /**
  * Écran 8 Infrastructure (§6.9).
  *
- * Deux cases à cocher (`docker`, CI) et un cloud cible. Le brouillon n'a pas de
- * champ cloud : l'hébergeur est un identifiant de la catégorie `hosting` choisi
- * parmi les options du moteur, et il rejoint `draft.technologies`. Docker et
- * CI/CD restent des booléens, parce que le manifest n'a que deux façons de les
- * exprimer et c'est `lib/draft-to-manifest.ts` qui les traduit.
+ * **Les six catégories d'infrastructure** du catalogue y sont affichées, pas
+ * seulement l'hébergement : gestionnaire de paquets, monorepo, conteneurs,
+ * environnement de développement, intégration continue et cloud cible. Chacune
+ * vient du moteur, filtrée par la **même** vérification de compatibilité que le
+ * Stack Builder, sur la sélection complète (`lib/selection.ts`) : les
+ * possibilités de la pile et celles de l'infrastructure se combinent donc dans
+ * les deux sens, et un refus est dit ici plutôt qu'à la génération.
  *
- * La traduction brouillon → manifest n'est plus détaillée ici : le plan du
+ * Docker et l'intégration continue gardent leurs deux cartes : ce sont les deux
+ * seuls choix que le manifest range dans `infra` sous forme de booléens
+ * (`lib/draft-to-manifest.ts`). Leurs identifiants sont donc **retirés** des
+ * listes de catégories pour qu'un même choix n'ait pas deux contrôles.
+ *
+ * La traduction brouillon → manifest n'est pas détaillée ici : le plan du
  * projet (écran 9) montre ce qui sera réellement généré, et un crayon y ramène
- * à la bonne case.
+ * à la bonne section.
  */
 export default function InfrastructurePage(): ReactElement {
   const t = useMessages();
   const draft = useDraft();
   const session = useSession();
-  const [hosts, setHosts] = useState<readonly OptionView[]>([]);
+  const [blocks, setBlocks] = useState<readonly InfrastructureBlock[]>([]);
   const [loading, setLoading] = useState(true);
   const [failure, setFailure] = useState<string | undefined>(undefined);
   const [attempt, setAttempt] = useState(0);
@@ -55,20 +68,28 @@ export default function InfrastructurePage(): ReactElement {
     }
   }, []);
 
+  // La même sélection qu'au Stack Builder : technologies, capacités **et** choix
+  // d'infrastructure. Mémoïsée sur les pièces du brouillon, pas sur le
+  // brouillon, pour que l'écriture du verdict ne relance pas le chargement.
+  const selection = useMemo(
+    () =>
+      selectionFor({
+        targets: draft.targets,
+        technologies: draft.technologies,
+        capabilities: draft.capabilities,
+        infra: draft.infra,
+      }),
+    [draft.targets, draft.technologies, draft.capabilities, draft.infra],
+  );
+
   // biome-ignore lint/correctness/useExhaustiveDependencies: `attempt` est la clé de relance : elle ne sert qu'à rejouer la lecture après une panne du moteur, sans perdre le brouillon.
   useEffect(() => {
     let alive = true;
     setLoading(true);
-    const selection = {
-      targets: [...draft.targets],
-      technologies: [
-        ...new Set([...draft.technologies, ...draft.capabilities, ...infrastructureIds(draft)]),
-      ].sort(),
-    };
-    void loadOptionsAction('hosting', selection)
+    void loadInfrastructureBlocksAction(selection)
       .then((loaded) => {
         if (alive) {
-          setHosts(loaded);
+          setBlocks(loaded);
           setFailure(undefined);
         }
       })
@@ -89,10 +110,98 @@ export default function InfrastructurePage(): ReactElement {
     return () => {
       alive = false;
     };
-  }, [draft, attempt, t]);
+  }, [selection, attempt, t]);
 
-  const hostingIds = hosts.map((host) => host.id);
+  // Le verdict du moteur, écrit ici comme au Stack Builder : sans lui, un refus
+  // né d'un choix d'infrastructure ne bloquerait aucune étape (`lib/flow.ts`).
+  // biome-ignore lint/correctness/useExhaustiveDependencies: `attempt` est la clé de relance : elle ne sert qu'à rejouer la vérification après un refus.
+  useEffect(() => {
+    let alive = true;
+    void checkSelectionAction(selection).then((resolution) => {
+      if (alive) {
+        session.update((currentDraft) => ({ ...currentDraft, resolution }));
+      }
+    });
+    return () => {
+      alive = false;
+    };
+  }, [selection, session, attempt]);
+
+  // Les deux raccourcis ont leur propre carte : leurs identifiants ne sont pas
+  // proposés une seconde fois dans les listes de catégories.
+  const shortcuts = useMemo(() => new Set<string>([DOCKER_ID, CI_ID]), []);
+  // Les titres des sections viennent de la table `SCREEN_ROLE` : ils existent
+  // dès le premier rendu, avant même que le moteur ait rendu les options. Une
+  // page qui n'affiche qu'une ligne de chargement ne dit pas ce qu'elle attend ;
+  // ici, on lit tout de suite ce qui sera demandé.
+  const sections = useMemo(
+    () =>
+      categoriesWithRole('infrastructure').map((category) => ({
+        category,
+        options: (blocks.find((block) => block.category === category)?.options ?? []).filter(
+          (option) => !shortcuts.has(option.id),
+        ),
+      })),
+    [blocks, shortcuts],
+  );
+
+  // Qui appartient à quelle catégorie, pour `toggleExclusive` (§12) : reconstruit
+  // depuis les blocs déjà chargés, jamais depuis un second aller-retour.
+  const categoryOf = useMemo(() => {
+    const map = new Map<string, Category>();
+    for (const block of blocks) {
+      for (const option of block.options) {
+        map.set(option.id, block.category);
+      }
+    }
+    return map;
+  }, [blocks]);
+
+  const hostingOptions = blocks.find((block) => block.category === 'hosting')?.options ?? [];
+  const hostingIds = hostingOptions.map((host) => host.id);
   const current = selectedHosting(draft.technologies, hostingIds);
+
+  function toggle(id: string, category: Category): void {
+    if (category === 'hosting') {
+      session.update((currentDraft) =>
+        chooseHosting(currentDraft, hostingIds, current === id ? null : id),
+      );
+      return;
+    }
+    session.update((currentDraft) => ({
+      ...currentDraft,
+      technologies: toggleExclusive(currentDraft.technologies, id, category, categoryOf),
+    }));
+  }
+
+  /** Les sœurs disponibles d'une option bloquée : de quoi rebondir sans chercher. */
+  function alternatives(options: readonly OptionView[], id: string): readonly OptionView[] {
+    return options.filter((item) => item.id !== id && item.state === 'available').slice(0, 3);
+  }
+
+  function optionList(
+    category: Category,
+    options: readonly OptionView[],
+    choose: (id: string) => void,
+  ): ReactElement {
+    return (
+      <div className="pf-grid-4 mt-2">
+        {options.map((option) => {
+          const pressed =
+            category === 'hosting' ? option.id === current : draft.technologies.includes(option.id);
+          return (
+            <OptionCard
+              key={option.id}
+              option={option}
+              pressed={pressed}
+              alternatives={option.state === 'blocked' ? alternatives(options, option.id) : []}
+              onToggle={() => choose(option.id)}
+            />
+          );
+        })}
+      </div>
+    );
+  }
 
   return (
     <StepShell
@@ -141,66 +250,60 @@ export default function InfrastructurePage(): ReactElement {
         </div>
       </fieldset>
 
-      <section
-        ref={hostingRef}
-        className="pf-deep-target mt-6"
-        aria-label={t.build.infrastructure.cloudLegend}
-      >
-        <h2 className="pf-label">{t.build.infrastructure.cloudTitle}</h2>
-        <p className="pf-hint">
-          {t.build.infrastructure.cloudHintBefore} <span className="pf-mono">hosting</span>
-          {t.build.infrastructure.cloudHintMid} <span className="pf-mono">technologies</span>
-          {t.build.infrastructure.cloudHintAfter}
-        </p>
-        {loading ? (
-          <LoadingLine className="mt-2">{t.build.infrastructure.loading}</LoadingLine>
-        ) : null}
-        {failure === undefined ? null : (
-          <ErrorState
-            className="mt-3"
-            title={t.build.infrastructure.engineDownTitle}
-            body={failure}
-            actions={
-              <button
-                type="button"
-                className="pf-btn"
-                onClick={() => setAttempt((value) => value + 1)}
-              >
-                <Icon name="refresh" />
-                {t.common.retry}
-              </button>
-            }
-          />
-        )}
-        {loading || failure !== undefined ? null : hosts.length === 0 ? (
-          <p className="pf-hint mt-2">{t.build.infrastructure.empty}</p>
+      <p className="pf-hint mt-6">{t.build.infrastructure.pickHint}</p>
+
+      {loading ? (
+        <LoadingLine className="mt-2">{t.build.infrastructure.loading}</LoadingLine>
+      ) : null}
+      {failure === undefined ? null : (
+        <ErrorState
+          className="mt-3"
+          title={t.build.infrastructure.engineDownTitle}
+          body={failure}
+          actions={
+            <button
+              type="button"
+              className="pf-btn"
+              onClick={() => setAttempt((value) => value + 1)}
+            >
+              <Icon name="refresh" />
+              {t.common.retry}
+            </button>
+          }
+        />
+      )}
+      {sections.map((section) => {
+        const label = categoryLabel(t, section.category);
+        const body = loading ? null : section.options.length === 0 ? (
+          <p className="pf-hint mt-2">{t.build.infrastructure.nothingCompatible}</p>
         ) : (
-          <div className="pf-grid-4 mt-2">
-            {hosts.map((host) => {
-              const chosen = host.id === current;
-              return (
-                <OptionCard
-                  key={host.id}
-                  option={host}
-                  pressed={chosen}
-                  alternatives={
-                    host.state === 'blocked'
-                      ? hosts
-                          .filter((item) => item.id !== host.id && item.state === 'available')
-                          .slice(0, 3)
-                      : []
-                  }
-                  onToggle={() => {
-                    session.update((currentDraft) =>
-                      chooseHosting(currentDraft, hostingIds, chosen ? null : host.id),
-                    );
-                  }}
-                />
-              );
-            })}
-          </div>
-        )}
-      </section>
+          optionList(section.category, section.options, (id) => toggle(id, section.category))
+        );
+        if (section.category === 'hosting') {
+          return (
+            <section
+              key={section.category}
+              ref={hostingRef}
+              className="pf-deep-target mt-6"
+              aria-label={t.build.infrastructure.cloudLegend}
+            >
+              <h2 className="pf-label">{t.build.infrastructure.cloudTitle}</h2>
+              <p className="pf-hint">
+                {t.build.infrastructure.cloudHintBefore} <span className="pf-mono">hosting</span>
+                {t.build.infrastructure.cloudHintMid} <span className="pf-mono">technologies</span>
+                {t.build.infrastructure.cloudHintAfter}
+              </p>
+              {body}
+            </section>
+          );
+        }
+        return (
+          <section key={section.category} className="mt-6" aria-label={label}>
+            <h2 className="pf-label">{label}</h2>
+            {body}
+          </section>
+        );
+      })}
     </StepShell>
   );
 }

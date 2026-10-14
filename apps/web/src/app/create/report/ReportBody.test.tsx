@@ -60,14 +60,60 @@ describe('ReportBody', () => {
     expect(html).not.toContain('Avertissements');
   });
 
-  it('un seul bouton mène à l’architecture du projet, et aucun à l’accueil', () => {
+  it('un projet enregistré mène à ses pages d’architecture et de graphe', () => {
+    const html = render({
+      report: SUCCESS,
+      technologies: [],
+      ...BASE_PROPS,
+      projectId: 'mon-app-1',
+    });
+
+    expect(html).toContain('href="/projects/architecture?id=mon-app-1"');
+    expect(html).toContain('href="/projects/graph?id=mon-app-1"');
+    expect(html).toContain('Architecture du projet');
+    expect(html).toContain('Graphe de dépendances');
+    // Le projet est écrit : l'étape 10 est refermée, l'aperçu ne mènerait nulle part.
+    expect(html).not.toContain('href="/create/preview"');
+    expect(html).not.toContain('href="/"');
+    expect(html).not.toContain('Retour au tableau de bord');
+  });
+
+  it('sans identifiant de projet, l’aperçu reste la seule architecture possible', () => {
     for (const report of [SUCCESS, REFUSED]) {
       const html = render({ report, technologies: [], ...BASE_PROPS });
       expect(html.split('href="/create/preview"')).toHaveLength(2);
       expect(html).toContain('Architecture du projet');
+      // Rien n'a été écrit (refus), ou le projet n'est pas dans la liste : pas
+      // de page de projet à désigner.
+      expect(html).not.toContain('/projects/architecture');
+      expect(html).not.toContain('/projects/graph');
       expect(html).not.toContain('href="/"');
       expect(html).not.toContain('Retour au tableau de bord');
     }
+  });
+
+  it('l’identifiant du projet est encodé dans l’adresse : il vient du stockage', () => {
+    const html = render({
+      report: SUCCESS,
+      technologies: [],
+      ...BASE_PROPS,
+      projectId: 'mon app/1',
+    });
+    expect(html).toContain('href="/projects/architecture?id=mon%20app%2F1"');
+    expect(html).toContain('href="/projects/graph?id=mon%20app%2F1"');
+  });
+
+  it('les gestes sont un pied de page, après le trait qui ferme le rapport', () => {
+    const html = render({
+      report: SUCCESS,
+      technologies: [],
+      ...BASE_PROPS,
+      projectId: 'mon-app-1',
+      onFinish: () => undefined,
+    });
+    expect(html).toMatch(/<footer[^>]*class="[^"]*border-t[^"]*"/);
+    // Le pied est le dernier bloc du rapport : rien ne le suit.
+    expect(html.endsWith('</footer></div>')).toBe(true);
   });
 
   it('« Ouvrir sur GitHub » seulement avec une adresse de dépôt valide, dans un nouvel onglet', () => {

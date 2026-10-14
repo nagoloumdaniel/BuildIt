@@ -1,6 +1,7 @@
 import type { Category } from '@buildit/registry';
 import type { DraftState } from '../../../lib/draft';
 import { FR_WIZARD } from '../../../lib/i18n/messages.wizard';
+import { type EngineSelection, selectionOf } from '../../../lib/selection';
 import { toggleExclusive } from '../../../lib/session';
 
 /**
@@ -88,25 +89,31 @@ export const DEFAULT_CAPABILITY_CATEGORY: CapabilityCategory = 'authorization';
 
 export const CAPABILITY_CATEGORIES: readonly CapabilityCategory[] = CAPABILITY_FAMILIES;
 
-/** Ce que le moteur attend pour vérifier une sélection. */
-export interface EngineSelection {
-  readonly targets: readonly string[];
-  readonly technologies: readonly string[];
+/**
+ * Les catégories qu'un écran configure, dans l'ordre de la table.
+ *
+ * Dérivée de `SCREEN_ROLE`, jamais recopiée : c'est ce qui permet à l'écran
+ * Infrastructure de demander **ses six** catégories d'un coup sans qu'une
+ * septième, ajoutée au registry, soit oubliée quelque part. L'ordre est celui
+ * de la déclaration de la table, donc stable d'un rendu à l'autre.
+ */
+export function categoriesWithRole(role: ScreenRole): readonly Category[] {
+  return (Object.keys(SCREEN_ROLE) as Category[]).filter(
+    (category) => SCREEN_ROLE[category] === role,
+  );
 }
 
+export type { EngineSelection };
+
 /**
- * La sélection envoyée au moteur : technologies **et** capacités.
+ * La sélection envoyée au moteur : voir `lib/selection.ts`.
  *
- * Les deux écrans écrivent dans deux listes du brouillon, mais le moteur ne
- * connaît qu'une sélection de technologies c'est déjà la règle de
- * `chosenIds` dans `lib/draft-to-manifest.ts`. L'union est triée pour que deux
- * ordres de clics donnent la même vérification.
+ * Elle porte les technologies, les capacités **et** les choix d'infrastructure
+ * (Docker, CI) : un refus causé par l'un des trois doit être dit tôt, et les
+ * options proposées à un écran doivent refléter les choix des autres.
  */
 export function engineSelection(draft: DraftState): EngineSelection {
-  return {
-    targets: [...draft.targets],
-    technologies: [...new Set([...draft.technologies, ...draft.capabilities])].sort(),
-  };
+  return selectionOf(draft);
 }
 
 /**
