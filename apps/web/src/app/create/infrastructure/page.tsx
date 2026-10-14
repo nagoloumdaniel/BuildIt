@@ -17,7 +17,6 @@ import { currentDeepLink, revealSection } from '../blueprint/deep-link';
 import { categoriesWithRole } from '../capabilities/capabilities';
 import { categoryLabel } from '../stack/stack-view';
 import { type InfrastructureBlock, loadInfrastructureBlocksAction } from './actions';
-import { CI_ID, chooseHosting, DOCKER_ID, selectedHosting } from './infrastructure';
 
 /**
  * Écran 8 Infrastructure (§6.9).
@@ -127,22 +126,18 @@ export default function InfrastructurePage(): ReactElement {
     };
   }, [selection, session, attempt]);
 
-  // Les deux raccourcis ont leur propre carte : leurs identifiants ne sont pas
-  // proposés une seconde fois dans les listes de catégories.
-  const shortcuts = useMemo(() => new Set<string>([DOCKER_ID, CI_ID]), []);
   // Les titres des sections viennent de la table `SCREEN_ROLE` : ils existent
   // dès le premier rendu, avant même que le moteur ait rendu les options. Une
   // page qui n'affiche qu'une ligne de chargement ne dit pas ce qu'elle attend ;
-  // ici, on lit tout de suite ce qui sera demandé.
+  // ici, on lit tout de suite ce qui sera demandé. Les deux raccourcis (Docker,
+  // CI-CD) ont déjà été retirés des listes par l'action serveur.
   const sections = useMemo(
     () =>
       categoriesWithRole('infrastructure').map((category) => ({
         category,
-        options: (blocks.find((block) => block.category === category)?.options ?? []).filter(
-          (option) => !shortcuts.has(option.id),
-        ),
+        options: blocks.find((block) => block.category === category)?.options ?? [],
       })),
-    [blocks, shortcuts],
+    [blocks],
   );
 
   // Qui appartient à quelle catégorie, pour `toggleExclusive` (§12) : reconstruit
@@ -157,20 +152,23 @@ export default function InfrastructurePage(): ReactElement {
     return map;
   }, [blocks]);
 
-  const hostingOptions = blocks.find((block) => block.category === 'hosting')?.options ?? [];
-  const hostingIds = hostingOptions.map((host) => host.id);
-  const current = selectedHosting(draft.technologies, hostingIds);
+  const targetsOf = useMemo(() => {
+    const map = new Map<string, readonly string[]>();
+    for (const block of blocks) {
+      for (const option of block.options) {
+        map.set(option.id, option.targets);
+      }
+    }
+    return map;
+  }, [blocks]);
 
   function toggle(id: string, category: Category): void {
-    if (category === 'hosting') {
-      session.update((currentDraft) =>
-        chooseHosting(currentDraft, hostingIds, current === id ? null : id),
-      );
-      return;
-    }
+    // Une seule bascule pour les sept catégories, hébergement compris : le
+    // moteur décide (`hosting` est cumulative, plusieurs hébergeurs cohabitent,
+    // un par plateforme), et l'écran ne doit pas retirer un choix qu'il accepte.
     session.update((currentDraft) => ({
       ...currentDraft,
-      technologies: toggleExclusive(currentDraft.technologies, id, category, categoryOf),
+      technologies: toggleExclusive(currentDraft.technologies, id, category, categoryOf, targetsOf),
     }));
   }
 
@@ -179,26 +177,18 @@ export default function InfrastructurePage(): ReactElement {
     return options.filter((item) => item.id !== id && item.state === 'available').slice(0, 3);
   }
 
-  function optionList(
-    category: Category,
-    options: readonly OptionView[],
-    choose: (id: string) => void,
-  ): ReactElement {
+  function optionList(options: readonly OptionView[], choose: (id: string) => void): ReactElement {
     return (
       <div className="pf-grid-4 mt-2">
-        {options.map((option) => {
-          const pressed =
-            category === 'hosting' ? option.id === current : draft.technologies.includes(option.id);
-          return (
-            <OptionCard
-              key={option.id}
-              option={option}
-              pressed={pressed}
-              alternatives={option.state === 'blocked' ? alternatives(options, option.id) : []}
-              onToggle={() => choose(option.id)}
-            />
-          );
-        })}
+        {options.map((option) => (
+          <OptionCard
+            key={option.id}
+            option={option}
+            pressed={draft.technologies.includes(option.id)}
+            alternatives={option.state === 'blocked' ? alternatives(options, option.id) : []}
+            onToggle={() => choose(option.id)}
+          />
+        ))}
       </div>
     );
   }
@@ -277,7 +267,7 @@ export default function InfrastructurePage(): ReactElement {
         const body = loading ? null : section.options.length === 0 ? (
           <p className="pf-hint mt-2">{t.build.infrastructure.nothingCompatible}</p>
         ) : (
-          optionList(section.category, section.options, (id) => toggle(id, section.category))
+          optionList(section.options, (id) => toggle(id, section.category))
         );
         if (section.category === 'hosting') {
           return (

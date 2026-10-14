@@ -308,8 +308,15 @@ describe('ProjectsView vider la liste', () => {
     expect(html).toContain('<span class="hidden sm:inline">Vider la liste</span>');
     // Le bouton vit dans les actions de l'en-tête, pas au pied de la liste.
     expect(html).toContain('pf-page-head-actions');
-    // Aucune cible à proposer sur une liste vide : le bouton disparaît.
-    expect(render({ projects: [] })).not.toContain('aria-label="Vider la liste"');
+  });
+
+  it('reste en place, désactivé, quand la liste n’a rien à vider', () => {
+    // Le faire disparaître ferait croire qu'il a été retiré de l'écran ; un
+    // bouton désactivé dit qu'il n'y a rien à vider.
+    const empty = render({ projects: [] });
+
+    expect(empty).toContain('aria-label="Vider la liste"');
+    expect(empty).toContain('disabled');
   });
 
   it('n’offre que les plateformes réellement présentes dans la liste', () => {

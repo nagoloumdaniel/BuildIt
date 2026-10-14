@@ -175,6 +175,19 @@ export default function CapabilitiesPage(): ReactElement {
     return byId;
   }, [loaded]);
 
+  // Les plateformes des fiches, pour la **même** règle d'exclusivité que le
+  // moteur. Les familles de cet écran sont cumulatives aujourd'hui, mais la
+  // bascule ne doit pas dépendre de cette coïncidence.
+  const targetsOf = useMemo(() => {
+    const byId = new Map<string, readonly string[]>();
+    for (const options of loaded.values()) {
+      for (const option of options) {
+        byId.set(option.id, option.targets);
+      }
+    }
+    return byId;
+  }, [loaded]);
+
   const labelOf = new Map<string, string>();
   for (const options of loaded.values()) {
     for (const option of options) {
@@ -183,7 +196,7 @@ export default function CapabilitiesPage(): ReactElement {
   }
 
   function toggle(id: string, category: CapabilityCategory): void {
-    session.update((current) => toggleCapability(current, id, category, categoryOf));
+    session.update((current) => toggleCapability(current, id, category, categoryOf, targetsOf));
   }
 
   const needle = query.trim().toLowerCase();

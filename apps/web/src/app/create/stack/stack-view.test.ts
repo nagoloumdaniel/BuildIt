@@ -5,7 +5,6 @@ import {
   type CategoryBlock,
   categoryLabel,
   categoryProgress,
-  defaultCategory,
   filterCatalogue,
   filterOptions,
   GUIDED_MAX,
@@ -172,24 +171,6 @@ describe('categoryProgress', () => {
 
   it('compte les choix faits et la taille de la catégorie', () => {
     expect(categoryProgress(options)).toEqual({ selected: 1, total: 3 });
-  });
-});
-
-describe('defaultCategory', () => {
-  it('ouvre la première catégorie qui porte déjà un choix', () => {
-    const blocks = [
-      block('frontend', [option('react', 'available')]),
-      block('database', [option('postgres', 'selected')]),
-    ];
-    expect(defaultCategory(blocks)).toBe('database');
-  });
-
-  it('retombe sur la première catégorie avec des fiches', () => {
-    expect(defaultCategory([block('frontend', [option('react', 'available')])])).toBe('frontend');
-  });
-
-  it('sans fiche, ne choisit rien', () => {
-    expect(defaultCategory([])).toBeUndefined();
   });
 });
 

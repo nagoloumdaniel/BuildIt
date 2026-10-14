@@ -77,6 +77,29 @@ describe('exclusivité de catégorie', () => {
     ).toEqual(['COMPAT_EXCLUSIVE_CATEGORY']);
   });
 
+  it('la règle vaut pour toute catégorie exclusive, pas seulement `frontend`', () => {
+    // Deux bases ou deux ORM qui ne visent **aucune** plateforme commune
+    // cohabitent : une base pour la bibliothèque, une pour l'API. C'est la même
+    // règle que côté écran (`lib/session.ts`), qui sans plateforme remplacerait.
+    expect(
+      codes(
+        checkExclusiveCategories([
+          entry({ id: 'postgresql', category: 'database', targets: ['api'] }),
+          entry({ id: 'sqlite', category: 'database', targets: ['library'] }),
+        ]),
+      ),
+    ).toEqual([]);
+
+    expect(
+      codes(
+        checkExclusiveCategories([
+          entry({ id: 'prisma', category: 'orm', targets: ['api'] }),
+          entry({ id: 'drizzle', category: 'orm', targets: ['api', 'web'] }),
+        ]),
+      ),
+    ).toEqual(['COMPAT_EXCLUSIVE_CATEGORY']);
+  });
+
   it('refuse deux technologies d’une catégorie exclusive', () => {
     expect(
       codes(

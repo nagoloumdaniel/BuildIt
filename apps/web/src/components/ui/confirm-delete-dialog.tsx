@@ -1,6 +1,6 @@
 'use client';
 
-import { type ReactElement, type ReactNode, useEffect, useRef, useState } from 'react';
+import { type ReactElement, type ReactNode, useEffect, useId, useRef, useState } from 'react';
 import { Icon } from './icon';
 
 /**
@@ -50,11 +50,6 @@ export interface ConfirmDeleteDialogProps {
   readonly busy: boolean;
   /** Dit pendant `busy`, au lecteur d'écran comme à l'œil. */
   readonly busyLabel: string;
-  /**
-   * Le refus d'un geste qui n'est pas la suppression elle-même (dossier
-   * introuvable, action refusée). Affiché sans refermer la popup.
-   */
-  readonly notice?: string | undefined;
   /** Le refus d'une suppression : affiché avec le ton de l'erreur. */
   readonly error?: string | undefined;
   /**
@@ -76,13 +71,15 @@ export function ConfirmDeleteDialog({
   closeLabel,
   busy,
   busyLabel,
-  notice,
   error,
   result,
   onConfirm,
   onClose,
 }: ConfirmDeleteDialogProps): ReactElement {
   const dialog = useRef<HTMLDialogElement>(null);
+  // Un identifiant stable par instance : deux popups montées ensemble (une par
+  // carte) ne doivent pas se disputer le même `id` de titre.
+  const titleId = useId();
   // Toutes cochées par défaut : la question posée est « supprimer quoi ? », et
   // la réponse la plus courante est « tout ce qui est proposé ». Une case
   // décochée est un retrait explicite, jamais un oubli.
@@ -94,11 +91,21 @@ export function ConfirmDeleteDialog({
   // quand elle est demandée, donc il n'y a pas d'attribut `open` à tenir en
   // parallèle de l'état du parent. `showModal` est aussi ce qui pose le focus
   // dans la popup et rend le reste de la page inerte.
+  //
+  // La fermeture, elle, se fait par **`close()`** et non par un simple
+  // démontage : mesuré dans Chrome, retirer du DOM une boîte ouverte laisse le
+  // focus sur `<body>`, alors que `close()` le rend au bouton qui l'a ouverte.
+  // Sans ça, un parcours clavier repartait du début du document.
   useEffect(() => {
     const element = dialog.current;
     if (element !== null && !element.open) {
       element.showModal();
     }
+    return () => {
+      if (element !== null && element.open) {
+        element.close();
+      }
+    };
   }, []);
 
   const toggle = (id: DeleteTargetId): void => {
@@ -118,7 +125,8 @@ export function ConfirmDeleteDialog({
     // un `onKeyDown` ici ne s'applique donc pas.
     // biome-ignore lint/a11y/useKeyWithClickEvents: l'Échap est traité par `onCancel` sur ce même élément.
     <dialog
-      aria-labelledby="pf-delete-dialog-title"
+      aria-busy={busy}
+      aria-labelledby={titleId}
       className="pf-dialog"
       onCancel={(event) => {
         // L'Échap est natif ; il ne doit pas fermer pendant une suppression en
@@ -138,7 +146,7 @@ export function ConfirmDeleteDialog({
       ref={dialog}
     >
       <div className="pf-dialog-box">
-        <p className="pf-title-sm flex items-center gap-2" id="pf-delete-dialog-title">
+        <p className="pf-title-sm flex items-center gap-2" id={titleId}>
           <span aria-hidden="true" style={{ color: 'var(--pf-danger)' }}>
             <Icon name="warning" size={16} />
           </span>
@@ -151,12 +159,6 @@ export function ConfirmDeleteDialog({
             {busyLabel}
           </p>
         ) : null}
-
-        {notice === undefined ? null : (
-          <p className="pf-hint mt-2" role="status">
-            {notice}
-          </p>
-        )}
 
         {error === undefined ? null : (
           <p className="pf-error mt-2" role="status">

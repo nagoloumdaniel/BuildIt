@@ -24,7 +24,7 @@ export type BadgeProps = {
   readonly children?: ReactNode;
 };
 
-/** L'étiquette courte d'un état (« Recommandé », « Connecté », « Choisie »). */
+/** L'étiquette courte d'un état (« Recommandé », « Connecté », « Lecture seule »). */
 export function Badge({ tone = 'neutral', className, children }: BadgeProps): ReactElement {
   return <span className={badgeClassName(tone, className)}>{children}</span>;
 }

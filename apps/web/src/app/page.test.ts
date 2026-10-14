@@ -127,7 +127,9 @@ describe('Dashboard projets créés (§6.14)', () => {
 
     expect(html).toContain('Projets créés');
     expect(html).toContain('mon-projet');
-    expect(html).toContain('Terminé');
+    // Plus de pastille « Terminé » : la carte se reconnaît à sa phrase, et à
+    // l'absence des gestes de brouillon.
+    expect(html).toContain('Ce projet est généré');
     expect(html).not.toContain('Reprendre');
     expect(html).not.toContain('Supprimer le brouillon');
   });

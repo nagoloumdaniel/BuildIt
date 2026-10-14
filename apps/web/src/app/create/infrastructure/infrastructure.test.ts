@@ -1,10 +1,12 @@
+import { isExclusive } from '@buildit/compatibility';
 import { parseManifest } from '@buildit/manifest';
 import { describe, expect, it } from 'vitest';
 import { type DraftState, freshDraft } from '../../../lib/draft';
 import { draftToManifest } from '../../../lib/draft-to-manifest';
+import { toggleExclusive } from '../../../lib/session';
 import { loadOptionsAction } from '../../actions';
 import { loadInfrastructureBlocksAction } from './actions';
-import { chooseHosting, infrastructureIds, selectedHosting } from './infrastructure';
+import { infrastructureIds } from './infrastructure';
 
 /** Un brouillon complet : les mêmes choix que le preset SaaS, saisis aux écrans. */
 function saasDraft(): DraftState {
@@ -59,33 +61,16 @@ describe('booléens d’infrastructure', () => {
 });
 
 describe('cloud cible', () => {
-  const HOSTING_IDS = ['vercel', 'netlify', 'cloudflare'];
-
-  it('retient l’hébergeur choisi sans toucher au reste de la pile', () => {
-    const draft = { ...freshDraft(), technologies: ['next', 'vercel', 'typescript'] };
-    const next = chooseHosting(draft, HOSTING_IDS, 'netlify');
-
-    expect(next.technologies).toEqual(['next', 'typescript', 'netlify']);
-    // Le brouillon reçu n'est pas muté.
-    expect(draft.technologies).toEqual(['next', 'vercel', 'typescript']);
-  });
-
-  it('remplace l’hébergeur précédent : le cloud cible est unique', () => {
+  it('l’hébergement est cumulatif : l’écran applique la règle du moteur', () => {
+    // `hosting` n'est pas une catégorie exclusive (`arity.ts`) : deux
+    // hébergeurs cohabitent, une API sur Fly.io et un web sur Vercel. L'écran
+    // n'a donc pas de règle d'unicité à lui — c'est ce que la bascule
+    // `toggleExclusive` sans `targets` fait déjà (aucun frère retiré).
+    expect(isExclusive('hosting')).toBe(false);
     const draft = { ...freshDraft(), technologies: ['next', 'vercel'] };
-    expect(chooseHosting(draft, HOSTING_IDS, 'cloudflare').technologies).toEqual([
-      'next',
-      'cloudflare',
-    ]);
-  });
-
-  it('retire l’hébergeur quand on le désélectionne, et rien d’autre', () => {
-    const draft = { ...freshDraft(), technologies: ['next', 'vercel', 'docker'] };
-    expect(chooseHosting(draft, HOSTING_IDS, null).technologies).toEqual(['next', 'docker']);
-  });
-
-  it('retrouve l’hébergeur déjà choisi, et rien quand il n’y en a pas', () => {
-    expect(selectedHosting(['next', 'vercel'], HOSTING_IDS)).toBe('vercel');
-    expect(selectedHosting(['next', 'typescript'], HOSTING_IDS)).toBeUndefined();
+    expect(
+      toggleExclusive(draft.technologies, 'netlify', 'hosting', new Map([['vercel', 'hosting']])),
+    ).toEqual(['next', 'vercel', 'netlify']);
   });
 });
 
@@ -163,18 +148,27 @@ describe('la source réelle des six catégories d’infrastructure (Server Actio
     }
   });
 
-  it('filtre par compatibilité : Docker ne sort pas sur des cibles mobiles', async () => {
-    // `docker` cible web/api/library (§10) : sur mobile, le moteur doit le
-    // refuser et **dire pourquoi**, au lieu de le laisser passer jusqu'à la
-    // génération.
+  it('n’expose jamais Docker ni GitHub Actions dans les listes : ils ont leur carte', async () => {
     const blocks = await loadInfrastructureBlocksAction({
+      targets: ['web', 'api'],
+      technologies: ['next', 'hono'],
+    });
+
+    const ids = blocks.flatMap((block) => block.options.map((option) => option.id));
+    expect(ids).not.toContain('docker');
+    expect(ids).not.toContain('github-actions');
+  });
+
+  it('filtre par compatibilité : Docker est refusé sur des cibles mobiles', async () => {
+    // `docker` cible web/api/library (§10) : sur mobile, le moteur le refuse et
+    // **dit pourquoi**. Le filtre des raccourcis ne cache pas ce refus : c'est
+    // la source, `loadOptionsAction`, qui le porte.
+    const containers = await loadOptionsAction('containers', {
       targets: ['mobile'],
       technologies: ['expo', 'typescript'],
     });
-    const containers = blocks.find((block) => block.category === 'containers');
+    const docker = containers.find((option) => option.id === 'docker');
 
-    expect(containers).toBeDefined();
-    const docker = containers?.options.find((option) => option.id === 'docker');
     expect(docker?.state).toBe('blocked');
     expect(docker?.reason).toBeDefined();
   });

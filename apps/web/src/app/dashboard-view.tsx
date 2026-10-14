@@ -214,7 +214,6 @@ export function DashboardView({
                 <p className="pf-eyebrow">{t.dashboard.projectsTitle}</p>
                 <p className="mt-1 flex flex-wrap items-center gap-2">
                   <span>{draft.name === '' ? t.dashboard.unnamed : draft.name}</span>
-                  <span className="pf-badge pf-badge-ok">{t.projects.done}</span>
                 </p>
                 <p className="pf-hint mt-1">{t.dashboard.projectDone}</p>
                 <div className="mt-3 flex flex-wrap items-center gap-3">

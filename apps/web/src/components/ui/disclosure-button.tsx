@@ -21,9 +21,9 @@ import { Icon } from './icon';
 export interface DisclosureButtonProps {
   readonly expanded: boolean;
   readonly onToggle: () => void;
-  /** Le libellé replié : « Voir toutes les options (12) ». */
+  /** Le libellé replié : « Télécharger le ZIP ou installer ». */
   readonly moreLabel: string;
-  /** Le libellé déplié : « Revenir aux recommandations ». */
+  /** Le libellé déplié : « Masquer l'export ». */
   readonly lessLabel: string;
   /** L'id de la zone que le bouton déplie, pour `aria-controls`. */
   readonly controls?: string;

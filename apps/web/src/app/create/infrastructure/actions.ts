@@ -2,8 +2,12 @@
 
 import type { Category } from '@buildit/registry';
 import type { OptionView } from '../../../lib/engine';
+import { CI_ID, DOCKER_ID } from '../../../lib/infrastructure-ids';
 import { loadOptionsAction } from '../../actions';
 import { categoriesWithRole } from '../capabilities/capabilities';
+
+/** Les deux raccourcis qui ont leur propre carte, donc exclus des listes. */
+const shortcuts: ReadonlySet<string> = new Set([DOCKER_ID, CI_ID]);
 
 /** Une catégorie d'infrastructure et ses options, telles que l'écran les rend. */
 export interface InfrastructureBlock {
@@ -39,6 +43,14 @@ export async function loadInfrastructureBlocksAction(
     })),
   );
 
-  // Une catégorie sans fiche ne s'affiche pas : elle ne serait qu'un cul-de-sac.
-  return loaded.filter((block) => block.options.length > 0);
+  // Docker et l'intégration continue ont leurs deux cartes à part : leurs
+  // identifiants sortent des listes **ici**, pas seulement à l'écran, pour
+  // qu'aucun appelant ne les voie deux fois. Une catégorie vidée par ce filtre
+  // disparaît au lieu de s'afficher vide.
+  return loaded
+    .map((block) => ({
+      category: block.category,
+      options: block.options.filter((option) => !shortcuts.has(option.id)),
+    }))
+    .filter((block) => block.options.length > 0);
 }

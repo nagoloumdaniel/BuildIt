@@ -51,8 +51,12 @@ describe('ConfirmDeleteDialog le formulaire', () => {
     const html = render();
 
     expect(html).toContain('<dialog');
-    expect(html).toContain('aria-labelledby="pf-delete-dialog-title"');
-    expect(html).toContain('id="pf-delete-dialog-title"');
+    // L'identifiant du titre est engendré (`useId`) : deux popups montées
+    // ensemble ne peuvent pas se le disputer. Ce qui compte, c'est que
+    // `aria-labelledby` désigne bien un élément présent.
+    const labelled = /aria-labelledby="([^"]+)"/.exec(html)?.[1];
+    expect(labelled).toBeTruthy();
+    expect(html).toContain(`id="${labelled}"`);
     expect(html).toContain('Supprimer « mon-app » ?');
     expect(html).toContain('Choisissez ce qui doit disparaître.');
   });

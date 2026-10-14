@@ -137,9 +137,9 @@ export const FR_DASHBOARD = {
       'Aucune adresse de dépôt n’est enregistrée pour ce projet. Vous pouvez en créer un nouveau, ou continuer sans GitHub.',
     repositoryConnect: 'Connecter un nouveau dépôt',
     repositoryArchiveOnly:
-      'Ce projet a été téléchargé en archive : il n’y a pas de copie locale à pousser sur un nouveau dépôt. « Passer » le laisse tel quel.',
+      'Ce projet a été téléchargé en archive : il n’y a pas de copie locale à pousser sur un nouveau dépôt. « Fermer » le laisse tel quel.',
     repositoryFailed: (name: string) =>
-      `Le dépôt GitHub de ${name} n’a pas pu être supprimé : il est peut-être déjà parti, ou votre compte GitHub n’y a plus accès. La carte a été détachée pour ne pas garder une adresse morte.`,
+      `Le dépôt GitHub de ${name} n’a pas pu être supprimé : votre compte n’y a peut-être plus accès, ou GitHub n’a pas répondu. L’adresse est conservée pour que vous puissiez réessayer.`,
     deleteFailed: (message: string) => `La suppression n’a pas abouti : ${message}`,
     forgetHint: 'Retirer un projet d’ici ne supprime aucun fichier sur le disque.',
     openInExplorer: 'Ouvrir dans l’explorateur',
@@ -281,9 +281,9 @@ export const EN_DASHBOARD: Widen<typeof FR_DASHBOARD> = {
       'No repository address is stored for this project. You can create a new one, or carry on without GitHub.',
     repositoryConnect: 'Connect a new repository',
     repositoryArchiveOnly:
-      'This project was downloaded as an archive: there is no local copy to push to a new repository. “Skip” leaves it as is.',
+      'This project was downloaded as an archive: there is no local copy to push to a new repository. “Close” leaves it as is.',
     repositoryFailed: (name: string) =>
-      `The GitHub repository of ${name} could not be deleted: it may already be gone, or your GitHub account no longer has access. The card was detached so it does not keep a dead address.`,
+      `The GitHub repository of ${name} could not be deleted: your account may no longer have access, or GitHub did not answer. The address is kept so you can try again.`,
     deleteFailed: (message: string) => `The deletion did not go through: ${message}`,
     forgetHint: 'Removing a project from here deletes no file on disk.',
     openInExplorer: 'Open in the file explorer',

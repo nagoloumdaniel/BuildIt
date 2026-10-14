@@ -119,21 +119,26 @@ export function engineSelection(draft: DraftState): EngineSelection {
 /**
  * Ajoute, retire ou remplace une capacité, sans muter le brouillon reçu.
  *
- * `email`, `payments`, `cms`, `ecommerce` et `build` sont des catégories
- * exclusives (§12) au même titre que `language` ou `orm` au Stack Builder :
- * choisir un second moyen de paiement sans retirer le premier produisait
- * une sélection que le moteur refusait au Blueprint, pas ici (même bug que
- * `toggleExclusive`, cf. `lib/session.ts`).
+ * Les catégories de cet écran sont **cumulatives** (`arity.ts`) : deux moyens
+ * de paiement, deux CMS, deux outils de validation cohabitent, et
+ * `toggleExclusive` n'a donc rien à remplacer. Le commentaire d'avant parlait
+ * d'exclusivité pour `email`, `payments`, `cms`, `ecommerce` ou `build` — une
+ * règle qui n'existe plus : les recopier ici invitait à « corriger » la bascule
+ * dans le mauvais sens.
  *
- * `categoryOf` vient des options déjà chargées pour la famille affichée les
- * seules dont le retrait silencieux a un sens : une capacité d'une autre
- * famille, non chargée ici, n'est jamais retirée par erreur.
+ * `categoryOf` et `targetsOf` viennent des options déjà chargées pour la famille
+ * affichée : les seules dont le retrait silencieux aurait un sens. Une capacité
+ * d'une autre famille, non chargée ici, n'est jamais retirée par erreur.
  */
 export function toggleCapability(
   draft: DraftState,
   id: string,
   category: Category,
   categoryOf: ReadonlyMap<string, Category>,
+  targetsOf?: ReadonlyMap<string, readonly string[]>,
 ): DraftState {
-  return { ...draft, capabilities: toggleExclusive(draft.capabilities, id, category, categoryOf) };
+  return {
+    ...draft,
+    capabilities: toggleExclusive(draft.capabilities, id, category, categoryOf, targetsOf),
+  };
 }

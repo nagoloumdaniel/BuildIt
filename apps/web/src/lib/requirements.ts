@@ -67,13 +67,19 @@ export type MissingRequirement =
 /**
  * Les formes d'architecture qui produisent du code serveur quel que soit
  * l'écran : leur squelette crée des dossiers serveur inconditionnellement.
+ *
+ * Table **complète** et non `Set<string>`, comme les deux tables voisines : une
+ * architecture ajoutée au manifest casse la compilation ici au lieu de tomber
+ * silencieusement dans « pas de besoin serveur ».
  */
-const SERVER_ARCHITECTURES: ReadonlySet<string> = new Set([
-  'modular-monolith',
-  'microservices',
-  'serverless',
-  'event-driven',
-]);
+const SERVER_ARCHITECTURES: Readonly<Record<Architecture, boolean>> = {
+  'single-app': false,
+  monorepo: false,
+  'modular-monolith': true,
+  microservices: true,
+  serverless: true,
+  'event-driven': true,
+};
 
 /** Ce qu'une architecture exige de l'écran Capacités. */
 const ARCHITECTURE_CAPABILITIES: Readonly<Record<Architecture, readonly Category[]>> = {
@@ -177,7 +183,7 @@ export function missingRequirements(draft: DraftState): readonly MissingRequirem
   }
 
   if (architecture !== undefined) {
-    if (SERVER_ARCHITECTURES.has(architecture)) {
+    if (SERVER_ARCHITECTURES[architecture]) {
       // Une application serveur, c'est la plateforme `api` **et** son
       // framework : l'un sans l'autre ne produit rien.
       if (!targets.includes('api')) {

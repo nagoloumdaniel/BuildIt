@@ -117,11 +117,10 @@ export interface ProjectsViewProps {
   /** `null` : la liste n'a pas encore été lue (`localStorage`, après hydratation). */
   readonly projects: readonly StoredProject[] | null;
   /**
-   * La suppression d'un projet : la **vue** l'exécute, parce qu'elle seule
-   * sait quoi supprimer (le dossier, l'adresse du dépôt, la ligne). Elle
-   * prévient ensuite le parent, qui relit `localStorage`.
+   * Le vidage est porté par la vue elle-même : elle seule sait quoi supprimer
+   * (les dossiers, les adresses, les lignes). `onChanged` prévient le parent,
+   * qui relit `localStorage`.
    */
-  readonly onClear?: ((ids: readonly DeleteTargetId[]) => void) | undefined;
   /** La liste persistée a changé : le parent la relit. */
   readonly onChanged?: (() => void) | undefined;
   /** Une sortie réussie (archive ou dossier) depuis la carte d'un projet. */
@@ -280,24 +279,24 @@ export function ProjectsView({ projects, onChanged, onExported }: ProjectsViewPr
   }
 
   /**
-   * Le vidage n'a de sens que sur une liste qui porte quelque chose : sans
-   * ligne, sans dépôt et sans dossier, le bouton n'aurait aucune cible à
-   * proposer. Le libellé disparaît en petit écran (la place manque à côté du
-   * titre), `aria-label` reste : un bouton en icône seule garde son nom.
+   * Le bouton reste **en place** même sans rien à vider : il est désactivé.
+   * Le faire disparaître ferait croire qu'il a été retiré de l'écran. Le
+   * libellé s'efface en petit écran (la place manque à côté du titre),
+   * `aria-label` reste : un bouton en icône seule garde son nom.
    */
-  const clearButton =
-    targets.length === 0 ? null : (
-      <button
-        aria-label={t.projects.forgetAll}
-        className="pf-btn pf-btn-sm pf-btn-danger"
-        onClick={() => setConfirming(true)}
-        title={t.projects.forgetAll}
-        type="button"
-      >
-        <Icon name="trash" size={14} />
-        <span className="hidden sm:inline">{t.projects.forgetAll}</span>
-      </button>
-    );
+  const clearButton = (
+    <button
+      aria-label={t.projects.forgetAll}
+      className="pf-btn pf-btn-sm pf-btn-danger"
+      disabled={targets.length === 0}
+      onClick={() => setConfirming(true)}
+      title={t.projects.forgetAll}
+      type="button"
+    >
+      <Icon name="trash" size={14} />
+      <span className="hidden sm:inline">{t.projects.forgetAll}</span>
+    </button>
+  );
 
   return (
     <ScreenShell

@@ -200,7 +200,9 @@ describe('Dashboard un projet généré n’est jamais un brouillon', () => {
     const html = render(draft, { report: SUCCESS });
 
     expect(html).toContain('mon-projet');
-    expect(html).toContain('Terminé');
+    // La carte « projet terminé » n'a plus de pastille « Terminé » : elle est
+    // reconnaissable à sa phrase, et à l'absence des gestes de brouillon.
+    expect(html).toContain('Ce projet est généré');
     expect(html).not.toContain('Reprendre');
     expect(html).not.toContain('Supprimer le brouillon');
   });

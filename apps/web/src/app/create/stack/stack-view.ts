@@ -196,17 +196,6 @@ export function categoryProgress(options: readonly StackOption[]): CategoryProgr
 }
 
 /**
- * La catégorie ouverte par défaut : celle où l'utilisateur a déjà choisi
- * quelque chose, sinon la première du catalogue.
- */
-export function defaultCategory(blocks: readonly CategoryBlock[]): Category | undefined {
-  const withSelection = blocks.find((block) =>
-    block.options.some((option) => option.state === 'selected'),
-  );
-  return (withSelection ?? blocks[0])?.category;
-}
-
-/**
  * Les alternatives à proposer pour une option bloquée : les options **disponibles**
  * de la même famille (ni bloquées, ni déjà choisies : celles-là sont la cause), dans l'ordre du catalogue, sans l'option elle-même.
  *

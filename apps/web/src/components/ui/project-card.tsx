@@ -490,21 +490,22 @@ export function ProjectCard({ project, onExported, onChanged }: ProjectCardProps
         if (step.kind === 'repository') {
           try {
             const outcome = await deleteRepositoryAction(step.url);
-            // `gone` est un succès : le dépôt n'est plus là, c'est tout ce que
-            // la suppression d'ici aurait obtenu.
-            detachRepository(browserProjectStorage(), step.id);
-            repository = { kind: outcome.ok ? outcome.status : 'gone' };
-            if (outcome.ok) {
-              done.push({ key: 'github', text: t.projects.deletedRepository });
-            } else {
+            if (!outcome.ok) {
+              // Un refus (compte non administrateur, déconnecté, adresse
+              // invalide) ne prouve **pas** que le dépôt a disparu : on ne
+              // détache pas, sinon l'écran annoncerait « introuvable » à tort.
               failure = t.projects.repositoryFailed(project.name);
+              continue;
             }
-          } catch {
-            // L'action ne répond pas : l'adresse est peut-être encore vivante,
-            // mais rien ne permet de le vérifier. On détache pour ne pas garder
-            // un lien sur lequel l'application ne peut plus agir.
+            // `gone` est un succès : le dépôt n'est plus là, c'est tout ce que
+            // la suppression d'ici aurait obtenu. L'adresse est morte, on
+            // détache le projet pour qu'aucun geste ne s'appuie dessus.
             detachRepository(browserProjectStorage(), step.id);
-            repository = { kind: 'gone' };
+            repository = { kind: outcome.status };
+            done.push({ key: 'github', text: t.projects.deletedRepository });
+          } catch {
+            // L'action ne répond pas : le dépôt est peut-être encore vivant.
+            // Détacher ferait perdre l'adresse sans preuve ; on le dit.
             failure = t.projects.repositoryFailed(project.name);
           }
           continue;
