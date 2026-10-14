@@ -4,17 +4,18 @@ import type { ReactElement } from 'react';
 import { Icon } from './icon';
 
 /**
- * « Voir toutes les options » / « Revenir aux recommandations » : **un**
- * bouton, deux états, et il se replie.
+ * « Télécharger le ZIP ou installer » / « Masquer l'export » : **un** bouton,
+ * deux états, et le panneau se replie.
  *
- * Trois écrans portaient leur propre version de ce geste, et deux ne savaient
- * que déplier : une fois les seize architectures affichées, plus moyen de
- * revenir aux trois recommandées. Ici l'état est explicite (`aria-expanded`),
- * le chevron dit le sens vers le bas pour déplier, vers le haut pour replier
- * et le libellé change avec lui.
+ * Le Stack Builder portait ce geste pour déplier sa longue traîne ; il ne la
+ * cache plus (tout le catalogue est affiché, l'étoile marque les
+ * recommandations). Le seul appelant est le panneau d'export d'une carte de
+ * projet, où le geste reste utile : l'export est une action, pas une liste.
  *
- * Il est mis en valeur sans crier : contour accentué et chevron, pas un
- * deuxième bouton principal qui disputerait « Continuer ».
+ * L'état est explicite (`aria-expanded`), le chevron dit le sens — vers le bas
+ * pour ouvrir, vers le haut pour fermer — et le libellé change avec lui. Mis en
+ * valeur sans crier : contour accentué et chevron, pas un deuxième bouton
+ * principal qui disputerait l'action de la carte.
  */
 
 export interface DisclosureButtonProps {

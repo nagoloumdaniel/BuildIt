@@ -60,7 +60,6 @@ export const FR_WIZARD = {
       description:
         'Le profil oriente l’architecture et la stack proposées ensuite. Il n’entre pas dans le manifest : c’est une aide au choix, pas une contrainte du moteur.',
       legend: 'Profils disponibles',
-      chosenBadge: 'Choisi',
       none: 'Aucun profil choisi pour l’instant.',
       summary: (label: string, guides: string) => `${label} : ${guides}`,
       labels: {
@@ -122,7 +121,6 @@ export const FR_WIZARD = {
       description:
         'La forme la plus souple n’est pas la moins chère à exploiter. L’architecture choisie part dans le manifest.',
       legend: 'Formes d’architecture disponibles',
-      chosenBadge: 'Choisie',
       impact: (complexity: string, cost: string) =>
         `Complexité : ${complexity} · Coût d’exploitation : ${cost}`,
       none: 'Aucune architecture choisie pour l’instant.',
@@ -217,8 +215,6 @@ export const FR_WIZARD = {
       expertNote: 'Tout le catalogue de cette catégorie, incompatibles comprises.',
       guidedNote:
         'Les recommandations portent l’étoile ; tout le catalogue de la catégorie est affiché.',
-      chosenBadge: 'Choisi',
-      blockedBadge: 'Incompatible',
       blockedFallback: 'Incompatible avec la sélection en cours.',
       navLabel: 'Catégories du catalogue',
       navEyebrow: 'Catégories',
@@ -299,8 +295,6 @@ export const FR_WIZARD = {
       servicesNoteBefore: 'Ces identifiants partent dans',
       servicesNoteAfter: ': le manifest ne porte aucune valeur, seulement des choix.',
       emptyFamily: 'Aucune option dans cette famille pour l’instant.',
-      chosenBadge: 'Choisie',
-      blockedBadge: 'Indisponible',
       families: {
         authorization: {
           label: 'Autorisations',
@@ -374,7 +368,6 @@ export const EN_WIZARD: Widen<typeof FR_WIZARD> = {
       description:
         'The profile steers the architecture and stack offered next. It never enters the manifest: it is an aid to choice, not an engine constraint.',
       legend: 'Available profiles',
-      chosenBadge: 'Chosen',
       none: 'No profile chosen yet.',
       summary: (label: string, guides: string) => `${label}: ${guides}`,
       labels: {
@@ -427,7 +420,6 @@ export const EN_WIZARD: Widen<typeof FR_WIZARD> = {
       description:
         'The most flexible shape is not the cheapest to run. The chosen architecture goes into the manifest.',
       legend: 'Available architecture shapes',
-      chosenBadge: 'Chosen',
       impact: (complexity: string, cost: string) =>
         `Complexity: ${complexity} · Operating cost: ${cost}`,
       none: 'No architecture chosen yet.',
@@ -506,8 +498,6 @@ export const EN_WIZARD: Widen<typeof FR_WIZARD> = {
         `${count} incompatible option${count > 1 ? 's' : ''} hidden by the “compatible only” filter.`,
       expertNote: 'The whole catalogue for this category, incompatibilities included.',
       guidedNote: 'Recommendations carry the star; the whole category catalogue is shown.',
-      chosenBadge: 'Chosen',
-      blockedBadge: 'Incompatible',
       blockedFallback: 'Incompatible with the current selection.',
       navLabel: 'Catalogue categories',
       navEyebrow: 'Categories',
@@ -581,8 +571,6 @@ export const EN_WIZARD: Widen<typeof FR_WIZARD> = {
       servicesNoteBefore: 'These identifiers go into',
       servicesNoteAfter: ': the manifest carries no value, only choices.',
       emptyFamily: 'No option in this family yet.',
-      chosenBadge: 'Chosen',
-      blockedBadge: 'Unavailable',
       families: {
         authorization: {
           label: 'Authorization',

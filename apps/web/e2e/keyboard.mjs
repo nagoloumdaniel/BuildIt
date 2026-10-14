@@ -540,12 +540,35 @@ export async function keyboardJourney(page, workspace) {
   // -------------------------------------------------------------------------
   await enterStep(5, 'stack', '**/create/stack', 'Stack Builder');
   await waitGone(page, 'Chargement du catalogue…');
+  // L'écran exige désormais un minimum (`lib/requirements.ts`) : sans framework
+  // pour la plateforme « Web », « Continuer » est légitimement refusé. Le refus
+  // n'arrive qu'une fois la résolution du moteur calculée — on l'attend, puis on
+  // prouve qu'il est annoncé et que le lien n'est plus un arrêt de tabulation.
   await page.waitForFunction(
-    () => document.querySelector('a[aria-disabled="true"]') === null,
+    () =>
+      Array.from(document.querySelectorAll('[role="status"]')).some((region) =>
+        (region.textContent ?? '').includes('exige un framework'),
+      ),
     undefined,
-    {
-      timeout: 30000,
-    },
+    { timeout: 30000 },
+  );
+  const stackRefusal = await refusals();
+  check(
+    stackRefusal.some((message) => message.includes('exige un framework')),
+    `Sans framework pour « Web », le refus devrait être annoncé par role="status". Régions reçues : ${stackRefusal.join(' | ')}`,
+  );
+  const emptyStack = await page.evaluate(() => {
+    const link = Array.from(document.querySelectorAll('a')).find(
+      (candidate) => candidate.textContent?.trim() === 'Continuer',
+    );
+    return {
+      disabled: link?.getAttribute('aria-disabled') ?? 'absent',
+      tabIndex: link?.tabIndex ?? -2,
+    };
+  });
+  check(
+    emptyStack.disabled === 'true' && emptyStack.tabIndex === -1,
+    `Sans framework pour « Web », « Continuer » devrait être refusé et non focusable (aria-disabled=${emptyStack.disabled}, tabIndex=${emptyStack.tabIndex}).`,
   );
   await checkOrder('stack');
   for (const [term, pattern] of STACK_TERMS) {
@@ -646,7 +669,7 @@ export async function keyboardJourney(page, workspace) {
   // puis les raccourcis du pied de page trois liens de plus qu'avant la
   // refonte. Vu depuis le début du document, la carte est le 18ᵉ arrêt.
   await tabUntil(
-    (stop) => stop.tag === 'BUTTON' && stop.name.includes('Docker'),
+    (stop) => stop.tag === 'BUTTON' && stop.text.includes('Docker'),
     'la carte « Docker »',
     { max: 40 },
   );

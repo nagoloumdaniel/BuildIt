@@ -15,7 +15,6 @@ import {
   optionReason,
   recommendedOptions,
   type StackOption,
-  selectedCount,
 } from './stack-view';
 
 /**
@@ -173,14 +172,6 @@ describe('categoryProgress', () => {
 
   it('compte les choix faits et la taille de la catégorie', () => {
     expect(categoryProgress(options)).toEqual({ selected: 1, total: 3 });
-  });
-
-  it('totalise les choix de tout le catalogue', () => {
-    const blocks = [
-      block('frontend', [option('react', 'selected'), option('vue', 'available')]),
-      block('database', [option('postgres', 'selected')]),
-    ];
-    expect(selectedCount(blocks)).toBe(2);
   });
 });
 

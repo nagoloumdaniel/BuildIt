@@ -81,7 +81,6 @@ export const FR_BUILD = {
       engineDownTitle: 'Les hébergeurs n’ont pas pu être lus',
       engineDown: 'Le moteur n’a pas répondu.',
       empty: 'Aucun hébergeur pour cette sélection.',
-      chosenBadge: 'Choisi',
     },
 
     /**
@@ -248,7 +247,6 @@ export const EN_BUILD: Widen<typeof FR_BUILD> = {
       engineDownTitle: 'The hosts could not be read',
       engineDown: 'The engine did not answer.',
       empty: 'No host for this selection.',
-      chosenBadge: 'Chosen',
     },
 
     blueprint: {

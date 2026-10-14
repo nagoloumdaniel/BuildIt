@@ -33,15 +33,13 @@ import { APP_TARGET } from './targets';
  * qui dit quelle fiche appartient à laquelle.
  */
 
-/** L'écran qui doit satisfaire le besoin. Mêmes identifiants que les étapes. */
-export type RequirementScreen = 'stack' | 'capabilities' | 'infrastructure';
-
 /**
  * Un besoin non satisfait, prêt à être dit.
  *
  * Forme discriminée plutôt que drapeaux : chaque cas a **sa** phrase, et
  * ajouter un besoin sans lui écrire sa phrase devient une erreur de
- * compilation dans le `switch` de `requirementText`.
+ * compilation dans le `switch` de `requirementText`. Le `screen` de chaque cas
+ * est l'étape du parcours qui doit le satisfaire.
  */
 export type MissingRequirement =
   | { readonly kind: 'framework'; readonly screen: 'stack'; readonly target: Target }
@@ -143,9 +141,10 @@ function hasFramework(chosen: readonly RegistryEntry[], target: Target): boolean
 /**
  * Une catégorie porte-t-elle un choix ?
  *
- * Les deux booléens de l'écran Infrastructure valent un choix de catégorie :
- * `docker` est un conteneur, `github-actions` de la CI. C'est exactement ce que
- * `lib/draft-to-manifest.ts` ajoute à la sélection.
+ * La case Docker de l'écran Infrastructure vaut un choix de la catégorie
+ * `containers`, exactement comme `lib/draft-to-manifest.ts` l'ajoute à la
+ * sélection. La case CI-CD, elle, n'est exigée par aucune architecture : pas de
+ * branche morte ici.
  */
 function hasCategory(
   draft: DraftState,
@@ -153,9 +152,6 @@ function hasCategory(
   category: Category,
 ): boolean {
   if (category === 'containers' && draft.infra.docker) {
-    return true;
-  }
-  if (category === 'ci-cd' && draft.infra.ci) {
     return true;
   }
   return chosen.some((entry) => entry.category === category);

@@ -11,9 +11,9 @@ import type { Messages } from '../../../lib/i18n/messages';
  *
  * Deux invariants portés par ce module :
  *
- * 1. **Une option bloquée n'est jamais silencieuse.** Le mode guidé cache la
- *    longue traîne des options compatibles, jamais les incompatibles : elles
- *    restent visibles, grisées, avec leur raison (`optionReason`).
+ * 1. **Une option bloquée n'est jamais silencieuse.** Elle reste visible,
+ *    grisée, avec sa raison (`optionReason`) ; plus aucun bouton ne déplie ni
+ *    ne replie la longue traîne.
  * 2. **Un choix déjà fait reste visible.** Le budget de recommandation
  *    s'applique aux options proposées, pas aux options sélectionnées masquer
  *    celles-ci empêcherait de les retirer.
@@ -53,7 +53,7 @@ export interface CategoryBlock {
   readonly options: readonly StackOption[];
 }
 
-/** Le plafond du §5 : jamais plus de quatre propositions à la fois. */
+/** Le nombre de recommandations marquées d'une étoile, au plus quatre (§5). */
 export const GUIDED_MAX = 4;
 
 /**
@@ -187,11 +187,6 @@ export function categoryProgress(options: readonly StackOption[]): CategoryProgr
     selected: options.filter((option) => option.state === 'selected').length,
     total: options.length,
   };
-}
-
-/** Combien de technologies portent la sélection, toutes catégories confondues. */
-export function selectedCount(blocks: readonly CategoryBlock[]): number {
-  return blocks.reduce((total, block) => total + categoryProgress(block.options).selected, 0);
 }
 
 /**

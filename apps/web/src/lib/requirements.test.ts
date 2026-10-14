@@ -1,6 +1,8 @@
+import { ARCHITECTURES, type Architecture } from '@buildit/manifest';
 import { describe, expect, it } from 'vitest';
 import type { DraftState } from './draft';
 import { freshDraft } from './draft';
+import { draftToManifest } from './draft-to-manifest';
 import { FR } from './i18n/messages';
 import { missingRequirements, requirementText } from './requirements';
 
@@ -158,5 +160,99 @@ describe('les phrases', () => {
     expect(text).toContain('Backend');
     expect(text).not.toContain('next');
     expect(text).not.toContain('hono');
+  });
+});
+
+/**
+ * L'invariant qui compte : **satisfaire les minimums suffit à produire un
+ * manifest**. C'est la seule façon de prouver que le tableau des besoins n'est
+ * ni trop faible (le manifest échouerait plus loin) ni arbitraire : chaque
+ * combinaison d'architecture et de plateformes est passée au vrai
+ * `draftToManifest`, celui qui parle au schéma du §10.
+ *
+ * Le langage n'est pas dans les besoins (le moteur le réclame déjà à l'écran
+ * Stack) : la sonde l'ajoute, comme le ferait un utilisateur.
+ */
+describe('satisfaire les minimums suffit à produire un manifest', () => {
+  /** Une fiche qui porte le framework de chaque plateforme. */
+  const FRAMEWORK: Readonly<Record<string, string>> = {
+    web: 'next',
+    mobile: 'expo',
+    desktop: 'electron',
+    api: 'hono',
+  };
+  const SERVER: ReadonlySet<string> = new Set([
+    'modular-monolith',
+    'microservices',
+    'serverless',
+    'event-driven',
+  ]);
+
+  function satisfying(architecture: Architecture, base: readonly string[]): DraftState {
+    const targets = [...base];
+    const technologies = new Set<string>();
+    const capabilities: string[] = [];
+    const infra = { docker: false, ci: false };
+
+    // Une forme serveur, et un monorepo sans application, ont besoin d'une
+    // plateforme qui en produise une : c'est ce que la phrase du refus dit.
+    if (SERVER.has(architecture) && !targets.includes('api')) {
+      targets.push('api');
+    }
+    if (architecture === 'monorepo' && !targets.some((target) => target in FRAMEWORK)) {
+      targets.push('web');
+    }
+
+    for (const target of targets) {
+      const framework = FRAMEWORK[target];
+      if (framework !== undefined) {
+        technologies.add(framework);
+      }
+      // `frontend.language` et `mobile.language` sont obligatoires (§10).
+      if (target === 'web' || target === 'mobile') {
+        technologies.add('typescript');
+      }
+    }
+    if (architecture === 'microservices' || architecture === 'event-driven') {
+      capabilities.push('bullmq');
+    }
+    if (architecture === 'microservices') {
+      infra.docker = true;
+    }
+    if (architecture === 'serverless') {
+      technologies.add('vercel');
+    }
+
+    return {
+      ...freshDraft(),
+      name: 'sonde-minimums',
+      targets,
+      architecture,
+      technologies: [...technologies],
+      capabilities,
+      infra,
+    };
+  }
+
+  const TARGET_SETS: readonly (readonly string[])[] = [
+    ['web'],
+    ['api'],
+    ['web', 'api'],
+    ['mobile'],
+    ['desktop'],
+    ['library'],
+    ['web', 'mobile', 'desktop', 'api'],
+  ];
+
+  it.each(
+    ARCHITECTURES.flatMap((architecture) =>
+      TARGET_SETS.map((targets) => [architecture, targets.join('+'), targets] as const),
+    ),
+  )('%s + %s', (architecture, _label, targets) => {
+    const state = satisfying(architecture, targets);
+
+    expect(kinds(state), JSON.stringify(state)).toEqual([]);
+    const result = draftToManifest(state);
+    expect(result.ok, JSON.stringify(!result.ok ? result.issues : [])).toBe(true);
   });
 });

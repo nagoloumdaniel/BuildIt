@@ -952,11 +952,14 @@
     padding-left: 2.35rem;
   }
 
-  /* La barre de recherche garde son liseré orange au focus : la bordure accent
-     et le halo suffisent, l'anneau bleu du navigateur par-dessus faisait deux
-     indicateurs pour un seul champ. Le focus reste visible pour autant. */
+  /* La barre de recherche garde son anneau, mais **à la couleur de la maison** :
+     l'anneau bleu du navigateur par-dessus le liseré orange faisait deux
+     indicateurs pour un champ. Le retirer tout à fait était pire — le parcours
+     clavier échouait sur dix arrêts sans indicateur visible, à juste titre : un
+     champ sans anneau n'est plus repérable au clavier (WCAG 2.4.7). */
   .pf-search > .pf-input:focus {
-    outline: none;
+    outline: 2px solid var(--pf-accent);
+    outline-offset: 1px;
   }
 
   /* Les technologies choisies, retirables d'un clic. */
@@ -1785,7 +1788,7 @@
     padding-top: 0.5rem;
   }
 
-  /* --- « Voir toutes les options » (DisclosureButton) ------------------- */
+  /* --- Panneau d'export repliable (DisclosureButton) -------------------- */
 
   /* Mis en valeur sans disputer « Continuer » : contour et texte accentués,
      fond teinté au survol. Le chevron dit le sens ; il pivote, il ne glisse

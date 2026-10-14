@@ -8,6 +8,11 @@ import type { IconName } from './icon';
  * sans icône est une erreur de compilation, pas une case vide à l'écran. Une
  * seule table, lue par le Stack Builder, les capacités et la bulle de détails —
  * deux tables auraient fini par donner deux icônes à la même famille.
+ *
+ * **Aucune icône en forme de coche.** La coche était le marqueur de sélection
+ * retiré des cartes : une `checkCircle` orange sur les fiches `validation`, ou
+ * un `shieldCheck` sur les fiches `security`, se liraient comme elle. La
+ * validation prend un œil (ce qu'on inspecte), la sécurité un bouclier nu.
  */
 export const CATEGORY_ICONS = {
   frontend: 'appWindow',
@@ -22,7 +27,7 @@ export const CATEGORY_ICONS = {
   state: 'workflow',
   'data-fetching': 'refresh',
   forms: 'listChecks',
-  validation: 'checkCircle',
+  validation: 'eye',
   api: 'plug',
   build: 'wrench',
   'package-manager': 'package',
@@ -43,7 +48,7 @@ export const CATEGORY_ICONS = {
   payments: 'creditCard',
   observability: 'activity',
   analytics: 'barChart',
-  security: 'shieldCheck',
+  security: 'shield',
   ai: 'bot',
   cms: 'fileText',
   ecommerce: 'shoppingCart',
