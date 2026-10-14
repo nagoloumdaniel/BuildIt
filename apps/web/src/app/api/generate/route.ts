@@ -3,6 +3,7 @@ import type { NextRequest } from 'next/server';
 import { isHostedEnvironment } from '../../../lib/hosting';
 import { webWorkspaceRoot } from '../../clone/destination';
 import { type GenerateStreamEvent, runGenerateStream } from '../../create/generate/stream-server';
+import { sessionDeps } from '../../github/server-deps';
 import { withoutServerSecrets } from '../../open/project';
 
 /**
@@ -56,6 +57,7 @@ export async function POST(request: NextRequest): Promise<Response> {
             hosted: isHostedEnvironment(),
             registryRoot: webWorkspaceRoot(),
             runner: withoutServerSecrets(nodeCommandRunner),
+            session: sessionDeps(),
           },
           send,
         );

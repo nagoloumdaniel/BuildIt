@@ -108,6 +108,30 @@ describe('parseGenerateEvent rien n’est cru sur parole', () => {
       },
     });
   });
+
+  it('lit l’adresse du dépôt GitHub et les échecs de sa création', () => {
+    const parsed = parseGenerateEvent(
+      block({
+        type: 'done',
+        ok: true,
+        directory: '/x',
+        repositoryUrl: 'https://github.com/moi/mon-projet',
+        githubIssues: [],
+      }),
+    );
+    expect(parsed).toMatchObject({
+      type: 'done',
+      result: { repositoryUrl: 'https://github.com/moi/mon-projet' },
+    });
+
+    const failed = parseGenerateEvent(
+      block({ type: 'done', ok: true, directory: '/x', githubIssues: ['déjà pris'] }),
+    );
+    expect(failed).toMatchObject({
+      type: 'done',
+      result: { githubIssues: ['déjà pris'] },
+    });
+  });
 });
 
 describe('streamGeneration', () => {

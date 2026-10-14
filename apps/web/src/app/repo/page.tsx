@@ -1,10 +1,12 @@
 'use client';
 
 import { type ReactElement, useEffect, useMemo, useState } from 'react';
-import { useDraft } from '../../components/wizard/draft-provider';
+import { useDraft, useSession } from '../../components/wizard/draft-provider';
 import { draftToManifest } from '../../lib/draft-to-manifest';
 import { useMessages } from '../../lib/i18n/provider';
 import { attachRepository, browserProjectStorage } from '../../lib/projects';
+import { toast } from '../../lib/toasts';
+import { deleteProjectAction } from '../actions';
 import {
   accessListAction,
   createRepositoryAction,
@@ -22,6 +24,7 @@ import { RepoView } from './view';
 export default function RepoPage(): ReactElement {
   const t = useMessages();
   const draft = useDraft();
+  const session = useSession();
   const [directory, setDirectory] = useState('');
   const [status, setStatus] = useState<RepositoryStatusView | null>(null);
   const [access, setAccess] = useState<AccessView | null>(null);
@@ -130,6 +133,38 @@ export default function RepoPage(): ReactElement {
   }
 
   /**
+   * Supprime du disque le dossier inspecté, après confirmation dans la vue.
+   *
+   * Le navigateur n'a aucun accès au disque : la suppression passe par une
+   * Server Action, avec un retour explicite dans les deux cas. L'état ne
+   * revient à zéro qu'après un succès : un dossier qui disparaît sur un échec
+   * laisserait croire que les fichiers sont partis.
+   */
+  async function deleteFromDisk(): Promise<void> {
+    const deletedName = status?.proposedName ?? '';
+    await withPending(t.repo.deleting, async () => {
+      try {
+        const result = await deleteProjectAction(directory);
+        if (result.ok) {
+          toast(t.repo.deleted(deletedName), { kind: 'success' });
+          setDirectory('');
+          setStatus(null);
+          setAccess(null);
+          setShareLink(null);
+          setName('');
+          setUsername('');
+          setDescription('');
+          setMessage(undefined);
+          return;
+        }
+        toast(result.issues.join(' ') || t.errors.offline, { kind: 'error' });
+      } catch {
+        toast(t.errors.offline, { kind: 'error' });
+      }
+    });
+  }
+
+  /**
    * Le lien de partage : encodage local, rien n'est envoyé au serveur (§20).
    * Le serveur ne rend que l'origine publique ; la copie et ses retours vivent
    * dans `ShareLinkRow`, partagée avec le plan du projet.
@@ -153,6 +188,7 @@ export default function RepoPage(): ReactElement {
       message={message}
       name={name}
       onCreate={() => void create()}
+      onDeleteFromDisk={() => void deleteFromDisk()}
       onDirectory={(value) => {
         setDirectory(value);
         setStatus(null);
@@ -170,6 +206,10 @@ export default function RepoPage(): ReactElement {
       onIsPrivate={setIsPrivate}
       onName={setName}
       onRemove={(login) => void remove(login)}
+      onResetDraft={() => {
+        session.reset();
+        setShareLink(null);
+      }}
       onRole={setRole}
       onUsername={setUsername}
       pendingLabel={pending}

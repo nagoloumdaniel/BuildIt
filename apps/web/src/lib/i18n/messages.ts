@@ -94,9 +94,7 @@ const FR_CORE = {
    * traduite, seulement affichée.
    */
   footer: {
-    navLabel: 'Raccourcis du pied de page',
-    licenceLine: 'Logiciel libre, licence MIT',
-    version: '0.5.0',
+    version: '0.6.0',
   },
 
   picker: {
@@ -247,9 +245,7 @@ const EN_CORE: Widen<typeof FR_CORE> = {
   },
 
   footer: {
-    navLabel: 'Footer shortcuts',
-    licenceLine: 'Open source, MIT licence',
-    version: '0.5.0',
+    version: '0.6.0',
   },
 
   picker: {

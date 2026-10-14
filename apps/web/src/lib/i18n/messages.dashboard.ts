@@ -54,6 +54,7 @@ export const FR_DASHBOARD = {
     draftKept: 'Le brouillon se reprend tout seul si vous fermez l’onglet.',
     resume: 'Reprendre',
     reset: 'Repartir de zéro',
+    deleteDraft: 'Supprimer le brouillon',
     unnamed: 'Projet sans nom',
   },
   projects: {
@@ -76,6 +77,10 @@ export const FR_DASHBOARD = {
     forget: 'Retirer de la liste',
     forgetAll: 'Vider la liste',
     pathWhat: 'le chemin du projet',
+    copyGithubLink: 'Copier le lien GitHub',
+    copyShareLink: 'Copier le lien de partage',
+    githubWhat: 'le lien GitHub',
+    shareWhat: 'le lien de partage',
     delete: 'Supprimer du disque',
     deleteConfirmTitle: 'Supprimer les fichiers de ce projet ?',
     deleteConfirmBody:
@@ -138,6 +143,7 @@ export const EN_DASHBOARD: Widen<typeof FR_DASHBOARD> = {
     draftKept: 'The draft comes back on its own if you close the tab.',
     resume: 'Resume',
     reset: 'Start over',
+    deleteDraft: 'Delete the draft',
     unnamed: 'Untitled project',
   },
   projects: {
@@ -160,6 +166,10 @@ export const EN_DASHBOARD: Widen<typeof FR_DASHBOARD> = {
     forget: 'Remove from list',
     forgetAll: 'Clear the list',
     pathWhat: 'the project path',
+    copyGithubLink: 'Copy the GitHub link',
+    copyShareLink: 'Copy the share link',
+    githubWhat: 'the GitHub link',
+    shareWhat: 'the share link',
     delete: 'Delete from disk',
     deleteConfirmTitle: 'Delete this project’s files?',
     deleteConfirmBody:

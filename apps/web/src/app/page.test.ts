@@ -84,7 +84,7 @@ describe('Dashboard le brouillon en cours', () => {
     expect(html).toContain('mon-app');
     expect(html).toContain('href="/create/stack"');
     expect(html).toContain('stack technique');
-    expect(html).toContain('Repartir de zéro');
+    expect(html).toContain('Supprimer le brouillon');
   });
 
   it('renvoie la première étape vers /create, pas /create/create', () => {
@@ -129,7 +129,7 @@ describe('Dashboard projets créés (§6.14)', () => {
     expect(html).toContain('mon-projet');
     expect(html).toContain('Terminé');
     expect(html).not.toContain('Reprendre');
-    expect(html).not.toContain('Repartir de zéro');
+    expect(html).not.toContain('Supprimer le brouillon');
   });
 
   it('propose GitHub et le rapport & la doc d’installation, jamais un retour en arrière', () => {
@@ -156,7 +156,7 @@ describe('Dashboard projets créés (§6.14)', () => {
     expect(html).not.toContain('Projets créés');
   });
 
-  it('un brouillon encore en cours garde Reprendre et Repartir de zéro, sans « Projets créés »', () => {
+  it('un brouillon encore en cours garde Reprendre et la suppression, sans « Projets créés »', () => {
     const draft: DraftState = { ...freshDraft(), name: 'mon-projet', step: 'stack' };
     const html = renderView(draft, null);
 

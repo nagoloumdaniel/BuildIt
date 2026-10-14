@@ -1,14 +1,15 @@
 'use client';
 
 import Link from 'next/link';
-import { type ReactElement, useState } from 'react';
+import { type ReactElement, useCallback, useEffect, useRef, useState } from 'react';
 import type { GenerationView } from '../../app/actions';
+import { encodeShareLink } from '../../app/share/codec';
 import { useLocale, useMessages } from '../../lib/i18n/provider';
 import { formatBytes, formatDate, type StoredProject } from '../../lib/projects';
+import { toast } from '../../lib/toasts';
 import { Card, CardHead } from './card';
-import { CopyButton } from './copy';
 import { DisclosureButton } from './disclosure-button';
-import { Icon } from './icon';
+import { Icon, type IconName } from './icon';
 import { ProgressBar } from './loading';
 import { ProjectExport } from './project-export';
 import { TechIcon } from './tech-icon';
@@ -27,7 +28,9 @@ import { TechIcon } from './tech-icon';
  *   sont des valeurs, et la famille le dit mieux qu'une étiquette ;
  * - les **gestes** portent icône *et* libellé. Une rangée d'icônes nues
  *   obligerait à survoler pour savoir laquelle télécharge et laquelle oublie —
- *   sur un geste destructif, c'est inacceptable.
+ *   sur un geste destructif, c'est inacceptable. Les deux seules exceptions
+ *   sont les copies de liens (GitHub, partage) : leur icône nomme déjà la
+ *   destination, et le libellé reste dans l'infobulle et l'`aria-label`.
  *
  * Elle lit la langue par les hooks plutôt que par des props : hors fournisseur
  * (rendu statique d'un test), `useMessages`/`useLocale` rendent le français,
@@ -61,6 +64,68 @@ export interface ProjectCardProps {
   readonly deleting?: boolean;
 }
 
+/** Le temps pendant lequel un bouton de copie reste « copié ». */
+const COPY_FEEDBACK_MS = 1_600;
+
+interface IconCopyButtonProps {
+  readonly value: string;
+  /** Ce qui est copié, nommé pour le lecteur d'écran : « le lien GitHub ». */
+  readonly what: string;
+  /** Le libellé complet, pour l'infobulle. */
+  readonly label: string;
+  /** L'icône qui identifie la destination : un lien GitHub ou un lien de partage. */
+  readonly icon: IconName;
+}
+
+/**
+ * Un bouton de copie en icône, posé dans la rangée des gestes.
+ *
+ * Il reprend le comportement de `CopyButton` (échange copier → coché, échec
+ * dit) mais porte l'icône de ce qu'il copie : deux boutons marqués d'une même
+ * icône de copie ne se distingueraient pas l'un de l'autre.
+ */
+function IconCopyButton({ value, what, label, icon }: IconCopyButtonProps): ReactElement {
+  const t = useMessages();
+  const [done, setDone] = useState(false);
+  const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(
+    () => () => {
+      if (timer.current !== null) {
+        clearTimeout(timer.current);
+      }
+    },
+    [],
+  );
+
+  const copy = useCallback(async (): Promise<void> => {
+    try {
+      await navigator.clipboard.writeText(value);
+      setDone(true);
+      if (timer.current !== null) {
+        clearTimeout(timer.current);
+      }
+      timer.current = setTimeout(() => setDone(false), COPY_FEEDBACK_MS);
+    } catch {
+      toast(t.common.copyFailed, { kind: 'error' });
+    }
+  }, [t, value]);
+
+  const accessible = done ? t.common.copied : t.a11y.copyWhat(what);
+
+  return (
+    <button
+      aria-label={accessible}
+      className="pf-btn pf-btn-ghost pf-btn-sm pf-btn-icon"
+      onClick={() => void copy()}
+      title={done ? t.common.copied : label}
+      type="button"
+    >
+      <Icon name={done ? 'check' : icon} size={14} />
+    </button>
+  );
+}
+
 export function ProjectCard({
   project,
   onExported,
@@ -78,6 +143,12 @@ export function ProjectCard({
   // Sans dossier (mode hébergé : rien n'a été écrit), il n'y a rien à
   // supprimer : le geste disparaît plutôt que d'échouer après le clic.
   const deletable = onDelete !== undefined && project.directory !== '';
+  // Le lien de partage n'existe que si le manifest est gardé **et** qu'une
+  // origine est connue : le serveur et les tests n'ont pas de `window`.
+  const shareLink =
+    manifest === undefined || typeof window === 'undefined'
+      ? undefined
+      : encodeShareLink(manifest, window.location.origin);
 
   return (
     <Card>
@@ -112,21 +183,6 @@ export function ProjectCard({
         </span>
       </div>
 
-      {/* Le dossier est une donnée technique : il n'est ni traduit ni mis en
-          prose, et il se coupe sur n'importe quel caractère un chemin
-          Windows n'a pas d'espace où revenir à la ligne. */}
-      {project.directory === '' ? null : (
-        <div className="mt-2.5 flex items-start gap-1">
-          <p
-            className="pf-mono min-w-0 flex-1"
-            style={{ color: 'var(--pf-muted)', lineHeight: '1.75rem', wordBreak: 'break-all' }}
-          >
-            {project.directory}
-          </p>
-          <CopyButton value={project.directory} what={t.projects.pathWhat} />
-        </div>
-      )}
-
       {/* Les logos sont une **liste** : chacun est un élément, et le compte
           des technologies masquées en est un aussi. Le nom accessible vient de
           la langue courante. */}
@@ -150,14 +206,29 @@ export function ProjectCard({
         </ul>
       )}
 
-      <p className="pf-hint mt-3">{t.projects.locked}</p>
-
       {/* Les gestes : tous de la même taille, icône **et** libellé, et ils
-          passent à la ligne au lieu de déborder à 360 px. Un seul geste par
-          destination : l'architecture, GitHub (ouvrir s'il existe, connecter
-          sinon), l'export ; puis, en retrait, retirer et supprimer. */}
-      {manifest === undefined ? <p className="pf-hint mt-3">{t.projects.legacy}</p> : null}
+          passent à la ligne au lieu de déborder à 360 px. Les deux copies de
+          liens ouvrent la rangée, en icône seule parce que leur destination
+          est déjà dans le dessin. Un seul geste par destination :
+          l'architecture, GitHub (copier, ouvrir s'il existe, connecter sinon),
+          l'export ; puis, en retrait, retirer et supprimer. */}
       <div className="mt-3 flex flex-wrap items-center gap-2">
+        {project.repositoryUrl === undefined ? null : (
+          <IconCopyButton
+            icon="github"
+            label={t.projects.copyGithubLink}
+            value={project.repositoryUrl}
+            what={t.projects.githubWhat}
+          />
+        )}
+        {shareLink === undefined ? null : (
+          <IconCopyButton
+            icon="link"
+            label={t.projects.copyShareLink}
+            value={shareLink}
+            what={t.projects.shareWhat}
+          />
+        )}
         {manifest === undefined ? null : (
           <Link
             className="pf-btn pf-btn-sm"

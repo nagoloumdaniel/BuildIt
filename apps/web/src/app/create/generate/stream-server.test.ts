@@ -4,6 +4,7 @@ import { join } from 'node:path';
 import type { CommandRunner, RunOptions } from '@buildit/exec';
 import { afterEach, describe, expect, it } from 'vitest';
 import { readRegistry } from '../../../lib/output-registry';
+import type { SessionDeps } from '../../github/session';
 import { saasManifest } from './fixtures';
 import { type GenerateStreamEvent, runGenerateStream } from './stream-server';
 
@@ -42,12 +43,20 @@ function fakeRunner(exitCode: number, calls: Call[] = []): CommandRunner {
   };
 }
 
-async function run(body: unknown, options: { hosted?: boolean; runner?: CommandRunner } = {}) {
+async function run(
+  body: unknown,
+  options: { hosted?: boolean; runner?: CommandRunner; session?: SessionDeps } = {},
+) {
   const registryRoot = await temporary('pf-gen-registre-');
   const events: GenerateStreamEvent[] = [];
   const done = await runGenerateStream(
     body,
-    { hosted: options.hosted ?? false, registryRoot, runner: options.runner ?? fakeRunner(0) },
+    {
+      hosted: options.hosted ?? false,
+      registryRoot,
+      runner: options.runner ?? fakeRunner(0),
+      ...(options.session === undefined ? {} : { session: options.session }),
+    },
     (event) => events.push(event),
   );
   return { done, events, registryRoot };
@@ -209,5 +218,65 @@ describe('runGenerateStream l’écriture et l’installation, annoncées dans l
     );
     expect(done.ok).toBe(true);
     expect(done.warnings.join(' ')).toContain('registre');
+  });
+});
+
+describe('runGenerateStream la connexion GitHub, un choix jamais une obligation', () => {
+  function sessionWithoutToken(): SessionDeps {
+    return {
+      fetch: async () => {
+        throw new Error('aucun réseau attendu sans jeton');
+      },
+      store: {
+        get: async () => undefined,
+        set: async () => undefined,
+        delete: async () => undefined,
+        location: 'test',
+      },
+      clientId: 'client-id',
+    };
+  }
+
+  it('sans demande GitHub, rien n’est créé et aucun champ ne part', async () => {
+    const parent = await temporary('pf-gen-sans-gh-');
+    const { done } = await run({ manifest: saasManifest(), parent, install: false });
+    expect(done.ok).toBe(true);
+    expect(done.repositoryUrl).toBeUndefined();
+    expect(done.githubIssues).toBeUndefined();
+  });
+
+  it('une demande GitHub sans session est signalée, le projet reste écrit', async () => {
+    const parent = await temporary('pf-gen-gh-sans-session-');
+    const { done } = await run({
+      manifest: saasManifest(),
+      parent,
+      install: false,
+      github: { name: 'mon-projet' },
+    });
+    expect(done.ok).toBe(true);
+    expect(done.repositoryUrl).toBeUndefined();
+    expect(done.githubIssues?.join(' ')).toContain('session');
+  });
+
+  it('une demande GitHub sans jeton échoue proprement, sans casser la génération', async () => {
+    const parent = await temporary('pf-gen-gh-sans-jeton-');
+    const { done } = await run(
+      { manifest: saasManifest(), parent, install: false, github: { name: 'mon-projet' } },
+      { session: sessionWithoutToken() },
+    );
+    expect(done.ok).toBe(true);
+    expect(done.repositoryUrl).toBeUndefined();
+    expect(done.githubIssues?.join(' ')).toContain('Connectez-vous à GitHub');
+  });
+
+  it('un nom de dépôt vide ou absent n’est pas pris pour une demande', async () => {
+    const parent = await temporary('pf-gen-gh-vide-');
+    const { done } = await run(
+      { manifest: saasManifest(), parent, install: false, github: { name: '   ' } },
+      { session: sessionWithoutToken() },
+    );
+    expect(done.ok).toBe(true);
+    expect(done.repositoryUrl).toBeUndefined();
+    expect(done.githubIssues).toBeUndefined();
   });
 });

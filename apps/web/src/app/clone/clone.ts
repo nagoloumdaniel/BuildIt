@@ -25,6 +25,8 @@ export interface ClonePreviewView {
   /** Le dossier retenu, relatif à la racine de travail. */
   readonly folder: string;
   readonly directory: string;
+  /** Le nom du dépôt déduit du lien, pour le champ « Nom du projet à créer ». */
+  readonly repoName: string;
   /** « propriétaire/dépôt » pour GitHub, l'URL sinon. */
   readonly label: string;
   readonly protocol: string;
@@ -85,6 +87,7 @@ function viewOf(
     ok: issues.length === 0,
     folder,
     directory,
+    repoName: remote === undefined ? '' : (defaultFolder(remote) ?? ''),
     label: remote === undefined ? '' : labelOf(remote),
     protocol: remote?.protocol ?? '',
     host: remote?.host ?? '',

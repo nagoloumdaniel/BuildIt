@@ -145,6 +145,18 @@ export const FR_BUILD = {
       incompleteBody:
         'Le brouillon est incomplet : le moteur n’a pas de projet à écrire. Complétez vos choix, puis revenez. Aucun fichier n’a été touché.',
       fixStack: 'Corriger mes choix',
+      /** Connecter le projet à GitHub avant la génération (§20bis). */
+      github: {
+        title: 'Connecter ce projet à GitHub',
+        reading: 'Lecture de l’état de la connexion GitHub…',
+        connectedAs: (login: string) => `Connecté : ${login}.`,
+        nameLabel: 'Nom du dépôt',
+        nameHint:
+          'Le dépôt est créé sur votre compte, puis le contenu du projet y est poussé sur la branche main (sans dossier racine).',
+        notConnected:
+          'Facultatif : connectez votre compte pour créer le dépôt en même temps que la génération en dossier.',
+        connect: 'Connecter ce projet à GitHub',
+      },
     },
 
     /**
@@ -291,6 +303,17 @@ export const EN_BUILD: Widen<typeof FR_BUILD> = {
       incompleteBody:
         'The draft is incomplete: the engine has no project to write. Complete your choices, then come back. No file has been touched.',
       fixStack: 'Fix my choices',
+      github: {
+        title: 'Connect this project to GitHub',
+        reading: 'Reading the GitHub connection state…',
+        connectedAs: (login: string) => `Connected: ${login}.`,
+        nameLabel: 'Repository name',
+        nameHint:
+          'The repository is created on your account, then the project contents are pushed to the main branch (no root folder).',
+        notConnected:
+          'Optional: connect your account to create the repository along with the folder generation.',
+        connect: 'Connect this project to GitHub',
+      },
     },
 
     report: {

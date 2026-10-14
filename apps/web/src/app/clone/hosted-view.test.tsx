@@ -64,28 +64,27 @@ describe('HostedCloneRun avant la copie', () => {
   it('grise la copie tant que le lien n’est pas vérifié, et dit pourquoi', () => {
     const html = run();
     expect(html).toContain(c.hostedCheck);
-    expect(html).toContain(c.hostedCopy);
+    expect(html).toContain(c.chooseDestination);
     expect(html).toContain(c.hostedBlockerCheck);
-    expect(html).toMatch(/disabled=""[^>]*>.*Choisir un dossier et copier/);
+    expect(html).toMatch(/disabled=""[^>]*>.*Choisir la destination pour cloner/);
   });
 
   it('attend de connaître le navigateur avant d’ouvrir l’explorateur', () => {
     const html = run({ canWrite: null, plan: PLAN });
-    expect(html).toMatch(/disabled=""[^>]*>.*Choisir un dossier et copier/);
+    expect(html).toMatch(/disabled=""[^>]*>.*Choisir la destination pour cloner/);
   });
 
   it('affranchit la copie une fois le dépôt reconnu', () => {
     const html = run({ plan: PLAN });
     expect(html).toContain('Dépôt GitHub reconnu : octo/hello.');
     expect(html).not.toContain(c.hostedBlockerCheck);
-    expect(html).not.toMatch(/disabled=""[^>]*>.*Choisir un dossier et copier/);
+    expect(html).not.toMatch(/disabled=""[^>]*>.*Choisir la destination pour cloner/);
   });
 
   it('propose le ZIP quand le navigateur n’écrit pas dans un dossier', () => {
     const html = run({ canWrite: false, plan: PLAN });
     expect(html).toContain(c.hostedDownload);
-    expect(html).toContain(c.hostedNoFolderApi);
-    expect(html).not.toContain(c.hostedCopy);
+    expect(html).not.toContain(c.chooseDestination);
   });
 
   it('donne la commande git clone pour un lien hors GitHub, sans faire semblant', () => {

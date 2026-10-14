@@ -2,6 +2,7 @@
 
 import { type ReactElement, useCallback, useEffect, useRef, useState } from 'react';
 import { useMessages } from '../../lib/i18n/provider';
+import { safeReturnTo } from '../../lib/return-to';
 import {
   githubConnectionModeAction,
   githubDisconnectAction,
@@ -31,6 +32,12 @@ export default function GithubPage(): ReactElement {
   const [message, setMessage] = useState<string | undefined>(undefined);
   const [mode, setMode] = useState<'redirect' | 'device' | null>(null);
   const [loadFailed, setLoadFailed] = useState(false);
+  // L'écran d'où l'on vient : la génération s'y fait renvoyer une fois connecté.
+  const [returnTo] = useState<string | undefined>(() =>
+    typeof window === 'undefined'
+      ? undefined
+      : safeReturnTo(new URLSearchParams(window.location.search).get('returnTo')),
+  );
 
   /**
    * Le numéro de la connexion en cours.
@@ -149,6 +156,7 @@ export default function GithubPage(): ReactElement {
       onDisconnect={() => void disconnect()}
       onReload={load}
       permissions={permissions}
+      returnTo={returnTo}
       status={status}
     />
   );

@@ -74,6 +74,11 @@ export interface ProjectExportProps {
    * des étapes. Absent, la marche à suivre s'en tient au socle.
    */
   readonly install?: { readonly docker: boolean; readonly envVarNames: readonly string[] };
+  /**
+   * Créer le dépôt GitHub du projet sous ce nom, après l'écriture en dossier.
+   * Absent : aucune connexion GitHub demandée, le processus reste inchangé.
+   */
+  readonly github?: { readonly name: string };
 }
 
 type Stage =
@@ -128,6 +133,10 @@ export function toGenerationView(done: GenerateDone): GenerationView {
     steps: done.steps,
     issues: done.issues,
     ...(done.installRequested ? { installed: done.installed } : {}),
+    ...(done.repositoryUrl === undefined ? {} : { repositoryUrl: done.repositoryUrl }),
+    ...(done.githubIssues === undefined || done.githubIssues.length === 0
+      ? {}
+      : { githubIssues: done.githubIssues }),
   };
 }
 
@@ -280,6 +289,7 @@ export function ProjectExport({
   onGenerated,
   initiallyOpen = false,
   install,
+  github,
 }: ProjectExportProps): ReactElement {
   const { t, locale } = useLocale();
   const o = t.output;
@@ -501,7 +511,7 @@ export function ProjectExport({
     setStage({ kind: 'running', install, progress: null });
 
     const outcome = await streamGeneration(
-      { manifest, parent, install },
+      { manifest, parent, install, ...(github === undefined ? {} : { github }) },
       {
         signal: controller.signal,
         onProgress: (progress) => {

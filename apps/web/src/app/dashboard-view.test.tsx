@@ -107,17 +107,40 @@ describe('Dashboard les projets générés (§6.14)', () => {
     expect(html).toContain('Aucun projet généré pour l’instant');
     expect(html).toContain('href="/create?new=1"');
   });
+
+  it('affiche les deux plus récents en deux colonnes sur grand écran', () => {
+    const html = render(freshDraft(), { projects: [RECENT, OLDER] });
+
+    expect(html).toContain('md:grid-cols-2');
+  });
+
+  it('supprime un projet depuis l’accueil, avec l’état de progression', () => {
+    const html = render(freshDraft(), {
+      projects: [RECENT],
+      onDelete: () => undefined,
+    });
+
+    expect(html).toContain('Supprimer du disque');
+
+    const deleting = render(freshDraft(), {
+      projects: [RECENT],
+      onDelete: () => undefined,
+      deletingId: RECENT.id,
+    });
+
+    expect(deleting).toContain('Suppression des fichiers…');
+  });
 });
 
 describe('Dashboard un projet généré n’est jamais un brouillon', () => {
-  it('ne propose ni Reprendre ni Repartir de zéro à l’écran rapport', () => {
+  it('ne propose ni Reprendre ni Supprimer le brouillon à l’écran rapport', () => {
     const draft: DraftState = { ...freshDraft(), name: 'mon-projet', step: 'report' };
     const html = render(draft, { report: SUCCESS });
 
     expect(html).toContain('mon-projet');
     expect(html).toContain('Terminé');
     expect(html).not.toContain('Reprendre');
-    expect(html).not.toContain('Repartir de zéro');
+    expect(html).not.toContain('Supprimer le brouillon');
   });
 
   it('garde le projet hors du brouillon même onglet rouvert (rapport disparu)', () => {
@@ -125,7 +148,7 @@ describe('Dashboard un projet généré n’est jamais un brouillon', () => {
     const html = render(draft, { report: null });
 
     expect(html).not.toContain('Reprendre');
-    expect(html).not.toContain('Repartir de zéro');
+    expect(html).not.toContain('Supprimer le brouillon');
     expect(html).toContain('Rien à reprendre');
   });
 
@@ -136,7 +159,7 @@ describe('Dashboard un projet généré n’est jamais un brouillon', () => {
       projects: [RECENT],
     });
 
-    expect(html).toContain('mon-app');
+    expect(html).toContain('recent-app');
     expect(html).not.toContain('Voir le rapport & la doc d’installation');
   });
 
@@ -147,7 +170,7 @@ describe('Dashboard un projet généré n’est jamais un brouillon', () => {
     expect(html).toContain('Reprendre');
     expect(html).toContain('href="/create/stack"');
     expect(html).toContain('stack technique');
-    expect(html).toContain('Repartir de zéro');
+    expect(html).toContain('Supprimer le brouillon');
   });
 
   it('ne repropose pas « Reprendre » après un retour dans le parcours', () => {
@@ -161,7 +184,7 @@ describe('Dashboard un projet généré n’est jamais un brouillon', () => {
     });
 
     expect(html).not.toContain('Reprendre');
-    expect(html).not.toContain('Repartir de zéro');
+    expect(html).not.toContain('Supprimer le brouillon');
     expect(html).toContain('Rien à reprendre');
   });
 

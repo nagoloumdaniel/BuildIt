@@ -91,10 +91,18 @@ export function ReportBody({
         </dl>
       ) : null}
 
-      {report.warnings.length === 0 ? null : (
+      {report.warnings.length === 0 && report.githubIssues === undefined ? null : (
         <section className="mt-5">
           <h3 className="pf-label">{body.warningsTitle}</h3>
-          <NoteList className="mt-1" notes={report.warnings} />
+          <NoteList
+            className="mt-1"
+            notes={[
+              ...report.warnings,
+              ...(report.githubIssues === undefined
+                ? []
+                : [o.githubFailed, ...report.githubIssues]),
+            ]}
+          />
         </section>
       )}
 

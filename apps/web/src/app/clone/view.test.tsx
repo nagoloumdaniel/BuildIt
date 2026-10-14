@@ -35,6 +35,7 @@ const PREVIEW: ClonePreviewView = {
   ok: true,
   folder: 'mon-app',
   directory: 'C:\\Projets\\mon-app',
+  repoName: 'mon-app',
   label: 'octocat/mon-app',
   protocol: 'https',
   host: 'github.com',
@@ -182,6 +183,57 @@ describe('CloneView la destination en local', () => {
     expect(html).not.toContain('Vérifiez d’abord le lien');
     expect(html).toContain('Cloner');
   });
+
+  it('pose le lien, le dossier et la vérification sur une même ligne', () => {
+    const html = render();
+
+    expect(html).toContain('flex flex-wrap items-end gap-3');
+    expect(html).toContain('flex-1 min-w-[16rem]');
+    expect(html).toContain('w-40');
+    expect(html).toContain(c.verifyLink);
+  });
+
+  it('dit « Lien valide » après la vérification, et « Vérifier le lien » avant', () => {
+    expect(render()).toContain(c.verifyLink);
+    expect(render({ preview: PREVIEW })).toContain(c.linkValid);
+  });
+
+  it('remplit le champ grisé avec le nom déduit du lien, sinon le dossier saisi', () => {
+    // Avant toute vérification, le champ reprend le nom du dossier déjà saisi.
+    const before = render({ folder: 'mon-app' }).match(
+      /<input[^>]*id="pf-clone-project-name"[^>]*>/,
+    )?.[0];
+    expect(before).toBeDefined();
+    expect(before).toMatch(/readonly/i);
+    expect(before).toContain('value="mon-app"');
+
+    // Une fois le lien vérifié, le nom du dépôt déduit s'affiche.
+    const after = render({ preview: PREVIEW }).match(
+      /<input[^>]*id="pf-clone-project-name"[^>]*>/,
+    )?.[0];
+    expect(after).toContain('value="mon-app"');
+
+    // Sans nom déduit, on retombe sur le dossier saisi.
+    const fallback = render({ preview: { ...PREVIEW, repoName: '' } }).match(
+      /<input[^>]*id="pf-clone-project-name"[^>]*>/,
+    )?.[0];
+    expect(fallback).toContain('value="mon-app"');
+  });
+
+  it('propose d’ouvrir dans l’explorateur après un clone réussi', () => {
+    const html = render({
+      status: 'done',
+      result: {
+        ok: true,
+        directory: 'C:\\Projets\\mon-app',
+        issues: [],
+        warnings: [],
+        installed: false,
+      },
+    });
+
+    expect(html).toContain(c.openInExplorer);
+  });
 });
 
 describe('CloneView destination refusée', () => {
@@ -265,18 +317,18 @@ describe('CloneView la destination en hébergé', () => {
     expect(html).toContain(c.hostedTitle);
     expect(html).toContain('sans historique git');
     expect(html).toContain('une page web ne peut lancer aucun programme');
-    expect(html).toContain(c.hostedCopy);
+    expect(html).toContain(c.chooseDestination);
     // Ni explorateur du serveur, ni racine de travail, ni installation.
     expect(html).not.toContain('Choisir où cloner');
     expect(html).not.toContain('Dossier parent');
     expect(html).not.toContain(c.installAfter);
-    expect(html).not.toContain(c.check);
+    expect(html).not.toContain(c.projectNameLabel);
   });
 
   it('sans la copie hébergée, n’affiche aucun geste qui ne marcherait pas', () => {
     const html = render({ destinationMode: 'root', folder: 'mon-projet' });
 
-    expect(html).not.toContain(c.hostedCopy);
+    expect(html).not.toContain(c.chooseDestination);
     expect(html).not.toContain(c.installAfter);
   });
 });

@@ -1503,9 +1503,11 @@
 
   /* --- Pied de page ----------------------------------------------------- */
 
-  /* Une ligne sobre au large, trois lignes alignées à gauche à l'étroit. Petit
+  /* Une ligne sobre au large, deux lignes alignées à gauche à l'étroit. Petit
      corps, gris, un seul filet au-dessus : le pied complète la page sans
-     attirer l'œil. */
+     attirer l'œil. Deux blocs seulement l'identité et le code source :
+     « Projets »/« Graphe » vivent déjà dans l'en-tête, pas de troisième bloc
+     ni de mention de licence à répéter ici. */
   .pf-footer {
     border-top: 1px solid var(--pf-border);
     color: var(--pf-muted);
@@ -1538,12 +1540,6 @@
     font-weight: 500;
   }
 
-  .pf-footer-nav {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.25rem 1.25rem;
-  }
-
   .pf-footer-link {
     align-items: center;
     color: var(--pf-muted);
@@ -1557,20 +1553,17 @@
     color: var(--pf-text);
   }
 
-  .pf-footer-meta {
-    color: var(--pf-faint);
-  }
-
   @media (min-width: 48rem) {
     .pf-footer-inner {
       align-items: center;
-      display: grid;
-      grid-template-columns: 1fr auto 1fr;
+      display: flex;
+      flex-direction: row;
+      justify-content: space-between;
       padding: 1.25rem 2rem;
     }
 
-    .pf-footer-meta {
-      justify-self: end;
+    .pf-footer-source {
+      margin-left: auto;
     }
   }
 

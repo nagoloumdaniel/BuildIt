@@ -30,6 +30,8 @@ export interface GenerateStreamRequest {
   /** Le dossier parent absolu, choisi dans l'explorateur de la machine. */
   readonly parent: string;
   readonly install: boolean;
+  /** Créer le dépôt GitHub du projet sous ce nom une fois l'écriture finie. */
+  readonly github?: { readonly name: string };
 }
 
 /** Un passage annoncé par la route, avant la fin. */
@@ -56,6 +58,10 @@ export interface GenerateDone {
   readonly installed: boolean;
   readonly installCommand?: string;
   readonly installIssues: readonly string[];
+  /** L'adresse du dépôt GitHub créé, quand on l'a demandé et qu'il a abouti. */
+  readonly repositoryUrl?: string;
+  /** Pourquoi la création du dépôt GitHub a échoué ; le projet reste écrit. */
+  readonly githubIssues?: readonly string[];
 }
 
 export type GenerateStreamFailure =
@@ -162,6 +168,7 @@ export function parseGenerateEvent(block: string): ParsedEvent | 'malformed' | u
       return 'malformed';
     }
     const installCommand = input['installCommand'];
+    const repositoryUrl = input['repositoryUrl'];
     return {
       type: 'done',
       result: {
@@ -177,6 +184,10 @@ export function parseGenerateEvent(block: string): ParsedEvent | 'malformed' | u
         installed: input['installed'] === true,
         ...(typeof installCommand === 'string' && installCommand !== '' ? { installCommand } : {}),
         installIssues: strings(input['installIssues']),
+        ...(typeof repositoryUrl === 'string' && repositoryUrl !== '' ? { repositoryUrl } : {}),
+        ...(strings(input['githubIssues']).length === 0
+          ? {}
+          : { githubIssues: strings(input['githubIssues']) }),
       },
     };
   }

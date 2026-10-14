@@ -99,6 +99,10 @@ export interface DashboardViewProps {
   readonly projects?: readonly StoredProject[] | null;
   /** Le choix du dossier ; absent, la carte redevient un simple lien. */
   readonly openLocal?: PickHandoff | undefined;
+  /** La suppression du dossier sur le disque, depuis l'accueil. */
+  readonly onDelete?: ((project: StoredProject) => void) | undefined;
+  /** Le projet dont le dossier est en cours de suppression, s'il y en a un. */
+  readonly deletingId?: string | null;
 }
 
 export function DashboardView({
@@ -108,6 +112,8 @@ export function DashboardView({
   onRedownload,
   projects = [],
   openLocal,
+  onDelete,
+  deletingId = null,
 }: DashboardViewProps): ReactElement {
   const t = useMessages();
   const completed = isCompletedProject(draft, report, projects);
@@ -175,9 +181,20 @@ export function DashboardView({
                     {t.dashboard.projectsAll}
                   </Link>
                 </div>
-                <div className="pf-stack mt-3">
+                <div className="mt-3 grid items-stretch gap-3 md:grid-cols-2">
                   {list.map((project) => (
-                    <ProjectCard key={project.id} project={project} />
+                    <ProjectCard
+                      key={project.id}
+                      deleting={deletingId === project.id}
+                      onDelete={
+                        onDelete === undefined
+                          ? undefined
+                          : () => {
+                              onDelete(project);
+                            }
+                      }
+                      project={project}
+                    />
                   ))}
                 </div>
               </>
@@ -245,8 +262,8 @@ export function DashboardView({
               </Link>
               {onReset === undefined ? null : (
                 <button className="pf-btn pf-btn-ghost" onClick={onReset} type="button">
-                  <Icon name="refresh" size={15} />
-                  {t.dashboard.reset}
+                  <Icon name="trash" size={15} />
+                  {t.dashboard.deleteDraft}
                 </button>
               )}
             </div>

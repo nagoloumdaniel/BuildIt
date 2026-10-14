@@ -94,8 +94,9 @@ describe('ProjectsView la liste', () => {
 
     expect(html.match(/Télécharger le ZIP ou installer/g)).toHaveLength(1);
     expect(html).toContain(`href="/projects/architecture?id=${RECENT.id}"`);
-    // Un projet d'avant la version 0.2.0 dit pourquoi il ne peut rien refaire.
-    expect(html).toContain('Généré avant la version 0.2.0');
+    // Un projet d'avant la version 0.2.0 n'a ni export ni architecture : la
+    // carte compacte ne le dit plus, elle ne propose simplement rien à refaire.
+    expect(html).not.toContain(`href="/projects/architecture?id=${OLD.id}"`);
   });
 
   it('ouvre le dépôt GitHub seulement quand son adresse est connue', () => {
@@ -106,6 +107,21 @@ describe('ProjectsView la liste', () => {
     expect(html).toContain('href="https://github.com/octocat/recent-app"');
     expect(html.match(/Ouvrir sur GitHub/g)).toHaveLength(1);
     expect(html.match(/Connecter à GitHub/g)).toHaveLength(1);
+  });
+
+  it('affiche la liste en deux colonnes sur grand écran', () => {
+    const html = render({ projects: [RECENT, OLD] });
+
+    expect(html).toContain('md:grid-cols-2');
+  });
+
+  it('copie le lien GitHub depuis la carte quand l’adresse est connue', () => {
+    const html = render({
+      projects: [{ ...RECENT, repositoryUrl: 'https://github.com/octocat/recent-app' }],
+    });
+
+    expect(html).toContain('aria-label="Copier le lien GitHub"');
+    expect(html).toContain('title="Copier le lien GitHub"');
   });
 });
 

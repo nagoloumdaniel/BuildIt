@@ -85,11 +85,13 @@ export function AppShell({ children }: { children: ReactNode }): ReactElement {
         {children}
       </div>
 
-      {/* Le pied de page : une ligne, trois informations, rien de décoratif.
-          L'identité et la version à gauche (ce qu'on cite dans un ticket),
-          les trois adresses utiles au milieu, la licence à droite. Les liens
-          sont en gris et prennent la couleur du texte au survol : ils ne
-          disputent pas l'orange aux actions de la page. */}
+      {/* Le pied de page : une ligne, deux informations, rien de décoratif.
+          L'identité et la version à gauche (ce qu'on cite dans un ticket), le
+          code source à droite. Plus de « Projets »/« Graphe » : ces deux
+          raccourcis vivent déjà dans l'en-tête (`BubbleNav`), les répéter ici
+          doublait la navigation sans la clarifier. Plus de mention de licence
+          en pied de page : elle vit dans le dépôt (`LICENSE`), pas sur
+          chaque écran. */}
       <footer className="pf-footer">
         <div className="pf-footer-inner">
           <p className="pf-footer-brand">
@@ -98,20 +100,15 @@ export function AppShell({ children }: { children: ReactNode }): ReactElement {
             <span className="pf-footer-version">v{t.footer.version}</span>
           </p>
 
-          <nav aria-label={t.footer.navLabel} className="pf-footer-nav">
-            <Link className="pf-footer-link" href="/projects">
-              {t.nav.projects}
-            </Link>
-            <Link className="pf-footer-link" href="/graph">
-              {t.nav.graph}
-            </Link>
-            <a className="pf-footer-link" href={REPO_URL} rel="noreferrer" target="_blank">
-              <Icon name="github" size={14} />
-              {t.nav.source}
-            </a>
-          </nav>
-
-          <p className="pf-footer-meta">{t.footer.licenceLine}</p>
+          <a
+            className="pf-footer-link pf-footer-source"
+            href={REPO_URL}
+            rel="noreferrer"
+            target="_blank"
+          >
+            <Icon name="github" size={14} />
+            {t.nav.source}
+          </a>
         </div>
       </footer>
     </>

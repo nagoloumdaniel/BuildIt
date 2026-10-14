@@ -124,6 +124,16 @@ export interface GenerationView {
    * quand le projet est écrit dans un dossier.
    */
   readonly zipBase64?: string;
+  /**
+   * L'adresse du dépôt GitHub créé et poussé pendant la génération en dossier,
+   * quand on l'a demandé et qu'il a abouti. Jamais devinée : absente sinon.
+   */
+  readonly repositoryUrl?: string;
+  /**
+   * Pourquoi la création du dépôt GitHub a échoué. Le projet, lui, reste
+   * écrit : ce sont des avertissements, pas un refus de génération.
+   */
+  readonly githubIssues?: readonly string[];
 }
 
 /**

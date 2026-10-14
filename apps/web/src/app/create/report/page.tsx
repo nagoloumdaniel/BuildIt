@@ -44,7 +44,15 @@ export default function ReportPage() {
   useEffect(() => {
     const loaded = loadReport(browserSessionStorage());
     setReport(loaded);
-    // Une archive n'a pas de dossier : rien ne la relie à un projet retenu.
+    // Le rapport porte l'adresse du dépôt créé pendant la génération en
+    // dossier. Sinon, on retombe sur la liste des projets : un projet
+    // régénéré ailleurs peut avoir été connecté depuis l'écran Dépôt.
+    const fromReport = isGithubUrl(loaded?.repositoryUrl) ? loaded?.repositoryUrl : undefined;
+    if (fromReport !== undefined) {
+      setRepositoryUrl(fromReport);
+      setReady(true);
+      return;
+    }
     if (loaded !== null && loaded.directory !== '') {
       const project = loadProjects(browserProjectStorage()).find(
         (item) => item.directory === loaded.directory,

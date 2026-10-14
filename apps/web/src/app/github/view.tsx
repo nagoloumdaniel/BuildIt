@@ -43,6 +43,8 @@ export interface GithubViewProps {
   /** La lecture initiale a échoué : l'écran propose la reprise, pas un constat. */
   readonly loadFailed?: boolean;
   readonly onReload?: (() => void) | undefined;
+  /** L'adresse interne où revenir une fois connecté (la génération le plus souvent). */
+  readonly returnTo?: string | undefined;
 }
 
 export function GithubView({
@@ -57,6 +59,7 @@ export function GithubView({
   onCancel,
   loadFailed = false,
   onReload,
+  returnTo,
 }: GithubViewProps): ReactElement {
   const t = useMessages();
   const connected = status?.connected === true;
@@ -118,11 +121,17 @@ export function GithubView({
           />
           <p className="pf-hint mt-2">{t.account.grantedScopes(grantList)}</p>
           <p className="pf-hint">{t.account.tokenStore(status.store)}</p>
-          <div className="mt-3">
+          <div className="mt-3 flex flex-wrap items-center gap-3">
             <Button disabled={busy} onClick={onDisconnect}>
               <Icon name="key" />
               {t.account.disconnect}
             </Button>
+            {returnTo === undefined ? null : (
+              <a className="pf-btn pf-btn-primary" href={returnTo}>
+                <Icon name="arrowRight" />
+                {t.account.returnToLabel}
+              </a>
+            )}
           </div>
         </Card>
       ) : issues.length > 0 ? (

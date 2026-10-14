@@ -306,7 +306,7 @@ export function HostedCloneRun(props: HostedCloneProps): ReactElement {
             onClick={props.onCopy}
           >
             <Icon name="folderOpen" />
-            {c.hostedCopy}
+            {c.chooseDestination}
           </button>
         )}
         {running ? (
@@ -322,8 +322,6 @@ export function HostedCloneRun(props: HostedCloneProps): ReactElement {
           </span>
         )}
       </div>
-
-      {props.canWrite === false ? <p className="pf-callout mt-3">{c.hostedNoFolderApi}</p> : null}
 
       {plan?.ok ? (
         <p className="pf-hint mt-3 flex items-center gap-2">

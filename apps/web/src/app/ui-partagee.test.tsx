@@ -116,6 +116,8 @@ function repoProps(overrides: Record<string, unknown>): ReactElement {
     onCreate: () => undefined,
     onInvite: () => undefined,
     onRemove: () => undefined,
+    onDeleteFromDisk: () => undefined,
+    onResetDraft: () => undefined,
     ...overrides,
   });
 }

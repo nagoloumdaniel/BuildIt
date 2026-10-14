@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { useCallback, useMemo } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { ErrorState } from '../../../components/ui/error-state';
 import { Icon } from '../../../components/ui/icon';
 import { ProjectExport } from '../../../components/ui/project-export';
@@ -12,6 +12,7 @@ import { useLocale } from '../../../lib/i18n/provider';
 import { browserProjectStorage } from '../../../lib/projects';
 import type { GenerationView } from '../../actions';
 import { browserSessionStorage, saveReport } from '../report/result';
+import { GithubConnectPanel } from './github-connect';
 import { rememberGeneratedProject } from './remember';
 
 /**
@@ -42,6 +43,13 @@ export default function GeneratePage() {
   const draft = useDraft();
   const session = useSession();
   const manifest = useMemo(() => draftToManifest(draft), [draft]);
+  // Le dépôt GitHub demandé à la génération en dossier, quand le panneau en
+  // porte un nom et que le compte est connecté. Choix, jamais obligation.
+  const [github, setGithub] = useState<{ readonly name: string } | undefined>(undefined);
+
+  const onGithubChange = useCallback((next: { readonly name: string } | undefined) => {
+    setGithub(next);
+  }, []);
 
   const remember = useCallback(
     (result: GenerationView) => {
@@ -96,11 +104,17 @@ export default function GeneratePage() {
           <p className="mt-1">{messages.output.lockBody}</p>
         </div>
       )}
+      {draft.generated === true ? null : (
+        <div className="mb-4">
+          <GithubConnectPanel onChange={onGithubChange} projectName={manifest.value.name} />
+        </div>
+      )}
       <ProjectExport
         install={{ docker: draft.infra.docker, envVarNames: draft.envVarNames }}
         manifest={manifest.value}
         onGenerated={remember}
         projectName={manifest.value.name}
+        {...(github === undefined ? {} : { github })}
       />
     </StepShell>
   );

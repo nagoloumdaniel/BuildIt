@@ -1,11 +1,13 @@
 import { exchangeAuthorizationCode } from '@buildit/github';
 import { NextResponse } from 'next/server';
+import { safeReturnTo } from '../../../lib/return-to';
 import { defaultCookieJar, unsealJson } from '../../../lib/session-cookie';
 import { STATE_COOKIE_NAME } from '../oauth-state';
 import { clientSecret, sessionDeps } from '../server-deps';
 
 interface SealedState {
   readonly state: string;
+  readonly returnTo?: string;
 }
 
 /**
@@ -66,5 +68,9 @@ export async function GET(request: Request): Promise<NextResponse> {
     return failure('store');
   }
 
-  return NextResponse.redirect(new URL('/github?connected=1', request.url));
+  // Le retour ramène là d'où l'on venait (la génération le plus souvent), une
+  // adresse interne revalidée une seconde fois : le cookie scellé peut avoir
+  // été édité, et l'état déchiffré n'est pas plus de confiance que l'URL.
+  const returnTo = safeReturnTo(storedState.returnTo);
+  return NextResponse.redirect(new URL(returnTo ?? '/github?connected=1', request.url));
 }

@@ -74,6 +74,8 @@ function render(overrides: Partial<RepoViewProps> = {}): string {
       onCreate: () => undefined,
       onInvite: () => undefined,
       onRemove: () => undefined,
+      onDeleteFromDisk: () => undefined,
+      onResetDraft: () => undefined,
       ...overrides,
     }),
   );
@@ -225,5 +227,32 @@ describe('RepoView le lien de partage en lecture seule (§20)', () => {
     expect(html).toMatch(
       /<button[^>]*disabled=""[^>]*pf-share-create|<button[^>]*pf-share-create[^>]*disabled=""/,
     );
+  });
+});
+
+describe('RepoView la suppression du dossier et du brouillon', () => {
+  it('propose de supprimer le dossier inspecté, la confirmation vient au clic', () => {
+    const html = render({ status: WITH_REPO });
+
+    expect(html).toContain('Supprimer ce projet du disque');
+    expect(html).toContain('pf-btn-danger');
+    // Au rendu statique, la confirmation n'est pas encore ouverte : elle ne
+    // s'affiche qu'après le clic sur le bouton danger.
+    expect(html).not.toContain('Supprimer les fichiers de ce projet ?');
+  });
+
+  it('propose de supprimer le brouillon dans la carte du lien de partage', () => {
+    const html = render({
+      status: WITH_REPO,
+      share: { link: null, blocked: null, onCreate: () => true },
+    });
+
+    expect(html).toContain('Supprimer le brouillon');
+  });
+
+  it('ne propose pas de supprimer un dossier qui n’a pas été lu', () => {
+    const html = render({ status: null });
+
+    expect(html).not.toContain('Supprimer ce projet du disque');
   });
 });

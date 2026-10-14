@@ -123,6 +123,7 @@ export const FR_OUTPUT = {
       openGithub: 'Ouvrir sur GitHub',
       openGithubLabel: 'Ouvrir le dépôt sur GitHub, dans un nouvel onglet',
       installedNote: 'Les dépendances ont été installées pendant la génération.',
+      githubFailed: 'Le dépôt GitHub n’a pas été créé :',
       installWhere:
         'Chaque étape dit où la faire : dans un terminal ouvert dans le dossier du projet, ou dans votre éditeur.',
       finish: 'Terminer',
@@ -242,6 +243,7 @@ export const EN_OUTPUT: Widen<typeof FR_OUTPUT> = {
       openGithub: 'Open on GitHub',
       openGithubLabel: 'Open the repository on GitHub, in a new tab',
       installedNote: 'Dependencies were installed during generation.',
+      githubFailed: 'The GitHub repository was not created:',
       installWhere:
         'Each step says where to do it: in a terminal opened in the project folder, or in your editor.',
       finish: 'Finish',

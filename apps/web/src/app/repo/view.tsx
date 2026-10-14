@@ -1,7 +1,7 @@
 'use client';
 
 import { Badge, Button, Field, StatusMessage } from '@buildit/ui';
-import type { ReactElement } from 'react';
+import { type ReactElement, useState } from 'react';
 import { Card, CardHead } from '../../components/ui/card';
 import { IssueList } from '../../components/ui/empty-state';
 import { ErrorState } from '../../components/ui/error-state';
@@ -61,6 +61,10 @@ export interface RepoViewProps {
   readonly onCreate: () => void;
   readonly onInvite: () => void;
   readonly onRemove: (login: string) => void;
+  /** Supprime du disque le dossier inspecté, après confirmation dans la vue. */
+  readonly onDeleteFromDisk: () => void;
+  /** Repart d'un brouillon vierge (le plan du projet est effacé). */
+  readonly onResetDraft: () => void;
 }
 
 /** Les libellés de rôle du dictionnaire ; un slug inconnu garde celui du serveur. */
@@ -148,6 +152,7 @@ export function RepoView(props: RepoViewProps): ReactElement {
   const create = createBlocker(status, name, busy, t);
   const invite = inviteBlocker(status, username, busy, t);
   const selectedRole = roles.find((item) => item.role === role);
+  const [confirmingDelete, setConfirmingDelete] = useState(false);
 
   return (
     <ScreenShell description={t.repo.description} icon="link" title={t.repo.title}>
@@ -280,6 +285,56 @@ export function RepoView(props: RepoViewProps): ReactElement {
               </div>
             </>
           )}
+
+          {/* Le dossier inspecté peut être effacé du disque. La confirmation
+              reste dans la carte : on voit encore le dossier qu'on s'apprête à
+              effacer, et le geste ne part jamais d'un seul clic. */}
+          <div className="pf-card-progress">
+            {confirmingDelete ? (
+              <div role="alert">
+                <p className="pf-title-sm flex items-center gap-2">
+                  <span aria-hidden="true" style={{ color: 'var(--pf-danger)' }}>
+                    <Icon name="warning" size={16} />
+                  </span>
+                  {t.repo.deleteConfirmTitle}
+                </p>
+                <p className="pf-hint mt-1">{t.repo.deleteConfirmBody}</p>
+                <div className="mt-3 flex flex-wrap items-center gap-2">
+                  <button
+                    className="pf-btn pf-btn-danger"
+                    disabled={busy}
+                    onClick={() => {
+                      setConfirmingDelete(false);
+                      props.onDeleteFromDisk();
+                    }}
+                    type="button"
+                  >
+                    <Icon name="trash" size={14} />
+                    {t.repo.deleteConfirmAction}
+                  </button>
+                  <button
+                    className="pf-btn pf-btn-ghost"
+                    disabled={busy}
+                    onClick={() => setConfirmingDelete(false)}
+                    type="button"
+                  >
+                    <Icon name="close" size={14} />
+                    {t.common.cancel}
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <button
+                className="pf-btn pf-btn-danger"
+                disabled={busy}
+                onClick={() => setConfirmingDelete(true)}
+                type="button"
+              >
+                <Icon name="trash" size={14} />
+                {t.repo.deleteFromDisk}
+              </button>
+            )}
+          </div>
         </Card>
       )}
 
@@ -426,6 +481,15 @@ export function RepoView(props: RepoViewProps): ReactElement {
             onCreate={share.onCreate}
             {...(share.blocked === null ? {} : { describedBy: 'pf-repo-share-blocked' })}
           />
+
+          {/* Le brouillon se reprend depuis zéro : un plan vierge, pas de lien
+              déjà encodé à côté. */}
+          <div className="mt-3 flex flex-wrap items-center gap-2">
+            <Button onClick={props.onResetDraft} variant="ghost">
+              <Icon name="trash" size={14} />
+              {t.repo.resetDraft}
+            </Button>
+          </div>
         </Card>
       )}
     </ScreenShell>

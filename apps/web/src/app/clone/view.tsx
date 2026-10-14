@@ -1,6 +1,7 @@
 'use client';
 
 import type { ReactElement } from 'react';
+import { openProjectFolderAction } from '../../app/actions';
 import { CommandLine } from '../../components/ui/copy';
 import { IssueList, NoteList } from '../../components/ui/empty-state';
 import { ErrorState } from '../../components/ui/error-state';
@@ -220,6 +221,10 @@ export function CloneView(props: CloneViewProps): ReactElement {
   const cloning = status === 'cloning';
   const blocker = cloneBlocker(preview, { busy, destinationMode, parent: props.parent }, c);
   const visible = matchingRepositories(props.repositories, props.query);
+  // Le nom du dépôt déduit du lien, affiché dans le champ grisé : tant que le
+  // serveur n'a rien rendu, on retombe sur le nom du dossier déjà saisi.
+  const previewOk = preview?.ok === true;
+  const projectName = preview !== null && preview.repoName !== '' ? preview.repoName : props.folder;
   const linkRefusal = preview !== null && preview.problem === 'link' ? preview : null;
   const parentRefusal = preview !== null && preview.problem === 'parent' ? preview : null;
   // Un parent vide n'est pas « pas accessible » : rien n'a encore été choisi.
@@ -320,22 +325,58 @@ export function CloneView(props: CloneViewProps): ReactElement {
         </section>
       ) : (
         <section className="pf-card pf-card-pad mt-3">
-          <label className="pf-label" htmlFor="pf-clone-link">
-            {c.linkLabel}
-          </label>
-          <input
-            id="pf-clone-link"
-            className="pf-input pf-mono"
-            autoComplete="off"
-            spellCheck={false}
-            placeholder={c.linkPlaceholder}
-            value={props.link}
-            onChange={(event) => props.onLink(event.target.value)}
-          />
+          <div className="flex flex-wrap items-end gap-3">
+            <div className="flex-1 min-w-[16rem]">
+              <label className="pf-label" htmlFor="pf-clone-link">
+                {c.linkLabel}
+              </label>
+              <input
+                id="pf-clone-link"
+                className="pf-input pf-mono"
+                autoComplete="off"
+                spellCheck={false}
+                placeholder={c.linkPlaceholder}
+                value={props.link}
+                onChange={(event) => props.onLink(event.target.value)}
+              />
+            </div>
+
+            {destinationMode === 'parent' ? (
+              <div className="w-40">
+                <label className="pf-label" htmlFor="pf-clone-folder">
+                  {c.folderNameLabel}
+                </label>
+                <input
+                  id="pf-clone-folder"
+                  className="pf-input pf-mono"
+                  autoComplete="off"
+                  spellCheck={false}
+                  placeholder={c.folderNamePlaceholder}
+                  value={props.folder}
+                  onChange={(event) => props.onFolder(event.target.value)}
+                />
+              </div>
+            ) : null}
+
+            {destinationMode === 'parent' ? (
+              <button
+                type="button"
+                className="pf-btn"
+                disabled={busy || props.parent.trim() === ''}
+                onClick={props.onPreview}
+              >
+                <Icon name={previewOk ? 'check' : 'search'} />
+                {status === 'checking' ? c.checking : previewOk ? c.linkValid : c.verifyLink}
+              </button>
+            ) : null}
+          </div>
+
           {linkRefusal === null ? null : <Refusals issues={linkRefusal.issues} />}
 
           {destinationMode === 'parent' ? (
             <>
+              <p className="pf-hint mt-1">{c.folderNameHint}</p>
+
               {unreachableParent === null ? (
                 <div className="mt-4">
                   <PathPicker
@@ -350,19 +391,15 @@ export function CloneView(props: CloneViewProps): ReactElement {
                 </div>
               ) : null}
 
-              <label className="pf-label mt-4" htmlFor="pf-clone-folder">
-                {c.folderNameLabel}
+              <label className="pf-label mt-4" htmlFor="pf-clone-project-name">
+                {c.projectNameLabel}
               </label>
               <input
-                id="pf-clone-folder"
+                id="pf-clone-project-name"
                 className="pf-input pf-mono"
-                autoComplete="off"
-                spellCheck={false}
-                placeholder={c.folderNamePlaceholder}
-                value={props.folder}
-                onChange={(event) => props.onFolder(event.target.value)}
+                readOnly
+                value={projectName}
               />
-              <p className="pf-hint mt-1">{c.folderNameHint}</p>
 
               <p className="pf-label mt-4">{c.fullPath}</p>
               {shownDirectory === '' ? (
@@ -409,15 +446,6 @@ export function CloneView(props: CloneViewProps): ReactElement {
       {props.tab === 'link' && hostedProps === null ? (
         <section className="mt-3">
           <div className="flex flex-wrap items-center gap-2">
-            <button
-              type="button"
-              className="pf-btn"
-              disabled={busy || (destinationMode === 'parent' && props.parent.trim() === '')}
-              onClick={props.onPreview}
-            >
-              <Icon name="search" />
-              {status === 'checking' ? c.checking : c.check}
-            </button>
             <button
               type="button"
               className="pf-btn pf-btn-primary"
@@ -559,6 +587,18 @@ export function CloneView(props: CloneViewProps): ReactElement {
                   <Refusals issues={result.issues} />
                 </>
               )}
+              {result.ok && destinationMode === 'parent' ? (
+                <div className="mt-2">
+                  <button
+                    type="button"
+                    className="pf-btn pf-btn-sm"
+                    onClick={() => void openProjectFolderAction(result.directory)}
+                  >
+                    <Icon name="folderOpen" />
+                    {c.openInExplorer}
+                  </button>
+                </div>
+              ) : null}
               {result.project === undefined ? null : (
                 <p className="pf-hint mt-2">
                   {c.detected(result.project.description)}

@@ -33,6 +33,7 @@ export const FR_ACCOUNT = {
       'Ouvre github.com dans cet onglet : choisissez votre compte, acceptez les permissions, vous revenez ici connecté.',
     contactingGithub: 'En attente de GitHub…',
     disconnect: 'Se déconnecter',
+    returnToLabel: 'Continuer vers la génération',
     /* L'attente de validation dans le navigateur : le code court, l'adresse, et
        le geste qui en sort sans lui, l'écran resterait bloqué sur GitHub. */
     deviceTitle: 'Validation dans le navigateur',
@@ -206,6 +207,18 @@ export const FR_ACCOUNT = {
       alreadyRepo: 'Ce projet a déjà un dépôt GitHub.',
       usernameMissing: 'Indiquez un nom d’utilisateur GitHub.',
     },
+
+    /* Le retrait du dossier inspecté et celui du brouillon : deux gestes
+       distincts, nommés tels quels. Supprimer efface les fichiers du dossier ;
+       supprimer le brouillon repart d'un plan vierge. */
+    deleteFromDisk: 'Supprimer ce projet du disque',
+    deleteConfirmTitle: 'Supprimer les fichiers de ce projet ?',
+    deleteConfirmBody:
+      'Le dossier et tout ce qu’il contient seront effacés de cette machine. Il n’y a pas de corbeille : c’est définitif.',
+    deleteConfirmAction: 'Oui, supprimer les fichiers',
+    deleting: 'Suppression des fichiers…',
+    deleted: (name: string) => `Projet supprimé : ${name}.`,
+    resetDraft: 'Supprimer le brouillon',
   },
 
   /** L'écran 11 graphe de dépendances (§6.11), hors parcours. */
@@ -266,6 +279,7 @@ export const EN_ACCOUNT: Widen<typeof FR_ACCOUNT> = {
       'Opens github.com in this tab: pick your account, accept the permissions, and you come back here signed in.',
     contactingGithub: 'Waiting for GitHub…',
     disconnect: 'Sign out',
+    returnToLabel: 'Continue to generation',
     deviceTitle: 'Browser confirmation',
     deviceInstruction: 'Open the GitHub page and enter this code:',
     deviceAddress: 'Address:',
@@ -422,6 +436,18 @@ export const EN_ACCOUNT: Widen<typeof FR_ACCOUNT> = {
       alreadyRepo: 'This project already has a GitHub repository.',
       usernameMissing: 'Enter a GitHub username.',
     },
+
+    /* Removing the inspected folder and the draft are two distinct, explicitly
+       named gestures. Delete erases the folder's files; delete the draft starts
+       over from a blank plan. */
+    deleteFromDisk: 'Delete this project from disk',
+    deleteConfirmTitle: "Delete this project's files?",
+    deleteConfirmBody:
+      'The folder and everything in it will be erased from this machine. There is no recycle bin: this is final.',
+    deleteConfirmAction: 'Yes, delete the files',
+    deleting: 'Deleting the files…',
+    deleted: (name: string) => `Project deleted: ${name}.`,
+    resetDraft: 'Delete the draft',
   },
 
   graph: {

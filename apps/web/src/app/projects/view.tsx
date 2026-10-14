@@ -93,7 +93,7 @@ export function ProjectsView({
         />
       ) : (
         <>
-          <div className="pf-stack">
+          <div className="grid items-stretch gap-3 md:grid-cols-2">
             {ordered.map((project) => (
               <ProjectCard
                 key={project.id}

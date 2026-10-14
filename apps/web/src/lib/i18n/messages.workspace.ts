@@ -135,6 +135,8 @@ export const FR_WORKSPACE = {
     ignoreScripts: 'Installer sans exécuter les scripts du projet (recommandé)',
     untrusted:
       'Un dépôt cloné n’est pas du code de confiance : ses scripts d’installation s’exécutent sur cette machine. La commande exacte est affichée avant d’être lancée.',
+    verifyLink: 'Vérifier le lien',
+    linkValid: 'Lien valide',
     check: 'Vérifier le lien et le dossier',
     checking: 'Vérification…',
     clone: 'Cloner',
@@ -156,6 +158,7 @@ export const FR_WORKSPACE = {
        lui, il n'y a rien à vérifier. */
     blockerNoParent: 'Choisissez d’abord le dossier où cloner.',
     folderNameLabel: 'Nom du sous-dossier',
+    projectNameLabel: 'Nom du projet à créer',
     folderNameHint:
       'Un seul nom, sans séparateur de chemin. Le clone crée ce dossier dans le dossier parent choisi.',
     fullPath: 'Chemin complet qui sera écrit',
@@ -177,10 +180,8 @@ export const FR_WORKSPACE = {
     hostedFolderHint:
       'Un seul nom, sans séparateur de chemin. Il sera créé dans le dossier que vous choisirez dans l’explorateur.',
     hostedCheck: 'Vérifier le lien',
-    hostedCopy: 'Choisir un dossier et copier',
+    chooseDestination: 'Choisir la destination pour cloner',
     hostedDownload: 'Télécharger le ZIP',
-    hostedNoFolderApi:
-      'Ce navigateur ne sait pas écrire dans un dossier (c’est le cas de Firefox et de Safari). Téléchargez l’archive ZIP du dépôt, ou ouvrez cette page dans Chrome ou Edge pour écrire directement dans un dossier.',
     hostedBlockerCheck: 'Vérifiez d’abord le lien.',
     hostedReady: (label: string) => `Dépôt GitHub reconnu : ${label}.`,
     hostedNotGithubTitle: 'Ce lien ne se clone que sur votre machine',
@@ -254,6 +255,7 @@ export const FR_WORKSPACE = {
       `Rien reçu depuis ${seconds} secondes : la copie est arrêtée.`,
     hostedErrorPicker: 'L’explorateur n’a pas pu s’ouvrir. Réessayez.',
     pickOtherFolder: 'Choisir un autre dossier',
+    openInExplorer: 'Ouvrir dans l’explorateur de fichiers',
     destinationUnavailable: 'Dossier pas accessible',
     destinationUnavailableBody:
       'Ce dossier n’existe pas, ou ce compte n’a pas le droit d’y écrire. Choisissez-en un autre : le clone créera le sous-dossier du dépôt à l’intérieur.',
@@ -402,6 +404,8 @@ export const EN_WORKSPACE: Widen<typeof FR_WORKSPACE> = {
     ignoreScripts: 'Install without running the project’s scripts (recommended)',
     untrusted:
       'A cloned repository is not trusted code: its install scripts run on this machine. The exact command is shown before it runs.',
+    verifyLink: 'Check the link',
+    linkValid: 'Link valid',
     check: 'Check the link and the folder',
     checking: 'Checking…',
     clone: 'Clone',
@@ -421,6 +425,7 @@ export const EN_WORKSPACE: Widen<typeof FR_WORKSPACE> = {
     blockerNoPreview: 'Check the link and the destination folder first.',
     blockerNoParent: 'Choose where to clone first.',
     folderNameLabel: 'Subfolder name',
+    projectNameLabel: 'Project name to create',
     folderNameHint:
       'A single name, with no path separator. The clone creates this folder inside the chosen parent folder.',
     fullPath: 'Full path that will be written',
@@ -439,10 +444,8 @@ export const EN_WORKSPACE: Widen<typeof FR_WORKSPACE> = {
     hostedFolderHint:
       'A single name, with no path separator. It is created inside the folder you choose in the file explorer.',
     hostedCheck: 'Check the link',
-    hostedCopy: 'Choose a folder and copy',
+    chooseDestination: 'Choose the destination to clone',
     hostedDownload: 'Download the ZIP',
-    hostedNoFolderApi:
-      'This browser cannot write into a folder (Firefox and Safari cannot). Download the repository ZIP archive, or open this page in Chrome or Edge to write straight into a folder.',
     hostedBlockerCheck: 'Check the link first.',
     hostedReady: (label: string) => `GitHub repository recognised: ${label}.`,
     hostedNotGithubTitle: 'This link only clones on your machine',
@@ -514,6 +517,7 @@ export const EN_WORKSPACE: Widen<typeof FR_WORKSPACE> = {
       `Nothing received for ${seconds} seconds: the copy is stopped.`,
     hostedErrorPicker: 'The file explorer could not open. Try again.',
     pickOtherFolder: 'Choose another folder',
+    openInExplorer: 'Open in file explorer',
     destinationUnavailable: 'Folder not reachable',
     destinationUnavailableBody:
       'This folder does not exist, or this account may not write to it. Choose another one: the clone will create the repository subfolder inside it.',

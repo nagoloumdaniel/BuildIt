@@ -3,7 +3,9 @@ import { generateProject } from '@buildit/generator';
 import { parseManifest } from '@buildit/manifest';
 import { detectProject, formatCommand, installCommand } from '@buildit/workspace';
 import { registerGenerated } from '../../../lib/output-registry';
+import type { SessionDeps } from '../../github/session';
 import { installProject } from '../../open/project';
+import { type CreateRepositoryResult, createRepository } from '../../repo/sharing';
 import { checkOutputDestination, HOSTED_FOLDER_REFUSAL } from './output-destination';
 
 /**
@@ -51,6 +53,10 @@ export interface GenerateDoneEvent {
   readonly installCommand?: string;
   /** Pourquoi l'installation a échoué ; vide si elle a abouti ou n'a pas été demandée. */
   readonly installIssues: readonly string[];
+  /** L'adresse du dépôt GitHub créé et poussé, quand on l'a demandé et qu'il a abouti. */
+  readonly repositoryUrl?: string;
+  /** Pourquoi la création du dépôt GitHub a échoué ; le projet, lui, reste écrit. */
+  readonly githubIssues?: readonly string[];
 }
 
 export interface GenerateStreamDeps {
@@ -59,12 +65,30 @@ export interface GenerateStreamDeps {
   readonly registryRoot: string;
   /** L'exécuteur de l'installation, déjà privé des secrets du serveur. */
   readonly runner: CommandRunner;
+  /** La session GitHub, pour créer le dépôt du projet si on l'a demandé. */
+  readonly session?: SessionDeps;
 }
 
 function record(input: unknown): Record<string, unknown> {
   return typeof input === 'object' && input !== null && !Array.isArray(input)
     ? (input as Record<string, unknown>)
     : {};
+}
+
+/**
+ * Le nom du dépôt GitHub demandé par l'écran, réduit à une chaîne non vide.
+ *
+ * Le champ `github` est un objet hostile : seule une chaîne `name` non vide est
+ * retenue, le reste est ignoré. La validation du nom (grammaire GitHub) est
+ * faite plus loin par `createRepository`, qui refuse nommément ce qui ne passe
+ * pas.
+ */
+function githubNameOf(input: unknown): string | undefined {
+  if (typeof input !== 'object' || input === null || Array.isArray(input)) {
+    return undefined;
+  }
+  const name = (input as Record<string, unknown>)['name'];
+  return typeof name === 'string' && name.trim() !== '' ? name.trim() : undefined;
 }
 
 function refusal(issues: readonly string[], directory = ''): GenerateDoneEvent {
@@ -172,6 +196,32 @@ export async function runGenerateStream(
       }
     }
 
+    // GitHub est un choix, jamais une obligation (§20bis) : on ne crée le dépôt
+    // que si l'écran l'a demandé avec un nom, et seulement une fois le projet
+    // écrit et installé. Un échec du dépôt ne retire pas le projet du disque —
+    // il est signalé à part, pour ne pas faire croire qu'il est connecté.
+    let repositoryUrl: string | undefined;
+    let githubIssues: readonly string[] = [];
+    const githubName = githubNameOf(input['github']);
+    if (githubName !== undefined) {
+      if (deps.session === undefined) {
+        githubIssues = ['La session GitHub n’est pas disponible : le dépôt n’a pas été créé.'];
+      } else {
+        const created: CreateRepositoryResult = await createRepository({
+          directory,
+          name: githubName,
+          isPrivate: true,
+          runner: deps.runner,
+          deps: deps.session,
+        });
+        if (created.ok && created.url !== undefined) {
+          repositoryUrl = created.url;
+        } else {
+          githubIssues = created.issues;
+        }
+      }
+    }
+
     return finish({
       type: 'done',
       ok: true,
@@ -188,6 +238,8 @@ export async function runGenerateStream(
       installed,
       ...(command === undefined ? {} : { installCommand: command }),
       installIssues,
+      ...(repositoryUrl === undefined ? {} : { repositoryUrl }),
+      ...(githubIssues.length === 0 ? {} : { githubIssues }),
     });
   } catch {
     return finish(

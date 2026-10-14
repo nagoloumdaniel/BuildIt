@@ -1,6 +1,7 @@
 import { randomUUID } from 'node:crypto';
 import { SCOPES } from '@buildit/github';
 import { NextResponse } from 'next/server';
+import { safeReturnTo } from '../../../lib/return-to';
 import { defaultCookieJar, sealJson } from '../../../lib/session-cookie';
 import { STATE_COOKIE_NAME } from '../oauth-state';
 import { clientSecret, sessionDeps } from '../server-deps';
@@ -27,6 +28,10 @@ export function GET(request: Request): NextResponse {
   }
 
   const state = randomUUID();
+  // L'écran d'où l'on vient (la génération le plus souvent) : après l'accord
+  // sur github.com, le retour y ramène plutôt que sur `/github`. L'adresse
+  // vient de l'URL, donc elle est revalidée, jamais crue sur parole.
+  const returnTo = safeReturnTo(new URL(request.url).searchParams.get('returnTo'));
   const redirectUri = new URL('/github/callback', request.url).toString();
   const authorizeUrl = new URL('https://github.com/login/oauth/authorize');
   authorizeUrl.searchParams.set('client_id', deps.clientId);
@@ -34,13 +39,17 @@ export function GET(request: Request): NextResponse {
   authorizeUrl.searchParams.set('scope', SCOPES.full.join(' '));
   authorizeUrl.searchParams.set('state', state);
 
-  defaultCookieJar().set(STATE_COOKIE_NAME, sealJson({ state }, secret), {
-    httpOnly: true,
-    secure: true,
-    sameSite: 'lax',
-    path: '/',
-    maxAge: 600,
-  });
+  defaultCookieJar().set(
+    STATE_COOKIE_NAME,
+    sealJson({ state, ...(returnTo === undefined ? {} : { returnTo }) }, secret),
+    {
+      httpOnly: true,
+      secure: true,
+      sameSite: 'lax',
+      path: '/',
+      maxAge: 600,
+    },
+  );
 
   return NextResponse.redirect(authorizeUrl);
 }

@@ -42,5 +42,6 @@ export function rememberGeneratedProject(
     // Copie : la liste est persistée, et le brouillon peut encore changer.
     technologies: [...draft.technologies],
     ...(manifest === undefined ? {} : { manifest }),
+    ...(report.repositoryUrl === undefined ? {} : { repositoryUrl: report.repositoryUrl }),
   });
 }

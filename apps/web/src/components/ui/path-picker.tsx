@@ -171,12 +171,16 @@ export function PathPicker({
         </div>
       )}
 
-      {/* Le chemin choisi, lisible : c'est la valeur, elle est en chasse fixe
-          et elle se coupe proprement sur un écran étroit. */}
+      {/* Le chemin choisi, lisible : un champ de lecture grisé, non modifiable.
+          Seuls le bouton « Choisir » et le bouton « Effacer » le changent. */}
       {mode !== 'manual' && value !== '' ? (
-        <p className="pf-code mt-2" style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-all' }}>
-          {value}
-        </p>
+        <input
+          aria-labelledby={`${fieldId}-label`}
+          aria-readonly
+          className="pf-input pf-mono mt-2"
+          readOnly
+          value={value}
+        />
       ) : null}
 
       {busy ? (
