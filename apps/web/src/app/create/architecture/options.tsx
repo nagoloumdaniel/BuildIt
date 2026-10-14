@@ -1,6 +1,6 @@
 'use client';
 
-import { ARCHITECTURES, type Architecture, skeletonTree } from '@buildit/manifest';
+import { ARCHITECTURES, type Architecture } from '@buildit/manifest';
 import type { ReactElement } from 'react';
 import type { DraftState } from '../../../lib/draft';
 import { useMessages } from '../../../lib/i18n/provider';
@@ -19,84 +19,13 @@ import { useMessages } from '../../../lib/i18n/provider';
  * écrire sa phrase casse la compilation au point d'usage. Même garde-fou que
  * l'écran cible.
  *
+ * La carte reste volontairement courte : le nom, l'explication, l'impact
+ * (complexité, coût) et le mode d'exécution. Le dépôt et l'arborescence de base
+ * vivaient ici aussi, et transformaient la grille en mur de texte.
+ *
  * `architecture`, lui, **part dans le manifest** (contrairement à `type`) : le
  * schéma du §10 le déclare obligatoire.
  */
-
-/**
- * Les technologies qui orientent la forme. Identifiants du catalogue, recopiés
- * ici parce que l'écran est un composant client sans accès au registry ; le
- * test de l'écran vérifie contre le catalogue réel qu'aucun ne manque ni ne
- * change de catégorie.
- */
-export const STACK_SIGNALS = {
-  frontend: [
-    'angular',
-    'astro',
-    'htmx',
-    'next',
-    'nuxt',
-    'preact',
-    'qwik',
-    'react',
-    'remix',
-    'solidjs',
-    'svelte',
-    'sveltekit',
-    'vue',
-  ],
-  backend: [
-    'actix-web',
-    'aspnet-core',
-    'axum',
-    'django',
-    'elysia',
-    'express',
-    'fastapi',
-    'fastify',
-    'fiber',
-    'flask',
-    'gin',
-    'hono',
-    'laravel',
-    'nestjs',
-    'rails',
-    'spring-boot',
-    'symfony',
-  ],
-  queue: ['bullmq', 'kafka', 'nats', 'rabbitmq', 'sqs'],
-  /** Hébergeurs à fonctions (Vercel Functions, Lambda, Workers, Netlify Functions). */
-  serverless: ['vercel', 'netlify', 'cloudflare', 'aws'],
-} as const satisfies Record<string, readonly string[]>;
-
-export interface StackProfile {
-  readonly frontend: boolean;
-  readonly backend: boolean;
-  readonly queue: boolean;
-  readonly serverless: boolean;
-}
-
-const has = (list: readonly string[], technologies: readonly string[]) =>
-  technologies.some((id) => list.includes(id));
-
-/**
- * Ce que la stack dit du projet. Avant l'écran Stack, aucune technologie
- * n'est choisie : les cibles de l'écran 2 décident alors du front et du back.
- */
-export function stackProfile(
-  technologies: readonly string[] = [],
-  targets: readonly string[] = [],
-): StackProfile {
-  const frontend = has(STACK_SIGNALS.frontend, technologies);
-  const backend = has(STACK_SIGNALS.backend, technologies);
-  const anyFramework = frontend || backend;
-  return {
-    frontend: anyFramework ? frontend : targets.some((target) => target !== 'api'),
-    backend: anyFramework ? backend : targets.includes('api'),
-    queue: has(STACK_SIGNALS.queue, technologies),
-    serverless: has(STACK_SIGNALS.serverless, technologies),
-  };
-}
 
 /**
  * La forme posée quand aucune n'est encore choisie : le manifest exige une
@@ -114,22 +43,15 @@ export function withArchitecture(draft: DraftState, architecture: Architecture):
 
 export interface ArchitectureChoicesProps {
   readonly selected: string | undefined;
-  /** Les technologies déjà choisies elles dessinent l'arborescence montrée. */
-  readonly technologies?: readonly string[];
-  /** Les cibles de l'écran 2 elles devinent front et back avant la stack. */
-  readonly targets?: readonly string[];
   readonly onSelect: (architecture: Architecture) => void;
 }
 
 /** Le contenu de l'écran, hors contexte React donc testable au rendu serveur. */
 export function ArchitectureChoices({
   selected,
-  technologies = [],
-  targets = [],
   onSelect,
 }: ArchitectureChoicesProps): ReactElement {
   const t = useMessages();
-  const profile = stackProfile(technologies, targets);
   const chosen = ARCHITECTURES.find((architecture) => architecture === selected);
   const labels = t.wizard.architecture.labels;
 
@@ -155,26 +77,7 @@ export function ArchitectureChoices({
                   {t.wizard.architecture.impact(note.complexity, note.cost)}
                 </span>
                 <span className="pf-choice-note">
-                  {t.wizard.architecture.repoLabel} : {note.repo}
-                </span>
-                <span className="pf-choice-note">
                   {t.wizard.architecture.runtimeLabel} : {note.runtime}
-                </span>
-                <span className="pf-choice-note">{t.wizard.architecture.treeLabel}</span>
-                {/* `span`, pas `pre` : un bouton n'accepte que du contenu en ligne. */}
-                <span
-                  className="pf-choice-note"
-                  data-tree={architecture}
-                  style={{
-                    display: 'block',
-                    fontFamily: 'var(--font-mono, monospace)',
-                    fontSize: '0.75rem',
-                    whiteSpace: 'pre-wrap',
-                  }}
-                >
-                  {skeletonTree(architecture, profile)
-                    .map((dir) => `${dir.path}/`)
-                    .join('\n')}
                 </span>
               </button>
             );

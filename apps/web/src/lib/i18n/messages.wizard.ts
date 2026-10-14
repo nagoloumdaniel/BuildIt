@@ -129,16 +129,13 @@ export const FR_WIZARD = {
       none: 'Aucune architecture choisie pour l’instant.',
       summary: (label: string, complexity: string, cost: string) =>
         `${label} : complexité ${complexity}, coût ${cost}`,
-      repoLabel: 'Dépôt',
       runtimeLabel: 'Exécution',
-      treeLabel: 'Dossiers de base générés :',
       labels: {
         'single-app': {
           label: 'Application unique',
           note: 'Une seule application, un seul dépôt, un seul déploiement.',
           complexity: 'faible',
           cost: 'minimal : un seul service à héberger et à surveiller.',
-          repo: 'un seul dépôt, une application ; le code découpé par fonctionnalités et par modules.',
           runtime: 'un seul processus déployé.',
         },
         monorepo: {
@@ -146,7 +143,6 @@ export const FR_WIZARD = {
           note: 'Plusieurs applications et paquets partagés dans un même dépôt.',
           complexity: 'moyenne',
           cost: 'modéré : la CI doit être outillée pour ne construire que ce qui change.',
-          repo: 'apps/ (web, api), packages/ partagés (contrats), infra/ par environnement, docs/decisions.',
           runtime: 'chaque application se déploie séparément.',
         },
         'modular-monolith': {
@@ -154,7 +150,6 @@ export const FR_WIZARD = {
           note: 'Un seul déploiement, des modules internes aux frontières nettes.',
           complexity: 'moyenne',
           cost: 'faible : un seul déployable, mais une discipline de modules à tenir.',
-          repo: 'un seul dépôt ; modules hexagonaux (domaine, application, adaptateurs).',
           runtime: 'un seul déployable, des frontières internes strictes.',
         },
         microservices: {
@@ -162,7 +157,6 @@ export const FR_WIZARD = {
           note: 'Des services indépendants, déployés et mis à l’échelle séparément.',
           complexity: 'élevée',
           cost: 'élevé : réseau, orchestration et observabilité à financer.',
-          repo: 'services/ (passerelle + services), packages/event-contracts, infra/.',
           runtime: 'un processus par service, chacun propriétaire de ses données.',
         },
         serverless: {
@@ -170,7 +164,6 @@ export const FR_WIZARD = {
           note: 'Des fonctions exécutées à la demande, sans serveur à administrer.',
           complexity: 'moyenne',
           cost: 'variable : à l’usage, avec un plafond de facturation à surveiller.',
-          repo: 'functions/ (http, events, scheduled) et infra/.',
           runtime: 'des fonctions à la demande, sans état.',
         },
         'event-driven': {
@@ -178,7 +171,6 @@ export const FR_WIZARD = {
           note: 'Des flux d’événements découplent producteurs et consommateurs.',
           complexity: 'élevée',
           cost: 'élevé : une file et une supervision de bout en bout.',
-          repo: 'src/events (producteurs, consommateurs, outbox, lettres mortes), packages/event-contracts.',
           runtime: 'une file ou un bus de messages entre producteurs et consommateurs.',
         },
       } satisfies Record<
@@ -188,7 +180,6 @@ export const FR_WIZARD = {
           note: string;
           complexity: string;
           cost: string;
-          repo: string;
           runtime: string;
         }
       >,
@@ -448,16 +439,13 @@ export const EN_WIZARD: Widen<typeof FR_WIZARD> = {
       none: 'No architecture chosen yet.',
       summary: (label: string, complexity: string, cost: string) =>
         `${label} : ${complexity} complexity, ${cost} cost`,
-      repoLabel: 'Repository',
       runtimeLabel: 'Runtime',
-      treeLabel: 'Base folders generated:',
       labels: {
         'single-app': {
           label: 'Single application',
           note: 'One application, one repository, one deployment.',
           complexity: 'low',
           cost: 'minimal: a single service to host and watch.',
-          repo: 'one repository, one application; code split by features and modules.',
           runtime: 'a single deployed process.',
         },
         monorepo: {
@@ -465,7 +453,6 @@ export const EN_WIZARD: Widen<typeof FR_WIZARD> = {
           note: 'Several applications and shared packages in one repository.',
           complexity: 'medium',
           cost: 'moderate: CI must be tooled to build only what changed.',
-          repo: 'apps/ (web, api), shared packages/ (contracts), infra/ per environment, docs/decisions.',
           runtime: 'each application deploys on its own.',
         },
         'modular-monolith': {
@@ -473,7 +460,6 @@ export const EN_WIZARD: Widen<typeof FR_WIZARD> = {
           note: 'One deployment, internal modules with clear boundaries.',
           complexity: 'medium',
           cost: 'low: a single deployable, but module discipline to hold.',
-          repo: 'one repository; hexagonal modules (domain, application, adapters).',
           runtime: 'one deployable, strict internal boundaries.',
         },
         microservices: {
@@ -481,7 +467,6 @@ export const EN_WIZARD: Widen<typeof FR_WIZARD> = {
           note: 'Independent services, deployed and scaled separately.',
           complexity: 'high',
           cost: 'high: network, orchestration and observability to fund.',
-          repo: 'services/ (gateway + services), packages/event-contracts, infra/.',
           runtime: 'one process per service, each owning its data.',
         },
         serverless: {
@@ -489,7 +474,6 @@ export const EN_WIZARD: Widen<typeof FR_WIZARD> = {
           note: 'Functions run on demand, with no server to administer.',
           complexity: 'medium',
           cost: 'variable: pay as you go, with a billing cap to watch.',
-          repo: 'functions/ (http, events, scheduled) and infra/.',
           runtime: 'stateless on-demand functions.',
         },
         'event-driven': {
@@ -497,7 +481,6 @@ export const EN_WIZARD: Widen<typeof FR_WIZARD> = {
           note: 'Event streams decouple producers and consumers.',
           complexity: 'high',
           cost: 'high: a queue and end-to-end supervision.',
-          repo: 'src/events (producers, consumers, outbox, dead letters), packages/event-contracts.',
           runtime: 'a queue or message bus between producers and consumers.',
         },
       },

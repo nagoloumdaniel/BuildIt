@@ -1,17 +1,10 @@
 import { ARCHITECTURES } from '@buildit/manifest';
-import { loadCatalogue } from '@buildit/registry';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
 import { DraftProvider } from '../../../components/wizard/draft-provider';
 import { freshDraft } from '../../../lib/draft';
 import { FR } from '../../../lib/i18n/messages';
-import {
-  ArchitectureChoices,
-  DEFAULT_ARCHITECTURE,
-  STACK_SIGNALS,
-  stackProfile,
-  withArchitecture,
-} from './options';
+import { ArchitectureChoices, DEFAULT_ARCHITECTURE, withArchitecture } from './options';
 import ArchitecturePage from './page';
 
 /** Le nombre de cartes d'architecture rendues, lu sur l'attribut. */
@@ -31,53 +24,24 @@ describe('les architectures réelles du manifest (§6.5)', () => {
       expect(note.note.length).toBeGreaterThan(0);
       expect(note.complexity.length).toBeGreaterThan(0);
       expect(note.cost.length).toBeGreaterThan(0);
+      expect(note.runtime.length).toBeGreaterThan(0);
     }
-  });
-});
-
-describe('profil de stack', () => {
-  it('les identifiants repérés existent au catalogue, dans la bonne catégorie', () => {
-    const catalogue = loadCatalogue();
-    if (!catalogue.ok) throw new Error('catalogue invalide');
-    const categoryOf = (id: string) => catalogue.value.get(id)?.category;
-    for (const id of STACK_SIGNALS.frontend) expect(categoryOf(id)).toBe('frontend');
-    for (const id of STACK_SIGNALS.backend) expect(categoryOf(id)).toBe('backend');
-    for (const id of STACK_SIGNALS.queue) expect(categoryOf(id)).toBe('queue');
-    for (const id of STACK_SIGNALS.serverless) expect(categoryOf(id)).toBe('hosting');
-    // Tous les frameworks front **web** et back du catalogue sont repérés. Les
-    // frameworks mobile et ordinateur (Expo, Flutter, Electron…) sont aussi de
-    // catégorie `frontend`, mais ne dessinent pas d'application web.
-    for (const entry of catalogue.value.entries()) {
-      const webOnly =
-        entry.targets.includes('web') &&
-        !entry.targets.some((target) => target === 'mobile' || target === 'desktop');
-      if (entry.category === 'frontend' && webOnly)
-        expect(STACK_SIGNALS.frontend).toContain(entry.id);
-      if (entry.category === 'backend') expect(STACK_SIGNALS.backend).toContain(entry.id);
-      if (entry.category === 'queue') expect(STACK_SIGNALS.queue).toContain(entry.id);
-    }
-  });
-
-  it('sans technologie, les cibles décident du front et du back', () => {
-    expect(stackProfile([], ['web', 'api'])).toMatchObject({ frontend: true, backend: true });
-    expect(stackProfile([], ['web'])).toMatchObject({ frontend: true, backend: false });
   });
 });
 
 describe('ArchitectureChoices', () => {
-  it('montre l’arborescence de base de chaque forme, et les notes dépôt / runtime', () => {
+  it('montre le nom, l’explication, l’impact et l’exécution de chaque forme', () => {
     const html = renderToStaticMarkup(
-      <ArchitectureChoices
-        selected={undefined}
-        technologies={['next', 'hono']}
-        targets={['web', 'api']}
-        onSelect={() => {}}
-      />,
+      <ArchitectureChoices selected={undefined} onSelect={() => {}} />,
     );
-    expect(html).toContain('apps/api/src/modules/example/domain/');
-    expect(html).toContain('functions/http/');
-    expect(html).toContain('Dépôt');
     expect(html).toContain('Exécution');
+    expect(html).toContain('Complexité');
+    expect(html).toContain('Coût d’exploitation');
+    // Le dépôt et l'arborescence de base ne sont plus sur la carte : elle se
+    // lit d'un coup d'œil.
+    expect(html).not.toContain('Dépôt');
+    expect(html).not.toContain('Dossiers de base générés');
+    expect(html).not.toContain('data-tree');
   });
 
   it('affiche les six formes d’emblée, sans recommandation ni bouton « voir plus »', () => {
@@ -88,15 +52,6 @@ describe('ArchitectureChoices', () => {
     expect(rendered(html)).toBe(ARCHITECTURES.length);
     expect(html).not.toContain('Recommand');
     expect(html).not.toContain('Voir toutes les options');
-  });
-
-  it('affiche la complexité et le coût d’exploitation, pas seulement le nom', () => {
-    const html = renderToStaticMarkup(
-      <ArchitectureChoices selected={undefined} onSelect={() => {}} />,
-    );
-
-    expect(html).toContain('Complexité');
-    expect(html).toContain('Coût d’exploitation');
   });
 
   it('marque l’architecture choisie, et elle seule', () => {
@@ -131,7 +86,7 @@ describe('withArchitecture', () => {
 
 describe('ArchitecturePage', () => {
   it('branche l’étape « architecture » dans StepShell et se rend sous son provider', () => {
-    // Preuve d'intégration : l'écran est bien l'étape 5 du parcours (§6.5), donc
+    // Preuve d'intégration : l'écran est bien l'étape 4 du parcours (§6.5), donc
     // la progression et l'étape suivante sont celles du catalogue des étapes.
     const html = renderToStaticMarkup(
       <DraftProvider>

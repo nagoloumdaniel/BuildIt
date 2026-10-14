@@ -40,8 +40,6 @@ export default function ArchitecturePage(): ReactElement {
     >
       <ArchitectureChoices
         selected={draft.architecture}
-        technologies={draft.technologies}
-        targets={draft.targets}
         onSelect={(architecture) =>
           session.update((current) => withArchitecture(current, architecture))
         }
