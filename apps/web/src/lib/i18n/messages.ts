@@ -94,7 +94,7 @@ const FR_CORE = {
    * traduite, seulement affichée.
    */
   footer: {
-    version: '0.7.0',
+    version: '0.7.1',
   },
 
   picker: {
@@ -245,7 +245,7 @@ const EN_CORE: Widen<typeof FR_CORE> = {
   },
 
   footer: {
-    version: '0.7.0',
+    version: '0.7.1',
   },
 
   picker: {
