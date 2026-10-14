@@ -7,9 +7,9 @@ import { OptionCard, type OptionCardData, refusalAdvice } from './option-card';
  * La carte d'une technologie, rendue sans DOM.
  *
  * Ce qui est vérifié ici est ce que la refonte a changé : plus de badge
- * « Choisi » (la carte entière le dit, plus une coche qui ne dépend pas de la
- * couleur), plus de raison écrite **dans** la carte (elle passe dans la bulle
- * `!`), et une bulle qui nomme les technologies en cause avec leur
+ * « Choisi » (le fond et le contour orange le disent), plus de coche dans le
+ * coin, une icône sur **chaque** option (marque connue, sinon icône de
+ * catégorie), et une bulle qui nomme les technologies en cause avec leur
  * documentation.
  */
 
@@ -21,13 +21,28 @@ const render = (props: Parameters<typeof OptionCard>[0]): string =>
   renderToStaticMarkup(<OptionCard {...props} />);
 
 describe('OptionCard sélection', () => {
-  it('une option choisie est appuyée, sans badge « Choisi »', () => {
+  it('une option choisie est appuyée, sans badge « Choisi » ni coche', () => {
     const html = render({ option: option({ id: 'react', state: 'selected' }), onToggle: () => {} });
 
     expect(html).toContain('aria-pressed="true"');
     expect(html).not.toMatch(/pf-badge[^>]*>[^<]*Choisi/);
-    // La coche existe pour que la sélection ne dépende pas de la couleur seule.
-    expect(html).toContain('pf-option-check');
+    // Le fond et le contour orange suffisent : pas de coche dans le coin.
+    expect(html).not.toContain('pf-option-check');
+  });
+
+  it('porte une icône sur chaque option, marque connue ou icône de catégorie', () => {
+    const known = render({ option: option({ id: 'react' }), onToggle: () => {} });
+    const unknown = render({
+      option: option({ id: 'zod-sans-marque', category: 'validation' }),
+      onToggle: () => {},
+    });
+
+    // Les deux passent par le même conteneur orange.
+    expect(known).toContain('pf-option-icon');
+    expect(unknown).toContain('pf-option-icon');
+    // La marque connue prend le sprite, l'autre l'icône de sa catégorie.
+    expect(known).toContain('tech-sprite.svg#t-react');
+    expect(unknown).toContain('data-icon=');
   });
 
   it('le choix local l’emporte sur un état moteur en retard', () => {
@@ -46,7 +61,7 @@ describe('OptionCard sélection', () => {
     expect(withdrawn).toContain('aria-pressed="false"');
   });
 
-  it('« Recommandé » ne se pose jamais sur une option bloquée ni déjà choisie', () => {
+  it('l’étoile « Recommandé » ne se pose jamais sur une option bloquée ni déjà choisie', () => {
     const plain = render({ option: option({ id: 'vue' }), recommended: true, onToggle: () => {} });
     const blocked = render({
       option: option({ id: 'mui', state: 'blocked' }),
@@ -59,9 +74,12 @@ describe('OptionCard sélection', () => {
       onToggle: () => {},
     });
 
-    expect(plain).toContain('Recommandé');
-    expect(blocked).not.toContain('Recommandé');
-    expect(chosen).not.toContain('Recommandé');
+    // Une étoile, pas un badge : le libellé reste accessible aux lecteurs d'écran.
+    expect(plain).toContain('pf-option-star');
+    expect(plain).toContain('aria-label="Recommandé"');
+    expect(plain).not.toMatch(/pf-badge[^>]*>[^<]*Recommandé/);
+    expect(blocked).not.toContain('pf-option-star');
+    expect(chosen).not.toContain('pf-option-star');
   });
 });
 

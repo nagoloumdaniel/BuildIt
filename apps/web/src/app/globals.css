@@ -952,11 +952,26 @@
     padding-left: 2.35rem;
   }
 
+  /* La barre de recherche garde son liseré orange au focus : la bordure accent
+     et le halo suffisent, l'anneau bleu du navigateur par-dessus faisait deux
+     indicateurs pour un seul champ. Le focus reste visible pour autant. */
+  .pf-search > .pf-input:focus {
+    outline: none;
+  }
+
   /* Les technologies choisies, retirables d'un clic. */
   .pf-chips {
     display: flex;
     flex-wrap: wrap;
     gap: 0.4rem;
+  }
+
+  /* L'icône de la puce : orange comme celle des cartes, pour que la même
+     technologie se reconnaisse d'un endroit à l'autre. */
+  .pf-chip-icon {
+    color: var(--pf-accent);
+    display: inline-flex;
+    flex: none;
   }
 
   .pf-chip {
@@ -1594,30 +1609,19 @@
     padding-right: 3rem;
   }
 
+  /* L'icône de la carte : toujours présente, toujours orange (le logo de la
+     marque, ou l'icône de la catégorie à défaut). */
   .pf-option-icon {
     color: var(--pf-accent);
     display: inline-flex;
     flex: none;
   }
 
-  /* Choisi : la coche du coin, en plus du fond et du contour. Elle existe pour
-     que la sélection ne repose pas sur la couleur seule. */
-  .pf-option-check {
-    align-items: center;
-    background: var(--pf-accent);
-    border-radius: 999px;
-    bottom: 0.6rem;
-    color: var(--pf-accent-text);
-    display: none;
-    height: 1.25rem;
-    justify-content: center;
-    position: absolute;
-    right: 0.6rem;
-    width: 1.25rem;
-  }
-
-  .pf-choice[aria-pressed="true"] .pf-option-check {
+  /* L'étoile d'une recommandation : orange, à côté du nom, sans cadre. */
+  .pf-option-star {
+    color: var(--pf-accent);
     display: inline-flex;
+    flex: none;
   }
 
   /* Incompatible : la carte est grisée (fond et contour neutres, rien

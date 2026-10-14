@@ -4,7 +4,7 @@ import { DraftProvider } from '../../../components/wizard/draft-provider';
 import InfrastructurePage from './page';
 
 describe('écran Infrastructure (§6.9)', () => {
-  it('rend le cadre de l’étape et les deux cases Docker / CI-CD', () => {
+  it('rend le cadre de l’étape et les deux cartes Docker / CI-CD', () => {
     const html = renderToStaticMarkup(
       <DraftProvider>
         <InfrastructurePage />
@@ -16,7 +16,10 @@ describe('écran Infrastructure (§6.9)', () => {
     expect(html).toContain('Infrastructure');
     expect(html).toContain('Docker');
     expect(html).toContain('Intégration continue');
-    expect(html).toContain('type="checkbox"');
+    // Des cartes appuyées, pas des cases à cocher : le voyant orange suffit.
+    expect(html).toContain('data-infra="docker"');
+    expect(html).toContain('data-infra="ci"');
+    expect(html).not.toContain('type="checkbox"');
   });
 
   it('dit où va le cloud cible, sans inventer de champ au brouillon', () => {

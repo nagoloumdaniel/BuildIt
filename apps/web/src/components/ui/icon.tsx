@@ -149,6 +149,11 @@ const PATHS = {
     'M19 3v4',
     'M21 5h-4',
   ],
+  /* L'étoile des recommandations : elle marque une option conseillée par le
+     mode guidé, partout où elle apparaît. */
+  star: [
+    'M12 2.6l2.95 5.98 6.6.96-4.78 4.65 1.13 6.57L12 17.66 6.1 20.76l1.13-6.57-4.78-4.65 6.6-.96z',
+  ],
   hammer: [
     'm15 12-8.4 8.4a1 1 0 1 1-3-3L12 9',
     'm18 15 4-4',

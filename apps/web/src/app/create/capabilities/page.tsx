@@ -2,9 +2,11 @@
 
 import type { Category } from '@buildit/registry';
 import { type ReactElement, useEffect, useMemo, useRef, useState } from 'react';
+import { categoryIcon } from '../../../components/ui/category-icon';
 import { ErrorState } from '../../../components/ui/error-state';
 import { Icon } from '../../../components/ui/icon';
 import { LoadingLine } from '../../../components/ui/loading';
+import { StackIcon } from '../../../components/ui/stack-icon';
 import { useDraft, useSession } from '../../../components/wizard/draft-provider';
 import { StepShell } from '../../../components/wizard/shell';
 import type { OptionView } from '../../../lib/engine';
@@ -254,6 +256,9 @@ export default function CapabilitiesPage(): ReactElement {
                 }}
               >
                 <span className="pf-choice-name">
+                  <span aria-hidden="true" className="pf-option-icon">
+                    <Icon name={categoryIcon(category)} size={16} />
+                  </span>
                   {t.wizard.capabilities.families[category].label}
                 </span>
                 <span className="pf-choice-note">
@@ -306,6 +311,9 @@ export default function CapabilitiesPage(): ReactElement {
               const label = labelOf.get(id) ?? id;
               return (
                 <li key={id} className="pf-chip">
+                  <span aria-hidden="true" className="pf-chip-icon">
+                    <StackIcon category={categoryOf.get(id)} id={id} label={label} size={14} />
+                  </span>
                   <span className="min-w-0 truncate">{label}</span>
                   <button
                     type="button"

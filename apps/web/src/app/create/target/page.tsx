@@ -47,12 +47,7 @@ export default function TargetPage() {
                 }))
               }
             >
-              <span className="pf-choice-name">
-                {labels[target].label}
-                {chosen ? (
-                  <span className="pf-badge pf-badge-accent ml-2">{t.wizard.targets.chosen}</span>
-                ) : null}
-              </span>
+              <span className="pf-choice-name">{labels[target].label}</span>
               <span className="pf-choice-note">{labels[target].note}</span>
             </button>
           );

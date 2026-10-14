@@ -9,6 +9,7 @@ import {
   type StepId,
   stepIndex,
 } from './flow';
+import { FR } from './i18n/messages';
 
 describe('STEP_ORDER', () => {
   it('couvre les étapes du §3 sans le menu ni le graphe', () => {
@@ -54,45 +55,132 @@ describe('STEP_ORDER', () => {
 
 describe('canAdvance bloquants du §6', () => {
   it('create : un nom conforme passe', () => {
-    expect(canAdvance({ ...freshDraft(), name: 'mon-projet' })).toBe(true);
+    expect(canAdvance({ ...freshDraft(), name: 'mon-projet' }, FR)).toBe(true);
   });
 
   it('create : un nom vide est refusé', () => {
-    expect(canAdvance({ ...freshDraft(), name: '' })).toBe(false);
+    expect(canAdvance({ ...freshDraft(), name: '' }, FR)).toBe(false);
   });
 
   it('create : un nom invalide selon le pattern du manifest est refusé', () => {
-    expect(canAdvance({ ...freshDraft(), name: 'Espace Interdit' })).toBe(false);
+    expect(canAdvance({ ...freshDraft(), name: 'Espace Interdit' }, FR)).toBe(false);
   });
 
   it('target : au moins une cible', () => {
-    expect(canAdvance({ ...freshDraft(), step: 'target', targets: [] })).toBe(false);
-    expect(canAdvance({ ...freshDraft(), step: 'target', targets: ['web'] })).toBe(true);
+    expect(canAdvance({ ...freshDraft(), step: 'target', targets: [] }, FR)).toBe(false);
+    expect(canAdvance({ ...freshDraft(), step: 'target', targets: ['web'] }, FR)).toBe(true);
   });
 
   it('target : mobile et desktop passent, le catalogue leur offre un framework', () => {
     // Expo, React Native, Flutter (mobile) ; Electron, Tauri (desktop).
     for (const target of ['mobile', 'desktop']) {
       const draft = { ...freshDraft(), step: 'target' as const, targets: [target] };
-      expect(canAdvance(draft), `${target} devrait être franchissable`).toBe(true);
+      expect(canAdvance(draft, FR), `${target} devrait être franchissable`).toBe(true);
     }
   });
 
   it('target : les cibles que le catalogue honore passent', () => {
     for (const target of ['web', 'api', 'library']) {
       const draft = { ...freshDraft(), step: 'target' as const, targets: [target] };
-      expect(canAdvance(draft), `${target} devrait passer`).toBe(true);
+      expect(canAdvance(draft, FR), `${target} devrait passer`).toBe(true);
     }
   });
 
-  it('stack : la résolution doit exister et ne porter aucun problème', () => {
-    const base = { ...freshDraft(), name: 'ok', targets: ['web'], step: 'stack' as const };
-    expect(canAdvance(base)).toBe(false);
-    expect(canAdvance({ ...base, resolution: { status: 'certified', issues: ['doublon'] } })).toBe(
-      false,
+  it('stack : la résolution doit exister, ne porter aucun problème, et les minimums être tenus', () => {
+    const base = {
+      ...freshDraft(),
+      name: 'ok',
+      targets: ['web'],
+      step: 'stack' as const,
+      technologies: ['next', 'typescript'],
+    };
+    expect(canAdvance(base, FR)).toBe(false);
+    expect(
+      canAdvance({ ...base, resolution: { status: 'certified', issues: ['doublon'] } }, FR),
+    ).toBe(false);
+    expect(canAdvance({ ...base, resolution: { status: 'certified', issues: [] } }, FR)).toBe(true);
+    expect(canAdvance({ ...base, resolution: { status: 'experimental', issues: [] } }, FR)).toBe(
+      true,
     );
-    expect(canAdvance({ ...base, resolution: { status: 'certified', issues: [] } })).toBe(true);
-    expect(canAdvance({ ...base, resolution: { status: 'experimental', issues: [] } })).toBe(true);
+  });
+
+  it('stack : la plateforme choisie exige son framework avant de continuer', () => {
+    const draft = {
+      ...freshDraft(),
+      name: 'ok',
+      targets: ['web'],
+      step: 'stack' as const,
+      resolution: { status: 'certified' as const, issues: [] },
+    };
+    expect(canAdvance(draft, FR)).toBe(false);
+    expect(blockedReason(draft, FR)).toContain('framework');
+
+    // Une fiche « frontend » qui ne sert pas web ne satisfait pas la cible.
+    expect(canAdvance({ ...draft, technologies: ['expo'] }, FR)).toBe(false);
+    expect(canAdvance({ ...draft, technologies: ['next'] }, FR)).toBe(true);
+  });
+
+  it('stack : une forme serveur exige la plateforme API puis un backend', () => {
+    const base = {
+      ...freshDraft(),
+      name: 'ok',
+      targets: ['web'],
+      architecture: 'microservices',
+      step: 'stack' as const,
+      technologies: ['next'],
+      resolution: { status: 'certified' as const, issues: [] },
+    };
+    expect(blockedReason(base, FR)).toContain('API');
+
+    const withApi = { ...base, targets: ['web', 'api'] };
+    expect(blockedReason(withApi, FR)).toContain('Backend');
+    expect(canAdvance({ ...withApi, technologies: ['next', 'hono'] }, FR)).toBe(true);
+  });
+
+  it('capabilities : la file d’attente d’une architecture événementielle est exigée', () => {
+    const base = {
+      ...freshDraft(),
+      name: 'ok',
+      targets: ['web', 'api'],
+      architecture: 'event-driven',
+      technologies: ['next', 'hono', 'typescript'],
+      step: 'capabilities' as const,
+    };
+    expect(canAdvance(base, FR)).toBe(false);
+    expect(blockedReason(base, FR)).toContain('File d’attente');
+    expect(canAdvance({ ...base, capabilities: ['bullmq'] }, FR)).toBe(true);
+  });
+
+  it('infrastructure : les conteneurs d’une architecture de services sont exigés', () => {
+    const base = {
+      ...freshDraft(),
+      name: 'ok',
+      targets: ['web', 'api'],
+      architecture: 'microservices',
+      technologies: ['next', 'hono', 'typescript'],
+      capabilities: ['bullmq'],
+      step: 'infrastructure' as const,
+    };
+    expect(canAdvance(base, FR)).toBe(false);
+    expect(blockedReason(base, FR)).toContain('Conteneurs');
+    // La case Docker de l'écran vaut un choix de la catégorie `containers`.
+    expect(canAdvance({ ...base, infra: { docker: true, ci: false } }, FR)).toBe(true);
+  });
+
+  it('un ORM sans base de données est refusé avant la génération', () => {
+    const base = {
+      ...freshDraft(),
+      name: 'ok',
+      targets: ['web'],
+      architecture: 'single-app',
+      technologies: ['next', 'typescript', 'prisma'],
+      step: 'stack' as const,
+      resolution: { status: 'certified' as const, issues: [] },
+    };
+    expect(blockedReason(base, FR)).toContain('ORM');
+    expect(
+      canAdvance({ ...base, technologies: ['next', 'typescript', 'prisma', 'postgresql'] }, FR),
+    ).toBe(true);
   });
 
   it('les étapes sans bloquant écrit passent', () => {
@@ -107,28 +195,39 @@ describe('canAdvance bloquants du §6', () => {
       'generate',
       'report',
     ] as const) {
-      expect(canAdvance({ ...freshDraft(), step })).toBe(true);
-      expect(blockedReason({ ...freshDraft(), step })).toBeUndefined();
+      expect(canAdvance({ ...freshDraft(), step }, FR)).toBe(true);
+      expect(blockedReason({ ...freshDraft(), step }, FR)).toBeUndefined();
     }
   });
 });
 
 describe('blockedReason la phrase que l’écran affiche', () => {
   it('dit quoi corriger quand le nom ne convient pas', () => {
-    expect(blockedReason({ ...freshDraft(), name: 'Espace Interdit' })).toContain('nom');
-    expect(blockedReason({ ...freshDraft(), name: 'mon-projet' })).toBeUndefined();
+    expect(blockedReason({ ...freshDraft(), name: 'Espace Interdit' }, FR)).toContain('nom');
+    expect(blockedReason({ ...freshDraft(), name: 'mon-projet' }, FR)).toBeUndefined();
   });
 
   it('réclame une plateforme, puis se taît dès qu’il y en a une', () => {
-    expect(blockedReason({ ...freshDraft(), step: 'target' })).toContain('plateforme');
-    expect(blockedReason({ ...freshDraft(), step: 'target', targets: ['web'] })).toBeUndefined();
+    expect(blockedReason({ ...freshDraft(), step: 'target' }, FR)).toContain('plateforme');
+    expect(
+      blockedReason({ ...freshDraft(), step: 'target', targets: ['web'] }, FR),
+    ).toBeUndefined();
   });
 
   it('porte le refus du moteur tel quel : c’est lui qui explique (§12)', () => {
-    const base = { ...freshDraft(), step: 'stack' as const };
-    expect(blockedReason(base)).toContain('compatibilité');
+    const base = {
+      ...freshDraft(),
+      name: 'ok',
+      targets: ['web'],
+      step: 'stack' as const,
+      technologies: ['next', 'typescript'],
+    };
+    expect(blockedReason(base, FR)).toContain('compatibilité');
     expect(
-      blockedReason({ ...base, resolution: { status: 'certified', issues: ['prisma exclut X'] } }),
+      blockedReason(
+        { ...base, resolution: { status: 'certified', issues: ['prisma exclut X'] } },
+        FR,
+      ),
     ).toBe('prisma exclut X');
   });
 });

@@ -101,37 +101,23 @@ export function matchesQuery(option: StackOption, query: string): boolean {
   return normalizeText(option.label).includes(needle) || normalizeText(option.id).includes(needle);
 }
 
-export interface GuidedView {
-  /** Les propositions du §5 : les choix faits, puis les disponibles. */
-  readonly recommended: readonly StackOption[];
-  /** Toutes les incompatibles, grisées avec leur raison jamais masquées. */
-  readonly blocked: readonly StackOption[];
-  /** La longue traîne compatible, derrière « Voir toutes les options ». */
-  readonly hidden: readonly StackOption[];
-}
-
 /**
- * Le découpage du mode guidé (§5) : 2 à 4 recommandations, le reste accessible.
+ * Les options que le mode guidé **recommande**, et elles seules.
  *
- * L'ordre source est celui du registry, qui va du plus courant au plus
- * pointu ; on le préserve au lieu de réinventer un classement. Les choix déjà
- * faits passent devant, parce que c'est ce qu'on vient vérifier ou défaire.
+ * L'écran affiche tout le catalogue de la catégorie : il n'y a plus de bouton
+ * pour déplier une longue traîne. Le budget de deux à quatre choix ne sert donc
+ * plus à masquer, il sert à **marquer** — l'étoile dit « conseillé », partout
+ * où elle apparaît.
+ *
+ * L'ordre source est celui du registry, qui va du plus courant au plus pointu ;
+ * les choix déjà faits passent devant, parce que c'est ce qu'on vient vérifier
+ * ou défaire, et qu'ils ne consomment pas le budget.
  */
-export function guidedView(options: readonly StackOption[]): GuidedView {
+export function recommendedOptions(options: readonly StackOption[]): readonly StackOption[] {
   const chosen = options.filter((option) => option.state === 'selected');
   const available = options.filter((option) => option.state === 'available');
-  const blocked = options.filter((option) => option.state === 'blocked');
-
-  // Les choix faits ne consomment pas le budget : ils sont toujours affichés.
   const budget = Math.max(0, GUIDED_MAX - chosen.length);
-  const recommended = [...chosen, ...available.slice(0, budget)];
-  const shown = new Set(recommended.map((option) => option.id));
-
-  return {
-    recommended,
-    blocked,
-    hidden: available.filter((option) => !shown.has(option.id)),
-  };
+  return [...chosen, ...available.slice(0, budget)];
 }
 
 /** Les filtres du mode expert (§5) : recherche texte, compatibilité stricte. */

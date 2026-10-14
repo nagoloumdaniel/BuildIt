@@ -9,11 +9,11 @@ import {
   filterCatalogue,
   filterOptions,
   GUIDED_MAX,
-  guidedView,
   matchesQuery,
   normalizeText,
   type OptionState,
   optionReason,
+  recommendedOptions,
   type StackOption,
   selectedCount,
 } from './stack-view';
@@ -54,7 +54,7 @@ describe('matchesQuery', () => {
   });
 });
 
-describe('guidedView', () => {
+describe('recommendedOptions : l’étoile du mode guidé', () => {
   const catalogue = [
     option('a', 'available'),
     option('b', 'selected'),
@@ -66,24 +66,16 @@ describe('guidedView', () => {
   ];
 
   it('recommande d’abord les choix faits, puis les disponibles, sans dépasser le budget', () => {
-    const view = guidedView(catalogue);
-    expect(view.recommended.map((item) => item.id)).toEqual(['b', 'a', 'd', 'e']);
-    expect(view.recommended).toHaveLength(GUIDED_MAX);
+    const recommended = recommendedOptions(catalogue);
+    expect(recommended.map((item) => item.id)).toEqual(['b', 'a', 'd', 'e']);
+    expect(recommended).toHaveLength(GUIDED_MAX);
   });
 
   it('ne met jamais une option bloquée dans les recommandations', () => {
-    expect(guidedView(catalogue).recommended.some((item) => item.state === 'blocked')).toBe(false);
+    expect(recommendedOptions(catalogue).some((item) => item.state === 'blocked')).toBe(false);
   });
 
-  it('expose le reste des disponibles derrière « Voir toutes les options »', () => {
-    expect(guidedView(catalogue).hidden.map((item) => item.id)).toEqual(['f']);
-  });
-
-  it('garde toutes les options bloquées visibles, avec leur raison', () => {
-    expect(guidedView(catalogue).blocked.map((item) => item.id)).toEqual(['c', 'g']);
-  });
-
-  it('garde une option choisie même au-delà du budget : la masquer empêcherait de la retirer', () => {
+  it('garde une option choisie même au-delà du budget : c’est elle qu’on vient défaire', () => {
     const many = [
       option('a', 'selected'),
       option('b', 'selected'),
@@ -92,15 +84,11 @@ describe('guidedView', () => {
       option('e', 'selected'),
       option('f', 'available'),
     ];
-    const view = guidedView(many);
-    expect(view.recommended.map((item) => item.id)).toEqual(['a', 'b', 'c', 'd', 'e']);
-    expect(view.hidden.map((item) => item.id)).toEqual(['f']);
+    expect(recommendedOptions(many).map((item) => item.id)).toEqual(['a', 'b', 'c', 'd', 'e']);
   });
 
   it('sur un catalogue plus petit que le budget, recommande tout ce qui est disponible', () => {
-    const view = guidedView([option('a', 'selected'), option('b', 'available')]);
-    expect(view.recommended.map((item) => item.id)).toEqual(['a', 'b']);
-    expect(view.hidden).toEqual([]);
+    expect(recommendedOptions([option('a', 'selected'), option('b', 'available')])).toHaveLength(2);
   });
 });
 

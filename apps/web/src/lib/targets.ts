@@ -1,5 +1,6 @@
 import { TARGETS, type Target } from '@buildit/manifest';
-import { loadCatalogue, type RegistryEntry, targetsWithoutFramework } from '@buildit/registry';
+import { type RegistryEntry, targetsWithoutFramework } from '@buildit/registry';
+import { catalogue } from './catalogue';
 
 /**
  * Les cibles que l'écran Target propose et la raison de celles qu'il ne
@@ -40,7 +41,7 @@ const APPLICATION_TARGETS: ReadonlySet<Target> = new Set(Object.values(APP_TARGE
 let entries: readonly RegistryEntry[] | undefined;
 
 /**
- * Le catalogue officiel, chargé une fois.
+ * Le catalogue officiel, chargé une fois par `lib/catalogue.ts`.
  *
  * Même politique que `draft-to-manifest.ts` : un catalogue illisible est un
  * artefact de construction cassé, pas une erreur de brouillon. On lève plutôt
@@ -48,13 +49,7 @@ let entries: readonly RegistryEntry[] | undefined;
  */
 function catalogueEntries(): readonly RegistryEntry[] {
   if (entries === undefined) {
-    const result = loadCatalogue();
-    if (!result.ok) {
-      throw new Error(
-        `Catalogue du registry illisible : ${result.issues.map((issue) => issue.code).join(', ')}.`,
-      );
-    }
-    entries = result.value.entries();
+    entries = catalogue().entries();
   }
   return entries;
 }

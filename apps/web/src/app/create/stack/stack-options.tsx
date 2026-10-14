@@ -103,7 +103,6 @@ export function ExpertToolbar({
           onChange={(event) => onQueryChange(event.target.value)}
         />
       </div>
-      <p className="pf-hint mt-1">{t.wizard.stack.searchHint}</p>
       {showCompatibleOnly ? (
         <label className="pf-hint mt-3 flex items-center gap-2" htmlFor="pf-stack-compatible">
           <input

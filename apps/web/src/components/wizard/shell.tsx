@@ -261,7 +261,7 @@ export function StepShell({
   const next = nextStep(step);
   // La condition évaluée est celle de l'étape **affichée**, jamais celle que le
   // brouillon portait avant qu'on arrive ici.
-  const reason = blockedReason({ ...draft, step });
+  const reason = blockedReason({ ...draft, step }, t);
   const ready = reason === undefined;
   // Projet généré : plus de retour possible, ni par « Précédent », ni par
   // « Annuler », ni par le stepper. `hidePrevious` reste pour l'écran qui

@@ -34,13 +34,13 @@ export default function InfrastructurePage(): ReactElement {
   const [loading, setLoading] = useState(true);
   const [failure, setFailure] = useState<string | undefined>(undefined);
   const [attempt, setAttempt] = useState(0);
-  const dockerRef = useRef<HTMLLabelElement>(null);
-  const ciRef = useRef<HTMLLabelElement>(null);
+  const dockerRef = useRef<HTMLButtonElement>(null);
+  const ciRef = useRef<HTMLButtonElement>(null);
   const hostingRef = useRef<HTMLElement>(null);
 
   // L'arrivée par un crayon du plan (`?section=docker|ci|hosting`) : la
-  // section visée est amenée sous les yeux, et une case reçoit le focus pour
-  // qu'un clavier puisse la décocher aussitôt. Sans paramètre, rien ne change.
+  // section visée est amenée sous les yeux, et le bouton reçoit le focus pour
+  // qu'un clavier puisse le basculer aussitôt. Sans paramètre, rien ne change.
   useEffect(() => {
     const section = currentDeepLink('section');
     if (section === 'hosting') {
@@ -51,7 +51,7 @@ export default function InfrastructurePage(): ReactElement {
       section === 'docker' ? dockerRef.current : section === 'ci' ? ciRef.current : null;
     if (target !== null) {
       revealSection(target);
-      target.querySelector('input')?.focus({ preventScroll: true });
+      target.focus({ preventScroll: true });
     }
   }, []);
 
@@ -103,43 +103,41 @@ export default function InfrastructurePage(): ReactElement {
       <fieldset>
         <legend className="pf-label">{t.build.infrastructure.legend}</legend>
         <div className="pf-grid">
-          <label ref={dockerRef} className="pf-choice pf-deep-target flex items-start gap-3">
-            <input
-              type="checkbox"
-              className="mt-1"
-              checked={draft.infra.docker}
-              onChange={(event) => {
-                const docker = event.target.checked;
-                session.update((currentDraft) => ({
-                  ...currentDraft,
-                  infra: { ...currentDraft.infra, docker },
-                }));
-              }}
-            />
-            <span className="min-w-0">
-              <span className="pf-choice-name">{t.build.infrastructure.docker}</span>
-              <span className="pf-choice-note">{t.build.infrastructure.dockerNote}</span>
-            </span>
-          </label>
+          <button
+            ref={dockerRef}
+            type="button"
+            className="pf-choice pf-deep-target"
+            data-infra="docker"
+            aria-pressed={draft.infra.docker}
+            onClick={() => {
+              const docker = !draft.infra.docker;
+              session.update((currentDraft) => ({
+                ...currentDraft,
+                infra: { ...currentDraft.infra, docker },
+              }));
+            }}
+          >
+            <span className="pf-choice-name">{t.build.infrastructure.docker}</span>
+            <span className="pf-choice-note">{t.build.infrastructure.dockerNote}</span>
+          </button>
 
-          <label ref={ciRef} className="pf-choice pf-deep-target flex items-start gap-3">
-            <input
-              type="checkbox"
-              className="mt-1"
-              checked={draft.infra.ci}
-              onChange={(event) => {
-                const ci = event.target.checked;
-                session.update((currentDraft) => ({
-                  ...currentDraft,
-                  infra: { ...currentDraft.infra, ci },
-                }));
-              }}
-            />
-            <span className="min-w-0">
-              <span className="pf-choice-name">{t.build.infrastructure.ci}</span>
-              <span className="pf-choice-note">{t.build.infrastructure.ciNote}</span>
-            </span>
-          </label>
+          <button
+            ref={ciRef}
+            type="button"
+            className="pf-choice pf-deep-target"
+            data-infra="ci"
+            aria-pressed={draft.infra.ci}
+            onClick={() => {
+              const ci = !draft.infra.ci;
+              session.update((currentDraft) => ({
+                ...currentDraft,
+                infra: { ...currentDraft.infra, ci },
+              }));
+            }}
+          >
+            <span className="pf-choice-name">{t.build.infrastructure.ci}</span>
+            <span className="pf-choice-note">{t.build.infrastructure.ciNote}</span>
+          </button>
         </div>
       </fieldset>
 

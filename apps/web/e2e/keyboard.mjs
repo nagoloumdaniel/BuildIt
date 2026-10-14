@@ -640,20 +640,22 @@ export async function keyboardJourney(page, workspace) {
   await enterStep(8, 'infrastructure', '**/create/infrastructure', 'Infrastructure');
   await waitGone(page, 'Chargement des hébergeurs…');
   await checkOrder('infrastructure');
-  // Le budget de frappes n'est pas la preuve : la preuve est que la case est
+  // Le budget de frappes n'est pas la preuve : la preuve est que le geste est
   // atteignable au clavier. `checkOrder` laisse le focus en fin de document, et
   // la séquence repart alors du haut en traversant l'en-tête, le rail d'étapes,
   // puis les raccourcis du pied de page trois liens de plus qu'avant la
-  // refonte. Vu depuis le début du document, la case est le 18ᵉ arrêt.
-  await tabUntil((stop) => stop.tag === 'INPUT' && stop.type === 'checkbox', 'la case « Docker »', {
-    max: 40,
-  });
-  await page.keyboard.press('Space');
-  const docker = await page.evaluate(
-    () => document.querySelector('main input[type="checkbox"]')?.checked ?? false,
+  // refonte. Vu depuis le début du document, la carte est le 18ᵉ arrêt.
+  await tabUntil(
+    (stop) => stop.tag === 'BUTTON' && stop.name.includes('Docker'),
+    'la carte « Docker »',
+    { max: 40 },
   );
-  check(docker === true, 'La barre d’espace n’a pas coché « Docker ».');
-  console.log('  case « Docker » cochée à la barre d’espace');
+  await page.keyboard.press('Space');
+  const docker = await page.evaluate(() =>
+    document.querySelector('main [data-infra="docker"]')?.getAttribute('aria-pressed'),
+  );
+  check(docker === 'true', 'La barre d’espace n’a pas coché « Docker ».');
+  console.log('  carte « Docker » cochée à la barre d’espace');
   await leaveStep(8, 'infrastructure');
 
   // -------------------------------------------------------------------------

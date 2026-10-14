@@ -5,7 +5,7 @@ import type { Messages } from '../../lib/i18n/messages';
 import { useMessages } from '../../lib/i18n/provider';
 import { Icon } from './icon';
 import { InfoTip } from './info-tip';
-import { hasBrand, TechIcon } from './tech-icon';
+import { StackIcon } from './stack-icon';
 
 /**
  * La carte d'une technologie **une** pour le Stack Builder et les capacités.
@@ -13,10 +13,11 @@ import { hasBrand, TechIcon } from './tech-icon';
  * Les deux écrans dessinaient chacun la leur, avec deux façons de dire « choisi »
  * et deux de dire « bloqué ». Ici :
  *
- * - **choisi** : le fond et le contour orange, plus une coche dans le coin —
- *   pas de badge « Choisi(e) » en plus, qui répétait ce que la carte disait
- *   déjà. La coche existe pour qu'une sélection ne dépende pas de la couleur
- *   seule ; `aria-pressed` le dit au lecteur d'écran ;
+ * - **icône toujours présente**, en orange : le logo de la marque quand elle est
+ *   connue, l'icône de la catégorie sinon. Une grille où un tiers des cases est
+ *   vide se lit moins bien qu'une grille pleine ;
+ * - **choisi** : le fond et le contour orange. Pas de coche dans le coin : le
+ *   voyant orange le dit déjà, et `aria-pressed` le dit au lecteur d'écran ;
  * - **incompatible** : la carte est grisée, le nom passe au rouge, et une
  *   pastille `!` rouge ouvre le détail. La raison n'est plus écrite **dans** la
  *   carte : trois lignes de refus sous chaque option noyaient la grille ;
@@ -57,7 +58,7 @@ export interface OptionCardProps {
    * faire.
    */
   readonly pressed?: boolean;
-  /** Badge « Recommandé » jamais posé sur une option bloquée. */
+  /** Étoile « Recommandé » : jamais posée sur une option bloquée ni déjà choisie. */
   readonly recommended?: boolean;
   /** Les options compatibles de la même famille, proposées comme solution. */
   readonly alternatives?: readonly TechnologyLink[];
@@ -136,14 +137,14 @@ export function OptionCard({
         {...(blocked ? { 'aria-describedby': `pf-option-${option.id}-state` } : {})}
       >
         <span className="pf-choice-name pf-option-name min-w-0 break-words">
-          {hasBrand(option.id) ? (
-            <span aria-hidden="true" className="pf-option-icon">
-              <TechIcon id={option.id} name={option.label} size={16} />
-            </span>
-          ) : null}
+          <span aria-hidden="true" className="pf-option-icon">
+            <StackIcon category={option.category} id={option.id} label={option.label} size={16} />
+          </span>
           <span className="min-w-0">{option.label}</span>
           {!blocked && !chosen && recommended ? (
-            <span className="pf-badge pf-badge-accent">{card.recommended}</span>
+            <span className="pf-option-star">
+              <Icon label={card.recommended} name="star" size={14} />
+            </span>
           ) : null}
         </span>
         {blocked ? (
@@ -151,9 +152,6 @@ export function OptionCard({
             {card.incompatible}
           </span>
         ) : null}
-        <span aria-hidden="true" className="pf-option-check">
-          <Icon name="check" size={12} />
-        </span>
       </button>
 
       <InfoTip

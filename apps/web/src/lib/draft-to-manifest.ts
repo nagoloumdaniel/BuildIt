@@ -5,7 +5,8 @@ import {
   type ParseResult,
   parseManifest,
 } from '@buildit/manifest';
-import { loadCatalogue, type Registry, type RegistryEntry, slotFor } from '@buildit/registry';
+import { type Registry, type RegistryEntry, slotFor } from '@buildit/registry';
+import { catalogue as catalogueRegistry } from './catalogue';
 import type { DraftState } from './draft';
 import { APP_TARGET, type AppKey } from './targets';
 
@@ -115,26 +116,15 @@ interface ManifestDraft {
   env?: string[];
 }
 
-let loaded: Registry | undefined;
-
 /**
- * Le catalogue officiel, chargé une fois.
+ * Le catalogue officiel, chargé une fois par `lib/catalogue.ts`.
  *
  * Un échec de chargement n'est pas une erreur de brouillon : le catalogue est
  * un artefact de construction, vérifié par les tests du registry. On lève
  * plutôt que de rendre un manifest partiel, qui aurait l'air valide.
  */
 function catalogue(): Registry {
-  if (loaded === undefined) {
-    const result = loadCatalogue();
-    if (!result.ok) {
-      throw new Error(
-        `Catalogue du registry illisible : ${result.issues.map((issue) => issue.code).join(', ')}.`,
-      );
-    }
-    loaded = result.value;
-  }
-  return loaded;
+  return catalogueRegistry();
 }
 
 /**

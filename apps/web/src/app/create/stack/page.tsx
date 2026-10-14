@@ -2,16 +2,16 @@
 
 import type { Category } from '@buildit/registry';
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { DisclosureButton } from '../../../components/ui/disclosure-button';
 import { EmptyState } from '../../../components/ui/empty-state';
 import { ErrorState } from '../../../components/ui/error-state';
 import { Icon, type IconName } from '../../../components/ui/icon';
 import { LoadingLine } from '../../../components/ui/loading';
 import { OptionCard } from '../../../components/ui/option-card';
+import { StackIcon } from '../../../components/ui/stack-icon';
 import { useDraft, useSession } from '../../../components/wizard/draft-provider';
 import { StepShell } from '../../../components/wizard/shell';
 import { useMessages } from '../../../lib/i18n/provider';
-import { toggle, toggleExclusive } from '../../../lib/session';
+import { toggleExclusive } from '../../../lib/session';
 import { checkSelectionAction } from '../../actions';
 import { currentDeepLink, revealSection } from '../blueprint/deep-link';
 import { loadStackBlocksAction } from './actions';
@@ -23,8 +23,7 @@ import {
   compatibleAlternatives,
   filterCatalogue,
   filterOptions,
-  guidedView,
-  selectedCount,
+  recommendedOptions,
 } from './stack-view';
 
 /**
@@ -54,7 +53,6 @@ export default function StackPage() {
   const [blocks, setBlocks] = useState<readonly CategoryBlock[]>([]);
   const [loading, setLoading] = useState(true);
   const [current, setCurrent] = useState<Category | null>(null);
-  const [expanded, setExpanded] = useState<readonly string[]>([]);
   const [query, setQuery] = useState('');
   const [compatibleOnly, setCompatibleOnly] = useState(false);
   // Relancer la vérification du moteur sans quitter l'écran : c'est l'action de
@@ -161,8 +159,10 @@ export default function StackPage() {
   const activeBlock = blocks.find((block) => block.category === active);
   const activeOptions = activeBlock?.options ?? [];
   const progress = categoryProgress(activeOptions);
-  const guided = guidedView(activeOptions);
-  const expandedHere = active !== undefined && expanded.includes(active);
+  // Plus de repli : la catégorie affiche tout son catalogue. Les recommandations
+  // passent seulement devant, et portent l'étoile.
+  const recommendedList = recommendedOptions(activeOptions);
+  const recommended = new Set(recommendedList.map((option) => option.id));
   // Le filtre n'agit qu'en mode expert : en guidé, les incompatibles restent
   // visibles avec leur raison, même si la case a été cochée avant la bascule.
   const filtered = draft.mode === 'expert' && compatibleOnly;
@@ -170,20 +170,20 @@ export default function StackPage() {
   const shownOptions =
     draft.mode === 'expert'
       ? expertOptions.shown
-      : expandedHere
-        ? activeOptions
-        : [...guided.recommended, ...guided.blocked];
-  const recommended = new Set(guided.recommended.map((option) => option.id));
+      : [...recommendedList, ...activeOptions.filter((option) => !recommended.has(option.id))];
   const searching = query.trim() !== '';
   const results = filterCatalogue(blocks, { query, compatibleOnly: filtered });
-  const chosen = selectedCount(blocks);
   const labelOf = new Map<string, string>();
   for (const block of blocks) {
     for (const option of block.options) {
       labelOf.set(option.id, option.label);
     }
   }
-  const chosenList = draft.technologies.map((id) => ({ id, label: labelOf.get(id) ?? id }));
+  const chosenList = draft.technologies.map((id) => ({
+    id,
+    label: labelOf.get(id) ?? id,
+    category: categoryOf.get(id),
+  }));
 
   function removeTechnology(id: string): void {
     session.update((currentDraft) => ({
@@ -250,6 +250,11 @@ export default function StackPage() {
                   <Icon name={mode.icon} size={16} />
                 </span>
                 {mode.label}
+                {mode.value === 'guided' ? (
+                  <span className="pf-option-star">
+                    <Icon label={t.optionCard.recommended} name="star" size={14} />
+                  </span>
+                ) : null}
               </span>
               <span className="pf-choice-note">{mode.note}</span>
             </button>
@@ -267,8 +272,6 @@ export default function StackPage() {
             <span className="pf-badge pf-badge-danger">
               {t.wizard.stack.issues(resolution.issues.length)}
             </span>
-          ) : resolution.status === 'certified' ? (
-            <span className="pf-badge pf-badge-ok">{t.wizard.stack.certified}</span>
           ) : null}
         </div>
         {chosenList.length === 0 ? (
@@ -277,6 +280,9 @@ export default function StackPage() {
           <ul className="pf-chips mt-2">
             {chosenList.map((item) => (
               <li key={item.id} className="pf-chip">
+                <span aria-hidden="true" className="pf-chip-icon">
+                  <StackIcon category={item.category} id={item.id} label={item.label} size={14} />
+                </span>
                 <span className="min-w-0 truncate">{item.label}</span>
                 <button
                   type="button"
@@ -412,8 +418,9 @@ export default function StackPage() {
                         : []
                     }
                     recommended={
+                      // L'étoile marque la recommandation partout : c'est ce que
+                      // dit la légende affichée à côté du mode guidé.
                       draft.mode === 'guided' &&
-                      !expandedHere &&
                       option.state === 'available' &&
                       recommended.has(option.id)
                     }
@@ -421,16 +428,6 @@ export default function StackPage() {
                   />
                 ))}
               </div>
-
-              {draft.mode === 'guided' && guided.hidden.length > 0 ? (
-                <DisclosureButton
-                  className="mt-3"
-                  expanded={expandedHere}
-                  lessLabel={t.wizard.stack.showRecommended}
-                  moreLabel={t.wizard.stack.showAll(guided.hidden.length)}
-                  onToggle={() => setExpanded((list) => toggle(list, activeBlock.category))}
-                />
-              ) : null}
 
               {draft.mode === 'expert' && expertOptions.hiddenBlocked > 0 ? (
                 <p className="pf-hint mt-3">
