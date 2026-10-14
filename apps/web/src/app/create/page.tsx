@@ -9,28 +9,15 @@ import { FreshStart } from './fresh-start';
 /**
  * Écran 1 Create Project (§6.2).
  *
- * Le nom et le mode de configuration sont les deux seules décisions de cet
- * écran. Les deux modes du §5 sont décrits ici, en clair : « Guidé » n'est pas
- * « Expert » avec moins d'options, c'est deux façons de parcourir le catalogue.
+ * Le nom est la seule décision de cet écran. Le mode de configuration
+ * (guidé/expert) se choisit au Stack Builder, l'écran où il change réellement
+ * la présentation du catalogue : le répéter ici faisait deux endroits pour une
+ * même décision sans rien clarifier.
  */
 export default function CreatePage() {
   const t = useMessages();
   const draft = useDraft();
   const session = useSession();
-
-  // Les deux modes du §5 : peu d'options, ou tout le catalogue.
-  const modes = [
-    {
-      value: 'guided' as const,
-      label: t.wizard.name.modeGuided,
-      note: t.wizard.name.modeGuidedNote,
-    },
-    {
-      value: 'expert' as const,
-      label: t.wizard.name.modeExpert,
-      note: t.wizard.name.modeExpertNote,
-    },
-  ];
 
   return (
     <StepShell step="create" title={t.wizard.name.title} description={t.wizard.name.description}>
@@ -54,24 +41,6 @@ export default function CreatePage() {
         }}
       />
       <p className="pf-hint mt-1">{t.wizard.name.hint}</p>
-
-      <fieldset className="mt-6">
-        <legend className="pf-label">{t.wizard.name.modeLegend}</legend>
-        <div className="pf-grid">
-          {modes.map((mode) => (
-            <button
-              key={mode.value}
-              type="button"
-              className="pf-choice"
-              aria-pressed={draft.mode === mode.value}
-              onClick={() => session.update((current) => ({ ...current, mode: mode.value }))}
-            >
-              <span className="pf-choice-name">{mode.label}</span>
-              <span className="pf-choice-note">{mode.note}</span>
-            </button>
-          ))}
-        </div>
-      </fieldset>
     </StepShell>
   );
 }

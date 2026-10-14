@@ -19,22 +19,16 @@ import type { Widen } from './widen';
 export const FR_WIZARD = {
   wizard: {
     /**
-     * Écran 1 Create Project : le nom, le mode de configuration et la
-     * mémoire du brouillon. `namePlaceholder` est le gabarit du champ.
+     * Écran 1 Create Project : le nom et la mémoire du brouillon.
+     * `namePlaceholder` est le gabarit du champ. Le mode de configuration se
+     * choisit au Stack Builder, pas ici.
      */
     namePlaceholder: 'mon-projet',
     name: {
       title: 'Créer un projet',
-      description:
-        'Nommez le projet et choisissez comment vous voulez le configurer. Tout est conservé au fur et à mesure.',
+      description: 'Nommez le projet. Tout est conservé au fur et à mesure.',
       label: 'Nom du projet',
       hint: 'Minuscules, chiffres, points, tirets et soulignés. Ce nom devient le dossier et l’identifiant du projet.',
-      modeLegend: 'Mode de configuration',
-      modeGuided: 'Guidé',
-      modeGuidedNote: 'Deux à quatre choix recommandés par étape. Le reste reste accessible.',
-      modeExpert: 'Expert',
-      modeExpertNote:
-        'Tout le catalogue, avec recherche et filtres, et les incompatibilités expliquées.',
     },
 
     /**
@@ -369,16 +363,9 @@ export const EN_WIZARD: Widen<typeof FR_WIZARD> = {
     namePlaceholder: 'my-project',
     name: {
       title: 'Create a project',
-      description:
-        'Name the project and pick how you want to configure it. Everything is kept as you go.',
+      description: 'Name the project. Everything is kept as you go.',
       label: 'Project name',
       hint: 'Lowercase letters, digits, dots, hyphens and underscores. This name becomes the folder and the project identifier.',
-      modeLegend: 'Configuration mode',
-      modeGuided: 'Guided',
-      modeGuidedNote: 'Two to four recommended choices per step. The rest stays within reach.',
-      modeExpert: 'Expert',
-      modeExpertNote:
-        'The whole catalogue, with search and filters, and incompatibilities explained.',
     },
 
     targets: {
