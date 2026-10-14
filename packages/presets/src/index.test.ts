@@ -13,7 +13,7 @@ describe('presets', () => {
     const parsed = parseManifest(manifest);
     expect(parsed.ok).toBe(true);
     if (parsed.ok) {
-      // Canonique : la même forme qu'après un aller-retour — un preset ne
+      // Canonique : la même forme qu'après un aller-retour un preset ne
       // doit pas produire un autre manifest selon qu'il passe par le CLI ou
       // par un fichier.
       expect(serializeManifest(parsed.value)).toBe(serializeManifest(manifest as never));

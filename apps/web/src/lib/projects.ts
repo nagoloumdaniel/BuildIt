@@ -9,7 +9,7 @@
  * le chercher à la main.
  *
  * Ce qui est conservé est donc le minimum pour le retrouver et le rouvrir :
- * un nom, un dossier, une date, un poids. Pas l'archive — plusieurs
+ * un nom, un dossier, une date, un poids. Pas l'archive plusieurs
  * mégaoctets par projet rempliraient le quota du navigateur en quelques
  * générations, et le projet est déjà sur le disque.
  *
@@ -43,7 +43,7 @@ export interface StoredProject {
    * télécharger l'archive, l'écrire dans un autre dossier, montrer son
    * architecture. Quelques centaines d'octets de JSON, pas l'archive : le
    * moteur reproduit le même projet à partir des mêmes choix (§9). Absent
-   * pour un projet généré avant cette version — l'écran le dit au lieu de
+   * pour un projet généré avant cette version l'écran le dit au lieu de
    * proposer un geste qui ne pourrait pas aboutir.
    */
   readonly manifest?: Manifest;
@@ -79,7 +79,7 @@ export function browserProjectStorage(): ProjectStorage {
   };
 }
 
-/** Une entrée du stockage, validée — ce qui vient de `localStorage` est hostile. */
+/** Une entrée du stockage, validée ce qui vient de `localStorage` est hostile. */
 function parseProject(value: unknown): StoredProject | undefined {
   if (typeof value !== 'object' || value === null) {
     return undefined;
@@ -114,7 +114,7 @@ function parseProject(value: unknown): StoredProject | undefined {
 /**
  * Une adresse de dépôt GitHub réelle : `https://github.com/<propriétaire>/<dépôt>`.
  *
- * Tout le reste est refusé — y compris une adresse GitHub qui ne désigne pas un
+ * Tout le reste est refusé y compris une adresse GitHub qui ne désigne pas un
  * dépôt (`https://github.com/settings`) : le bouton « Ouvrir sur GitHub » ne
  * doit mener qu'au dépôt du projet.
  */

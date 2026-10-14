@@ -3,7 +3,7 @@ import type { DraftState } from './draft';
 import { offeredTargets, refusedTargets } from './targets';
 
 /**
- * La machine à états du parcours (§3) — les 14 écrans moins le menu d'accueil
+ * La machine à états du parcours (§3) les 14 écrans moins le menu d'accueil
  * et le Dependency Graph, qui est accessible **depuis** le Blueprint (§6.11)
  * et n'est donc pas une étape.
  *
@@ -51,7 +51,7 @@ function at(index: number): StepId | null {
 }
 
 /**
- * **Pourquoi** on ne peut pas avancer — la phrase que l'écran affiche.
+ * **Pourquoi** on ne peut pas avancer la phrase que l'écran affiche.
  *
  * Une seule source de vérité : `canAdvance` en découle. Deux fonctions
  * séparées finiraient par se contredire, et l'écran montrerait « Continuer »
@@ -65,7 +65,7 @@ export function blockedReason(draft: DraftState): string | undefined {
         : 'Choisissez un nom : minuscules, chiffres, points, tirets ou soulignés.';
     case 'target': {
       // §6.3 : au moins une cible. Puis §7.9, §7.10 : une cible sans framework
-      // au catalogue ne peut pas produire de manifest (§10) — le refus est dit
+      // au catalogue ne peut pas produire de manifest (§10) le refus est dit
       // ici, avec sa raison, plutôt que découvert trois écrans plus loin sur un
       // champ absent. Un brouillon hérité ou un lien de partage peut encore la
       // porter : l'écran Target, lui, ne la propose plus.
@@ -88,7 +88,7 @@ export function blockedReason(draft: DraftState): string | undefined {
       // `experimental` passe : c'est un avertissement, pas un refus (§12).
       return draft.resolution.issues.length === 0 ? undefined : draft.resolution.issues.join(' ');
     default:
-      // Aucun bloquant écrit dans le §6 pour ces écrans — choix, pas oubli.
+      // Aucun bloquant écrit dans le §6 pour ces écrans choix, pas oubli.
       return undefined;
   }
 }

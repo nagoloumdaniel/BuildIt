@@ -15,7 +15,7 @@ import {
  * La bascule de thème : **un seul bouton**, qui montre le soleil en clair et
  * la lune en sombre.
  *
- * Le défaut reste le thème du système — c'est lui que le script
+ * Le défaut reste le thème du système c'est lui que le script
  * anti-clignotement applique au premier affichage, et le bouton le reflète.
  * Un appui force le thème opposé à celui qui est affiché ; la préférence est
  * conservée dans le navigateur (`pf-theme`). Tant que rien n'a été forcé, le

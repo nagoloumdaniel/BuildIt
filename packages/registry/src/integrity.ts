@@ -6,7 +6,7 @@ import type { RegistryEntry } from './schema/entry.js';
  *
  * Une fiche peut être parfaitement valide et le catalogue incohérent : une
  * référence vers une entrée renommée, deux fiches qui se contredisent, un
- * identifiant en double. Le schéma ne peut rien contre ça — il ne voit qu'une
+ * identifiant en double. Le schéma ne peut rien contre ça il ne voit qu'une
  * fiche à la fois.
  */
 
@@ -92,7 +92,7 @@ export function checkIntegrity(entries: readonly RegistryEntry[]): IntegrityIssu
         if (referenced === undefined) {
           // `suggest` vient de @buildit/manifest : chercher la faute de
           // frappe la plus proche est le même problème ici et là, et deux
-          // implémentations finiraient par diverger — l'une corrigée, l'autre pas.
+          // implémentations finiraient par diverger l'une corrigée, l'autre pas.
           const hint = suggest(reference, knownIds);
           issues.push({
             code: 'REGISTRY_UNKNOWN_REFERENCE',
@@ -106,7 +106,7 @@ export function checkIntegrity(entries: readonly RegistryEntry[]): IntegrityIssu
 
         // Seul `requires` contraint les cibles : une dépendance obligatoire doit
         // exister sur au moins une plateforme commune. `compatibleWith` ne le
-        // contraint pas — Next et Expo cohabitent très bien dans un monorepo
+        // contraint pas Next et Expo cohabitent très bien dans un monorepo
         // web + mobile sans partager de cible.
         if (field === 'requires') {
           const shared = entry.targets.some((target) => referenced.targets.includes(target));

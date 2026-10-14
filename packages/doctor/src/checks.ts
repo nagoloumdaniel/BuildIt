@@ -17,7 +17,7 @@ interface Ruled {
 
 /**
  * Le catalogue, injecté : seul juge de ce qui existe (§11). Le Doctor ne
- * recopie aucune liste de technologies — il demande le **nom lisible** au
+ * recopie aucune liste de technologies il demande le **nom lisible** au
  * catalogue. Le CLI construit cet adaptateur à partir du catalogue chargé.
  */
 export interface Catalogue {
@@ -44,7 +44,7 @@ ${listed}
   };
 }
 
-/** `1 dépendance` / `2 dépendances` — le constat se lit, il ne se déchiffre pas. */
+/** `1 dépendance` / `2 dépendances` le constat se lit, il ne se déchiffre pas. */
 function plural(count: number, singular: string, pluralForm: string): string {
   return `${count} ${count > 1 ? pluralForm : singular}`;
 }
@@ -412,7 +412,7 @@ export function runDoctor(facts: ProjectFacts, catalogue: Catalogue): Report {
   };
 }
 
-/** Le nom lisible d'une fiche, ou son identifiant — pour l'en-tête du rapport. */
+/** Le nom lisible d'une fiche, ou son identifiant pour l'en-tête du rapport. */
 export function describeTechnology(catalogue: Catalogue, id: string): string {
   return catalogue.nameOf(id) ?? id;
 }

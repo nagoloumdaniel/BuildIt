@@ -67,7 +67,7 @@ afterEach(async () => {
   await Promise.all(created.splice(0).map((path) => rm(path, { recursive: true, force: true })));
 });
 
-describe('resolveLocalDirectory — un chemin validé avant tout accès disque', () => {
+describe('resolveLocalDirectory un chemin validé avant tout accès disque', () => {
   it('refuse un chemin relatif, vide ou porteur de caractères de contrôle', () => {
     expect(resolveLocalDirectory('mon-projet').ok).toBe(false);
     expect(resolveLocalDirectory('').ok).toBe(false);
@@ -89,7 +89,7 @@ describe('resolveLocalDirectory — un chemin validé avant tout accès disque',
   });
 
   it.skipIf(process.platform !== 'win32')(
-    'accepte un chemin UNC — constat M3 du rapport, non corrigé',
+    'accepte un chemin UNC constat M3 du rapport, non corrigé',
     () => {
       // Sonde de comportement, pas d'approbation : `\\serveur\partage` est
       // `isAbsolute` sous Windows, donc accepté, et `stat`/`detectProject`
@@ -115,7 +115,7 @@ describe('refuseMissingDirectory', () => {
   });
 });
 
-describe('inspectProject — détecter, sans rien lancer', () => {
+describe('inspectProject détecter, sans rien lancer', () => {
   it('détecte pnpm d’après son verrou et annonce la commande exacte', async () => {
     const dir = await nodeProject({
       'package.json': JSON.stringify({ name: 'mon-app' }),
@@ -208,7 +208,7 @@ describe('inspectProject — détecter, sans rien lancer', () => {
   });
 });
 
-describe('installProject — seulement ce qui a été confirmé', () => {
+describe('installProject seulement ce qui a été confirmé', () => {
   it('lance la commande du gestionnaire détecté, dans le dossier du projet', async () => {
     const dir = await nodeProject({
       'package.json': JSON.stringify({ name: 'mon-app' }),
@@ -288,7 +288,7 @@ const SCRUBBED = {
   NPM_TOKEN: '',
 } as const;
 
-describe('installProject — le jeton du serveur n’atteint pas le code du projet (§24)', () => {
+describe('installProject le jeton du serveur n’atteint pas le code du projet (§24)', () => {
   const SECRET = 'ghp_serveur_0123456789abcdefghij';
 
   it('neutralise PF_GITHUB_TOKEN dans l’environnement de la commande lancée', async () => {
@@ -351,7 +351,7 @@ describe('installProject — le jeton du serveur n’atteint pas le code du proj
   it('vide aussi les jetons hérités du shell, pas seulement celui du produit', async () => {
     // Trouvé en revue (MAJOR-1) : la liste ne contenait que `PF_GITHUB_TOKEN`.
     // Un serveur lancé depuis un shell de CI porte aussi `GITHUB_TOKEN`,
-    // `GH_TOKEN` ou `NPM_TOKEN` — mêmes portes, même `postinstall`.
+    // `GH_TOKEN` ou `NPM_TOKEN` mêmes portes, même `postinstall`.
     for (const name of ['GITHUB_TOKEN', 'GH_TOKEN', 'NPM_TOKEN', 'PF_GIT_TOKEN'] as const) {
       const read = ['-e', `process.stdout.write(process.env.${name} ?? "<absent>")`];
       const saved = process.env[name];
@@ -400,7 +400,7 @@ describe('installProject — le jeton du serveur n’atteint pas le code du proj
   });
 });
 
-describe('les Server Actions de l’écran 23 — rien sans un chemin valide', () => {
+describe('les Server Actions de l’écran 23 rien sans un chemin valide', () => {
   it('refuse un chemin relatif avant tout accès disque', async () => {
     const inspection = await inspectProjectAction('mon-projet');
     expect(inspection.ok).toBe(false);

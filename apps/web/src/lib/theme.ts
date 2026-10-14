@@ -1,5 +1,5 @@
 /**
- * Thème clair / sombre — la logique pure, hors React.
+ * Thème clair / sombre la logique pure, hors React.
  *
  * Le §6 impose les deux thèmes ; le choix de l'utilisateur vit dans
  * `localStorage`, mais rien ici ne touche au navigateur : `Storage` est passé

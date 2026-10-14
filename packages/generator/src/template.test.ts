@@ -55,19 +55,19 @@ describe('substitution', () => {
  * La propriété de sécurité du §24 : le moteur ne connaît **que** la
  * substitution. Tout le reste traverse sans être interprété.
  *
- * Ces tests ne prouvent pas que les syntaxes étrangères sont interdites — elles
- * ne le sont pas, un template Next.js contient légitimement des backticks — mais
+ * Ces tests ne prouvent pas que les syntaxes étrangères sont interdites elles
+ * ne le sont pas, un template Next.js contient légitimement des backticks mais
  * qu'elles ne sont **pas exécutées**.
  */
 describe('aucune exécution de code', () => {
   it('laisse passer une interpolation JavaScript sans l’évaluer', () => {
-    // biome-ignore lint/suspicious/noTemplateCurlyInString: le `${…}` littéral est l'objet du test — il ne doit jamais être évalué.
+    // biome-ignore lint/suspicious/noTemplateCurlyInString: le `${…}` littéral est l'objet du test il ne doit jamais être évalué.
     const source = 'const x = `bonjour ${process.env.SECRET}`;';
     expect(render(source)).toBe(source);
   });
 
   it('laisse passer un appel de fonction sans l’exécuter', () => {
-    // biome-ignore lint/suspicious/noTemplateCurlyInString: le `${…}` littéral est l'objet du test — il ne doit jamais être évalué.
+    // biome-ignore lint/suspicious/noTemplateCurlyInString: le `${…}` littéral est l'objet du test il ne doit jamais être évalué.
     const source = 'const x = `${process.exit(1)}`;';
     expect(render(source)).toBe(source);
   });
@@ -124,7 +124,7 @@ describe('placeholders invalides', () => {
     }
   });
 
-  it('nomme le template fautif — on doit savoir lequel corriger', () => {
+  it('nomme le template fautif on doit savoir lequel corriger', () => {
     const result = renderTemplate('{{inconnue}}', CONTEXT, 'frontend/next/page.tsx');
     expect(result.ok).toBe(false);
     if (!result.ok) {

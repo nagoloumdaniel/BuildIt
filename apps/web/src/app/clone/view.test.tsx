@@ -94,7 +94,7 @@ function render(overrides: Partial<CloneViewProps> = {}): string {
   );
 }
 
-describe('CloneView — onglet « Mes dépôts »', () => {
+describe('CloneView onglet « Mes dépôts »', () => {
   it('liste les dépôts du compte connecté', () => {
     const html = render({ tab: 'mine', connected: true, repositories: [REPOSITORY] });
 
@@ -125,7 +125,7 @@ describe('CloneView — onglet « Mes dépôts »', () => {
   });
 });
 
-describe('CloneView — la destination en local', () => {
+describe('CloneView la destination en local', () => {
   it('fait choisir un dossier parent dans l’explorateur, jamais un chemin tapé', () => {
     const html = render();
 
@@ -184,7 +184,7 @@ describe('CloneView — la destination en local', () => {
   });
 });
 
-describe('CloneView — destination refusée', () => {
+describe('CloneView destination refusée', () => {
   const REFUSED: ClonePreviewView = {
     ...PREVIEW,
     ok: false,
@@ -244,7 +244,7 @@ describe('CloneView — destination refusée', () => {
   });
 });
 
-describe('CloneView — la destination en hébergé', () => {
+describe('CloneView la destination en hébergé', () => {
   const hosted: NonNullable<CloneViewProps['hosted']> = {
     canWrite: true,
     plan: null,
@@ -281,7 +281,7 @@ describe('CloneView — la destination en hébergé', () => {
   });
 });
 
-describe('CloneView — l’avancement', () => {
+describe('CloneView l’avancement', () => {
   it('montre la phase réelle, le pourcentage et la sortie brute de git', () => {
     const html = render({
       status: 'cloning',
@@ -339,7 +339,7 @@ describe('CloneView — l’avancement', () => {
   });
 });
 
-describe('CloneView — le résultat, conservé après la fin', () => {
+describe('CloneView le résultat, conservé après la fin', () => {
   it('annonce le clone, le projet détecté et l’installation', () => {
     const html = render({
       preview: PREVIEW,

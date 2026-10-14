@@ -8,7 +8,7 @@
  * qu'un humain regarde, et la référence pour comparer avant / après une refonte.
  *
  * Il sert le **vrai** serveur (`next start`, exactement comme `pf web`) sur un
- * espace de travail temporaire, et pilote le navigateur déjà installé — même
+ * espace de travail temporaire, et pilote le navigateur déjà installé même
  * socle que `journey.mjs`, donc aucun serveur « de test » qui divergerait du
  * serveur réel.
  *

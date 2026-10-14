@@ -1,8 +1,8 @@
 # BuildIt
 
-> **Development Environment Factory** — décrire un projet, choisir ses plateformes et ses technologies, obtenir un projet prêt à développer : cohérent, documenté et diagnostiqué.
+> **Development Environment Factory** décrire un projet, choisir ses plateformes et ses technologies, obtenir un projet prêt à développer : cohérent, documenté et diagnostiqué.
 
-**Statut : pré-alpha.** Le moteur (manifest, registry, compatibility, generator) existe et est testé ; quatre presets (SaaS, API, Dashboard, Full-stack en monorepo) sont certifiés : générés, installés, construits et démarrés par le test de fumée. Le CLI `pf` existe ([référence](docs/cli.md)) mais n'est pas encore publié sur npm : rien n'est utilisable par un tiers sans cloner le dépôt. Il sait aussi cloner un dépôt, ouvrir un projet local et gérer le dépôt GitHub d'un projet (Phase 7B). Le **configurateur web** (`pnpm pf web`) porte les 18 écrans du MVP : parcours guidé ou expert, Stack Builder avec progressive disclosure, Blueprint, Dependency Graph, aperçu des fichiers, génération réelle — et le même manifest que le CLI pour les mêmes choix. Voir la [roadmap](docs/roadmap.md).
+**Statut : pré-alpha.** Le moteur (manifest, registry, compatibility, generator) existe et est testé ; quatre presets (SaaS, API, Dashboard, Full-stack en monorepo) sont certifiés : générés, installés, construits et démarrés par le test de fumée. Le CLI `pf` existe ([référence](docs/cli.md)) mais n'est pas encore publié sur npm : rien n'est utilisable par un tiers sans cloner le dépôt. Il sait aussi cloner un dépôt, ouvrir un projet local et gérer le dépôt GitHub d'un projet (Phase 7B). Le **configurateur web** (`pnpm pf web`) porte les 18 écrans du MVP : parcours guidé ou expert, Stack Builder avec progressive disclosure, Blueprint, Dependency Graph, aperçu des fichiers, génération réelle et le même manifest que le CLI pour les mêmes choix. Voir la [roadmap](docs/roadmap.md).
 
 ---
 
@@ -10,7 +10,7 @@
 
 C'est le principe fondateur du produit, et il est vérifié par un test automatisé, pas seulement affirmé ici.
 
-Le projet que vous générez est autonome : aucune dépendance runtime, aucun paquet propriétaire, aucun appel réseau vers nous. Vous pouvez supprimer BuildIt de votre machine juste après la génération — rien ne casse. Ce que vous obtenez est le code que vous auriez écrit vous-même si vous aviez pris le temps de câbler correctement Docker, la CI, le lint, les tests et les variables d'environnement.
+Le projet que vous générez est autonome : aucune dépendance runtime, aucun paquet propriétaire, aucun appel réseau vers nous. Vous pouvez supprimer BuildIt de votre machine juste après la génération rien ne casse. Ce que vous obtenez est le code que vous auriez écrit vous-même si vous aviez pris le temps de câbler correctement Docker, la CI, le lint, les tests et les variables d'environnement.
 
 ## Confidentialité : local-first par défaut
 
@@ -48,7 +48,7 @@ Commandes individuelles :
 | `pnpm test` | Vitest |
 | `pnpm build` | tsdown, via Turborepo |
 | `pnpm lint:secrets` | secretlint |
-| `pnpm pf <commande>` | Le CLI, sur les sources — [référence](docs/cli.md) |
+| `pnpm pf <commande>` | Le CLI, sur les sources [référence](docs/cli.md) |
 | `pnpm pf web` | Le configurateur web, servi en local sur `127.0.0.1` |
 | `pnpm test:e2e` | Le parcours des 12 étapes dans un vrai navigateur (Edge/Chrome/Chromium) |
 
@@ -58,17 +58,17 @@ La CI GitHub n'est pas disponible pour ce dépôt : **l'intégration continue es
 
 | Quand | Ce qui tourne |
 |---|---|
-| chaque push | `pnpm ci:local` — lint, typecheck, test, build, scan de secrets |
-| push qui touche `generator`, `registry` ou `recipes` | en plus, `pnpm test:smoke` — génère de vrais projets, les installe depuis npm, les construit ; avec Docker, va jusqu'à une base réelle et une inscription |
-| à la main | `pnpm ci:full` — les deux |
+| chaque push | `pnpm ci:local` lint, typecheck, test, build, scan de secrets |
+| push qui touche `generator`, `registry` ou `recipes` | en plus, `pnpm test:smoke` génère de vrais projets, les installe depuis npm, les construit ; avec Docker, va jusqu'à une base réelle et une inscription |
+| à la main | `pnpm ci:full` les deux |
 
-Le test de fumée exige Docker (base, Redis, images) et un navigateur (tests Playwright générés, `playwright install chromium` par défaut) : sans eux, il échoue. `PF_SMOKE_SKIP_DOCKER=1` et `PF_SMOKE_SKIP_E2E=1` sautent ces preuves **explicitement** — elles apparaissent « skipped » dans le compte — et cela se dit dans la PR. `PF_SMOKE_CHROMIUM=<exécutable>` utilise un Chromium déjà installé. Hors-ligne, `LEFTHOOK_EXCLUDE=smoke git push`. Derrière un proxy TLS d'entreprise, `PF_SMOKE_DOCKER_CA=<ca.crt>` permet de construire l'image Docker du test. `.github/workflows/ci.yml` est gardé dormant (déclenchement manuel), prêt à resservir.
+Le test de fumée exige Docker (base, Redis, images) et un navigateur (tests Playwright générés, `playwright install chromium` par défaut) : sans eux, il échoue. `PF_SMOKE_SKIP_DOCKER=1` et `PF_SMOKE_SKIP_E2E=1` sautent ces preuves **explicitement** elles apparaissent « skipped » dans le compte et cela se dit dans la PR. `PF_SMOKE_CHROMIUM=<exécutable>` utilise un Chromium déjà installé. Hors-ligne, `LEFTHOOK_EXCLUDE=smoke git push`. Derrière un proxy TLS d'entreprise, `PF_SMOKE_DOCKER_CA=<ca.crt>` permet de construire l'image Docker du test. `.github/workflows/ci.yml` est gardé dormant (déclenchement manuel), prêt à resservir.
 
 ### Structure
 
 ```
 tooling/    configurations partagées (TypeScript, …)
-packages/   moteur — manifest, registry, compatibility, generator, presets…
+packages/   moteur manifest, registry, compatibility, generator, presets…
 apps/cli/   le CLI pf
 docs/       cahier des charges, roadmap, specs, plans
 ```
@@ -77,14 +77,14 @@ docs/       cahier des charges, roadmap, specs, plans
 
 ## Documentation
 
-- [Guide](docs/README.md) — le produit tel qu'il est :
+- [Guide](docs/README.md) le produit tel qu'il est :
   - [Démarrage rapide](docs/guide/quickstart.md) · [Concepts](docs/guide/concepts.md) · [BuildIt et Forge](docs/guide/produit-et-moteur.md)
   - [No-lock-in](docs/guide/no-lock-in.md) · [Confidentialité](docs/guide/confidentialite.md)
   - [Référence du manifest](docs/guide/reference-manifest.md) · [Référence du registry](docs/guide/reference-registry.md) · [Commandes](docs/guide/commandes.md)
-- [Cahier des charges](docs/cahier-des-charges.md) — cadrage produit et technique complet
-- [Roadmap](docs/roadmap.md) — 0 → beta publique, phase par phase
-- [CLI `pf`](docs/cli.md) — référence des commandes
-- [`llms.txt`](docs/llms.txt) — index court et factuel pour les moteurs
+- [Cahier des charges](docs/cahier-des-charges.md) cadrage produit et technique complet
+- [Roadmap](docs/roadmap.md) 0 → beta publique, phase par phase
+- [CLI `pf`](docs/cli.md) référence des commandes
+- [`llms.txt`](docs/llms.txt) index court et factuel pour les moteurs
 - [Contribuer](CONTRIBUTING.md)
 
 ## Licence

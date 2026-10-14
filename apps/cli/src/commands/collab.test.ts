@@ -125,7 +125,7 @@ describe('pf collab remove', () => {
   });
 });
 
-describe('pf collab — conditions', () => {
+describe('pf collab conditions', () => {
   it('projet sans dépôt GitHub : refus avec la marche à suivre', async () => {
     const dir = await mkdtemp(join(tmpdir(), 'pf-collab-'));
     const io = fakeIo({ cwd: dir, runner: fakeWorld({ git: fakeGit(dir) }, { value: TOKEN }) });

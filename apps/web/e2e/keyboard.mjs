@@ -1,5 +1,5 @@
 /**
- * Le parcours des 12 étapes **au clavier seul** — gate M5 (§8F.1, §6).
+ * Le parcours des 12 étapes **au clavier seul** gate M5 (§8F.1, §6).
  *
  * Aucune API souris de Playwright n'est utilisée : le test se garde lui-même
  * contre une rechute (vérification statique du source en fin de fichier). Chaque
@@ -18,7 +18,7 @@
  * échoue à la fin en les listant tous, pour qu'un seul passage les montre tous.
  *
  * Les flèches ne sont pas utilisées : aucun composant du parcours n'est un
- * `radiogroup` ou une `listbox` à navigation par flèches — les choix sont des
+ * `radiogroup` ou une `listbox` à navigation par flèches les choix sont des
  * `<button aria-pressed>` et des cases à cocher natives, que Tab puis
  * Entrée/Espace activent. C'est dit ici plutôt que simulé dans le test.
  */
@@ -68,7 +68,7 @@ const DESCRIBE = () => {
  * `index` est la **place dans le DOM**, y compris pour les éléments qui ne sont
  * pas des arrêts de tabulation (`tabindex="-1"`). Elle sert d'ancrage : le
  * parcours pose le focus sur le titre de l'écran, qui est une cible programmée
- * — sans cette place, on ne saurait pas d'où repart la séquence.
+ * sans cette place, on ne saurait pas d'où repart la séquence.
  */
 const FOCUSABLES = () => {
   const root = document.querySelector('main');
@@ -106,7 +106,7 @@ function trail(stops) {
     .join(' → ');
 }
 
-/** Attend qu'un texte de chargement ait disparu — sans supposer de délai fixe. */
+/** Attend qu'un texte de chargement ait disparu sans supposer de délai fixe. */
 /**
  * Écrit le projet dans un dossier par la **même** route que l'écran
  * (`POST /api/generate`), avec le manifest que l'écran vient de mémoriser.
@@ -228,7 +228,7 @@ export async function keyboardJourney(page, workspace) {
       };
     });
     throw new Error(
-      `${label} n'est pas atteignable au clavier en ${max} Tab (${seen.length} arrêt(s), ${bodies} sortie(s) du document). Séquence : ${trail(seen)} — au moment de l'échec : <main> ${state.focusables} élément(s) focusable(s), ${state.html} caractères, titre « ${state.title} ».`,
+      `${label} n'est pas atteignable au clavier en ${max} Tab (${seen.length} arrêt(s), ${bodies} sortie(s) du document). Séquence : ${trail(seen)} au moment de l'échec : <main> ${state.focusables} élément(s) focusable(s), ${state.html} caractères, titre « ${state.title} ».`,
     );
   }
 
@@ -302,13 +302,13 @@ export async function keyboardJourney(page, workspace) {
       stops.push(stop);
     }
     if (!left) {
-      note(`${label} : le focus ne ressort pas de <main> — piège de focus probable.`);
+      note(`${label} : le focus ne ressort pas de <main> piège de focus probable.`);
     }
     const visited = stops.map(keyOf).join(' > ');
     const wanted = tail.map(keyOf).join(' > ');
     if (visited !== wanted) {
       note(
-        `${label} : l'ordre de tabulation ne suit pas l'ordre du DOM. Attendu (après l'arrêt courant) : ${wanted || '(fin)'} — obtenu : ${visited || '(rien)'}.`,
+        `${label} : l'ordre de tabulation ne suit pas l'ordre du DOM. Attendu (après l'arrêt courant) : ${wanted || '(fin)'} obtenu : ${visited || '(rien)'}.`,
       );
     }
     let previous = null;
@@ -316,7 +316,7 @@ export async function keyboardJourney(page, workspace) {
       if (previous !== null) {
         if (stop.y < previous.y - 8) {
           note(
-            `${label} : l'ordre de tabulation ne suit pas l'ordre visuel — « ${stop.text} » (y=${stop.y}) arrive après « ${previous.text} » (y=${previous.y}).`,
+            `${label} : l'ordre de tabulation ne suit pas l'ordre visuel « ${stop.text} » (y=${stop.y}) arrive après « ${previous.text} » (y=${previous.y}).`,
           );
           break;
         }
@@ -358,11 +358,11 @@ export async function keyboardJourney(page, workspace) {
     const stop = await focused();
     if (stop.tag !== 'H1') {
       note(
-        `étape ${index} (${name}) : après le changement d'écran, le focus est sur <${stop.tag}> « ${stop.text} » et non sur le titre de l'étape — le focus est perdu à chaque navigation cliente.`,
+        `étape ${index} (${name}) : après le changement d'écran, le focus est sur <${stop.tag}> « ${stop.text} » et non sur le titre de l'étape le focus est perdu à chaque navigation cliente.`,
       );
     }
     console.log(
-      `\n[${index}/12] ${name} — « ${heading} » (${stop.tag === 'H1' ? 'focus posé sur le titre' : `focus resté sur <${stop.tag}>`})`,
+      `\n[${index}/12] ${name} « ${heading} » (${stop.tag === 'H1' ? 'focus posé sur le titre' : `focus resté sur <${stop.tag}>`})`,
     );
   }
 
@@ -381,7 +381,7 @@ export async function keyboardJourney(page, workspace) {
   // -------------------------------------------------------------------------
   // Le lien d'évitement, avant tout le reste : c'est le **premier** arrêt de
   // tabulation du document. Entrée doit poser le focus sur sa cible `#contenu`
-  // — la seule sonde qui distingue un lien d'évitement qui marche d'un lien
+  // la seule sonde qui distingue un lien d'évitement qui marche d'un lien
   // décoratif (un `href="#…"` sans cible focalisable ne déplace rien).
   // -------------------------------------------------------------------------
   await page.goto(`${BASE}/`, { waitUntil: 'domcontentloaded' });
@@ -414,7 +414,7 @@ export async function keyboardJourney(page, workspace) {
   // -------------------------------------------------------------------------
   // Entrée du parcours : le Dashboard annonce les trois chemins du §18bis.
   // -------------------------------------------------------------------------
-  console.log('\n[entrée] Dashboard — ordre de tabulation complet du document');
+  console.log('\n[entrée] Dashboard ordre de tabulation complet du document');
   await checkOrder('dashboard');
   await tabUntil(
     (stop) => stop.tag === 'A' && stop.text.startsWith('Créer un projet'),
@@ -424,7 +424,7 @@ export async function keyboardJourney(page, workspace) {
   await page.keyboard.press('Enter');
 
   // -------------------------------------------------------------------------
-  // 1. Create Project — le nom est un bloquant (§6.2).
+  // 1. Create Project le nom est un bloquant (§6.2).
   // -------------------------------------------------------------------------
   await enterStep(1, 'create', '**/create', 'Créer un projet');
   const nameRefusal = await refusals();
@@ -461,7 +461,7 @@ export async function keyboardJourney(page, workspace) {
   await leaveStep(1, 'create');
 
   // -------------------------------------------------------------------------
-  // 2. Target Selection — le choix se fait à la touche Entrée (§6.3).
+  // 2. Target Selection le choix se fait à la touche Entrée (§6.3).
   // -------------------------------------------------------------------------
   await enterStep(2, 'target', '**/create/target', 'Plateformes cibles');
   const targetRefusal = await refusals();
@@ -511,7 +511,7 @@ export async function keyboardJourney(page, workspace) {
   console.log('  ✓ étape 2/12 franchie au clavier (Entrée sur « Continuer »)');
 
   // -------------------------------------------------------------------------
-  // 3. Project Type et 4. Architecture — les recommandations du mode guidé.
+  // 3. Project Type et 4. Architecture les recommandations du mode guidé.
   // -------------------------------------------------------------------------
   await enterStep(3, 'type', '**/create/type', 'Profil du projet');
   await checkOrder('type');
@@ -536,7 +536,7 @@ export async function keyboardJourney(page, workspace) {
   await leaveStep(4, 'architecture');
 
   // -------------------------------------------------------------------------
-  // 5. Stack Builder — la recherche globale, saisie et parcourue au clavier.
+  // 5. Stack Builder la recherche globale, saisie et parcourue au clavier.
   // -------------------------------------------------------------------------
   await enterStep(5, 'stack', '**/create/stack', 'Stack Builder');
   await waitGone(page, 'Chargement du catalogue…');
@@ -579,7 +579,7 @@ export async function keyboardJourney(page, workspace) {
     await page.keyboard.press('Enter');
     // Le moteur recharge les options après chaque bascule : l'état du bouton
     // focalisé change de façon **asynchrone**. On attend qu'il l'annonce, au
-    // lieu de parier sur un délai fixe — 300 ms suffisent à la main, pas après
+    // lieu de parier sur un délai fixe 300 ms suffisent à la main, pas après
     // le parcours complet de l'écran.
     await page
       .waitForFunction(
@@ -643,7 +643,7 @@ export async function keyboardJourney(page, workspace) {
   // Le budget de frappes n'est pas la preuve : la preuve est que la case est
   // atteignable au clavier. `checkOrder` laisse le focus en fin de document, et
   // la séquence repart alors du haut en traversant l'en-tête, le rail d'étapes,
-  // puis les raccourcis du pied de page — trois liens de plus qu'avant la
+  // puis les raccourcis du pied de page trois liens de plus qu'avant la
   // refonte. Vu depuis le début du document, la case est le 18ᵉ arrêt.
   await tabUntil((stop) => stop.tag === 'INPUT' && stop.type === 'checkbox', 'la case « Docker »', {
     max: 40,
@@ -675,7 +675,7 @@ export async function keyboardJourney(page, workspace) {
   await leaveStep(10, 'preview');
 
   // -------------------------------------------------------------------------
-  // 11. Generation Progress — écriture réelle, déclenchée au clavier.
+  // 11. Generation Progress écriture réelle, déclenchée au clavier.
   // -------------------------------------------------------------------------
   await enterStep(11, 'generate', '**/create/generate', 'Générer le projet');
   await page.waitForFunction(
@@ -728,7 +728,7 @@ export async function keyboardJourney(page, workspace) {
   console.log('  ✓ étape 11/12 franchie au clavier');
 
   // -------------------------------------------------------------------------
-  // 12. Generation Report — l'arrivée effective, prouvée sur le disque.
+  // 12. Generation Report l'arrivée effective, prouvée sur le disque.
   // -------------------------------------------------------------------------
   await enterStep(12, 'report', '**/create/report', 'Rapport de génération');
   await checkOrder('report');
@@ -764,7 +764,7 @@ export async function keyboardJourney(page, workspace) {
   check(crossed.length === 12, `Seulement ${crossed.length}/12 étapes franchies au clavier.`);
   if (issues.length > 0) {
     throw new Error(
-      `Le clavier seul ne franchit pas encore le parcours — ${issues.length} obstacle(s) :\n- ${issues.join('\n- ')}`,
+      `Le clavier seul ne franchit pas encore le parcours ${issues.length} obstacle(s) :\n- ${issues.join('\n- ')}`,
     );
   }
 }

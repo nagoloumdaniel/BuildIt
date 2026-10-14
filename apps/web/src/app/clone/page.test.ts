@@ -3,16 +3,16 @@ import { type CloneFetch, type CloneStreamFailure, parseCloneEvent, streamClone 
 import { type ClonePhase, type CloneProgress, clonePhaseRank } from './progress';
 
 /**
- * L'écran 22 — le suivi du clone.
+ * L'écran 22 le suivi du clone.
  *
  * Le clone ne passe pas par une Server Action : elle rend son résultat d'un
  * seul coup, et un clone de 200 Mo y passerait des minutes derrière un rotor.
  * `POST /api/clone` tient la réponse ouverte et pousse l'avancement réel de
- * git ; ces tests lisent ce flux contre un **faux `fetch`** — aucun réseau.
+ * git ; ces tests lisent ce flux contre un **faux `fetch`** aucun réseau.
  *
  * Ce qui est vérifié ici : la mesure ne recule jamais, le corps de la requête
  * porte bien la destination choisie, et les trois fins (aboutie, annulée,
- * perdue) sont distinguées — c'est ce qui permet à l'écran de ne jamais laisser
+ * perdue) sont distinguées c'est ce qui permet à l'écran de ne jamais laisser
  * une barre tourner sans fin.
  */
 
@@ -141,7 +141,7 @@ describe('parseCloneEvent', () => {
   });
 });
 
-describe('streamClone — le flux du clone', () => {
+describe('streamClone le flux du clone', () => {
   it('pousse une progression monotone et rend le résultat', async () => {
     const fake = fakeFetch(
       sse([
@@ -223,7 +223,7 @@ describe('streamClone — le flux du clone', () => {
             evidence: 'pnpm-lock.yaml',
             origin: 'd’après pnpm-lock.yaml',
             warnings: [],
-            description: 'JavaScript / TypeScript — pnpm',
+            description: 'JavaScript / TypeScript pnpm',
           },
           installCommand: 'pnpm install',
           warnings: ['Aucun projet reconnu'],
@@ -239,7 +239,7 @@ describe('streamClone — le flux du clone', () => {
     expect(outcome.kind).toBe('done');
     if (outcome.kind === 'done') {
       expect(outcome.result.project?.packageManager).toBeUndefined();
-      expect(outcome.result.project?.description).toBe('JavaScript / TypeScript — pnpm');
+      expect(outcome.result.project?.description).toBe('JavaScript / TypeScript pnpm');
       expect(outcome.result.warnings).toEqual(['Aucun projet reconnu']);
     }
   });

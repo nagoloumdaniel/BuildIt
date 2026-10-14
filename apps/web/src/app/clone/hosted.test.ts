@@ -160,7 +160,7 @@ describe('les refus, en vocabulaire d’écran', () => {
   });
 });
 
-describe('hostedResponse — vérification et refus avant le flux', () => {
+describe('hostedResponse vérification et refus avant le flux', () => {
   it('rend le plan en JSON, sans toucher à GitHub', async () => {
     const fake = github(REPO);
     const response = await hostedResponse(
@@ -203,7 +203,7 @@ describe('hostedResponse — vérification et refus avant le flux', () => {
   });
 });
 
-describe('hostedResponse — le flux des fichiers', () => {
+describe('hostedResponse le flux des fichiers', () => {
   it('annonce le manifeste, envoie chaque fichier, et finit par `done`', async () => {
     const fake = github(REPO);
     const response = await hostedResponse(
@@ -339,7 +339,7 @@ describe('hostedResponse — le flux des fichiers', () => {
   });
 });
 
-describe('hostedResponse — l’archive pour Firefox et Safari', () => {
+describe('hostedResponse l’archive pour Firefox et Safari', () => {
   it('relaie l’archive de GitHub comme un téléchargement nommé', async () => {
     const response = await hostedResponse(
       { action: 'zip', link: 'octo/hello', folder: 'hello' },

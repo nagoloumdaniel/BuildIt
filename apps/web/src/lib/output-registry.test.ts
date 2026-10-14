@@ -29,7 +29,7 @@ async function temporaryRoot(): Promise<string> {
   return root;
 }
 
-describe('parseRegistry — un fichier relu comme une donnée hostile', () => {
+describe('parseRegistry un fichier relu comme une donnée hostile', () => {
   it('garde les chemins absolus, Windows comme POSIX', () => {
     const text = JSON.stringify({
       directories: ['C:\\Projets\\app', '/home/moi/app', 'D:/x/y', '\\\\serveur\\partage\\app'],
@@ -57,7 +57,7 @@ describe('parseRegistry — un fichier relu comme une donnée hostile', () => {
   });
 });
 
-describe('registerGenerated / unregisterGenerated — sur un vrai disque', () => {
+describe('registerGenerated / unregisterGenerated sur un vrai disque', () => {
   it('sans fichier, le registre est vide', async () => {
     const root = await temporaryRoot();
     expect(await readRegistry(join(root, 'absent'))).toEqual([]);

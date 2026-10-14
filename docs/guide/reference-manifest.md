@@ -2,16 +2,16 @@
 
 Le **Project Manifest** est l'objet d'entrée du moteur : l'UI et le CLI le
 produisent, le pipeline le consomme. C'est du JSON, versionné, et il valide la
-**forme** — pas l'identité des technologies, ni leur compatibilité (voir
+**forme** pas l'identité des technologies, ni leur compatibilité (voir
 [Concepts](concepts.md), « forme, identité, combinaison »).
 
 Sources qui font foi :
 
-- [`packages/manifest/src/schema/manifest.ts`](../../packages/manifest/src/schema/manifest.ts) — les champs ;
-- [`packages/manifest/src/schema/enums.ts`](../../packages/manifest/src/schema/enums.ts) — `targets`, `architecture` ;
-- [`packages/manifest/src/schema/primitives.ts`](../../packages/manifest/src/schema/primitives.ts) — grammaire du nom, des slugs, unicité ;
-- [`packages/manifest/src/errors.ts`](../../packages/manifest/src/errors.ts) — codes et messages ;
-- [`packages/manifest/src/serialize.ts`](../../packages/manifest/src/serialize.ts) — forme canonique.
+- [`packages/manifest/src/schema/manifest.ts`](../../packages/manifest/src/schema/manifest.ts) les champs ;
+- [`packages/manifest/src/schema/enums.ts`](../../packages/manifest/src/schema/enums.ts) `targets`, `architecture` ;
+- [`packages/manifest/src/schema/primitives.ts`](../../packages/manifest/src/schema/primitives.ts) grammaire du nom, des slugs, unicité ;
+- [`packages/manifest/src/errors.ts`](../../packages/manifest/src/errors.ts) codes et messages ;
+- [`packages/manifest/src/serialize.ts`](../../packages/manifest/src/serialize.ts) forme canonique.
 
 ## Un manifest minimal
 
@@ -27,7 +27,7 @@ Sources qui font foi :
 
 ```text
 $ pnpm pf graph sans-base.json
-sans-base — 2 technologies, stack certifiée
+sans-base 2 technologies, stack certifiée
 
   ✓ frontend         Next.js (next)
   ✓ language         TypeScript (typescript)
@@ -46,7 +46,7 @@ sans-base — 2 technologies, stack certifiée
 | `mobile` | non | `{ framework, language, styling? }` | idem |
 | `desktop` | non | `{ framework }` | idem |
 | `backend` | non | `{ framework, language? }` | `framework` obligatoire si l'objet existe |
-| `database` | non | `{ engine, orm? }` | `engine` obligatoire si l'objet existe — un ORM seul est refusé |
+| `database` | non | `{ engine, orm? }` | `engine` obligatoire si l'objet existe un ORM seul est refusé |
 | `auth` | non | `{ provider }` | `provider` obligatoire si l'objet existe |
 | `services` | non | tableau de slugs, sans doublon | Capacités et services : paiement, email, cache, observabilité… |
 | `quality` | non | tableau de slugs, sans doublon | Outils de qualité : lint, format, tests, hooks Git |
@@ -76,7 +76,7 @@ $ pnpm pf graph invalide-valeurs.json        # targets: ["website"], architectur
 
 Un slug de technologie suit `^[a-z0-9]+(?:-[a-z0-9]+)*$` : minuscules et
 chiffres séparés par des tirets simples. Un tableau ne peut pas contenir deux
-fois la même valeur — un doublon n'est pas dédupliqué en silence : il révèle
+fois la même valeur un doublon n'est pas dédupliqué en silence : il révèle
 presque toujours une façade qui ajoute deux fois la même capacité.
 
 ## Forme canonique
@@ -94,7 +94,7 @@ presque toujours une façade qui ajoute deux fois la même capacité.
 Conséquence directe : **les mêmes choix donnent la même chaîne**, octet pour
 octet, quelle que soit la façade et quel que soit l'ordre des clics.
 `serializeManifest` applique la même forme, avec une indentation de deux espaces
-et un saut de ligne final — le fichier est destiné à être relu par des humains et
+et un saut de ligne final le fichier est destiné à être relu par des humains et
 posé dans un dépôt.
 
 ## Version et migrations
@@ -103,7 +103,7 @@ Il n'existe aujourd'hui qu'une version : `MANIFEST_VERSION = 1`. Le mécanisme d
 migration est néanmoins livré et testé
 ([`migrate.ts`](../../packages/manifest/src/migrate.ts)) : `MIGRATIONS` est vide,
 et `migrateManifest` applique la chaîne puis valide le résultat. Le jour où une
-v2 existera, des manifests v1 circuleront déjà dans des liens de partage — la
+v2 existera, des manifests v1 circuleront déjà dans des liens de partage la
 machinerie ne sera pas inventée sous contrainte.
 
 ## Les codes de refus
@@ -132,6 +132,6 @@ et un message :
 | « Ce slug existe-t-il au catalogue ? » | le **registry** (`pf add auth` → « Technologie inconnue ») |
 | « Ces technologies vont-elles ensemble ? » | le **compatibility engine** (deux ORM → refus, `Drizzle` → déclarée) |
 
-Un manifest peut donc être **valide et ingénérable** : c'est voulu — le manifest
+Un manifest peut donc être **valide et ingénérable** : c'est voulu le manifest
 décrit une intention, le moteur dit si elle tient. Voir
 [Référence du registry](reference-registry.md) pour le détail du partage.

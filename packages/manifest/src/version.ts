@@ -14,7 +14,7 @@ export type ManifestVersion = typeof MANIFEST_VERSION;
 /**
  * Garde de type sur le champ `manifestVersion` d'un manifest.
  *
- * Volontairement strict : la valeur provient de JSON non fiable — un fichier
+ * Volontairement strict : la valeur provient de JSON non fiable un fichier
  * édité à la main, un lien de partage (§20) ou un manifest écrit par une
  * version plus récente de l'outil. Une comparaison stricte refuse d'un seul
  * coup les chaînes numériques, les décimaux, `NaN`, `null` et `undefined`.

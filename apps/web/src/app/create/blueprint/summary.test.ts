@@ -55,7 +55,7 @@ describe('les tables de libellés sont complètes', () => {
   });
 });
 
-describe('manifestTechnologyIds — la sélection envoyée au moteur', () => {
+describe('manifestTechnologyIds la sélection envoyée au moteur', () => {
   it('rend tous les identifiants du manifest SaaS, dans l’ordre canonique, sans doublon', () => {
     // Le preset brut n'est pas encore canonique : `parseManifest` trie les
     // ensembles, et c'est ce manifest-là que `draftToManifest` produit.
@@ -120,7 +120,7 @@ describe('manifestTechnologyIds — la sélection envoyée au moteur', () => {
   });
 });
 
-describe('blueprintView — le résumé lisible', () => {
+describe('blueprintView le résumé lisible', () => {
   it('rend le manifest SaaS avec les vrais noms du catalogue', () => {
     const view = blueprintView(saasManifest(), catalogueLabels(), FR);
 
@@ -166,7 +166,7 @@ describe('blueprintView — le résumé lisible', () => {
     expect(blueprintView(manifest, labels, FR).headline).toBe('Next.js + PostgreSQL + Stripe');
   });
 
-  it('un identifiant non nommé reste lisible — son slug est affiché, rien n’est inventé', () => {
+  it('un identifiant non nommé reste lisible son slug est affiché, rien n’est inventé', () => {
     const manifest: Manifest = {
       manifestVersion: 1,
       name: 'demo',

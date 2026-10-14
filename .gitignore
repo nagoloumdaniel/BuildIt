@@ -5,7 +5,7 @@ coverage/
 .turbo/
 *.tsbuildinfo
 
-# Environnement — §24 : aucune valeur sensible dans le dépôt
+# Environnement §24 : aucune valeur sensible dans le dépôt
 .env
 .env.*
 !.env.example

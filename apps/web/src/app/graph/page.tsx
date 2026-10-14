@@ -24,7 +24,7 @@ interface GraphState {
 }
 
 /**
- * Dependency Graph (§6.11) — la vue avancée, **accessible depuis le Blueprint,
+ * Dependency Graph (§6.11) la vue avancée, **accessible depuis le Blueprint,
  * jamais imposée**. Elle est hors parcours (`ScreenShell`, sans progression) et
  * n'a aucune dépendance : pas de librairie de graphe, un dessin déterministe
  * (dont la description porte l'équivalent textuel complet) puis une lecture
@@ -33,7 +33,7 @@ interface GraphState {
  *
  * La sélection est celle du manifest canonique quand il est constructible :
  * le graphe montre alors exactement ce que le moteur a résolu, additions
- * comprises. Un brouillon incomplet montre ce qui a été coché — imparfait mais
+ * comprises. Un brouillon incomplet montre ce qui a été coché imparfait mais
  * honnête, plutôt qu'un graphe vide.
  */
 export default function GraphPage(): ReactElement {
@@ -58,8 +58,8 @@ export default function GraphPage(): ReactElement {
   const [failed, setFailed] = useState(false);
 
   /**
-   * Chaque calcul porte un numéro : une réponse tardive — la sélection a changé
-   * entre-temps, ou l'utilisateur a relancé — ne doit pas écraser l'état
+   * Chaque calcul porte un numéro : une réponse tardive la sélection a changé
+   * entre-temps, ou l'utilisateur a relancé ne doit pas écraser l'état
    * courant. Le bouton « Recalculer » rappelle simplement `load`.
    */
   const requestId = useRef(0);

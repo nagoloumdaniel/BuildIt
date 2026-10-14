@@ -14,7 +14,7 @@ import { handOver } from './picked-store';
  *
  * C'est tout ce que la carte du menu fait : ouvrir l'explorateur, et dès qu'un
  * dossier est désigné, aller là où l'analyse se lit. Rien ne s'affiche dans la
- * carte — ni détection, ni commande, ni installation : la même information à
+ * carte ni détection, ni commande, ni installation : la même information à
  * deux endroits finissait par diverger, et l'accueil se transformait en écran
  * d'ouverture au milieu d'une grille de trois cartes.
  *

@@ -41,7 +41,7 @@ async function exists(path: string): Promise<boolean> {
   }
 }
 
-describe('generateZipAction — une archive, en local comme en hébergé', () => {
+describe('generateZipAction une archive, en local comme en hébergé', () => {
   it('rend une archive du projet entier, rangée sous le nom du projet, sans dossier', async () => {
     const result = await generateZipAction(saasManifest('archive-locale'));
     expect(result.ok).toBe(true);
@@ -68,7 +68,7 @@ describe('generateZipAction — une archive, en local comme en hébergé', () =>
   });
 });
 
-describe('checkOutputDestinationAction — le dossier, vérifié sans rien écrire', () => {
+describe('checkOutputDestinationAction le dossier, vérifié sans rien écrire', () => {
   it('accepte un parent lisible dont le sous-dossier n’existe pas', async () => {
     const parent = await temporary('pf-dest-libre-');
     const checked = await checkOutputDestinationAction(parent, 'mon-projet');
@@ -99,7 +99,7 @@ describe('checkOutputDestinationAction — le dossier, vérifié sans rien écri
   });
 });
 
-describe('deleteProjectAction — un projet écrit ailleurs', () => {
+describe('deleteProjectAction un projet écrit ailleurs', () => {
   it('supprime un dossier inscrit au registre, puis l’en retire', async () => {
     const root = await temporary('pf-del-travail-');
     // biome-ignore lint/complexity/useLiteralKeys: `noPropertyAccessFromIndexSignature` impose les crochets sur `process.env`.

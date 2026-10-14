@@ -1,5 +1,5 @@
 /**
- * Recettes — capacités câblées qu'une technologie sait apporter à un projet
+ * Recettes capacités câblées qu'une technologie sait apporter à un projet
  * (§22, Recipe Resolver) : « Better Auth en email + mot de passe », « Stripe
  * Checkout ».
  *

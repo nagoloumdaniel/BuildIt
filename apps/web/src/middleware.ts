@@ -15,7 +15,7 @@ import { isAllowedHost } from './lib/hosting';
  * porte : le nom de domaine de l'attaquant ne sera jamais celui sous lequel le
  * serveur accepte de répondre.
  *
- * Phase 12 — hébergement multi-visiteurs : sur Vercel (`VERCEL=1`), le `Host`
+ * Phase 12 hébergement multi-visiteurs : sur Vercel (`VERCEL=1`), le `Host`
  * n'est jamais `127.0.0.1` pour un visiteur légitime non plus. `lib/hosting.ts`
  * porte la liste des hôtes autorisés et bascule selon l'environnement ; ce
  * fichier ne fait plus que l'interroger, pour que le comportement local

@@ -16,7 +16,7 @@ import type { InstallResultView, ProjectSummaryView } from './project';
  *
  * Il vit hors de `view.tsx` parce que deux écrans le montrent : la page
  * `/open` et la carte « Ouvrir un projet local » du menu d'accueil. Un projet
- * local se lit de la même façon des deux côtés — dupliquer le panneau aurait
+ * local se lit de la même façon des deux côtés dupliquer le panneau aurait
  * fait diverger la formule de la commande d'installation, c'est-à-dire
  * exactement ce qu'on ne veut pas.
  *
@@ -94,7 +94,7 @@ export function DetectionSummary({ summary, className }: DetectionSummaryProps):
         {summary.label}
       </p>
       <p className="pf-hint mt-1">
-        {t.open.manager} : {summary.packageManager ?? t.open.notApplicable} — {summary.origin}.
+        {t.open.manager} : {summary.packageManager ?? t.open.notApplicable} {summary.origin}.
       </p>
       <p className="pf-hint mt-1">
         {t.open.readFile} : <span className="pf-mono">{summary.evidence}</span>
@@ -121,7 +121,7 @@ export interface InstallPanelProps {
    *
    * En hébergé, le dossier a été lu dans le navigateur du visiteur ; aucun
    * serveur ne lancera `pnpm install` sur sa machine. Le panneau montre alors
-   * la commande, copiable, et le dit — plutôt qu'un bouton grisé sans issue.
+   * la commande, copiable, et le dit plutôt qu'un bouton grisé sans issue.
    */
   readonly runnable?: boolean;
 }

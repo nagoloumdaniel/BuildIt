@@ -6,11 +6,11 @@ import type { ReactElement } from 'react';
  * Il est posé en **image de fond** d'une boîte dont la taille est donnée par le
  * code (`.pf-logo-mark`, dans `globals.css`) : le navigateur ne télécharge
  * alors que le fichier du thème **affiché**, et changer de thème échange
- * l'image sans JavaScript — c'est le même `data-theme` qui pose déjà les
+ * l'image sans JavaScript c'est le même `data-theme` qui pose déjà les
  * couleurs, donc aucune bascule après hydratation et aucun clignotement.
  *
  * Pourquoi pas `next/image` : le moteur d'images de Next exige `sharp`, absent
- * de cette installation — toute requête `/_next/image` répondait 400 et le logo
+ * de cette installation toute requête `/_next/image` répondait 400 et le logo
  * s'affichait cassé dans les deux thèmes. Les deux fichiers sont des assets
  * fixes, déjà à leur taille d'affichage : les servir directement est plus sûr,
  * plus rapide (18 ko au lieu de 170 ko) et supprime une dépendance native.

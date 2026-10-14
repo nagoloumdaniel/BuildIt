@@ -13,7 +13,7 @@ import { deletionTarget, sameDirectory } from './delete-project';
 const ROOT = 'C:\\Users\\moi\\buildit';
 const POSIX_ROOT = '/home/moi/buildit';
 
-describe('deletionTarget — ce qui est supprimable', () => {
+describe('deletionTarget ce qui est supprimable', () => {
   it('accepte un enfant direct du dossier de travail', () => {
     const target = deletionTarget(`${ROOT}\\mon-app`, ROOT, false);
 
@@ -24,7 +24,7 @@ describe('deletionTarget — ce qui est supprimable', () => {
     expect(deletionTarget(`${POSIX_ROOT}/mon-app`, POSIX_ROOT, false).ok).toBe(true);
   });
 
-  it('ignore la casse du dossier de travail — Windows ne la distingue pas', () => {
+  it('ignore la casse du dossier de travail Windows ne la distingue pas', () => {
     expect(deletionTarget('c:\\users\\moi\\buildit\\mon-app', ROOT, false).ok).toBe(true);
   });
 
@@ -33,7 +33,7 @@ describe('deletionTarget — ce qui est supprimable', () => {
   });
 });
 
-describe('deletionTarget — ce qui est refusé, et pourquoi', () => {
+describe('deletionTarget ce qui est refusé, et pourquoi', () => {
   it('refuse tout en mode hébergé : il n’y a pas de dossier à supprimer', () => {
     expect(deletionTarget(`${ROOT}\\mon-app`, ROOT, true)).toEqual({
       ok: false,
@@ -93,7 +93,7 @@ describe('deletionTarget — ce qui est refusé, et pourquoi', () => {
   });
 });
 
-describe('deletionTarget — un projet écrit ailleurs, inscrit au registre', () => {
+describe('deletionTarget un projet écrit ailleurs, inscrit au registre', () => {
   const ELSEWHERE = 'D:\\Projets\\mon-app';
 
   it('accepte un dossier hors du dossier de travail s’il est au registre', () => {

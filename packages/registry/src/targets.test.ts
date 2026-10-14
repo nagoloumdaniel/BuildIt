@@ -5,8 +5,8 @@ import type { RegistryEntry } from './schema/entry.js';
 import { FRAMEWORK_CATEGORIES, targetCoverage, targetsWithoutFramework } from './targets.js';
 
 /**
- * La couverture des cibles se mesure sur le catalogue **réel** — c'est elle qui
- * décide ce que l'écran Target propose — et sur des fixtures pour prouver que la
+ * La couverture des cibles se mesure sur le catalogue **réel** c'est elle qui
+ * décide ce que l'écran Target propose et sur des fixtures pour prouver que la
  * règle lit les données au lieu de réciter une réponse.
  */
 
@@ -14,7 +14,7 @@ const result = loadCatalogue();
 
 function requireEntries(): readonly RegistryEntry[] {
   if (!result.ok) {
-    throw new Error('le catalogue ne charge pas — voir catalogue.test.ts');
+    throw new Error('le catalogue ne charge pas voir catalogue.test.ts');
   }
   return result.value.entries();
 }
@@ -81,7 +81,7 @@ describe('la règle lit le catalogue', () => {
 
   it('une fiche language visant desktop ne couvre pas desktop', () => {
     // La catégorie décide du rôle : un langage remplit `language`, jamais
-    // `framework` — sans quoi le manifest mobile/desktop passerait le schéma
+    // `framework` sans quoi le manifest mobile/desktop passerait le schéma
     // avec un langage à la place d'un framework.
     const catalogue: RegistryEntry[] = [
       entry({ id: 'typescript', category: 'language', targets: ['mobile', 'desktop'] }),

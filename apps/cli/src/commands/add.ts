@@ -24,7 +24,7 @@ interface Placement {
   readonly replaced?: string | undefined;
 }
 
-/** Le manifest, avec un champ d'application remplacé — jamais un cast. */
+/** Le manifest, avec un champ d'application remplacé jamais un cast. */
 function withApp(manifest: Manifest, app: AppKey, field: AppField, id: string): Manifest {
   return { ...manifest, [app]: { ...manifest[app], [field]: id } };
 }
@@ -54,7 +54,7 @@ function replaceInApp(manifest: Manifest, field: AppField, id: string): Placemen
  * **remplace** la valeur unique en place et on le dit (`remplace X`), parce que
  * c'est un ajout demandé explicitement à un manifest existant. Le brouillon, lui,
  * assemble un manifest neuf et garde la première fiche rencontrée. Ce module ne
- * décide plus *où* va une catégorie — c'était la seule chose que les deux copies
+ * décide plus *où* va une catégorie c'était la seule chose que les deux copies
  * devaient dire à l'identique.
  */
 function slotted(slot: Slot, manifest: Manifest, id: string): Placement | string {

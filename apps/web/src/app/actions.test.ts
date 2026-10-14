@@ -17,7 +17,7 @@ import {
  * Les Server Actions, appelées directement : ce sont des fonctions asynchrones
  * ordinaires. Ce que ces tests prouvent n'est pas Next (le build s'en charge),
  * c'est le **contrat** : rien de ce qui vient du client n'est cru sur parole,
- * et la génération écrit vraiment — mais jamais là où le client le demande.
+ * et la génération écrit vraiment mais jamais là où le client le demande.
  */
 
 const created: string[] = [];
@@ -61,7 +61,7 @@ describe('les vues du moteur', () => {
   });
 });
 
-describe('previewManifestAction — un dry-run, même sur une entrée hostile', () => {
+describe('previewManifestAction un dry-run, même sur une entrée hostile', () => {
   it('refuse un manifest invalide avec des messages, sans lever', async () => {
     const preview = await previewManifestAction({ name: '///' });
     expect(preview.files).toEqual([]);
@@ -79,7 +79,7 @@ describe('previewManifestAction — un dry-run, même sur une entrée hostile', 
   });
 });
 
-describe('generateProjectAction — écrit vraiment, mais sous sa racine', () => {
+describe('generateProjectAction écrit vraiment, mais sous sa racine', () => {
   it('écrit le projet sous PF_WEB_WORKSPACE et rend son rapport', async () => {
     const root = await mkdtemp(join(tmpdir(), 'pf-web-generate-'));
     created.push(root);

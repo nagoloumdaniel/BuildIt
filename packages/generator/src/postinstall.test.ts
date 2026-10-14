@@ -1,7 +1,4 @@
-import { mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises';
-import { tmpdir } from 'node:os';
-import { join } from 'node:path';
-import { afterEach, describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vitest';
 import {
   type CommandResult,
   type CommandRunner,
@@ -12,7 +9,7 @@ import {
 } from './postinstall.js';
 
 /**
- * Post Install et Validation (§22, 5.10) — jamais de vrai shell ici, sauf pour
+ * Post Install et Validation (§22, 5.10) jamais de vrai shell ici, sauf pour
  * l'exécuteur réel lui-même, testé avec `node`, présent partout.
  */
 
@@ -42,7 +39,7 @@ function fakeRunner(
 
 const FAIL = (output: string): CommandResult => ({ exitCode: 1, output });
 
-describe('isTransientFailure — réseau ou panne durable', () => {
+describe('isTransientFailure réseau ou panne durable', () => {
   it.each([
     'ERR_PNPM_META_FETCH_FAIL  GET https://registry.npmjs.org/next: request to failed, reason: getaddrinfo ENOTFOUND',
     'npm error code ECONNRESET',

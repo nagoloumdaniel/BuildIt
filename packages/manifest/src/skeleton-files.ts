@@ -7,7 +7,7 @@ import type { Architecture } from './schema/enums.js';
  *
  * Pur, sans `fs` : le générateur l’écrit dans un projet neuf, et l’écran
  * « Ouvrir un projet local » le propose pour un projet existant, dans le
- * navigateur — une seule source pour les deux.
+ * navigateur une seule source pour les deux.
  */
 
 export interface SkeletonFile {
@@ -75,14 +75,14 @@ export function skeletonFiles(
   const view = files.find((file) => file.path === 'docs/architecture/README.md');
   if (view !== undefined) {
     Object.assign(view, {
-      contents: `# Architecture — ${name}\n\nForme : **${title}**. Décision : [ADR-001](../decisions/ADR-001-${architecture}.md).\n\n## Arborescence de base\n\n\`\`\`\n${tree(dirs)}\n\`\`\`\n\n## Responsabilités\n\n${dirs.map((dir) => `- \`${dir.path}/\` — ${dir.role}`).join('\n')}\n`,
+      contents: `# Architecture ${name}\n\nForme : **${title}**. Décision : [ADR-001](../decisions/ADR-001-${architecture}.md).\n\n## Arborescence de base\n\n\`\`\`\n${tree(dirs)}\n\`\`\`\n\n## Responsabilités\n\n${dirs.map((dir) => `- \`${dir.path}/\` ${dir.role}`).join('\n')}\n`,
     });
   }
 
   files.push(
     {
       path: `docs/decisions/ADR-001-${architecture}.md`,
-      contents: `# ADR-001 — Architecture : ${title}\n\n- Statut : acceptée\n- Date : ${date}\n\n## Contexte\n\nLe projet ${name} est généré par BuildIt avec l’architecture « ${architecture} ».\n\n## Décision\n\n${RATIONALE[architecture]}\n\n## Conséquences\n\n- Chaque dossier de base porte un README qui fixe sa responsabilité et sa règle de dépendance.\n- Le domaine n’importe aucun framework : les adaptateurs dépendent du domaine, jamais l’inverse.\n- Toute évolution de cette décision passe par un nouvel ADR qui remplace celui-ci.\n`,
+      contents: `# ADR-001 Architecture : ${title}\n\n- Statut : acceptée\n- Date : ${date}\n\n## Contexte\n\nLe projet ${name} est généré par BuildIt avec l’architecture « ${architecture} ».\n\n## Décision\n\n${RATIONALE[architecture]}\n\n## Conséquences\n\n- Chaque dossier de base porte un README qui fixe sa responsabilité et sa règle de dépendance.\n- Le domaine n’importe aucun framework : les adaptateurs dépendent du domaine, jamais l’inverse.\n- Toute évolution de cette décision passe par un nouvel ADR qui remplace celui-ci.\n`,
     },
     {
       path: 'CONTRIBUTING.md',

@@ -58,7 +58,7 @@ export function redactOrigin(origin: string): string {
  * Le dépôt GitHub d'un `origin`.
  *
  * On relit l'URL **après** nettoyage : un jeton dans l'URL fait refuser le lien
- * par `parseRemote`, mais le dépôt reste bien sur GitHub — l'écran ne doit pas
+ * par `parseRemote`, mais le dépôt reste bien sur GitHub l'écran ne doit pas
  * dire le contraire.
  */
 function githubRef(state: RepositoryState): RepositoryRef | undefined {
@@ -86,7 +86,7 @@ export interface RepositoryStatusView {
   readonly name?: string;
   readonly url?: string;
   readonly visibility: Visibility;
-  /** Nom de dépôt proposé à la création — le nom du dossier, éditable ensuite. */
+  /** Nom de dépôt proposé à la création le nom du dossier, éditable ensuite. */
   readonly proposedName: string;
   readonly issues: readonly string[];
 }
@@ -109,7 +109,7 @@ export function refusedRepositoryStatus(
 
 /**
  * L'état du dépôt, sans rien modifier : dépôt Git, commit, `origin`, lien et
- * visibilité. `deps` est optionnel — sans compte connecté, la visibilité reste
+ * visibilité. `deps` est optionnel sans compte connecté, la visibilité reste
  * `unknown` plutôt que d'échouer.
  */
 export async function repositoryStatus(
@@ -215,7 +215,7 @@ export interface CreateRepositoryResult {
 /**
  * Crée le dépôt GitHub du projet et y pousse le code.
  *
- * L'ordre est celui du CLI, et il compte : le premier commit d'abord — s'il
+ * L'ordre est celui du CLI, et il compte : le premier commit d'abord s'il
  * échoue, rien n'a encore été créé sur GitHub —, le dépôt ensuite, le push en
  * dernier. Un échec du push est signalé avec l'URL du dépôt créé, parce qu'il
  * existe bel et bien.
@@ -307,7 +307,7 @@ export interface AccessView {
   readonly issues: readonly string[];
 }
 
-/** Collaborateurs et invitations en attente — le même écran que `pf collab list`. */
+/** Collaborateurs et invitations en attente le même écran que `pf collab list`. */
 export async function listAccess(
   deps: SessionDeps,
   directory: string,
@@ -423,7 +423,7 @@ export interface RemoveOptions {
   readonly deps: SessionDeps;
 }
 
-/** Retire un accès — l'invitation en attente si elle existe, sinon le collaborateur. */
+/** Retire un accès l'invitation en attente si elle existe, sinon le collaborateur. */
 export async function removeCollaborator(options: RemoveOptions): Promise<AccessMutationView> {
   const username = typeof options.username === 'string' ? options.username.trim() : '';
   if (!USERNAME.test(username)) {
@@ -492,7 +492,7 @@ const ROLE_TEXT: Readonly<Record<Role, { readonly label: string; readonly note: 
   },
 };
 
-/** Les rôles du §20bis, chacun avec sa phrase — la liste vient du paquet. */
+/** Les rôles du §20bis, chacun avec sa phrase la liste vient du paquet. */
 export const ROLE_VIEWS: readonly RoleView[] = ROLES.map((role) => ({
   role,
   label: ROLE_TEXT[role].label,

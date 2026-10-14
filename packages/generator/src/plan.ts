@@ -13,7 +13,7 @@ import {
  * de sa réflexion ne peut pas être annulé proprement : au moment où il
  * découvre un problème, il a déjà laissé la moitié d'un projet sur le disque.
  *
- * Le dry-run n'est donc pas un mode à part — c'est cette étape-ci, sans la
+ * Le dry-run n'est donc pas un mode à part c'est cette étape-ci, sans la
  * suivante. Un mode « aperçu » séparé finirait par diverger de la génération
  * réelle ; ici c'est le même objet qu'on montre puis qu'on écrit.
  */
@@ -33,8 +33,8 @@ export type GenIssue = Issue<GenIssueCode>;
 
 const MESSAGES: Readonly<Record<GenIssueCode, string>> = {
   GEN_EMPTY_PATH: 'Un fichier du plan n’a pas de chemin.',
-  // Un seul code pour les trois causes — chemin absolu, remontée, lien
-  // symbolique — parce que du point de vue de l'utilisateur c'est le même
+  // Un seul code pour les trois causes chemin absolu, remontée, lien
+  // symbolique parce que du point de vue de l'utilisateur c'est le même
   // problème : le fichier voulait sortir du dossier cible. Le message dit
   // laquelle des causes s'applique.
   GEN_PATH_RESERVED:
@@ -56,7 +56,7 @@ export interface PlannedFile {
   /** Chemin relatif au dossier cible, séparateurs POSIX. */
   readonly path: string;
   readonly contents: string;
-  /** Template ou recette à l'origine du fichier — traçabilité (§6.14). */
+  /** Template ou recette à l'origine du fichier traçabilité (§6.14). */
   readonly source: string;
   /** Bit d'exécution, pour les scripts. */
   readonly executable?: boolean;
@@ -99,8 +99,8 @@ function normalizeWithin(path: string): string | undefined {
 }
 
 /**
- * Un segment `.git`, quelle que soit sa casse — macOS et Windows ne la
- * distinguent pas — ni ses points ou espaces finaux, que Windows ignore.
+ * Un segment `.git`, quelle que soit sa casse macOS et Windows ne la
+ * distinguent pas ni ses points ou espaces finaux, que Windows ignore.
  */
 function entersGitDir(path: string): boolean {
   return path.split('/').some((segment) => segment.replace(/[. ]+$/, '').toLowerCase() === '.git');
@@ -218,7 +218,7 @@ export function planFiles(
   return ok({ targetDir, files: sorted });
 }
 
-/** Décrit un plan sous forme d'arborescence — c'est ce que montre le dry-run (§6.12). */
+/** Décrit un plan sous forme d'arborescence c'est ce que montre le dry-run (§6.12). */
 export function describePlan(plan: FilePlan): string {
   if (plan.files.length === 0) {
     return 'Aucun fichier à générer.';

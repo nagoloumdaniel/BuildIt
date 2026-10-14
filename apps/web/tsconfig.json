@@ -15,7 +15,7 @@
     "noUncheckedSideEffectImports": false,
     // Application non publiée : pas de .d.ts à produire, et les exports RSC de
     // Next (metadata, route handlers) sont inférés. Seule déviation à la
-    // convention du dépôt — documentée ici.
+    // convention du dépôt documentée ici.
     "isolatedDeclarations": false,
     "allowJs": true,
     "incremental": true

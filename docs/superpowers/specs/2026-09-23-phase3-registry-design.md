@@ -1,4 +1,4 @@
-# Phase 3 — Registry : design
+# Phase 3 Registry : design
 
 **Date :** 2026-09-23
 **Phase roadmap :** 3 (Milestone M1)
@@ -8,7 +8,7 @@
 
 ## Objectif
 
-Le registry est la base de connaissances du produit : ce que le catalogue sait des technologies. Il est **data-driven** — jamais codé en dur dans un écran (§11). Ajouter une technologie doit être une pull request sur un fichier JSON, pas une modification de code.
+Le registry est la base de connaissances du produit : ce que le catalogue sait des technologies. Il est **data-driven** jamais codé en dur dans un écran (§11). Ajouter une technologie doit être une pull request sur un fichier JSON, pas une modification de code.
 
 ## Décisions
 
@@ -16,7 +16,7 @@ Le registry est la base de connaissances du produit : ce que le catalogue sait d
 |---|---|
 | ORM par défaut des presets | Prisma (§8 amendé le 23/09/2026) |
 | Largeur du catalogue | ~40 fiches `certifiée` + ~150 `déclarée` |
-| Un fichier par fiche | `data/<catégorie>/<id>.json` — diffs lisibles, contribution par PR |
+| Un fichier par fiche | `data/<catégorie>/<id>.json` diffs lisibles, contribution par PR |
 | Intégrité référentielle | vérifiée : une fiche ne peut pas citer un identifiant qui n'existe pas |
 
 ## Le distinguo certifiée / déclarée
@@ -30,7 +30,7 @@ C'est la décision structurante de la phase. Le catalogue doit être **large** (
 
 Les deux contraintes sur `template` sont vérifiées en CI. Une fiche `certified` sans template promet ce qui n'existe pas ; une fiche `declared` avec template ment dans l'autre sens. Les deux cassent la construction.
 
-Une fiche passe de `declared` à `certified` le jour où son template et son test existent — preset par preset, pas par lot.
+Une fiche passe de `declared` à `certified` le jour où son template et son test existent preset par preset, pas par lot.
 
 ## Schéma d'une fiche
 
@@ -48,9 +48,9 @@ requires        identifiants du registry                        optionnel
 compatibleWith  identifiants du registry                        optionnel
 conflictsWith   identifiants du registry                        optionnel
 packages        noms de paquets npm                             optionnel
-env             noms de variables — jamais de valeur (§24)       optionnel
+env             noms de variables jamais de valeur (§24)       optionnel
 recipes         identifiants de recettes                        optionnel
-template        chemin de template — lié à `generation`          conditionnel
+template        chemin de template lié à `generation`          conditionnel
 docs            URL de documentation                            optionnel
 ```
 
@@ -60,12 +60,12 @@ docs            URL de documentation                            optionnel
 
 Une fiche isolée peut être valide et le registry incohérent. Les vérifications ne portent donc pas seulement sur chaque fiche, mais sur l'ensemble :
 
-1. **Unicité** — deux fiches ne peuvent pas partager un `id`.
-2. **Références résolues** — tout identifiant cité dans `requires`, `compatibleWith` ou `conflictsWith` désigne une fiche existante. C'est ce qui empêche le catalogue de pourrir silencieusement quand une entrée est renommée.
-3. **Pas d'auto-référence** — une fiche ne se cite pas elle-même.
-4. **Pas de contradiction** — un même identifiant ne peut pas figurer à la fois dans `compatibleWith` et `conflictsWith`.
-5. **Cohérence de cible** — une dépendance `requires` doit couvrir au moins une des cibles de la fiche qui la requiert.
-6. **Fraîcheur** — `lastReviewedAt` de plus d'un an produit un avertissement, pas une erreur (§7, revue trimestrielle).
+1. **Unicité** deux fiches ne peuvent pas partager un `id`.
+2. **Références résolues** tout identifiant cité dans `requires`, `compatibleWith` ou `conflictsWith` désigne une fiche existante. C'est ce qui empêche le catalogue de pourrir silencieusement quand une entrée est renommée.
+3. **Pas d'auto-référence** une fiche ne se cite pas elle-même.
+4. **Pas de contradiction** un même identifiant ne peut pas figurer à la fois dans `compatibleWith` et `conflictsWith`.
+5. **Cohérence de cible** une dépendance `requires` doit couvrir au moins une des cibles de la fiche qui la requiert.
+6. **Fraîcheur** `lastReviewedAt` de plus d'un an produit un avertissement, pas une erreur (§7, revue trimestrielle).
 
 ## API publique
 

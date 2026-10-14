@@ -36,7 +36,7 @@ function symbol(status: string): string {
 
 /**
  * Le rapport lisible. Le score et les constats viennent du moteur ; ce module
- * ne fait que les mettre en page — aucune règle, aucun calcul.
+ * ne fait que les mettre en page aucune règle, aucun calcul.
  */
 export function formatReport(report: Report, title: string): string {
   const lines: string[] = [`${title} · santé du projet : ${report.score}/100`, ''];
@@ -62,7 +62,7 @@ export function formatReport(report: Report, title: string): string {
 }
 
 /**
- * `pf doctor` — le diagnostic d'un projet (§16).
+ * `pf doctor` le diagnostic d'un projet (§16).
  *
  * Un manifest présent mais invalide est une erreur, pas un silence : les
  * constats seraient faux sans lui.

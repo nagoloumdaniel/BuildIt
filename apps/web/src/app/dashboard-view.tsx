@@ -16,7 +16,7 @@ import { PickCard } from './open/pick-card';
 import type { PickHandoff } from './open/pick-handoff';
 
 /**
- * Le contenu de l'écran 1 — Dashboard (§6.1, §18bis), hors `page.tsx`.
+ * Le contenu de l'écran 1 Dashboard (§6.1, §18bis), hors `page.tsx`.
  *
  * Next interdit tout export autre que `default` dans un `page.tsx` : les
  * données et les composants testables vivent ici, `page.tsx` ne fait que
@@ -25,7 +25,7 @@ import type { PickHandoff } from './open/pick-handoff';
  *
  * Trois idées gouvernent la page :
  * 1. **Un projet généré n'est jamais un brouillon.** Dès que le brouillon est
- *    à l'écran « rapport », il sort de « Brouillon en cours » — la liste des
+ *    à l'écran « rapport », il sort de « Brouillon en cours » la liste des
  *    projets générés le porte, et le rapport de session n'est qu'un bonus.
  * 2. **Ouvrir un projet local ouvre l'explorateur**, pas une page
  *    intermédiaire : la carte du menu porte tout le fil (choix, analyse,
@@ -60,14 +60,14 @@ function hasDraft(draft: DraftState): boolean {
  * Deux signaux, et il en faut deux :
  *
  * 1. le brouillon est sur l'écran « rapport » et un rapport de session le
- *    confirme — le cas normal, juste après la génération ;
+ *    confirme le cas normal, juste après la génération ;
  * 2. le rapport est en main **et** la liste des projets générés contient déjà
  *    ce projet (même nom, même dossier).
  *
  * Le second n'est pas une redondance : depuis le rapport, le rail d'étapes
  * reste cliquable, et redescendre corriger un choix réécrit `draft.step`. Sans
  * lui, l'accueil reproposerait « Reprendre » sur un projet déjà écrit et
- * verrouillé — exactement ce que le §6.14 interdit. Et comme il s'appuie sur la
+ * verrouillé exactement ce que le §6.14 interdit. Et comme il s'appuie sur la
  * liste persistée, il survit à la fermeture de l'onglet, là où le rapport de
  * session disparaît.
  */
@@ -291,8 +291,8 @@ export interface LocalOpenCardProps {
 /**
  * La carte « Ouvrir un projet local » du menu.
  *
- * **La carte est le bouton.** L'appuyer ouvre l'explorateur — celui de la
- * machine en local, celui du navigateur en hébergé — et dès qu'un dossier est
+ * **La carte est le bouton.** L'appuyer ouvre l'explorateur celui de la
+ * machine en local, celui du navigateur en hébergé et dès qu'un dossier est
  * désigné, l'écran d'ouverture s'affiche avec l'analyse déjà en route.
  *
  * Elle n'affiche ni détection, ni commande, ni installation : c'est l'écran

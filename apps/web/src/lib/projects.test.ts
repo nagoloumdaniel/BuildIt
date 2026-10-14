@@ -148,7 +148,7 @@ describe('forgetProject', () => {
 });
 
 describe('recentProjects', () => {
-  it('rend les deux premiers par défaut — ce que montre le tableau de bord', () => {
+  it('rend les deux premiers par défaut ce que montre le tableau de bord', () => {
     const list = [project({ id: 'a' }), project({ id: 'b' }), project({ id: 'c' })];
     expect(recentProjects(list).map((item) => item.id)).toEqual(['a', 'b']);
   });
@@ -208,7 +208,7 @@ describe('browserProjectStorage', () => {
    * `Object.defineProperty` plutôt qu'une affectation : la propriété globale
    * `window` n'est pas déclarée dans l'environnement Node de Vitest, on la crée
    * donc, et on remet l'état exact d'avant (souvent : rien). Un `@ts-expect-error`
-   * sur l'affectation ne suffisait pas — il masquait aussi les erreurs réelles
+   * sur l'affectation ne suffisait pas il masquait aussi les erreurs réelles
    * du faux objet, ce que le compilateur signalait à juste titre.
    */
   function withWindow(windowValue: unknown, run: () => void): void {

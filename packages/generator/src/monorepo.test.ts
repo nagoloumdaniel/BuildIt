@@ -211,7 +211,7 @@ describe('monorepo : une seule application', () => {
   });
 });
 
-describe('le preset Full-stack du §8 est certifié — 6.7b', () => {
+describe('le preset Full-stack du §8 est certifié 6.7b', () => {
   it('aucun avertissement de combinaison expérimentale', () => {
     expect(plan().warnings.map((warning) => warning.code)).not.toContain(
       'COMPAT_EXPERIMENTAL_COMBINATION',

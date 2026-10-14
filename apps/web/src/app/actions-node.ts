@@ -60,7 +60,7 @@ import {
  *
  * Même motif que `actions.ts` : le navigateur ne parle jamais directement à un
  * paquet du moteur, et **rien de ce qui vient du client n'est cru sur parole**.
- * Ce fichier est volontairement mince — il ne fait que fournir les dépendances
+ * Ce fichier est volontairement mince il ne fait que fournir les dépendances
  * réelles (le `fetch` global, le `CommandRunner`, le trousseau) aux modules de
  * son dossier, qui portent la validation et sont testés contre des faux.
  *
@@ -96,7 +96,7 @@ function devicePendingStore(): DevicePendingStore {
 /**
  * L'exécuteur des commandes de projet : `git` et les installations. Le jeton
  * d'environnement du serveur (`PF_GITHUB_TOKEN`) n'atteint jamais ces processus
- * — un dépôt cloné n'est pas du code de confiance (§18bis, §24), et `git commit`
+ * un dépôt cloné n'est pas du code de confiance (§18bis, §24), et `git commit`
  * peut lancer un hook. `PF_GIT_TOKEN`, lui, reste posé par `packages/git` pour
  * la seule commande qui en a besoin.
  */
@@ -104,7 +104,7 @@ function projectRunner(): CommandRunner {
   return withoutServerSecrets(nodeCommandRunner);
 }
 
-// --- Écran 21 — GitHub Connection -----------------------------------------
+// --- Écran 21 GitHub Connection -----------------------------------------
 
 export async function githubStatusAction(): Promise<GithubStatusView> {
   return githubStatus(sessionDeps());
@@ -118,7 +118,7 @@ export async function githubPermissionsAction(): Promise<readonly PermissionView
  * Le flux de connexion que l'écran doit proposer.
  *
  * En hébergé : la redirection OAuth (`/github/authorize`), un clic, aucun
- * code à recopier. En local, le device flow garde son avantage — un seul
+ * code à recopier. En local, le device flow garde son avantage un seul
  * processus, pas de callback HTTP à exposer sur une machine qui n'écoute
  * que `127.0.0.1` : rien à y rediriger depuis github.com.
  */
@@ -143,7 +143,7 @@ export async function githubRepositoriesAction(): Promise<RepositoryListView> {
   return repositoriesFor(sessionDeps());
 }
 
-// --- Écran 22 — Clone Project ---------------------------------------------
+// --- Écran 22 Clone Project ---------------------------------------------
 
 /**
  * Où le clone atterrit, selon l'environnement.
@@ -152,7 +152,7 @@ export async function githubRepositoriesAction(): Promise<RepositoryListView> {
  * sa machine : c'est lui le propriétaire du disque, et une « racine de
  * travail » invisible qu'il n'a pas choisie était la principale cause de
  * clones qui semblaient ne pas marcher. En hébergé, le `parent` du navigateur
- * est ignoré — l'accepter serait une écriture de fichier arbitraire sur le
+ * est ignoré l'accepter serait une écriture de fichier arbitraire sur le
  * serveur.
  */
 function clonePlace(parent: unknown): ClonePlace {
@@ -170,7 +170,7 @@ export async function clonePreviewAction(
 }
 
 /**
- * Le mode de destination que l'écran doit proposer — `parent` en local (un
+ * Le mode de destination que l'écran doit proposer `parent` en local (un
  * dossier absolu choisi dans l'explorateur), `root` en hébergé (un dossier
  * relatif à la racine de travail).
  *
@@ -213,7 +213,7 @@ export async function cloneProjectAction(input: unknown): Promise<CloneResultVie
   });
 }
 
-// --- Écran 23 — Open Local Project ----------------------------------------
+// --- Écran 23 Open Local Project ----------------------------------------
 
 export async function inspectProjectAction(directory: unknown): Promise<ProjectInspectionView> {
   const resolved = resolveLocalDirectory(directory);
@@ -236,7 +236,7 @@ export async function inspectPickedFolderAction(input: unknown): Promise<Project
 }
 
 /**
- * Les fichiers de base manquants d'un projet du disque — local seulement : en
+ * Les fichiers de base manquants d'un projet du disque local seulement : en
  * hébergé, le serveur n'a pas le disque du visiteur (le navigateur s'en charge).
  */
 export async function planBaseFilesAction(
@@ -275,7 +275,7 @@ export async function installProjectAction(input: unknown): Promise<InstallResul
   return installProject(resolved.value, record['ignoreScripts'] === true, projectRunner());
 }
 
-// --- Écran 24 — Repository & Sharing --------------------------------------
+// --- Écran 24 Repository & Sharing --------------------------------------
 
 export async function repositoryStatusAction(directory: unknown): Promise<RepositoryStatusView> {
   const resolved = resolveLocalDirectory(directory);

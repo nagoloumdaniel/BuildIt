@@ -52,7 +52,7 @@ describe('STEP_ORDER', () => {
   });
 });
 
-describe('canAdvance — bloquants du §6', () => {
+describe('canAdvance bloquants du §6', () => {
   it('create : un nom conforme passe', () => {
     expect(canAdvance({ ...freshDraft(), name: 'mon-projet' })).toBe(true);
   });
@@ -113,7 +113,7 @@ describe('canAdvance — bloquants du §6', () => {
   });
 });
 
-describe('blockedReason — la phrase que l’écran affiche', () => {
+describe('blockedReason la phrase que l’écran affiche', () => {
   it('dit quoi corriger quand le nom ne convient pas', () => {
     expect(blockedReason({ ...freshDraft(), name: 'Espace Interdit' })).toContain('nom');
     expect(blockedReason({ ...freshDraft(), name: 'mon-projet' })).toBeUndefined();

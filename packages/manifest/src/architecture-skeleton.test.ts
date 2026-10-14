@@ -6,7 +6,7 @@ const FULL = { frontend: true, backend: true };
 const paths = (architecture: Parameters<typeof skeletonTree>[0], stack = FULL) =>
   skeletonTree(architecture, stack).map((dir) => dir.path);
 
-describe('skeletonTree — dossiers de base par architecture', () => {
+describe('skeletonTree dossiers de base par architecture', () => {
   it('donne à chaque dossier une responsabilité écrite, sans doublon ni chemin absolu', () => {
     for (const architecture of ARCHITECTURES) {
       const tree = skeletonTree(architecture, FULL);
@@ -80,7 +80,7 @@ describe('skeletonTree — dossiers de base par architecture', () => {
   });
 });
 
-describe('withoutDuplicateShared — pas de shared/ui à côté de components/', () => {
+describe('withoutDuplicateShared pas de shared/ui à côté de components/', () => {
   const dirs = skeletonTree('single-app', { frontend: true, backend: false });
 
   it('garde shared/ui et shared/lib sans équivalent', () => {

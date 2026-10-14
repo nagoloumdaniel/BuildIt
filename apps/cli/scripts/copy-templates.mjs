@@ -1,5 +1,5 @@
 // Le binaire publié embarque le moteur (tsdown, `noExternal`). Le generator y
-// cherche ses templates à `../templates` de son code — soit, une fois
+// cherche ses templates à `../templates` de son code soit, une fois
 // empaqueté, `apps/cli/templates`. On les y recopie à chaque construction.
 import { cp, rm } from 'node:fs/promises';
 

@@ -8,7 +8,7 @@ import type { Widen } from './widen';
  *
  * Un groupe par écran, et les **identifiants techniques comme clés** (`web`,
  * `single-app`, `payments`…) : ce sont eux qui viennent du catalogue et de la
- * fiche produit, donc eux qui se traduisent — jamais eux qui se renomment. Le
+ * fiche produit, donc eux qui se traduisent jamais eux qui se renomment. Le
  * poste de recherche, les commandes et les slugs (`next`, `pnpm install`)
  * restent hors du dictionnaire : ils sont les mêmes dans un terminal.
  *
@@ -19,7 +19,7 @@ import type { Widen } from './widen';
 export const FR_WIZARD = {
   wizard: {
     /**
-     * Écran 1 — Create Project : le nom, le mode de configuration et la
+     * Écran 1 Create Project : le nom, le mode de configuration et la
      * mémoire du brouillon. `namePlaceholder` est le gabarit du champ.
      */
     namePlaceholder: 'mon-projet',
@@ -38,7 +38,7 @@ export const FR_WIZARD = {
     },
 
     /**
-     * Écran 2 — Target Selection : les plateformes que le catalogue peut
+     * Écran 2 Target Selection : les plateformes que le catalogue peut
      * honorer, chacune avec sa phrase, plus ce qui est retenu et pourquoi.
      */
     targets: {
@@ -59,7 +59,7 @@ export const FR_WIZARD = {
     },
 
     /**
-     * Écran 3 — Project Type : le profil, sa phrase, et ce qu'il fait
+     * Écran 3 Project Type : le profil, sa phrase, et ce qu'il fait
      * recommander aux écrans suivants. `label` sert aussi de badge.
      */
     types: {
@@ -121,8 +121,8 @@ export const FR_WIZARD = {
     },
 
     /**
-     * Écran 4 — Architecture Builder : la forme du projet, sa description et
-     * son **impact** (complexité, coût d'exploitation) — c'est ce qui décide.
+     * Écran 4 Architecture Builder : la forme du projet, sa description et
+     * son **impact** (complexité, coût d'exploitation) c'est ce qui décide.
      */
     architecture: {
       title: 'Architecture',
@@ -201,7 +201,7 @@ export const FR_WIZARD = {
     },
 
     /**
-     * Écran 5 — Stack Builder : modes, comptes, états de compatibilité,
+     * Écran 5 Stack Builder : modes, comptes, états de compatibilité,
      * recherche globale et **libellés des 37 catégories** du catalogue.
      */
     stack: {
@@ -291,7 +291,7 @@ export const FR_WIZARD = {
     },
 
     /**
-     * Écran 6 — Capabilities : les familles de capacités du §6.7 et leur
+     * Écran 6 Capabilities : les familles de capacités du §6.7 et leur
      * phrase. C'est l'ordre de cette table qui fait la liste de l'écran :
      * `capabilities.ts` en dérive ses catégories, donc une famille ajoutée ici
      * a son libellé dans les deux langues par construction.

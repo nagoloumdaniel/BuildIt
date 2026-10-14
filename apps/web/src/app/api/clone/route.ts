@@ -11,13 +11,13 @@ import { type ProjectSummaryView, withoutServerSecrets } from '../../open/projec
  *
  * Pourquoi une route et pas une Server Action : une action rend son résultat
  * d'un seul coup. Un clone de 200 Mo met des minutes, et un rotor pendant
- * trois minutes ne dit pas si quelque chose avance — c'est exactement la
+ * trois minutes ne dit pas si quelque chose avance c'est exactement la
  * plainte à laquelle cet écran répond. Une route, elle, peut tenir la réponse
  * ouverte et pousser l'avancement réel que `git clone --progress` produit.
  *
  * Le format est celui des **événements serveur** (`text/event-stream`) : géré
  * nativement par le navigateur, rétabli tout seul, et lisible dans l'onglet
- * réseau — un WebSocket serait un protocole de plus pour un flux à sens
+ * réseau un WebSocket serait un protocole de plus pour un flux à sens
  * unique.
  *
  * Ce que cette route ne change pas :
@@ -51,7 +51,7 @@ type CloneEvent =
       /**
        * Le projet reconnu, en entier : l'écran affiche le gestionnaire, la
        * commande exacte et les avertissements, et ce résultat doit survivre à
-       * la fin du flux — le navigateur le garde tel quel.
+       * la fin du flux le navigateur le garde tel quel.
        */
       readonly project?: ProjectSummaryView;
     };

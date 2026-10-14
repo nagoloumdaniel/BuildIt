@@ -38,7 +38,7 @@ const SAAS = [
 ];
 
 describe('le preset SaaS se résout', () => {
-  it('sans erreur — sinon le message dit laquelle', () => {
+  it('sans erreur sinon le message dit laquelle', () => {
     const result = resolve({ targets: ['web'], technologies: SAAS }, catalogue());
     const problems = result.ok ? [] : result.issues.map((i) => `${i.code} : ${i.message}`);
     expect(problems).toEqual([]);
@@ -54,8 +54,8 @@ describe('le preset SaaS se résout', () => {
     }
   });
 
-  it('est certifiée — chaque fiche du preset passe le test de fumée (phase 6.7a)', () => {
-    // Ce test disait « expérimentale — aucun template n'existe encore » depuis
+  it('est certifiée chaque fiche du preset passe le test de fumée (phase 6.7a)', () => {
+    // Ce test disait « expérimentale aucun template n'existe encore » depuis
     // la phase 4, écrit pour tomber le jour où le preset serait réellement
     // générable. Il est tombé à la certification de Sentry et PostHog.
     const result = resolve({ targets: ['web'], technologies: SAAS }, catalogue());
@@ -65,7 +65,7 @@ describe('le preset SaaS se résout', () => {
     }
   });
 
-  it('avertit sur la licence de Sentry — §11', () => {
+  it('avertit sur la licence de Sentry §11', () => {
     const result = resolve({ targets: ['web'], technologies: SAAS }, catalogue());
     expect(result.ok).toBe(true);
     if (result.ok) {
@@ -123,7 +123,7 @@ describe('incompatibilités réelles', () => {
   });
 });
 
-describe('optionsFor sur le catalogue réel — §5', () => {
+describe('optionsFor sur le catalogue réel §5', () => {
   it('rend les 17 ORM du catalogue, jamais une liste filtrée', () => {
     const options = optionsFor('orm', { targets: ['web'], technologies: ['prisma'] }, catalogue());
     expect(options.length).toBe(catalogue().query({ category: 'orm' }).length);

@@ -17,18 +17,18 @@ import { createPortal } from 'react-dom';
 import { Icon, type IconName } from './icon';
 
 /**
- * Un détail qui s'ouvre au clic, au survol **et** au clavier — une « bulle de
+ * Un détail qui s'ouvre au clic, au survol **et** au clavier une « bulle de
  * détails » plutôt qu'une infobulle.
  *
  * Pourquoi pas un `title` ni une infobulle ARIA (`role="tooltip"`) : le panneau
  * porte des **liens** (documentation officielle), et une infobulle ne peut rien
- * contenir d'interactif — elle disparaît dès qu'on la quitte pour cliquer.
+ * contenir d'interactif elle disparaît dès qu'on la quitte pour cliquer.
  * Le motif retenu est celui du « toggletip » : un bouton qui annonce son état
  * (`aria-expanded`) et contrôle un panneau ordinaire.
  *
  * Trois façons de l'ouvrir, une seule de le garder ouvert :
  * - **survol** (souris) : il s'ouvre, et reste ouvert tant que le pointeur est
- *   sur le bouton ou sur le panneau — on peut aller cliquer un lien ;
+ *   sur le bouton ou sur le panneau on peut aller cliquer un lien ;
  * - **clic**, **Entrée** ou **Espace** (et toucher, où le survol n'existe
  *   pas) : il s'**épingle** ; un second appui, `Échap`, un clic ailleurs ou la
  *   sortie du focus le referme.
@@ -41,7 +41,7 @@ import { Icon, type IconName } from './icon';
  * Ouvert, le panneau est **porté** dans `document.body` (portail) et placé en
  * `position: fixed` sous le bouton : aucun `overflow` ni contexte d'empilement
  * d'une carte ou d'une grille ne peut le couper ou le recouvrir. Fermé, il
- * reste en place, masqué — le rendu serveur garde son contenu.
+ * reste en place, masqué le rendu serveur garde son contenu.
  *
  * Le panneau est un frère du bouton, jamais un enfant : un lien à l'intérieur
  * d'un `<button>` est du HTML invalide, et c'est exactement le piège où tombe

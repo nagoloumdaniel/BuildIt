@@ -4,7 +4,7 @@
   "private": true,
   "type": "module",
   "license": "MIT",
-  "description": "Registry des technologies — base de connaissances du catalogue (cahier des charges §7, §11).",
+  "description": "Registry des technologies base de connaissances du catalogue (cahier des charges §7, §11).",
   "exports": {
     ".": {
       "types": "./src/index.ts",

@@ -26,7 +26,7 @@ import { MESSAGES, type Messages } from './messages';
  *
  * Le premier rendu est celui du serveur, qui ne connaît aucune préférence :
  * il sort le français, et l'effet d'hydratation bascule si le visiteur a
- * choisi l'anglais. Un `suppressHydrationWarning` serait un pansement — ici
+ * choisi l'anglais. Un `suppressHydrationWarning` serait un pansement ici
  * le texte est remplacé après le montage, pas pendant la comparaison.
  *
  * Aucune route `/[locale]` : ce configurateur n'est pas indexé par langue, et
@@ -37,7 +37,7 @@ interface LocaleContextValue {
   readonly locale: Locale;
   readonly t: Messages;
   readonly setLocale: (locale: Locale) => void;
-  /** Vrai une fois la préférence du visiteur lue — avant, c'est le défaut. */
+  /** Vrai une fois la préférence du visiteur lue avant, c'est le défaut. */
   readonly ready: boolean;
 }
 
@@ -80,7 +80,7 @@ export function LocaleProvider({ children }: { children: ReactNode }): ReactElem
 /**
  * Le dictionnaire de la langue courante.
  *
- * Hors fournisseur — rendu statique d'un test de composant — il rend le
+ * Hors fournisseur rendu statique d'un test de composant il rend le
  * français plutôt que de lever : un test de balisage n'a pas à monter tout
  * l'arbre de l'application pour vérifier un bouton.
  */

@@ -15,17 +15,17 @@ import {
  *
  * Pourquoi `fetch` et pas `EventSource` : l'événement serveur natif ne sait
  * faire que des `GET`. Ici le clone part d'un `POST` (lien, dossier, options,
- * parent choisi), donc on lit le flux à la main — et on y gagne la seule chose
+ * parent choisi), donc on lit le flux à la main et on y gagne la seule chose
  * qui manquait vraiment : un `AbortSignal` pour arrêter le suivi.
  *
  * Ce que ce module ne fait pas : il ne décide de rien. Il pousse une mesure
  * déjà **monotone** (la phase ne recule jamais), il rend un résultat, et il
- * distingue trois fins — aboutie, interrompue par l'utilisateur, interrompue
+ * distingue trois fins aboutie, interrompue par l'utilisateur, interrompue
  * par la liaison. Les phrases qui les racontent vivent dans l'i18n de l'écran.
  *
  * Le silence du serveur est borné : sans événement pendant
  * `DEFAULT_IDLE_TIMEOUT_MS`, le suivi s'arrête au lieu de tourner sans fin.
- * C'est la promesse que l'écran doit tenir — voir le `done` manquant, un flux
+ * C'est la promesse que l'écran doit tenir voir le `done` manquant, un flux
  * coupé et un serveur muet comme trois échecs distincts, jamais comme une barre
  * qui tourne.
  */
@@ -39,11 +39,11 @@ export interface CloneStreamRequest {
   readonly folder: string;
   readonly install: boolean;
   readonly ignoreScripts: boolean;
-  /** Le dossier parent absolu choisi dans l'explorateur — ignoré en hébergé. */
+  /** Le dossier parent absolu choisi dans l'explorateur ignoré en hébergé. */
   readonly parent?: string;
 }
 
-/** Pourquoi le suivi s'est arrêté — la phrase est choisie par l'écran. */
+/** Pourquoi le suivi s'est arrêté la phrase est choisie par l'écran. */
 export type CloneStreamFailure =
   | { readonly reason: 'timeout'; readonly seconds: number }
   | { readonly reason: 'network' }
@@ -63,7 +63,7 @@ export type CloneStreamOutcome =
 export type CloneFetch = (url: string, init: RequestInit) => Promise<Response>;
 
 export interface CloneStreamOptions {
-  /** L'annulation demandée par l'utilisateur — le bouton « Annuler ». */
+  /** L'annulation demandée par l'utilisateur le bouton « Annuler ». */
   readonly signal?: AbortSignal;
   /** Chaque mesure retenue, déjà fusionnée avec la précédente. */
   readonly onProgress?: (progress: CloneProgress) => void;
@@ -124,7 +124,7 @@ function dataOf(block: string): string | undefined {
 
 /**
  * Un bloc devient un événement connu, rien du tout (événement d'un autre type),
- * ou `'malformed'` — la réponse n'est pas celle qu'on attendait.
+ * ou `'malformed'` la réponse n'est pas celle qu'on attendait.
  *
  * Rien n'est cru sur parole : ce qui vient du réseau est revalidé champ par
  * champ, y compris la phase et le pourcentage.
@@ -166,7 +166,7 @@ export function parseCloneEvent(block: string): CloneStreamEvent | 'malformed' |
   if (type === 'done') {
     const directory = input['directory'];
     // L'essentiel du résultat : a-t-il réussi, et où. Le reste tolère
-    // l'absence — un clone abouti ne doit pas passer pour illisible parce
+    // l'absence un clone abouti ne doit pas passer pour illisible parce
     // qu'un champ facultatif manque.
     if (typeof input['ok'] !== 'boolean' || typeof directory !== 'string') {
       return 'malformed';
@@ -209,7 +209,7 @@ function phaseProgress(phase: ClonePhase): CloneProgress {
  * Lance le clone et suit son avancement jusqu'au bout.
  *
  * Rend toujours un résultat : `done` (abouti ou refusé par le moteur),
- * `cancelled` (l'utilisateur a arrêté le **suivi** — le clone, lui, peut
+ * `cancelled` (l'utilisateur a arrêté le **suivi** le clone, lui, peut
  * continuer côté serveur), ou `failed` avec sa raison.
  */
 export async function streamClone(

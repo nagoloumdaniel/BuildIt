@@ -28,7 +28,7 @@ const useBrowserLayoutEffect = typeof window === 'undefined' ? useEffect : useLa
  * Le premier rendu se fait **sans stockage** : le serveur ne connaît pas
  * `localStorage`, et le rendu client d'hydratation doit lui ressembler, sinon
  * React signale une divergence. Le stockage est branché dans un effet, une
- * fois l'hydratation terminée — et c'est là seulement que le brouillon repris
+ * fois l'hydratation terminée et c'est là seulement que le brouillon repris
  * réapparaît.
  *
  * Ce branchement est un effet **de mise en page** : React exécute tous les
@@ -60,8 +60,8 @@ export function useSession(): SessionStore {
 export function useDraft(): DraftState {
   const store = useSession();
   // Le troisième argument est le snapshot **serveur** : React l'emploie pendant
-  // l'hydratation. Passer `store.get` — l'état courant, déjà enrichi par
-  // `attach` — faisait rendre au client une sélection absente du HTML, et React
+  // l'hydratation. Passer `store.get` l'état courant, déjà enrichi par
+  // `attach` faisait rendre au client une sélection absente du HTML, et React
   // signalait une divergence d'hydratation.
   return useSyncExternalStore(store.subscribe, store.get, store.getServer);
 }

@@ -6,9 +6,9 @@ import { join } from 'node:path';
  *
  * `spawn('pnpm', …)` et `execFileSync('pnpm', …)` échouent en `ENOENT` sous
  * Windows : `pnpm` y est un `pnpm.cmd`, et Node refuse de lancer un `.cmd` sans
- * shell (CVE-2024-27980). Le produit a déjà la réponse — `resolveCommand` de
+ * shell (CVE-2024-27980). Le produit a déjà la réponse `resolveCommand` de
  * `packages/exec` remplace le `.cmd` par son script JavaScript lancé avec Node,
- * sans jamais ouvrir de shell — mais elle est asynchrone, alors que le test de
+ * sans jamais ouvrir de shell mais elle est asynchrone, alors que le test de
  * fumée lance ses commandes en synchrone.
  *
  * On reproduit donc ici la **même** résolution, en synchrone, et

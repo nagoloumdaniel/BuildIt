@@ -6,7 +6,7 @@ import { z } from 'zod';
  * « Fermée par nature » veut dire qu'ajouter une valeur est une décision de
  * produit, pas une entrée de catalogue. Les plateformes cibles et les formes
  * d'architecture changent à l'échelle d'une version majeure ; les technologies
- * changent toutes les semaines — c'est pourquoi elles vivent dans le registry
+ * changent toutes les semaines c'est pourquoi elles vivent dans le registry
  * et non ici.
  */
 

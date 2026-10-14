@@ -36,7 +36,7 @@ export interface NormalizedIssue {
   readonly value: unknown;
   /** Code déclaré via `params.pfCode` sur une vérification personnalisée. */
   readonly declaredCode?: string;
-  /** Valeurs acceptées, pour une énumération — matière première de l'indice. */
+  /** Valeurs acceptées, pour une énumération matière première de l'indice. */
   readonly acceptedValues?: string[];
   /** Type attendu, pour un `type-mismatch`. */
   readonly expectedType?: string;

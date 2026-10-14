@@ -6,7 +6,7 @@ import { toast } from '../../lib/toasts';
 import { Icon } from './icon';
 
 /**
- * Copier une valeur — commande, chemin, lien.
+ * Copier une valeur commande, chemin, lien.
  *
  * Une commande affichée est une commande qu'on va taper : la sélectionner à la
  * souris dans un `<code>` qui se coupe sur n'importe quel caractère est le
@@ -17,7 +17,7 @@ import { Icon } from './icon';
  * - le retour est un **échange d'icône** à taille constante (copier → coché) :
  *   rien ne bouge, ni le bouton ni la ligne qui le porte ;
  * - l'échec est dit (le presse-papiers est refusé hors contexte sécurisé, ou
- *   par la politique du navigateur) plutôt qu'avalé — un bouton qui ne fait
+ *   par la politique du navigateur) plutôt qu'avalé un bouton qui ne fait
  *   rien sans le dire est pire que pas de bouton ;
  * - le minuteur est annulé au démontage : un `setState` après coup fait
  *   japper React et ne sert personne.
@@ -77,7 +77,7 @@ export function CopyButton({ value, what, className }: CopyButtonProps): ReactEl
 }
 
 export interface CommandLineProps {
-  /** La valeur, telle qu'elle sera copiée — jamais traduite (§6). */
+  /** La valeur, telle qu'elle sera copiée jamais traduite (§6). */
   readonly value: string;
   readonly what?: string;
   readonly className?: string;
@@ -124,7 +124,7 @@ export interface CommandStepsProps {
  *
  * C'est une **liste ordonnée** parce que l'ordre compte (on installe avant de
  * lancer), et les numéros sont en chasse fixe dans la gouttière : ils sont des
- * repères de séquence, pas de la décoration — et ils laissent les commandes
+ * repères de séquence, pas de la décoration et ils laissent les commandes
  * alignées sur une seule colonne.
  */
 export function CommandSteps({ steps, what, className }: CommandStepsProps): ReactElement {

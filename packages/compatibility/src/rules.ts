@@ -38,7 +38,7 @@ function warning(
  * Deux technologies d'une catégorie **exclusive** ne peuvent pas coexister.
  *
  * C'est la « détection des doublons » du §12 : deux solutions qui remplissent
- * la même capacité. L'arité de la catégorie décide — voir `arity.ts`.
+ * la même capacité. L'arité de la catégorie décide voir `arity.ts`.
  */
 export function checkExclusiveCategories(entries: readonly RegistryEntry[]): CompatibilityIssue[] {
   const issues: CompatibilityIssue[] = [];
@@ -232,7 +232,7 @@ function describeEcosystems(values: readonly Ecosystem[]): string {
  * exécution) doivent partager au moins un écosystème.
  *
  * C'est la règle qui manquait : sans elle, Vuetify passait dans un projet
- * Next.js et Prisma derrière un backend Django — deux projets générés qui
+ * Next.js et Prisma derrière un backend Django deux projets générés qui
  * n'auraient jamais démarré. Elle remplace aussi la règle grossière « une
  * fiche par catégorie », qui refusait TypeScript au front et Python à l'API.
  *

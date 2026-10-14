@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { CATEGORIES, entrySchema, GENERATION_STATUSES, LIFECYCLE_STATUSES } from './entry.js';
 
-/** Fiche minimale valide — base de tous les tests de rejet. */
+/** Fiche minimale valide base de tous les tests de rejet. */
 const VALID = {
   id: 'better-auth',
   name: 'Better Auth',
@@ -117,7 +117,7 @@ describe('lien entre generation et template', () => {
     expect(accepts({ generation: 'certified', template: 'auth/better-auth' })).toBe(true);
   });
 
-  it('refuse une fiche déclarée avec template — elle ment dans l’autre sens', () => {
+  it('refuse une fiche déclarée avec template elle ment dans l’autre sens', () => {
     expect(accepts({ generation: 'declared', template: 'auth/better-auth' })).toBe(false);
   });
 });
@@ -136,7 +136,7 @@ describe('date de revue', () => {
   });
 });
 
-describe('variables d’environnement — §24', () => {
+describe('variables d’environnement §24', () => {
   it('accepte des noms de variables', () => {
     expect(accepts({ env: ['DATABASE_URL', 'BETTER_AUTH_SECRET'] })).toBe(true);
   });
@@ -146,7 +146,7 @@ describe('variables d’environnement — §24', () => {
     ['des minuscules', 'database_url'],
     ['un tiret', 'DATABASE-URL'],
     ['un espace', 'DATABASE URL'],
-  ])('refuse %s — aucune valeur ne doit pouvoir entrer', (_label, value) => {
+  ])('refuse %s aucune valeur ne doit pouvoir entrer', (_label, value) => {
     expect(accepts({ env: [value] })).toBe(false);
   });
 });
@@ -159,7 +159,7 @@ describe('licence', () => {
     },
   );
 
-  it('refuse une licence inconnue — une licence mal orthographiée est une alerte juridique manquée', () => {
+  it('refuse une licence inconnue une licence mal orthographiée est une alerte juridique manquée', () => {
     expect(accepts({ license: 'MIT-ish' })).toBe(false);
   });
 });

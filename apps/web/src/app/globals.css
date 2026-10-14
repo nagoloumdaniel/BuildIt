@@ -9,7 +9,7 @@
 @import "../styles/clone.css";
 
 /*
- * Direction artistique — « Forge ».
+ * Direction artistique « Forge ».
  *
  * Le produit compose des projets : il chauffe une matière (le brouillon) et en
  * sort une pièce finie (le dépôt). D'où les deux couleurs, et une seule
@@ -20,8 +20,8 @@
  *   donnée mesurée.
  *
  * Deux familles, deux rôles, jamais interchangés :
- * - **Inter** porte la prose — titres, phrases, libellés de bouton ;
- * - **JetBrains Mono** porte la *donnée* — chemins, identifiants techniques,
+ * - **Inter** porte la prose titres, phrases, libellés de bouton ;
+ * - **JetBrains Mono** porte la *donnée* chemins, identifiants techniques,
  *   compteurs d'étape, tailles, pourcentages, codes. Le lecteur apprend en une
  *   page que ce qui est en chasse fixe est une valeur, pas un commentaire.
  *
@@ -55,7 +55,7 @@
   --pf-accent-hover: #a93f0a;
   /* L'orange sur son propre fond clair (`--pf-accent-soft`) tombe à 4,48:1 :
      trop juste pour du texte de 11 px. Cette variante porte donc **le texte
-     posé sur un fond teinté** (bulle active, badge, étape franchie) — 5,02:1.
+     posé sur un fond teinté** (bulle active, badge, étape franchie) 5,02:1.
      L'orange de marque reste celui des aplats et des bordures. */
   --pf-accent-strong: #b6430a;
   --pf-accent-text: #ffffff;
@@ -95,7 +95,7 @@
   --pf-fast: 120ms var(--pf-ease);
 
   /* Le fichier du logo pour le thème clair. Le sombre le remplace plus bas,
-     dans le même bloc `[data-theme="dark"]` — une seule requête, celle du
+     dans le même bloc `[data-theme="dark"]` une seule requête, celle du
      thème affiché. */
   --pf-logo-image: url("/brand/logo-on-light.webp");
 
@@ -127,7 +127,7 @@
   --pf-surface-2: #1c2023;
   --pf-surface-3: #23282c;
   --pf-border: #282d31;
-  /* 3,23:1 sur `--pf-surface` — même raison qu'en clair. */
+  /* 3,23:1 sur `--pf-surface` même raison qu'en clair. */
   --pf-border-strong: #606870;
   --pf-text: #eceef0;
   --pf-muted: #9aa2aa;
@@ -282,7 +282,7 @@
   /* Les cases à cocher et les boutons radio portent la couleur d'action. Sans
      cette règle, le navigateur les peint en bleu : la seule couleur de la page
      qui ne vienne pas de la direction artistique. La cible monte aussi à 17 px
-     (24 px avec la marge de l'étiquette) — le minimum de WCAG 2.5.8. */
+     (24 px avec la marge de l'étiquette) le minimum de WCAG 2.5.8. */
   input[type="checkbox"],
   input[type="radio"] {
     accent-color: var(--pf-accent);
@@ -625,7 +625,7 @@
   }
 
   /* L'identité n'est pas un bouton : elle respire plus large que les pilules,
-     et son fond ne bouge pas au survol — seul le texte se réchauffe. */
+     et son fond ne bouge pas au survol seul le texte se réchauffe. */
   .pf-pod-identity {
     gap: 0.5rem;
     padding: 0.25rem 0.85rem;
@@ -698,7 +698,7 @@
   }
 
   /* L'onglet courant : le fond, le contour et la graisse changent ensemble.
-     Trois signaux, dont deux sans couleur — il n'y a donc pas de pastille à
+     Trois signaux, dont deux sans couleur il n'y a donc pas de pastille à
      côté du libellé, qui ajoutait un point à lire sans rien dire de plus. */
   .pf-bubble[aria-current="page"],
   .pf-bubble[aria-selected="true"] {
@@ -738,8 +738,8 @@
   /* --- En-tête flottante ----------------------------------------------- */
 
   /* Aucun fond, aucune frontière : les bulles sont le seul dessin de l'en-tête.
-     Elle reste collante — sur un parcours de douze écrans, revenir à l'accueil
-     ne doit pas demander de remonter — et laisse le contenu passer **entre**
+     Elle reste collante sur un parcours de douze écrans, revenir à l'accueil
+     ne doit pas demander de remonter et laisse le contenu passer **entre**
      les bulles plutôt que sous un bandeau. */
   .pf-topbar {
     pointer-events: none;
@@ -817,7 +817,7 @@
   }
 
   /* Un champ qui a le focus garde un **anneau** : le liseré chaud et son halo
-     disent où l'on est, et l'anneau du navigateur reste par-dessus — c'est lui
+     disent où l'on est, et l'anneau du navigateur reste par-dessus c'est lui
      que lit un contrôle d'accessibilité, et lui qui survit à une feuille de
      style partielle. Le supprimer faisait échouer le parcours clavier sur sept
      champs, à juste titre. */
@@ -841,7 +841,7 @@
     margin-bottom: 0.35rem;
   }
 
-  /* Une case à cocher qui se voit, et dont la cible fait 24 px — la règle vit
+  /* Une case à cocher qui se voit, et dont la cible fait 24 px la règle vit
      dans la couche `base` (`input[type="checkbox"]`), pas derrière une classe :
      les cases du produit sont des `<input>` nus, et une classe oubliée sur
      l'une d'elles se voit tout de suite (accent bleu du navigateur). */
@@ -1122,7 +1122,7 @@
   }
 
   /* Le vide est centré : l'icône, le titre, la phrase et les gestes sur un
-     même axe. La règle vit ici plutôt que sur un utilitaire — c'est une
+     même axe. La règle vit ici plutôt que sur un utilitaire c'est une
      structure du composant, et elle ne dépend d'aucun analyseur de classes. */
   .pf-empty-state {
     text-align: center;
@@ -1191,7 +1191,7 @@
 
   /* Le filet de tête : l'orange qui se refroidit en acier. C'est la seule
      décoration de la page, et elle dit exactement la même chose que la
-     palette — l'action d'un côté, la donnée de l'autre. */
+     palette l'action d'un côté, la donnée de l'autre. */
   .pf-page-head {
     padding-bottom: 0.9rem;
     position: relative;
@@ -1792,7 +1792,7 @@
 
   /* Mis en valeur sans disputer « Continuer » : contour et texte accentués,
      fond teinté au survol. Le chevron dit le sens ; il pivote, il ne glisse
-     pas — rien ne se déplace sous le curseur. */
+     pas rien ne se déplace sous le curseur. */
   .pf-disclosure {
     border-color: var(--pf-accent-line);
     color: var(--pf-accent-strong);
@@ -1816,7 +1816,7 @@
 
   /* Le logo est une image de fond, pas un `<img>` : le navigateur ne
      télécharge que le fichier du thème affiché, et le changement de thème
-     échange l'image par la même règle CSS qui échange les couleurs — aucune
+     échange l'image par la même règle CSS qui échange les couleurs aucune
      bascule après hydratation, donc aucun clignotement. Les fichiers sont des
      WebP préparés une fois (`scripts/build-brand-webp.py`), 18 ko au lieu de
      170 ko de PNG. */

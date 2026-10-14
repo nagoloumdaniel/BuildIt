@@ -298,7 +298,7 @@ const missing = [];
 
 for (const id of unique) {
   const slug = ALIASES[id] ?? id.replace(/[^a-z0-9]/g, '');
-  // biome-ignore lint/performance/noDynamicNamespaceImportAccess: l'index est **le** sujet du script — le catalogue donne un identifiant, `simple-icons` exporte des centaines de symboles. Des imports nommés seraient une liste de 283 lignes à tenir à la main, exactement ce que ce fichier évite.
+  // biome-ignore lint/performance/noDynamicNamespaceImportAccess: l'index est **le** sujet du script le catalogue donne un identifiant, `simple-icons` exporte des centaines de symboles. Des imports nommés seraient une liste de 283 lignes à tenir à la main, exactement ce que ce fichier évite.
   const icon = simpleIcons[exportName(slug)];
   if (icon === undefined) {
     missing.push(id);
@@ -317,7 +317,7 @@ const symbols = [...found.entries()].map(
 // thème décider de la couleur. 196 marques y tiennent pour le prix d'une
 // requête, contre ~300 ko de JavaScript si on les embarquait.
 //
-// `aria-hidden` sur la racine : le fichier n'est jamais affiché tel quel — il
+// `aria-hidden` sur la racine : le fichier n'est jamais affiché tel quel il
 // est consommé par `<use>`, et chaque `TechIcon` porte son propre nom
 // accessible. Sans cet attribut, la règle d'accessibilité de Biome exige un
 // `<title>` sur un SVG qui n'est pourtant jamais rendu.
@@ -328,7 +328,7 @@ writeFileSync(
 );
 
 const lines = [
-  '// Fichier engendré par scripts/build-tech-icons.mjs — ne pas modifier à la main.',
+  '// Fichier engendré par scripts/build-tech-icons.mjs ne pas modifier à la main.',
   '// Les tracés vivent dans `public/tech-sprite.svg` (marques `simple-icons`, CC0-1.0).',
   '// Ici ne restent que les identifiants disponibles : quelques kilooctets, pas 300.',
   '// Relancer le script après tout ajout au catalogue des technologies.',

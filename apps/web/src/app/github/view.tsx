@@ -12,14 +12,14 @@ import type { DeviceStartView, PermissionView } from './device';
 import type { GithubStatusView } from './session';
 
 /**
- * La vue de l'écran 21 — GitHub Connection (§6.21, §20bis).
+ * La vue de l'écran 21 GitHub Connection (§6.21, §20bis).
  *
  * Pure : elle reçoit son état et ses gestes. Un `page.tsx` Next ne peut
  * exporter que `default` (le type engendré le vérifie), donc la vue vit ici et
  * le branchement des Server Actions vit dans `page.tsx`.
  *
  * Rien de sensible ne la traverse : un identifiant de compte, des permissions,
- * et **où** le jeton est rangé — jamais le jeton. Aucun texte n'est écrit ici :
+ * et **où** le jeton est rangé jamais le jeton. Aucun texte n'est écrit ici :
  * tout passe par `useMessages()`, et les seules valeurs brutes affichées telles
  * quelles sont celles du moteur (les refus) et les identifiants techniques
  * (permissions, code, URL).

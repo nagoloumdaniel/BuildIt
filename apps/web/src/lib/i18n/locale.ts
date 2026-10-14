@@ -13,7 +13,7 @@ export type Locale = (typeof LOCALES)[number];
 
 export const DEFAULT_LOCALE: Locale = 'fr';
 
-/** La clé de stockage — la même que celle du script anti-clignotement. */
+/** La clé de stockage la même que celle du script anti-clignotement. */
 export const LOCALE_STORAGE_KEY = 'pf-locale';
 
 export function isLocale(value: unknown): value is Locale {
@@ -81,7 +81,7 @@ export const LOCALE_LABELS: Readonly<Record<Locale, string>> = {
   en: 'English',
 };
 
-/** L'étiquette courte du sélecteur — deux lettres, en chasse fixe. */
+/** L'étiquette courte du sélecteur deux lettres, en chasse fixe. */
 export const LOCALE_SHORT: Readonly<Record<Locale, string>> = {
   fr: 'FR',
   en: 'EN',

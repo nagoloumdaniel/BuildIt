@@ -1,7 +1,7 @@
 import { type ReactElement, type ReactNode, useId } from 'react';
 
 /**
- * Les états de chargement — **aucun squelette**.
+ * Les états de chargement **aucun squelette**.
  *
  * Un squelette promet une forme avant de la connaître : il fait sauter la
  * page quand la vraie donnée arrive plus haute ou plus courte, et il ment
@@ -52,7 +52,7 @@ export function Dots({ className }: { className?: string }): ReactElement {
 }
 
 export interface ProgressBarProps {
-  /** De 0 à 100. Absent : barre indéterminée — on ne connaît pas l'avancement. */
+  /** De 0 à 100. Absent : barre indéterminée on ne connaît pas l'avancement. */
   readonly value?: number | undefined;
   readonly labelledBy?: string;
   readonly label?: string;
@@ -123,8 +123,8 @@ export interface ProgressPanelProps {
 /**
  * Le bloc d'avancement d'une opération longue : titre, pas, barre, mesure.
  *
- * Le pourcentage et la mesure sont en chasse fixe — ce sont des valeurs. Le
- * titre et le pas sont en Inter — ce sont des phrases.
+ * Le pourcentage et la mesure sont en chasse fixe ce sont des valeurs. Le
+ * titre et le pas sont en Inter ce sont des phrases.
  */
 export function ProgressPanel({
   title,

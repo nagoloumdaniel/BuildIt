@@ -61,7 +61,7 @@ function renderCard(overrides: Partial<PickHandoff> = {}): string {
   return renderToStaticMarkup(createElement(LocalOpenCard, { handoff: handoff(overrides) }));
 }
 
-describe('Dashboard — le menu des chemins', () => {
+describe('Dashboard le menu des chemins', () => {
   it('propose les trois chemins, dont l’ouverture locale', () => {
     const html = render(freshDraft(), { openLocal: handoff() });
 
@@ -83,7 +83,7 @@ describe('Dashboard — le menu des chemins', () => {
   });
 });
 
-describe('Dashboard — les projets générés (§6.14)', () => {
+describe('Dashboard les projets générés (§6.14)', () => {
   it('montre les deux plus récents, et le lien vers tous les projets', () => {
     const html = render(freshDraft(), { projects: [RECENT, OLDER, THIRD] });
 
@@ -109,7 +109,7 @@ describe('Dashboard — les projets générés (§6.14)', () => {
   });
 });
 
-describe('Dashboard — un projet généré n’est jamais un brouillon', () => {
+describe('Dashboard un projet généré n’est jamais un brouillon', () => {
   it('ne propose ni Reprendre ni Repartir de zéro à l’écran rapport', () => {
     const draft: DraftState = { ...freshDraft(), name: 'mon-projet', step: 'report' };
     const html = render(draft, { report: SUCCESS });
@@ -186,7 +186,7 @@ describe('Dashboard — un projet généré n’est jamais un brouillon', () => 
   });
 });
 
-describe('LocalOpenCard — la carte est le bouton', () => {
+describe('LocalOpenCard la carte est le bouton', () => {
   it('ouvre l’explorateur sans bouton ni lien à viser dans la carte', () => {
     const html = renderCard();
 

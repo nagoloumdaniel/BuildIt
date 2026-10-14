@@ -28,7 +28,7 @@ export const projectNameSchema: z.ZodString = z
  */
 /**
  * Nom d'une variable d'environnement ajoutée à la main (`env` du manifest) :
- * majuscules, chiffres et soulignés, une lettre en tête. Jamais de `=` — donc
+ * majuscules, chiffres et soulignés, une lettre en tête. Jamais de `=` donc
  * jamais de valeur : le manifest ne porte que des noms.
  */
 export const ENV_NAME_PATTERN: RegExp = /^[A-Z][A-Z0-9_]*$/;
@@ -43,7 +43,7 @@ export const techSlugSchema: z.ZodString = z.string().regex(TECH_SLUG_PATTERN);
  * Tableau sans doublon.
  *
  * Un doublon est signalé, jamais dédupliqué en silence : il révèle presque
- * toujours une erreur en amont — un manifest édité à la main, ou une façade
+ * toujours une erreur en amont un manifest édité à la main, ou une façade
  * qui ajoute deux fois la même capacité. Le corriger discrètement masquerait
  * le vrai problème.
  *

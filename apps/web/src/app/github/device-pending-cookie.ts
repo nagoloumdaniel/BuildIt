@@ -5,7 +5,7 @@ import type { DevicePendingStore } from './device';
 /**
  * Le magasin hébergé du device flow (Phase 12 bis) : le code en attente vit
  * dans un cookie scellé, pas dans la mémoire du processus qui a répondu à
- * `startDevice` — rien ne garantit que `waitDevice` retombe sur la même
+ * `startDevice` rien ne garantit que `waitDevice` retombe sur la même
  * instance serverless (c'est le bug corrigé ici : la connexion GitHub
  * échouait en hébergé, « Aucune connexion en cours », alors que le code
  * venait d'être saisi).
@@ -15,7 +15,7 @@ import type { DevicePendingStore } from './device';
  * en transit, et sa durée de vie est celle du flux (quelques minutes), pas de
  * la session.
  *
- * `id` n'est pas utilisé comme clé — un seul visiteur ne mène qu'une seule
+ * `id` n'est pas utilisé comme clé un seul visiteur ne mène qu'une seule
  * connexion à la fois, un seul cookie suffit. Il est tout de même comparé : un
  * identifiant différent de celui scellé (onglet concurrent, rechargement sur
  * un ancien lien) est traité comme une absence, jamais comme une connexion

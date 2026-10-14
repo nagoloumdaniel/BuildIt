@@ -6,16 +6,16 @@ import { cookies } from 'next/headers';
  * Le jeton GitHub par visiteur, en mode hébergé (Phase 12).
  *
  * Le trousseau du système (`packages/github/src/token-store.ts`) suppose un
- * seul visiteur par machine — vrai en local (décision 8B.6), faux dès que
+ * seul visiteur par machine vrai en local (décision 8B.6), faux dès que
  * deux personnes ouvrent le même déploiement public : elles partageraient
  * sinon le même compte GitHub via les Server Actions. La correction retenue
  * ici est un cookie **scellé** (chiffré et authentifié, jamais en clair),
- * httpOnly et secure, posé par le serveur et relu à chaque requête — un jeton
+ * httpOnly et secure, posé par le serveur et relu à chaque requête un jeton
  * par session de navigateur, jamais une variable serveur globale.
  *
  * Chiffrement : AES-256-GCM avec `node:crypto`, sans dépendance ajoutée (le
  * monorepo n'a ni `jose` ni `iron-session` ; en ajouter une pour un scellé de
- * 30 lignes serait disproportionné — cf. consigne de la tâche). La clé est
+ * 30 lignes serait disproportionné cf. consigne de la tâche). La clé est
  * dérivée de `SESSION_SECRET` par SHA-256 (qui produit exactement les 32
  * octets qu'AES-256 exige, quelle que soit la longueur du secret fourni).
  */
@@ -47,7 +47,7 @@ function sealRaw(plaintext: string, secret: string): string {
 
 /**
  * Descelle un cookie. Rend `undefined` pour toute entrée qui n'est pas un
- * scellé valide pour ce secret — forme invalide, authentification GCM
+ * scellé valide pour ce secret forme invalide, authentification GCM
  * échouée (valeur altérée ou secret différent). Jamais d'exception : un
  * cookie de visiteur est une entrée non fiable comme une autre.
  */
@@ -75,7 +75,7 @@ export function sealToken(token: string, secret: string): string {
 }
 
 /**
- * Descelle un cookie de jeton. `undefined` pour toute entrée invalide — forme,
+ * Descelle un cookie de jeton. `undefined` pour toute entrée invalide forme,
  * authentification GCM, ou jeton qui, une fois déchiffré, n'a pas la forme
  * d'un jeton GitHub.
  */
@@ -85,7 +85,7 @@ export function unsealToken(sealed: string, secret: string): string | undefined 
 }
 
 /**
- * Scelle une valeur JSON quelconque — le même coffre que `sealToken`, pour un
+ * Scelle une valeur JSON quelconque le même coffre que `sealToken`, pour un
  * état qui n'est pas un jeton (ex. le `device_code` en attente, Phase 12 bis).
  */
 export function sealJson<T>(value: T, secret: string): string {
@@ -93,7 +93,7 @@ export function sealJson<T>(value: T, secret: string): string {
 }
 
 /**
- * Descelle une valeur JSON. `undefined` pour toute entrée invalide — forme,
+ * Descelle une valeur JSON. `undefined` pour toute entrée invalide forme,
  * authentification GCM, ou contenu qui n'est pas du JSON valide. Le typage de
  * `T` n'est pas revérifié au-delà de « c'est du JSON » : l'appelant reste
  * responsable de la forme attendue, comme pour tout JSON lu d'une source non
@@ -111,14 +111,14 @@ export function unsealJson<T>(sealed: string, secret: string): T | undefined {
   }
 }
 
-/** La forme minimale d'un magasin de cookies dont ce module a besoin — celle de `next/headers`. */
+/** La forme minimale d'un magasin de cookies dont ce module a besoin celle de `next/headers`. */
 export interface CookieJar {
   get(name: string): { readonly value: string } | undefined;
   set(name: string, value: string, options?: Record<string, unknown>): void;
   delete(name: string): void;
 }
 
-/** Le magasin de cookies réel de la requête en cours — importé où ce module a besoin d'un défaut. */
+/** Le magasin de cookies réel de la requête en cours importé où ce module a besoin d'un défaut. */
 export function defaultCookieJar(): CookieJar {
   // `cookies()` n'est valide que dans une portée de requête (Server Action,
   // Route Handler, composant serveur) : importé ici, appelé seulement au
@@ -133,7 +133,7 @@ const MISSING_SECRET: GitHubIssue = githubIssue(
 );
 
 /**
- * Le jeton d'un visiteur, scellé dans un cookie — l'équivalent du trousseau
+ * Le jeton d'un visiteur, scellé dans un cookie l'équivalent du trousseau
  * du système pour le mode hébergé.
  *
  * Sans `SESSION_SECRET`, ce magasin refuse systématiquement d'enregistrer :

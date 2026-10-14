@@ -89,7 +89,7 @@ describe('docker-compose.yml', () => {
 /**
  * §24 : un fichier généré ne porte aucune valeur sensible. Les identifiants de
  * `docker-compose.yml` sont des valeurs de bac à sable pour un conteneur
- * éphémère local — ce que le fichier doit dire explicitement, pour que personne
+ * éphémère local ce que le fichier doit dire explicitement, pour que personne
  * ne les prenne pour des secrets à protéger ni ne les réutilise en production.
  */
 describe('docker-compose et les identifiants', () => {
@@ -179,7 +179,7 @@ describe('buildInfrastructure ne lève jamais', () => {
  */
 describe('défauts corrigés après lecture de la sortie', () => {
   it('monte chaque volume au chemin réel de la technologie', () => {
-    // Un chemin dérivé du nom du service — /var/lib/postgres — monterait le
+    // Un chemin dérivé du nom du service /var/lib/postgres monterait le
     // volume à côté des données, que PostgreSQL écrit dans
     // /var/lib/postgresql/data. Rien ne serait persisté, sans erreur visible.
     const compose = fileNamed(buildInfrastructure([POSTGRES], {}), 'docker-compose.yml');
@@ -218,7 +218,7 @@ describe('défauts corrigés après lecture de la sortie', () => {
   });
 });
 
-describe('Dockerfile — 5B.6', () => {
+describe('Dockerfile 5B.6', () => {
   const DOCKER = entry({ id: 'docker', category: 'containers' });
   const APP = { build: 'next build', start: 'next start' };
 
@@ -283,7 +283,7 @@ describe('Dockerfile — 5B.6', () => {
   });
 });
 
-describe('Dev Container — 5B.6', () => {
+describe('Dev Container 5B.6', () => {
   const DEV_CONTAINER = entry({ id: 'dev-container', category: 'dev-environment' });
 
   it('est généré quand il est choisi, au nom du projet', () => {
@@ -313,7 +313,7 @@ describe('Dev Container — 5B.6', () => {
   });
 });
 
-describe('Dockerfile et scripts d’installation — 6.7a', () => {
+describe('Dockerfile et scripts d’installation 6.7a', () => {
   const DOCKER = entry({ id: 'docker', category: 'containers' });
 
   it('télécharge les paquets sans le code, installe une fois le code copié', () => {
@@ -331,14 +331,14 @@ describe('Dockerfile et scripts d’installation — 6.7a', () => {
   });
 });
 
-describe('docker-compose.yml — URL de connexion locale', () => {
+describe('docker-compose.yml URL de connexion locale', () => {
   it('donne l’URL qui correspond au service, en commentaire', () => {
     const compose = fileNamed(buildInfrastructure([POSTGRES], {}), 'docker-compose.yml');
     expect(compose).toContain('# DATABASE_URL=postgresql://postgres:postgres@localhost:5432/app');
   });
 });
 
-describe('Dockerfile — port du conteneur', () => {
+describe('Dockerfile port du conteneur', () => {
   it('fixe PORT=3000 : l’application écoute là où EXPOSE le dit, quel que soit son défaut', () => {
     const dockerfile = fileNamed(
       buildInfrastructure(

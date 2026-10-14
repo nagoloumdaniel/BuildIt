@@ -88,7 +88,7 @@ export async function pickWritableFolder(): Promise<PickOutcome> {
  *
  * Les chemins viennent du serveur, mais ils traversent le réseau : un `..`, un
  * chemin absolu ou un segment vide n'a rien à faire dans un projet généré, et
- * l'API refuserait de toute façon de sortir du dossier — on le refuse avant.
+ * l'API refuserait de toute façon de sortir du dossier on le refuse avant.
  */
 export function safeSegments(path: string): readonly string[] | undefined {
   const segments = path.split('/');

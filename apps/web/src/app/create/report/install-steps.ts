@@ -3,7 +3,7 @@ import type { Messages } from '../../../lib/i18n/messages';
 /**
  * Les commandes d'installation du projet généré (§6.14).
  *
- * Dérivées du brouillon seul — jamais une liste de technologies recopiée
+ * Dérivées du brouillon seul jamais une liste de technologies recopiée
  * (§11) : ce que ce module sait, c'est que tous les presets de ce dépôt
  * utilisent pnpm (`PROJECT_CONTEXT.md`), et que les deux seuls réglages
  * d'infrastructure du brouillon (`infra.docker`, `envVarNames`) changent la

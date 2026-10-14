@@ -12,7 +12,7 @@ import {
 /**
  * La langue : lecture, écriture, déduction.
  *
- * Ce module est la seule logique du dossier `i18n` — les dictionnaires sont des
+ * Ce module est la seule logique du dossier `i18n` les dictionnaires sont des
  * données et le fournisseur est de la glue React. Il est donc vérifié ici, sans
  * DOM : le stockage est injecté, comme pour le thème (`lib/theme.ts`).
  */

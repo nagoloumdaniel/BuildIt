@@ -1,4 +1,4 @@
-// Fichier engendré par scripts/build-index.mjs — ne pas modifier à la main.
+// Fichier engendré par scripts/build-index.mjs ne pas modifier à la main.
 // Source de vérité : le dossier data/. Relancer le script après toute modification.
 
 /** Fiches brutes, non validées. `loadCatalogue()` les valide. */

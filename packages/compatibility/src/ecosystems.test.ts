@@ -8,7 +8,7 @@ import { optionsFor, resolve, type Selection } from './resolve.js';
  * Ces tests ne décrivent pas des fiches inventées : ils rejouent, sur les 283
  * fiches livrées, les combinaisons que l'audit a corrigées dans les deux sens.
  * Si quelqu'un retire un écosystème d'une fiche ou remet une catégorie en
- * « un seul choix », c'est ici que ça casse — avec le nom de la paire.
+ * « un seul choix », c'est ici que ça casse avec le nom de la paire.
  */
 
 const catalogue = loadCatalogue();

@@ -1,4 +1,4 @@
-# DORMANT — la CI GitHub n'est pas disponible pour ce dépôt. L'intégration
+# DORMANT la CI GitHub n'est pas disponible pour ce dépôt. L'intégration
 # continue est locale : le hook pre-push de lefthook (ci:local, et le test de
 # fumée quand le push touche generator, registry ou recipes).
 #

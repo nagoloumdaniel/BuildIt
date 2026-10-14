@@ -84,7 +84,7 @@ describe('selectionFromManifest', () => {
   });
 });
 
-describe('planProject — le dry-run', () => {
+describe('planProject le dry-run', () => {
   it('produit un plan pour le preset SaaS', () => {
     const result = planProject(SAAS, '/cible');
     const problems = result.ok ? [] : result.issues.map((i) => `${i.code} : ${i.message}`);
@@ -133,7 +133,7 @@ describe('planProject — le dry-run', () => {
   });
 });
 
-describe('generateProject — le projet sur le disque', () => {
+describe('generateProject le projet sur le disque', () => {
   it('écrit un projet complet', async () => {
     const target = join(await tempDir(), 'quai3');
     const result = await generateProject(SAAS, target);
@@ -188,7 +188,7 @@ describe('generateProject — le projet sur le disque', () => {
     expect(json.dependencies['next']).toBeDefined();
   });
 
-  it('écrit un .env.example sans aucune valeur — §24', async () => {
+  it('écrit un .env.example sans aucune valeur §24', async () => {
     const target = join(await tempDir(), 'quai3');
     await generateProject(SAAS, target);
 
@@ -202,7 +202,7 @@ describe('generateProject — le projet sur le disque', () => {
     }
   });
 
-  it('écrit un README qui énonce la non-dépendance — §1', async () => {
+  it('écrit un README qui énonce la non-dépendance §1', async () => {
     const target = join(await tempDir(), 'quai3');
     await generateProject(SAAS, target);
 
@@ -262,7 +262,7 @@ describe('generateProject — le projet sur le disque', () => {
   });
 });
 
-describe('le projet généré ne dépend pas de BuildIt — §1', () => {
+describe('le projet généré ne dépend pas de BuildIt §1', () => {
   it('aucun fichier ne référence un paquet @buildit', async () => {
     const target = join(await tempDir(), 'quai3');
     await generateProject(SAAS, target);
@@ -301,11 +301,11 @@ describe('le projet généré ne dépend pas de BuildIt — §1', () => {
 });
 
 /**
- * Jalon 6.7a : chaque technologie du preset SaaS du §8 est certifiée — le
+ * Jalon 6.7a : chaque technologie du preset SaaS du §8 est certifiée le
  * test de fumée la génère, l'installe, la construit, et va jusqu'à une
  * inscription réelle en base. La combinaison n'est plus expérimentale.
  */
-describe('le preset SaaS du §8 est certifié — 6.7a', () => {
+describe('le preset SaaS du §8 est certifié 6.7a', () => {
   it('aucun avertissement de combinaison expérimentale', () => {
     const result = planProject(SAAS, '/cible');
     expect(result.ok).toBe(true);
@@ -333,10 +333,10 @@ describe('les avertissements remontent jusqu’au bout', () => {
     }
   });
 
-  it('toute la stack SaaS est épinglée — aucune version ouverte', () => {
+  it('toute la stack SaaS est épinglée aucune version ouverte', () => {
     // Assertion plus forte que la propagation : elle porte sur les données
     // réelles. Si quelqu'un ajoute un paquet à une fiche du preset sans lui
-    // donner de plage, ce test le dit — et la génération redeviendrait non
+    // donner de plage, ce test le dit et la génération redeviendrait non
     // reproductible sans que personne ne s'en aperçoive.
     const result = planProject(SAAS, '/cible');
     expect(result.ok).toBe(true);
@@ -357,7 +357,7 @@ describe('les avertissements remontent jusqu’au bout', () => {
     }
   });
 
-  it('la génération les rend aussi — l’utilisateur les voit après écriture', async () => {
+  it('la génération les rend aussi l’utilisateur les voit après écriture', async () => {
     const target = join(await tempDir(), 'quai3');
     const result = await generateProject(DECLARED, target);
     expect(result.ok).toBe(true);
@@ -397,7 +397,7 @@ function registryWithoutTestConflict(): Registry {
 
 /**
  * Les chemins d'erreur du pipeline. Ce sont ceux qui s'exécutent quand quelque
- * chose va mal — donc exactement ceux dont le comportement compte le plus.
+ * chose va mal donc exactement ceux dont le comportement compte le plus.
  */
 describe('chemins d’erreur', () => {
   it('remonte un conflit de script avec les mots du socle', () => {
@@ -434,7 +434,7 @@ describe('chemins d’erreur', () => {
  * Post Install, Validation et reprise (5B.2, 5B.3). L'exécuteur est factice :
  * aucun vrai pnpm, aucun vrai git.
  */
-describe('post-install, validation et reprise — §22', () => {
+describe('post-install, validation et reprise §22', () => {
   function fakeRunner(answers: Record<string, CommandResult> = {}): CommandRunner & {
     calls: string[];
   } {
@@ -607,7 +607,7 @@ describe('post-install, validation et reprise — §22', () => {
 /**
  * Template Resolver et Recipe Resolver branchés dans le pipeline (5B.4, 5B.5).
  */
-describe('templates et recettes dans le plan — §22', () => {
+describe('templates et recettes dans le plan §22', () => {
   /**
    * Le catalogue officiel réduit à une seule fiche certifiée : `next`.
    *
@@ -654,7 +654,7 @@ describe('templates et recettes dans le plan — §22', () => {
 
   it('une fiche certifiée apporte les fichiers de son template, rendus', async () => {
     const templates = await templatesRoot({
-      'frontend/next/app/page.tsx': 'export const title = "{{projectName}} — {{year}}";\n',
+      'frontend/next/app/page.tsx': 'export const title = "{{projectName}} {{year}}";\n',
     });
     const result = planProject(SAAS, '/cible', {
       registry: registryWithCertifiedNext(),
@@ -664,7 +664,7 @@ describe('templates et recettes dans le plan — §22', () => {
     expect(paths(result)).toContain('app/page.tsx');
     if (result.ok) {
       const page = result.value.plan.files.find((file) => file.path === 'app/page.tsx');
-      expect(page?.contents).toBe('export const title = "quai3 — 2031";\n');
+      expect(page?.contents).toBe('export const title = "quai3 2031";\n');
       expect(page?.source).toBe('template:frontend/next');
     }
   });
@@ -742,7 +742,7 @@ describe('templates et recettes dans le plan — §22', () => {
 
   it('sans fiche certifiée ni recette, aucun dossier de templates n’est lu', () => {
     // Le preset SaaS contient maintenant des fiches certifiées : sa racine de
-    // templates est lue, et une racine absente le fait échouer — ce qui est le
+    // templates est lue, et une racine absente le fait échouer ce qui est le
     // comportement voulu. Le cas « rien à lire » se teste donc sur un manifest
     // qui ne sélectionne aucune fiche certifiée.
     const nu = { ...SAAS, frontend: undefined, quality: undefined, infra: undefined };
@@ -751,7 +751,7 @@ describe('templates et recettes dans le plan — §22', () => {
   });
 });
 
-describe('le nom du projet est revérifié avant tout rendu — revue sécurité', () => {
+describe('le nom du projet est revérifié avant tout rendu revue sécurité', () => {
   it('un manifest non validé ne peut pas injecter de code par son nom', () => {
     const result = planProject(
       { ...SAAS, name: 'x"; require("child_process").execSync("id"); //' },
@@ -777,7 +777,7 @@ const API: Manifest = {
   infra: ['docker', 'github-actions'],
 };
 
-describe('le preset API du §8 est certifié — 6.7b', () => {
+describe('le preset API du §8 est certifié 6.7b', () => {
   it('aucun avertissement de combinaison expérimentale', () => {
     const result = planProject(API, '/cible');
     expect(result.ok).toBe(true);
@@ -837,7 +837,7 @@ const DASHBOARD: Manifest = {
   infra: ['docker', 'github-actions'],
 };
 
-describe('le preset Dashboard est certifié — 6.7b', () => {
+describe('le preset Dashboard est certifié 6.7b', () => {
   it('combinaison certifiée, recette appliquée', () => {
     const result = planProject(DASHBOARD, '/cible', { recipes: ['dashboard-admin'] });
     expect(result.ok).toBe(true);

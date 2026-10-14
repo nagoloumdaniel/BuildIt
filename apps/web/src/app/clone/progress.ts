@@ -4,13 +4,13 @@
  * `git clone --progress` écrit son avancement sur la sortie d'erreur, par
  * retours chariot (`\r`) plutôt que par lignes : une même ligne est réécrite
  * en place. On la découpe donc sur `\r` **et** `\n`, et on ne garde que la
- * dernière mesure vue — la seule qui soit encore vraie.
+ * dernière mesure vue la seule qui soit encore vraie.
  *
  * Pourquoi un pourcentage composé plutôt que celui de git : git recommence à
  * zéro à chaque phase (comptage, compression, réception, deltas, extraction).
  * Une barre qui va quatre fois de 0 à 100 n'informe pas. Chaque phase reçoit
  * donc une part du total, choisie d'après ce qu'elle coûte réellement sur un
- * dépôt ordinaire — la réception domine, le reste est court.
+ * dépôt ordinaire la réception domine, le reste est court.
  *
  * Les bornes sont assumées : elles rendent la barre **monotone**, ce qui est
  * la seule promesse qu'une barre doit tenir. Elle n'est pas une estimation de
@@ -157,7 +157,7 @@ export function isClonePhase(value: unknown): value is ClonePhase {
 /**
  * La fusion de deux mesures, pour un affichage qui ne recule **jamais**.
  *
- * La mesure la plus avancée gagne — phase d'abord, pourcentage ensuite — et
+ * La mesure la plus avancée gagne phase d'abord, pourcentage ensuite et
  * c'est la mesure retenue qui donne son `detail` : garder la phase la plus
  * avancée avec la mesure brute d'une phase antérieure afficherait deux choses
  * qui ne vont pas ensemble. Une phase de rang inférieur est donc ignorée en

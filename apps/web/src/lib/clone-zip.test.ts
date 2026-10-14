@@ -16,7 +16,7 @@ function names(buffer: Buffer, limits: ZipLimits = LIMITS): readonly string[] {
   return listing.files.map((file) => file.name);
 }
 
-describe('listZip — lecture', () => {
+describe('listZip lecture', () => {
   it('lit les entrées deflate et stockées, à la demande', () => {
     const zip = buildZip([
       { name: 'repo/README.md', data: '# Bonjour\n' },
@@ -63,7 +63,7 @@ describe('listZip — lecture', () => {
   });
 });
 
-describe('listZip — refus', () => {
+describe('listZip refus', () => {
   it('refuse ce qui n’est pas une archive', () => {
     expect(listZip(Buffer.from('court'), LIMITS)).toEqual({
       ok: false,
@@ -129,7 +129,7 @@ describe('listZip — refus', () => {
   });
 });
 
-describe('ZipFile.read — l’entrée tient-elle parole ?', () => {
+describe('ZipFile.read l’entrée tient-elle parole ?', () => {
   function onlyFile(zip: Buffer) {
     const listing = listZip(zip, LIMITS);
     if (!listing.ok || listing.files[0] === undefined) {

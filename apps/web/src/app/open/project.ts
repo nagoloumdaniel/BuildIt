@@ -20,7 +20,7 @@ import { describeIssues } from '../github/session';
  * n'exécuter l'installation **qu'après** confirmation explicite de l'appelant.
  *
  * Règle de chemin (§24) : un chemin venu du navigateur est validé avant tout
- * accès disque — absolu, sans caractère de contrôle, normalisé. Un dossier
+ * accès disque absolu, sans caractère de contrôle, normalisé. Un dossier
  * relatif serait relatif à ce que Node décide, pas à ce que l'utilisateur croit.
  */
 
@@ -62,7 +62,7 @@ export async function refuseMissingDirectory(directory: string): Promise<string 
  *
  * `origin` est la phrase du CLI : « d'après pnpm-lock.yaml », ou « supposé »
  * quand rien ne le dit. `plainCommand` / `safeCommand` sont les deux commandes
- * possibles — avec et sans exécution des scripts du projet — pour que l'écran
+ * possibles avec et sans exécution des scripts du projet pour que l'écran
  * montre exactement ce qu'il lancera.
  */
 export interface ProjectSummaryView {
@@ -91,7 +91,7 @@ function originOf(detection: Detection): string {
   return detection.source === 'assumed' ? 'supposé' : `d’après ${detection.evidence}`;
 }
 
-/** La phrase que le CLI affiche : « JavaScript / TypeScript — pnpm (d'après …) ». */
+/** La phrase que le CLI affiche : « JavaScript / TypeScript pnpm (d'après …) ». */
 export function describeDetection(detection: Detection): string {
   if (detection.packageManager === undefined) {
     return `${detection.label} (${originOf(detection)})`;
@@ -146,7 +146,7 @@ export async function inspectProject(directory: string): Promise<ProjectInspecti
  * machine (File System Access API) : le serveur n'en verra jamais le chemin,
  * seulement le nom du dossier, les noms des fichiers du premier niveau et le
  * texte de `package.json`. C'est exactement ce que la règle de détection lit,
- * donc c'est la **même** règle qui tourne — `detectFromEntries`.
+ * donc c'est la **même** règle qui tourne `detectFromEntries`.
  *
  * Tout est revalidé ici : ce JSON vient du client, donc quelqu'un peut
  * l'écrire à la main. Les bornes ne protègent pas un disque (il n'y a aucun
@@ -195,7 +195,7 @@ export function toProjectEntries(
  * Reconnaît le projet que le navigateur a désigné.
  *
  * Rien n'est lu, rien n'est écrit : la règle s'applique aux noms reçus. Le
- * `directory` rendu est le **nom du dossier**, pas un chemin — l'écran ne doit
+ * `directory` rendu est le **nom du dossier**, pas un chemin l'écran ne doit
  * pas faire croire qu'il connaît un emplacement qu'il ne connaît pas.
  */
 export function inspectPickedEntries(input: PickedEntriesInput): ProjectInspectionView {
@@ -252,13 +252,13 @@ const SERVER_SECRETS = [
 /**
  * Un exécuteur dont les commandes **enfants** ne reçoivent aucun secret du
  * serveur. Le nom de la variable reste présent, vidé : `packages/exec` empile
- * `process.env` puis `options.env`, on ne peut donc pas la retirer — mais le
+ * `process.env` puis `options.env`, on ne peut donc pas la retirer mais le
  * code du projet y lit une chaîne vide.
  *
  * L'ordre du merge est le point sensible : `scrubbed` **puis** `options.env`.
  * L'appelant est le seul à savoir ce qu'il pose, et `packages/git` y met
  * `PF_GIT_TOKEN` pour la seule commande qui en a besoin ; écraser cet ordre
- * viderait le jeton que `git push` attend, ou — pire — laisserait passer un
+ * viderait le jeton que `git push` attend, ou pire laisserait passer un
  * secret hérité du shell. Le test négatif du fichier voisin exécute un vrai
  * processus enfant pour le prouver.
  */

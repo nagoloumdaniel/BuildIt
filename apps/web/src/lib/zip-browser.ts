@@ -1,6 +1,6 @@
 /**
  * Le même `.zip` que `zip.ts` (entrées STORED), **sans Node** : ni `Buffer`
- * ni `node:zlib`. Il sert dans le navigateur — Firefox, Safari — quand aucun
+ * ni `node:zlib`. Il sert dans le navigateur Firefox, Safari quand aucun
  * dossier ne peut être écrit directement : les fichiers manquants partent en
  * archive à décompresser à la racine du projet.
  */
@@ -83,7 +83,7 @@ export function createBrowserZip(entries: readonly BrowserZipEntry[]): Uint8Arra
   return out;
 }
 
-/** Propose l'archive au téléchargement — le navigateur choisit où elle atterrit. */
+/** Propose l'archive au téléchargement le navigateur choisit où elle atterrit. */
 export function downloadBytes(bytes: Uint8Array, filename: string): void {
   const url = URL.createObjectURL(new Blob([bytes as BlobPart], { type: 'application/zip' }));
   const link = document.createElement('a');

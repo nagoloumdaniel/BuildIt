@@ -1,17 +1,17 @@
 # Référence du registry
 
 Le **registry** est la base de connaissances du produit : ce que BuildIt
-sait des technologies. Il ne raisonne pas — il **déclare**. Décider si deux
+sait des technologies. Il ne raisonne pas il **déclare**. Décider si deux
 technologies vont ensemble est le travail du compatibility engine
 ([§12](../cahier-des-charges.md), et [Concepts](concepts.md)).
 
 Sources qui font foi :
 
-- [`packages/registry/src/schema/entry.ts`](../../packages/registry/src/schema/entry.ts) — la forme d'une fiche, les catégories, les licences ;
-- [`packages/registry/src/load.ts`](../../packages/registry/src/load.ts) — le chargement et la validation ;
-- [`packages/registry/src/integrity.ts`](../../packages/registry/src/integrity.ts) — la cohérence de l'ensemble ;
-- [`packages/registry/data/`](../../packages/registry/data) — les fiches, éditées à la main ;
-- [`packages/registry/CONTRIBUTING.md`](../../packages/registry/CONTRIBUTING.md) — comment en ajouter une (la procédure qui fait foi).
+- [`packages/registry/src/schema/entry.ts`](../../packages/registry/src/schema/entry.ts) la forme d'une fiche, les catégories, les licences ;
+- [`packages/registry/src/load.ts`](../../packages/registry/src/load.ts) le chargement et la validation ;
+- [`packages/registry/src/integrity.ts`](../../packages/registry/src/integrity.ts) la cohérence de l'ensemble ;
+- [`packages/registry/data/`](../../packages/registry/data) les fiches, éditées à la main ;
+- [`packages/registry/CONTRIBUTING.md`](../../packages/registry/CONTRIBUTING.md) comment en ajouter une (la procédure qui fait foi).
 
 ## Le catalogue en chiffres
 
@@ -55,7 +55,7 @@ ai · cms · ecommerce
 ```
 
 Une catégorie ne dit pas seulement « de quoi il s'agit », elle porte une
-**arité** — combien de technologies peuvent coexister. Cette arité vit dans le
+**arité** combien de technologies peuvent coexister. Cette arité vit dans le
 moteur de compatibilité, pas sur les fiches :
 [`arity.ts`](../../packages/compatibility/src/arity.ts). `testing` est
 cumulative (Vitest *et* Playwright dans le preset SaaS), `orm` est exclusive.
@@ -110,20 +110,20 @@ encore) :
 | `name` | oui | Libellé affiché, 1 à 60 caractères, écrit comme l'éditeur l'écrit |
 | `category` | oui | Une des 37 catégories fermées |
 | `targets` | oui | Plateformes servies, non vide et sans doublon |
-| `status` | oui | `stable`, `beta`, `deprecated` — dépréciée reste utilisable, avec avertissement |
+| `status` | oui | `stable`, `beta`, `deprecated` dépréciée reste utilisable, avec avertissement |
 | `generation` | oui | `certified` (un test de génération la couvre) ou `declared` |
 | `license` | oui | Identifiant d'une des 19 licences fermées |
 | `lastReviewedAt` | oui | Date réelle, jamais dans le futur ; au-delà d'un an, avertissement |
 | `versionRange` | non | Contrainte semver, par exemple `>=15.0.0 <17.0.0` |
 | `requires` | non | Fiches **obligatoires** : le moteur les ajoute et le dit |
 | `compatibleWith` | non | Fiches qui fonctionnent avec celle-ci |
-| `conflictsWith` | non | Fiches incompatibles — pour les conflits qui **traversent** les catégories |
+| `conflictsWith` | non | Fiches incompatibles pour les conflits qui **traversent** les catégories |
 | `packages` / `devPackages` | non | Paquets npm de production / de développement, disjoints |
 | `packageRanges` | non | Plage par paquet ; un paquet non déclaré n'a pas de plage |
 | `env` | non | **Noms** de variables d'environnement, jamais de valeur |
 | `recipes` | non | Variantes d'usage **déclarées** par la fiche (`oauth`, `webhooks`, `migrate`…). À ne pas confondre avec les recettes du générateur ([`packages/recipes`](../../packages/recipes)), qui portent des fichiers : ce champ n'est pas consommé par le pipeline aujourd'hui |
 | `engines` | non | Contraintes de runtime (`node`, `bun`, `deno`) |
-| `template` | non | Chemin du template — **uniquement** si `generation` vaut `certified` |
+| `template` | non | Chemin du template **uniquement** si `generation` vaut `certified` |
 | `docs` | non | URL http(s) de la documentation officielle |
 
 Trois contraintes croisées sont portées par le schéma, donc impossibles à
@@ -137,8 +137,8 @@ Trois contraintes croisées sont portées par le schéma, donc impossibles à
   il manque à la liste).
 
 En revanche, une fiche `certified` **peut** n'avoir aucun template : TypeScript,
-Biome et Vitest n'apportent aucun fichier d'application — leur configuration vient
-de la couche d'intégration — mais ils doivent être certifiés pour que la
+Biome et Vitest n'apportent aucun fichier d'application leur configuration vient
+de la couche d'intégration mais ils doivent être certifiés pour que la
 combinaison qui les contient le soit.
 
 ## Ce que le chargement vérifie
@@ -167,7 +167,7 @@ l'utilisateur.
 |---|---|
 | Ce slug existe-t-il ? Quelle est sa catégorie ? | **le registry** |
 | Ces deux technologies vont-elles ensemble ? | le **compatibility engine** |
-| Cette combinaison est-elle certifiée ? | le **compatibility engine** — le statut se déduit de `generation` sur chaque fiche de la sélection |
+| Cette combinaison est-elle certifiée ? | le **compatibility engine** le statut se déduit de `generation` sur chaque fiche de la sélection |
 | Cette technologie est-elle compatible avec mes versions ? | `engines` (déclaré) puis `checkEngines` (décidé) |
 
 Un fichier de fiche ne contient **jamais** de règle de combinaison : c'est ce qui

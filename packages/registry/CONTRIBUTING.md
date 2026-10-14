@@ -61,12 +61,12 @@ Une fiche porte le nom de sa technologie. Plusieurs de ces noms sont des fichier
 
 | Champ | Règle |
 |---|---|
-| `id` | minuscules, chiffres, tirets simples — `better-auth`, `github-actions`. Unique dans tout le registry. Doit être le nom du fichier. |
+| `id` | minuscules, chiffres, tirets simples `better-auth`, `github-actions`. Unique dans tout le registry. Doit être le nom du fichier. |
 | `name` | libellé affiché, 1 à 60 caractères. Écrivez-le comme l'éditeur l'écrit : `Next.js`, `shadcn/ui`, `pnpm`. |
 | `category` | une des catégories fermées (voir plus bas). |
 | `targets` | au moins une plateforme, sans doublon : `web`, `mobile`, `desktop`, `api`, `library`. |
 | `status` | `stable`, `beta` ou `deprecated`. Une technologie dépréciée reste utilisable mais affiche un avertissement. |
-| `generation` | `certified` ou `declared`. Voir la section suivante — c'est le champ le plus important. |
+| `generation` | `certified` ou `declared`. Voir la section suivante c'est le champ le plus important. |
 | `license` | identifiant d'une liste fermée. |
 | `lastReviewedAt` | date réelle `AAAA-MM-JJ`, jamais dans le futur. |
 
@@ -95,7 +95,7 @@ La grammaire des noms de variables interdit le signe `=`. Ce n'est pas une polit
 
 ---
 
-## `certified` ou `declared` — la question centrale
+## `certified` ou `declared` la question centrale
 
 C'est ce qui permet au catalogue d'être **large** sans jamais **mentir**.
 
@@ -111,17 +111,17 @@ C'est ce qui permet au catalogue d'être **large** sans jamais **mentir**.
 
 Une fiche ne devient `certified` que le jour où un **test de génération** produit un projet qui la contient, l'installe et le construit. C'est `pnpm test:smoke`.
 
-Un template n'est pas exigé. La règle initiale le demandait, et elle confondait deux choses : apporter du **code applicatif** et être couverte par un **test**. TypeScript, Biome et Vitest sont certifiés sans template — leur configuration vient de la couche d'intégration du générateur, pas d'un dossier de templates.
+Un template n'est pas exigé. La règle initiale le demandait, et elle confondait deux choses : apporter du **code applicatif** et être couverte par un **test**. TypeScript, Biome et Vitest sont certifiés sans template leur configuration vient de la couche d'intégration du générateur, pas d'un dossier de templates.
 
 Selon ce qu'apporte la technologie, la preuve prend trois formes :
 
-- **code applicatif** — un template (`next`, `tailwind`, `shadcn-ui`) ;
-- **code qui dépend d'une combinaison** — une intégration à `when` dans le générateur (`prisma` + `postgresql`, `playwright` + `next`). Une combinaison sans intégration ne reçoit rien et reste `experimental` ;
-- **service externe** — une recette qui l'utilise, installée et typée par le test de fumée (`stripe`, `resend`).
+- **code applicatif** un template (`next`, `tailwind`, `shadcn-ui`) ;
+- **code qui dépend d'une combinaison** une intégration à `when` dans le générateur (`prisma` + `postgresql`, `playwright` + `next`). Une combinaison sans intégration ne reçoit rien et reste `experimental` ;
+- **service externe** une recette qui l'utilise, installée et typée par le test de fumée (`stripe`, `resend`).
 
-`vercel` n'apporte aucun fichier : Next.js s'y déploie tel quel, et le `build` que Vercel exécute est celui que vérifie le test de fumée. La certification ne dit rien de plus — pas qu'un déploiement a été fait.
+`vercel` n'apporte aucun fichier : Next.js s'y déploie tel quel, et le `build` que Vercel exécute est celui que vérifie le test de fumée. La certification ne dit rien de plus pas qu'un déploiement a été fait.
 
-`github-actions` : le workflow généré n'exécute que les scripts que le test de fumée lance déjà, dans le même ordre, avec `--frozen-lockfile`. Le fichier n'a jamais tourné sur GitHub — la CI GitHub n'est pas disponible pour ce dépôt.
+`github-actions` : le workflow généré n'exécute que les scripts que le test de fumée lance déjà, dans le même ordre, avec `--frozen-lockfile`. Le fichier n'a jamais tourné sur GitHub la CI GitHub n'est pas disponible pour ce dépôt.
 
 `docker` : le test de fumée construit l'image du preset API, la lance, vérifie `/health` et que le conteneur ne tourne pas en root.
 
@@ -130,8 +130,8 @@ Selon ce qu'apporte la technologie, la preuve prend trois formes :
 Le socle généré est un projet pnpm/Node. Comme Python, Go, Java ou .NET, les fiches suivantes sont donc `declared` : le générateur pose le socle (README, `.env.example`, CI, squelette d'architecture) mais aucun code applicatif.
 
 - **COBOL** (`cobol`, écosystème d'exécution `cobol`) : `gnucobol`, `cobol-check`, `ocesql` (ESQL vers PostgreSQL uniquement), `db2`, `cobol-language-support` (Eclipse Che4z), `zowe`, et les outils transverses `make`, `cmake`. Aucun backend HTTP COBOL n'est au catalogue : la stack se choisit sur la cible `library` (programme batch). L'écosystème `cobol` refuse toute fiche liée à Node, Python, la JVM…
-- **mobile** : `expo`, `react-native`, `flutter` (+ `dart`) — champ `mobile.framework` du manifest.
-- **desktop** : `electron`, `tauri` — champ `desktop.framework`.
+- **mobile** : `expo`, `react-native`, `flutter` (+ `dart`) champ `mobile.framework` du manifest.
+- **desktop** : `electron`, `tauri` champ `desktop.framework`.
 
 Les frameworks restent dans la catégorie `frontend`, exclusive : un projet porte un seul framework d'interface, web, mobile ou desktop.
 
@@ -167,7 +167,7 @@ La fiche « next » cite « typescrpit » dans « requires », qui n'existe pas.
 
 ## Catégories
 
-Liste fermée. Ajouter une catégorie est une décision d'architecture, pas une contribution de routine — ouvrez une discussion d'abord.
+Liste fermée. Ajouter une catégorie est une décision d'architecture, pas une contribution de routine ouvrez une discussion d'abord.
 
 ```
 frontend · language · styling · ui · backend
@@ -217,7 +217,7 @@ Ne modifiez jamais ce fichier à la main. Il est exclu du formateur pour cette r
 
 ## Fraîcheur
 
-Le catalogue est revu chaque trimestre. Quand vous vérifiez qu'une fiche est toujours exacte — version, licence, statut, documentation —, mettez `lastReviewedAt` à jour. Une fiche non revue depuis plus d'un an produit un avertissement au chargement, sans bloquer.
+Le catalogue est revu chaque trimestre. Quand vous vérifiez qu'une fiche est toujours exacte version, licence, statut, documentation —, mettez `lastReviewedAt` à jour. Une fiche non revue depuis plus d'un an produit un avertissement au chargement, sans bloquer.
 
 ---
 

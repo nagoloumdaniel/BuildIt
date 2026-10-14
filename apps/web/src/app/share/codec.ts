@@ -5,14 +5,14 @@ import { isLoopbackOrigin } from './origin';
  * Le codec du partage en lecture seule (§20, décision 9.1).
  *
  * Le manifest est encodé dans le **fragment** de l'URL : `/share#<base64url>`.
- * Un fragment n'est jamais envoyé au serveur — c'est le navigateur qui le garde
+ * Un fragment n'est jamais envoyé au serveur c'est le navigateur qui le garde
  * —, donc il ne peut fuiter ni dans un journal, ni dans un cookie, ni dans un
  * en-tête `Referer`. Il n'y a pas d'identifiant à énumérer : le lien **est** la
  * donnée, et il fonctionne partout où `pf web` tourne.
  *
  * Fonctions pures, sans React et sans accès réseau : les seules dépendances
  * sont `serializeManifest` (la forme canonique du manifest) et `parseManifest`
- * (qui revalide tout ce qui revient d'un lien — un lien reçu n'est pas de
+ * (qui revalide tout ce qui revient d'un lien un lien reçu n'est pas de
  * confiance). `btoa`/`atob` sont fournis par le navigateur comme par Node.
  */
 
@@ -30,7 +30,7 @@ function bytesToBase64Url(bytes: Uint8Array): string {
   return btoa(binary).replaceAll('+', '-').replaceAll('/', '_').replace(/=+$/, '');
 }
 
-/** `undefined` quand la charge n'est pas du base64url exploitable — jamais une exception. */
+/** `undefined` quand la charge n'est pas du base64url exploitable jamais une exception. */
 function base64UrlToBytes(payload: string): Uint8Array | undefined {
   if (payload === '' || !BASE64URL.test(payload)) {
     return undefined;
@@ -55,7 +55,7 @@ export function encodeSharePayload(manifest: Manifest): string {
   return bytesToBase64Url(new TextEncoder().encode(serializeManifest(manifest)));
 }
 
-/** `/share#<charge>` — le chemin seul, sans origine. */
+/** `/share#<charge>` le chemin seul, sans origine. */
 export function sharePath(payload: string): string {
   return `${SHARE_PATH}#${payload}`;
 }
@@ -75,7 +75,7 @@ export function encodeShareLink(manifest: Manifest, base = ''): string {
 /**
  * L'origine à retenir : celle que le serveur propose si elle existe, celle du
  * navigateur sinon. Une base proposée sert quand l'UI est atteinte par un autre
- * nom que `127.0.0.1` (tunnel, nom d'hôte, site hébergé) — Phase 12.
+ * nom que `127.0.0.1` (tunnel, nom d'hôte, site hébergé) Phase 12.
  *
  * Dernier garde-fou : une base en boucle locale ne l'emporte jamais sur une
  * page ouverte depuis un vrai domaine. Le navigateur sait sous quel nom il a
@@ -119,8 +119,8 @@ const NOT_JSON = 'Ce lien ne contient pas une configuration exploitable.';
 /**
  * Décode un fragment et revalide le manifest.
  *
- * Chaque échec — charge tronquée, base64 invalide, UTF-8 invalide, JSON
- * corrompu, manifest refusé — rend une phrase, jamais une pile : cette page est
+ * Chaque échec charge tronquée, base64 invalide, UTF-8 invalide, JSON
+ * corrompu, manifest refusé rend une phrase, jamais une pile : cette page est
  * publique, elle ne montre pas de trace technique.
  */
 export function decodeSharePayload(payload: string): ShareDecodeResult {

@@ -4,7 +4,7 @@
   "private": true,
   "type": "module",
   "license": "MIT",
-  "description": "Git (§18bis, §20bis) : liens validés, clone sans reste, init, push — sans shell, jeton jamais dans une URL.",
+  "description": "Git (§18bis, §20bis) : liens validés, clone sans reste, init, push sans shell, jeton jamais dans une URL.",
   "exports": {
     ".": {
       "types": "./src/index.ts",

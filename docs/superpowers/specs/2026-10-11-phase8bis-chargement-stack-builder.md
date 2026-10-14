@@ -1,10 +1,10 @@
-# 8bis — Stack Builder : 37 Server Actions, mesurées puis réduites
+# 8bis Stack Builder : 37 Server Actions, mesurées puis réduites
 
 **Date** : 2026-10-11 · **Branche** : `feat/phase8-web-socle` · **Périmètre** :
 `apps/web/src/app/create/stack/**` (+ ce rapport).
 
-Le constat du roadmap — « le Stack Builder charge les options par 37 Server
-Actions, une par catégorie : point chaud si l'écran paraît lent » — n'avait
+Le constat du roadmap « le Stack Builder charge les options par 37 Server
+Actions, une par catégorie : point chaud si l'écran paraît lent » n'avait
 jamais été mesuré. Il l'est ici. La conclusion est en deux parties, et la
 seconde contredit l'intuition que la première suggérait :
 
@@ -39,7 +39,7 @@ React 19.3.0. Catalogue : **283 fiches, 37 catégories, toutes non vides**.
 
 | Mesure | p50 | min | max |
 | --- | --- | --- | --- |
-| `loadCatalogue()` (une fois par processus) | 39,3 ms | — | — |
+| `loadCatalogue()` (une fois par processus) | 39,3 ms | | |
 | Les 37 catégories, sélection vide (283 `resolve()`) | **2,16 ms** | 1,47 | 4,43 |
 | Les 37 catégories, 3 technos choisies | **1,69 ms** | 1,05 | 2,94 |
 | Les 37 catégories, 8 technos choisies | **2,38 ms** | 1,65 | 4,93 |
@@ -88,7 +88,7 @@ build refait.
 | Catalogue visible (médiane) | **921 ms** | **372 ms** | **−549 ms (−60 %)** |
 | Durée de la vague d'actions (médiane) | **702 ms** | **128 ms** | −574 ms (−82 %) |
 | Somme des durées RPC (médiane) | **806 ms** | **156 ms** | −650 ms (−81 %) |
-| Action la plus lente (médiane) | 38 ms | 53 ms | — |
+| Action la plus lente (médiane) | 38 ms | 53 ms | |
 
 Détail des deux séries (avant) :
 
@@ -135,7 +135,7 @@ toujours les 37 catégories).
 `@buildit/generator`, sous les **deux** formes (`import … from 'x'` et
 l'import à effet de bord `import 'x'`). Le premier jet de ce test ne voyait que
 la première forme : en injectant `import '../../../lib/engine';` dans
-`page.tsx`, il passait — corrigé, il échoue (vérifié, puis import retiré).
+`page.tsx`, il passait corrigé, il échoue (vérifié, puis import retiré).
 
 ## Ce qui reste ouvert (mesuré, non corrigé)
 
@@ -145,7 +145,7 @@ consolidation qui l'a fait apparaître : c'était déjà le cas avec les 37 acti
 `DraftProvider` branche `localStorage` dans un effet (`store.attach`), qui
 notifie les abonnés ; le rendu suivant recrée les tableaux `targets` et
 `technologies`, donc la `selection` mémoïsée change de référence et l'effet de
-chargement repart une seconde fois — pour des données identiques.
+chargement repart une seconde fois pour des données identiques.
 
 Après consolidation cela coûte : 2 requêtes d'action au lieu d'une, ~50 ko
 transférés en double, ~128 ms de vague au lieu de ~90 ms. C'est visible dans
@@ -169,7 +169,7 @@ pnpm lint                                   # exit 0 (0 erreur)
 
 ---
 
-# Suite (task-7) — la deuxième vague était un bug, pas le prix de l'hydratation
+# Suite (task-7) la deuxième vague était un bug, pas le prix de l'hydratation
 
 **Date** : 2026-10-11 (même journée) · **Branche** : `feat/phase8-web-socle` · même machine
 (Windows, Node v24.10.0, Next 15.5.27, React 19.3.0). Cette suite **ajoute** au rapport
@@ -177,7 +177,7 @@ ci-dessus sans en réécrire les chiffres ; elle ferme la section « Ce qui rest
 
 La section précédente donnait la bonne chaîne (« `attach` branche `localStorage`, notifie, les
 tableaux sont recréés ») et proposait deux pistes. La mesure fine montre que la chaîne est
-exacte, mais que le **déclencheur est une écriture antérieure à `attach`** — et que les deux
+exacte, mais que le **déclencheur est une écriture antérieure à `attach`** et que les deux
 pistes visées n'auraient pas suffi.
 
 ## 1. Nature du doublon : un bug
@@ -199,11 +199,11 @@ Trois faits mesurés :
 2. **Il commite un brouillon différent** parce que `StepShell` a écrit l'étape de l'URL dans un
    effet **avant** lui : les effets des enfants passent avant celui du provider, qui est leur
    parent. Le brouillon persisté porte l'étape *quittée* (`create`), la mémoire porte l'étape
-   courante (`stack`) — `attach` relit et écrase.
+   courante (`stack`) `attach` relit et écrase.
 3. **Ce commit rend les tableaux neufs.** `loadDraft` reconstruit `targets` et `technologies`,
    or le `useMemo` de `page.tsx` compare des **références**, pas des valeurs. La sélection
    mémoïsée change d'identité, et les deux effets (catalogue *et* compatibilité) repartent pour
-   des valeurs identiques — les deux corps de requête mesurés sont
+   des valeurs identiques les deux corps de requête mesurés sont
    `[{"targets":[],"technologies":[]}]`, octet pour octet.
 
 C'est donc un bug : la seconde vague ne portait **aucune** information neuve. Deux conséquences
@@ -228,7 +228,7 @@ Le doublon vit dans le cycle de vie du store, pas dans l'effet de l'écran : il 
   brouillon **relu du stockage**, recouvert par ce que l'application a changé **en mémoire**
   depuis la création du store. L'étape de l'URL écrite par `StepShell` gagne donc sur l'étape
   persistée. Deuxième règle, celle qui coûtait cher : un tableau dont la **valeur** ne change
-  pas **garde sa référence** — c'est ce que lit `useMemo`, donc la sélection mémoïsée ne bouge
+  pas **garde sa référence** c'est ce que lit `useMemo`, donc la sélection mémoïsée ne bouge
   plus.
 - **`attach`** (`lib/session.ts`) applique cette restauration et ne notifie **pas** si le
   brouillon restauré se persisterait à l'identique (`samePersistedDraft`) : un rendu qui ne
@@ -236,7 +236,7 @@ Le doublon vit dans le cycle de vie du store, pas dans l'effet de l'écran : il 
   ce qui permet de distinguer « relu » de « changé en mémoire ».
 
 Les invariants du brouillon sont intacts : rien de sensible n'entre dans le brouillon
-(`toPersisted` n'a pas bougé), et un brouillon relu **différent** est toujours annoncé — la
+(`toPersisted` n'a pas bougé), et un brouillon relu **différent** est toujours annoncé la
 reprise est vérifiée de nouveau dans l'interface (voir §4).
 
 **16 tests ajoutés** (5 dans `session.test.ts`, 11 dans `draft.test.ts`), dont un garde-fou
@@ -253,12 +253,12 @@ jusqu'à la disparition de « Chargement du catalogue ».
 
 | Scénario de visite | Requêtes POST | dont catalogue | dont compatibilité | Catalogue visible (médiane chaude) |
 | --- | --- | --- | --- | --- |
-| **Avant** — aucun brouillon | 4 | **2** | 2 | 124 ms |
-| **Avant** — brouillon persisté = frais | 4 | **2** | 2 | 132 ms |
-| **Avant** — brouillon persisté `web` + `next` | 4 | **2** (vide, puis reprise) | 2 | 125 ms |
-| **Après** — aucun brouillon | **2** | **1** | 1 | **80 ms** |
-| **Après** — brouillon persisté = frais | **2** | **1** | 1 | **85 ms** |
-| **Après** — brouillon persisté `web` + `next` | 4 | 2 (vide, puis reprise) | 2 | 110 ms |
+| **Avant** aucun brouillon | 4 | **2** | 2 | 124 ms |
+| **Avant** brouillon persisté = frais | 4 | **2** | 2 | 132 ms |
+| **Avant** brouillon persisté `web` + `next` | 4 | **2** (vide, puis reprise) | 2 | 125 ms |
+| **Après** aucun brouillon | **2** | **1** | 1 | **80 ms** |
+| **Après** brouillon persisté = frais | **2** | **1** | 1 | **85 ms** |
+| **Après** brouillon persisté `web` + `next` | 4 | 2 (vide, puis reprise) | 2 | 110 ms |
 
 Les deux corps de la vague dupliquée étaient identiques (mesuré) : la moitié des octets du
 catalogue était transférée pour rien. La somme des octets du catalogue sur les 7 visites chaudes
@@ -266,8 +266,8 @@ passe de 346 311–593 676 o (selon les réponses que la sonde a pu lire) à 296
 **bornes basses**, environ une réponse sur sept n'étant pas lisible par la sonde.
 
 Le troisième scénario est le plus important : **le rechargement nécessaire est conservé**. Un
-visiteur qui reprend un brouillon non vide paie toujours deux vagues, dont la seconde — la
-reprise — est celle qui compte. La première est le prix d'hydratation décrit au §1, et elle
+visiteur qui reprend un brouillon non vide paie toujours deux vagues, dont la seconde la
+reprise est celle qui compte. La première est le prix d'hydratation décrit au §1, et elle
 n'est **pas** supprimée ici : l'enlever demanderait de ne pas interroger le moteur avant que le
 brouillon soit restauré, ce qui change le contrat du provider et le moment du premier appel
 moteur pour tous les écrans (piste du §6, non appliquée).
@@ -315,7 +315,7 @@ restauration après rechargement complet n'est donc pas sacrifiée au gain de re
   tableau du §3) : le moteur est interrogé une fois avec la sélection vide du rendu serveur,
   puis une fois avec la sélection restaurée. Piste la moins risquée, **non appliquée** : que le
   provider expose « le stockage est branché » et que l'écran attende ce signal avant son premier
-  appel moteur — le moteur ne serait jamais interrogé sur une sélection qui n'est pas encore
+  appel moteur le moteur ne serait jamais interrogé sur une sélection qui n'est pas encore
   restaurée. Elle change le contrat du provider et le moment du premier appel pour chaque écran
   qui l'adopterait : à faire avec sa propre mesure.
 - **Le commentaire d'`actions.ts`** citait `.measure-stack/measure-rpc.mjs`, un dossier de
@@ -326,9 +326,9 @@ restauration après rechargement complet n'est donc pas sacrifiée au gain de re
 ## Commandes de vérification (suite task-7)
 
 ```powershell
-pnpm --filter @buildit/web test     # exit 0 — session+draft : 25 → 41 tests
+pnpm --filter @buildit/web test     # exit 0 session+draft : 25 → 41 tests
 pnpm --filter @buildit/web build     # exit 0
-pnpm typecheck                               # exit 0 — 28 tâches
-pnpm lint                                    # exit 0 — 0 erreur
+pnpm typecheck                               # exit 0 28 tâches
+pnpm lint                                    # exit 0 0 erreur
 ```
 

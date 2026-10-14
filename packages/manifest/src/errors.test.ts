@@ -14,7 +14,7 @@ describe('MANIFEST_ISSUE_CODES', () => {
 });
 
 describe('messageFor', () => {
-  it('rend un message pour chaque code — aucun code orphelin', () => {
+  it('rend un message pour chaque code aucun code orphelin', () => {
     for (const code of MANIFEST_ISSUE_CODES) {
       const message = messageFor(code, {});
       expect(message.length).toBeGreaterThan(0);

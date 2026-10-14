@@ -170,7 +170,7 @@ describe('pf web', () => {
     // La sortie autonome recopie les liens pnpm : sous Windows, Node ne les
     // résout pas toujours (EPERM), et `.next/standalone` n'est pas nettoyé
     // entre deux builds. Sur une machine de développement, `next start` est le
-    // mode qui marche — le standalone reste le repli.
+    // mode qui marche le standalone reste le repli.
     const world = fakeWorld({ node: ok });
     const root = await nextStartApp();
     const io = fakeIo({ cwd: root, runner: world, portProbe: async () => false });
@@ -186,7 +186,7 @@ describe('pf web', () => {
   it('sans `next` installé, retombe sur la sortie autonome', async () => {
     const world = fakeWorld({ node: ok });
     // Une application **distribuée** : la sortie autonome et son BUILD_ID,
-    // sans `node_modules/next` — c'est là que le standalone est le bon mode.
+    // sans `node_modules/next` c'est là que le standalone est le bon mode.
     const root = await mkdtemp(join(tmpdir(), 'pf-web-dist-'));
     await mkdir(join(root, 'apps/web/.next/standalone/apps/web'), { recursive: true });
     await writeFile(join(root, BUILD_ID), 'build-factice');

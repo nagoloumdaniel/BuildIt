@@ -20,7 +20,7 @@ import {
  * l'accessibilité du rendu se prouve ici, pas à l'œil.
  *
  * Les mots viennent du dictionnaire : c'est lui qui est passé, dans les deux
- * langues — un graphe anglais ne doit pas garder les phrases françaises.
+ * langues un graphe anglais ne doit pas garder les phrases françaises.
  */
 
 const NODES: readonly RelationNode[] = [
@@ -77,7 +77,7 @@ describe('l’ordre est stable, quel que soit l’ordre reçu', () => {
   });
 });
 
-describe('describeEdge — une phrase complète pour chaque relation', () => {
+describe('describeEdge une phrase complète pour chaque relation', () => {
   it('rend « A exige B. »', () => {
     const edge = EDGES[0];
     if (edge === undefined) {
@@ -105,7 +105,7 @@ describe('describeEdge — une phrase complète pour chaque relation', () => {
   });
 });
 
-describe('graphText — l’équivalent textuel complet', () => {
+describe('graphText l’équivalent textuel complet', () => {
   it('nomme chaque nœud avec son état et chaque arête', () => {
     const lines = graphText(NODES, EDGES, LABELS, FR.graph);
     const text = lines.join('\n');
@@ -123,7 +123,7 @@ describe('graphText — l’équivalent textuel complet', () => {
   });
 });
 
-describe('layoutGraph — une mise en page déterministe', () => {
+describe('layoutGraph une mise en page déterministe', () => {
   it('place chaque nœud une fois, à une position distincte, dans les bornes', () => {
     const layout = layoutGraph(NODES, EDGES);
 
@@ -159,7 +159,7 @@ describe('layoutGraph — une mise en page déterministe', () => {
   });
 });
 
-describe('layoutGraph — des colonnes d’exigence', () => {
+describe('layoutGraph des colonnes d’exigence', () => {
   it('place ce qui est exigé à droite de ce qui l’exige', () => {
     const layout = layoutGraph(NODES, EDGES);
     const at = new Map(layout.nodes.map((placed) => [placed.node.id, placed]));
@@ -192,7 +192,7 @@ describe('layoutGraph — des colonnes d’exigence', () => {
   });
 });
 
-describe('explainGraph — ce que dit le graphe affiché', () => {
+describe('explainGraph ce que dit le graphe affiché', () => {
   const edges: readonly RelationEdge[] = [
     ...EDGES,
     { from: 'postgresql', to: 'typescript', kind: 'requires' },

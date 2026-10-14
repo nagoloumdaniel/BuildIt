@@ -7,7 +7,7 @@ import { Toaster, ToastList } from './toaster';
  * Vitest tourne en environnement `node` (pas de jsdom) : on prouve le contrat
  * de rendu avec `renderToStaticMarkup`, qui n'a besoin ni de DOM ni de React
  * côté client. Le composant connecté (`Toaster`) n'est monté par React que
- * dans le navigateur — ici on vérifie qu'il rend sans lever, qu'il reflète son
+ * dans le navigateur ici on vérifie qu'il rend sans lever, qu'il reflète son
  * store, et que le layout le branche réellement.
  */
 describe('ToastList', () => {

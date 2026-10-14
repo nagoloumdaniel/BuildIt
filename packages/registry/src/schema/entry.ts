@@ -66,7 +66,7 @@ export type Category = (typeof CATEGORIES)[number];
  *   Python ; aucune configuration ne les fait parler.
  *
  * Une fiche **sans** écosystème est agnostique (Tailwind, Bootstrap, Sentry) :
- * elle ne contraint rien. C'est la valeur par défaut, et elle est voulue — on
+ * elle ne contraint rien. C'est la valeur par défaut, et elle est voulue on
  * ne déclare un écosystème que lorsqu'il est une vraie limite.
  */
 export const UI_ECOSYSTEMS = [
@@ -128,7 +128,7 @@ export const LICENSES = [
   'Public-Domain',
   // Licence propre à PostgreSQL, proche d'une BSD. Ajoutée en écrivant les
   // premières vraies fiches : une liste fermée ne vaut que si elle couvre
-  // réellement le catalogue, sinon on est tenté d'approximer — et une licence
+  // réellement le catalogue, sinon on est tenté d'approximer et une licence
   // approximée rend l'alerte « usage commercial » du §11 inutile.
   'PostgreSQL',
   'MPL-2.0',
@@ -263,8 +263,8 @@ export const entrySchema: z.ZodType<RegistryEntry, unknown> = z
   // Une fiche certifiée n'a pas forcément de template. La règle initiale
   // l'exigeait, et elle confondait deux choses : apporter du **code
   // applicatif** et être couverte par un **test de génération**. TypeScript,
-  // Biome et Vitest n'apportent aucun fichier d'application — leur
-  // configuration vient de la couche d'intégration — mais ils doivent être
+  // Biome et Vitest n'apportent aucun fichier d'application leur
+  // configuration vient de la couche d'intégration mais ils doivent être
   // certifiés pour que la combinaison qui les contient le soit.
   //
   // La vraie garantie est ailleurs : un test compare l'ensemble des fiches

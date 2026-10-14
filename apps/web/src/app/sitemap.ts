@@ -4,7 +4,7 @@ import type { MetadataRoute } from 'next';
  * `/sitemap.xml`, engendré à la construction de l'application.
  *
  * Une seule URL aujourd'hui : la racine. C'est la seule page dont le contenu
- * soit destiné à être trouvé — les écrans du parcours (`/create/**`) sont
+ * soit destiné à être trouvé les écrans du parcours (`/create/**`) sont
  * l'application elle-même, pas du contenu, et `/share` est en `noindex` (un lien
  * de partage décrit le projet de quelqu'un).
  *

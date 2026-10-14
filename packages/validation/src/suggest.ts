@@ -2,7 +2,7 @@
  * Distance de Damerau-Levenshtein (variante « optimal string alignment »).
  *
  * Damerau plutôt que Levenshtein parce que la transposition de deux lettres
- * voisines est la faute de frappe la plus courante — « wbe » pour « web ».
+ * voisines est la faute de frappe la plus courante « wbe » pour « web ».
  * Levenshtein la facture 2, ce qui la place hors de portée de tout seuil
  * raisonnable ; Damerau la facture 1, ce qui est le comportement attendu.
  *
@@ -14,7 +14,7 @@
  *
  * Le `?? 0` est imposé par `noUncheckedIndexedAccess` : le compilateur type
  * tout accès indexé comme potentiellement `undefined`. Il est **inatteignable**
- * — tous les indices sont bornés par construction — donc intestable, et c'est
+ * tous les indices sont bornés par construction donc intestable, et c'est
  * la seule raison pour laquelle cette ligne est exclue de la couverture. Le
  * garde-fou est concentré ici plutôt que répété à chaque accès.
  */
@@ -30,8 +30,8 @@ function editDistance(a: string, b: string): number {
 
   // Matrice à plat dans un Int32Array plutôt qu'un tableau de tableaux : avec
   // `noUncheckedIndexedAccess`, un `number[][]` oblige à un `?? 0` sur chaque
-  // accès. Ces garde-fous sont inatteignables — les indices sont bornés par
-  // construction — mais ils restent du code non couvert que personne ne peut
+  // accès. Ces garde-fous sont inatteignables les indices sont bornés par
+  // construction mais ils restent du code non couvert que personne ne peut
   // tester. Un Int32Array rend un `number`, donc aucune branche morte.
   const width = b.length + 1;
   const matrix = new Int32Array((a.length + 1) * width);
@@ -72,7 +72,7 @@ function toleranceFor(candidate: string): number {
 /**
  * Cherche la valeur acceptée la plus proche d'une saisie fautive.
  *
- * §12 demande que le produit explique plutôt que de refuser sèchement — ça
+ * §12 demande que le produit explique plutôt que de refuser sèchement ça
  * commence ici, sur une faute de frappe.
  */
 export function suggest(value: string, candidates: readonly string[]): string | undefined {

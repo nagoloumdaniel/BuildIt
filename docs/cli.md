@@ -1,6 +1,6 @@
-# `pf` — référence des commandes
+# `pf` référence des commandes
 
-`pf` est la façade en ligne de commande du moteur Forge (§9, §21). Elle produit un Project Manifest et le passe au pipeline — le même que celui de la future interface web : **même manifest, même projet, octet pour octet** (vérifié par un test, pour chaque preset).
+`pf` est la façade en ligne de commande du moteur Forge (§9, §21). Elle produit un Project Manifest et le passe au pipeline le même que celui de la future interface web : **même manifest, même projet, octet pour octet** (vérifié par un test, pour chaque preset).
 
 **Statut :** Phases 7 et 7B livrées dans le dépôt, **pas encore publiée sur npm** (il faut un compte et un jeton). En attendant :
 
@@ -16,7 +16,7 @@ pnpm --filter @nagoloum/cli build  # puis node apps/cli/bin/pf.js <commande>
 | | |
 |---|---|
 | Codes de sortie | `0` succès · `1` le moteur a refusé ou échoué · `2` usage (argument manquant, drapeau inconnu, commande pas encore livrée) |
-| Erreurs | `✗ message`, puis `→ piste`, puis `(CODE)` — le code est stable, le message est pour vous |
+| Erreurs | `✗ message`, puis `→ piste`, puis `(CODE)` le code est stable, le message est pour vous |
 | Mode non interactif | Hors terminal, ou avec `--yes`, aucune question n'est posée : une information manquante est une erreur qui nomme le drapeau à fournir |
 | Aide | `pf --help`, `pf <commande> --help` |
 
@@ -35,7 +35,7 @@ Crée un projet depuis un preset certifié (`saas`, `dashboard`, `api`, `fullsta
 | `--no-install` | Ne pas installer |
 | `--no-git` | Ne pas créer de dépôt Git |
 | `--dry-run` | Afficher l'arborescence ; rien n'est écrit |
-| `--from <étape>` | Reprendre à `write`, `install`, `git` ou `validate` — après une erreur passagère, `pf` affiche la commande exacte |
+| `--from <étape>` | Reprendre à `write`, `install`, `git` ou `validate` après une erreur passagère, `pf` affiche la commande exacte |
 | `--yes`, `-y` | Aucune question |
 
 ```bash
@@ -44,14 +44,14 @@ pf create mon-api --preset api --no-git --dir services/api
 pf create demo --preset fullstack --dry-run
 ```
 
-Le nom : minuscules, chiffres, points, tirets ou soulignés — sans commencer par un point ni un souligné (`PROJECT_NAME_PATTERN` du manifest, qui fait foi).
+Le nom : minuscules, chiffres, points, tirets ou soulignés sans commencer par un point ni un souligné (`PROJECT_NAME_PATTERN` du manifest, qui fait foi).
 
 ## `pf template`
 
 | | |
 |---|---|
 | `pf template list` | Les presets, et à quoi ils servent |
-| `pf template show <preset> [--name <nom>]` | Le manifest du preset sur la sortie standard — et rien d'autre, pour pouvoir le rediriger ; ses recettes sont rappelées sur la sortie d'erreur |
+| `pf template show <preset> [--name <nom>]` | Le manifest du preset sur la sortie standard et rien d'autre, pour pouvoir le rediriger ; ses recettes sont rappelées sur la sortie d'erreur |
 | `pf template use <preset> [nom] [options]` | Alias de `pf create --preset <preset>` |
 
 ## `pf generate <manifest.json>`
@@ -68,7 +68,7 @@ La stack résolue : chaque technologie, sa catégorie, certifiée (`✓`) ou seu
 
 Ajoute une technologie au manifest, au champ que désigne sa catégorie (`frontend.ui`, `database.orm`, `quality`, `infra`, `services`…), puis contrôle la compatibilité de l'ensemble. Affiche la modification, ce qu'elle remplace et ce qu'elle entraîne ; **n'écrit qu'avec `--yes` ou après confirmation**. Fichier par défaut : `pf.manifest.json`, réécrit sous forme canonique.
 
-Une technologie qui n'a pas de sens seule est refusée avec la raison (un ORM sans base, un style sans application web, un langage — il se choisit à la création).
+Une technologie qui n'a pas de sens seule est refusée avec la raison (un ORM sans base, un style sans application web, un langage il se choisit à la création).
 
 ### Mode expert
 
@@ -85,13 +85,13 @@ Le Project Doctor (§16) : un **score de 0 à 100**, un constat par point de con
 
 ```bash
 $ pf doctor
-quai3 — santé du projet : 89/100
+quai3 santé du projet : 89/100
 
-✓ TypeScript — Le projet est vérifié par TypeScript (tsconfig.json ou dépendance `typescript`).
-✓ Dépendances — 13 dépendances déclarées et installées.
-✕ Variables d'environnement — 1 variable lue par le code (DATABASE_URL) sans .env.example :
+✓ TypeScript Le projet est vérifié par TypeScript (tsconfig.json ou dépendance `typescript`).
+✓ Dépendances 13 dépendances déclarées et installées.
+✕ Variables d'environnement 1 variable lue par le code (DATABASE_URL) sans .env.example :
   personne ne sait quoi remplir.
-⚠ Monitoring d'erreurs — Rien ne remonte les erreurs de production (Sentry, OpenTelemetry…).
+⚠ Monitoring d'erreurs Rien ne remonte les erreurs de production (Sentry, OpenTelemetry…).
 …
 
 Corrections proposées :
@@ -109,7 +109,7 @@ Corrections proposées :
 
 La clé API LLM locale (§0, §17), pour les fonctions d'analyse à venir.
 
-- `set` lit la clé sur l'entrée standard (`echo "$CLE" | pf key set`) ou par une saisie masquée dans un terminal. **Jamais en argument** : elle resterait dans l'historique du shell et dans `ps` — `pf` refuse.
+- `set` lit la clé sur l'entrée standard (`echo "$CLE" | pf key set`) ou par une saisie masquée dans un terminal. **Jamais en argument** : elle resterait dans l'historique du shell et dans `ps` `pf` refuse.
 - Stockée dans `credentials.json` du répertoire de configuration, fichier en `0600`, dossier en `0700`. Répertoire : `$PF_CONFIG_DIR`, sinon `%APPDATA%\buildit` (Windows), `$XDG_CONFIG_HOME/buildit`, `~/.config/buildit`.
 - `status` dit si une clé est définie, **jamais sa valeur, pas même en partie**.
 - `clear` la supprime.
@@ -123,7 +123,7 @@ Clone un dépôt, puis propose d'installer ses dépendances. Sans lien, dans un 
 - **Liens acceptés** : `https://…`, `git@hôte:chemin`, `ssh://…`, `propriétaire/dépôt` (GitHub). **Refusés avant tout appel à Git** : un lien qui commence par `-`, `ext::`, `file://`, un chemin local, `http://`, un lien contenant des identifiants.
 - **Dossier** : inexistant ou vide. Un clone qui échoue ne laisse rien derrière lui.
 - **Dépôt privé** : connectez-vous d'abord (`pf login`). Le jeton est transmis à Git par un *credential helper*, jamais dans l'URL ni en argument.
-- **Code cloné** : ses scripts d'installation s'exécuteraient sur votre machine — `pf` le dit et propose « sans scripts » en premier.
+- **Code cloné** : ses scripts d'installation s'exécuteraient sur votre machine `pf` le dit et propose « sans scripts » en premier.
 
 | Option | |
 |---|---|
@@ -133,7 +133,7 @@ Clone un dépôt, puis propose d'installer ses dépendances. Sans lien, dans un 
 
 ### `pf open <dossier>` · `pf install`
 
-Reconnaît un projet de la machine et propose l'installation ; `pf install` agit sur le dossier courant. Le gestionnaire de paquets vient du verrou (`pnpm-lock.yaml`, `yarn.lock`, `bun.lock[b]`, `package-lock.json`), sinon du champ `packageManager`, sinon npm — **annoncé comme une supposition**. Python, Rust, Go, PHP et Ruby sont reconnus et nommés, avec la commande à lancer vous-même (installation automatique en V1).
+Reconnaît un projet de la machine et propose l'installation ; `pf install` agit sur le dossier courant. Le gestionnaire de paquets vient du verrou (`pnpm-lock.yaml`, `yarn.lock`, `bun.lock[b]`, `package-lock.json`), sinon du champ `packageManager`, sinon npm **annoncé comme une supposition**. Python, Rust, Go, PHP et Ruby sont reconnus et nommés, avec la commande à lancer vous-même (installation automatique en V1).
 
 La commande exacte est affichée **avant** d'être lancée. Sans terminal, rien n'est installé sans `--yes`. Options : `--ignore-scripts`, `--yes`.
 
@@ -141,14 +141,14 @@ La commande exacte est affichée **avant** d'être lancée. Sans terminal, rien 
 
 - `pf login` : connexion par code (device flow). Les permissions sont annoncées avant : `repo` (dépôts privés, création, collaborateurs), ou `public_repo` avec `--public-only`. **L'application OAuth de BuildIt n'est pas encore enregistrée** : en attendant, `PF_GITHUB_CLIENT_ID=<identifiant>` ou un jeton existant.
 - `pf login --with-token` : lit un jeton sur l'entrée standard (`echo "$JETON" | pf login --with-token`) ou par saisie masquée. **Jamais en argument.**
-- Le jeton va dans le trousseau du système — Trousseau macOS, Secret Service (Linux, `secret-tool`), Gestionnaire d'identification Windows —, toujours par l'entrée standard de l'outil. **Trousseau absent : refus, aucun repli en clair.** Pour la CI, `PF_GITHUB_TOKEN` est lu (jamais écrit).
+- Le jeton va dans le trousseau du système Trousseau macOS, Secret Service (Linux, `secret-tool`), Gestionnaire d'identification Windows —, toujours par l'entrée standard de l'outil. **Trousseau absent : refus, aucun repli en clair.** Pour la CI, `PF_GITHUB_TOKEN` est lu (jamais écrit).
 - `pf logout` retire le jeton de la machine ; pour le révoquer côté GitHub : https://github.com/settings/applications.
 
 ### `pf repo create` · `pf repo share`
 
 | | |
 |---|---|
-| `pf repo create [--public] [--name <nom>] [--description <texte>] [--dir <dossier>] [--yes]` | Crée le dépôt GitHub du projet — **privé sauf `--public`** — et y pousse le code. Nom proposé : `name` de `package.json`, sinon le dossier. Le premier commit est créé avant tout appel à GitHub ; un nom pris ne crée rien. Confirmation, ou `--yes` |
+| `pf repo create [--public] [--name <nom>] [--description <texte>] [--dir <dossier>] [--yes]` | Crée le dépôt GitHub du projet **privé sauf `--public`** et y pousse le code. Nom proposé : `name` de `package.json`, sinon le dossier. Le premier commit est créé avant tout appel à GitHub ; un nom pris ne crée rien. Confirmation, ou `--yes` |
 | `pf repo share [--dir <dossier>]` | Le lien du dépôt, ses collaborateurs, les invitations en attente |
 
 ### `pf collab add | list | remove`
@@ -165,7 +165,7 @@ La commande exacte est affichée **avant** d'être lancée. Sans terminal, rien 
 
 ### `pf web [--port <n>] [--no-open]`
 
-Sert le configurateur web — le même manifest, le même projet que le CLI — depuis l'application déjà construite (`pnpm build`), ouvre le navigateur, et **reste au premier plan : Ctrl-C arrête le serveur**.
+Sert le configurateur web le même manifest, le même projet que le CLI depuis l'application déjà construite (`pnpm build`), ouvre le navigateur, et **reste au premier plan : Ctrl-C arrête le serveur**.
 
 | Option | |
 |---|---|
@@ -178,17 +178,17 @@ pnpm pf web         # http://127.0.0.1:4173
 pnpm pf web --port 5000 --no-open
 ```
 
-- **Prérequis : le web doit être construit** (`pnpm build`, c'est-à-dire `next build`). Sans `apps/web/.next/BUILD_ID`, `pf web` refuse et le dit (code 1) — rien n'est lancé à moitié. Deux modes de service, dans cet ordre : `next start` quand `apps/web/node_modules/next` est là (le cas d'un dépôt cloné — c'est le seul mode fiable sous Windows, où la sortie autonome recopie des liens pnpm que Node ne résout pas toujours), sinon la sortie autonome `apps/web/.next/standalone/apps/web/server.js` (le cas d'une application distribuée), et `standalone/server.js` si l'application a été bâtie seule.
+- **Prérequis : le web doit être construit** (`pnpm build`, c'est-à-dire `next build`). Sans `apps/web/.next/BUILD_ID`, `pf web` refuse et le dit (code 1) rien n'est lancé à moitié. Deux modes de service, dans cet ordre : `next start` quand `apps/web/node_modules/next` est là (le cas d'un dépôt cloné c'est le seul mode fiable sous Windows, où la sortie autonome recopie des liens pnpm que Node ne résout pas toujours), sinon la sortie autonome `apps/web/.next/standalone/apps/web/server.js` (le cas d'une application distribuée), et `standalone/server.js` si l'application a été bâtie seule.
 - **Local uniquement** : le serveur écoute sur `127.0.0.1`, jamais `0.0.0.0`. Le configurateur n'est pas joignable depuis le réseau.
-- **Un port qui répond déjà est refusé** (code 1) : `pf` n'ajoute pas un second serveur à côté d'un autre — le premier resterait, et le port serait tenu par un processus qu'on ne voit plus. Arrêtez-le, ou changez de port.
-- Le navigateur est ouvert par `explorer` (Windows), `open` (macOS), `xdg-open` (Linux), **sans shell** : l'URL est un argument. Un navigateur absent n'empêche pas le serveur de tourner — `pf` dit alors quelle adresse ouvrir vous-même.
-- Le serveur qui s'arrête en erreur fait rendre le code `1` à `pf`, avec sa sortie — de quoi comprendre.
+- **Un port qui répond déjà est refusé** (code 1) : `pf` n'ajoute pas un second serveur à côté d'un autre le premier resterait, et le port serait tenu par un processus qu'on ne voit plus. Arrêtez-le, ou changez de port.
+- Le navigateur est ouvert par `explorer` (Windows), `open` (macOS), `xdg-open` (Linux), **sans shell** : l'URL est un argument. Un navigateur absent n'empêche pas le serveur de tourner `pf` dit alors quelle adresse ouvrir vous-même.
+- Le serveur qui s'arrête en erreur fait rendre le code `1` à `pf`, avec sa sortie de quoi comprendre.
 
 ## Partage en lecture seule (§20)
 
 ### `pf share <manifest.json> [--url <base>]`
 
-Imprime **une seule ligne** : un lien vers `/share` du configurateur, dont le **fragment** porte le Project Manifest en `base64url(serializeManifest(manifest))`. Rien n'est envoyé au serveur — un fragment d'URL ne quitte jamais le navigateur —, donc rien ne peut fuiter dans un journal, une requête ou un cookie, et il n'y a aucun identifiant à énumérer. Le lien est auto-porteur : il fonctionne partout où `pf web` tourne.
+Imprime **une seule ligne** : un lien vers `/share` du configurateur, dont le **fragment** porte le Project Manifest en `base64url(serializeManifest(manifest))`. Rien n'est envoyé au serveur un fragment d'URL ne quitte jamais le navigateur —, donc rien ne peut fuiter dans un journal, une requête ou un cookie, et il n'y a aucun identifiant à énumérer. Le lien est auto-porteur : il fonctionne partout où `pf web` tourne.
 
 | Option | |
 |---|---|
@@ -201,7 +201,7 @@ pf share pf.manifest.json
 pf share pf.manifest.json --url http://127.0.0.1:5000
 ```
 
-- **Le lien est la donnée.** Qui l'a peut lire la configuration : il n'est pas chiffré, et il n'y a pas d'expiration possible — il n'y a pas de serveur qui la porte. Ne le partagez qu'avec qui vous voulez voir la configuration.
+- **Le lien est la donnée.** Qui l'a peut lire la configuration : il n'est pas chiffré, et il n'y a pas d'expiration possible il n'y a pas de serveur qui la porte. Ne le partagez qu'avec qui vous voulez voir la configuration.
 - La page `/share` est en **lecture seule** : elle affiche le Blueprint, ne modifie rien et ne génère rien. Elle est posée en `noindex, nofollow`.
 - Le manifest est relu par `parseManifest` à l'ouverture : un fragment tronqué, un base64 invalide ou un manifest fabriqué à la main s'affichent comme un refus lisible, jamais comme une page blanche ni une pile.
 - **Ce n'est pas le partage d'un projet** : partager le code passe par GitHub (`pf repo create`, puis `pf repo share` et `pf collab`).

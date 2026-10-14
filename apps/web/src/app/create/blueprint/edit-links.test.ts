@@ -38,7 +38,7 @@ const VIEW: BlueprintView = {
   ],
 };
 
-describe('technologyEditHref — l’étape et la section de chaque technologie', () => {
+describe('technologyEditHref l’étape et la section de chaque technologie', () => {
   it('une technologie du Stack Builder ouvre sa catégorie', () => {
     const ctx = context({ technologies: ['next', 'prisma'] });
     expect(technologyEditHref('next', ctx)).toBe('/create/stack?category=frontend');
@@ -70,7 +70,7 @@ describe('technologyEditHref — l’étape et la section de chaque technologie'
   });
 });
 
-describe('editableBlueprint — le plan du brouillon, crayons compris', () => {
+describe('editableBlueprint le plan du brouillon, crayons compris', () => {
   it('pose un lien sur le nom, les plateformes, l’architecture et chaque technologie', () => {
     const view = editableBlueprint(VIEW, context({ technologies: ['next'] }), FR);
 

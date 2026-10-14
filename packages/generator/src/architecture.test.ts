@@ -87,7 +87,7 @@ describe('withArchitectureSkeleton', () => {
   });
 });
 
-describe('architectureSkeleton — pas de doublon avec le template, ADR daté', () => {
+describe('architectureSkeleton pas de doublon avec le template, ADR daté', () => {
   const single: Manifest = { ...BASE, architecture: 'single-app', targets: ['web'] };
   const planned = (...paths: string[]) =>
     paths.map((path) => ({ path, contents: 'x', source: 't' }));

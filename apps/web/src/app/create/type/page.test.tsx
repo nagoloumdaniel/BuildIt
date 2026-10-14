@@ -8,7 +8,7 @@ import { PROJECT_TYPES, ProjectTypeChoices, withType } from './profiles';
 
 /**
  * Vitest tourne sans DOM : on prouve le contrat par `renderToStaticMarkup`.
- * `ProjectTypeChoices` est le contenu de l'écran **hors contexte React** — il
+ * `ProjectTypeChoices` est le contenu de l'écran **hors contexte React** il
  * prend le brouillon et le geste de sélection en props, donc il se rend seul.
  */
 

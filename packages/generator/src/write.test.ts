@@ -10,7 +10,7 @@ import { type FileSystem, generate, nodeFileSystem } from './write.js';
  *
  * Un système de fichiers entièrement simulé prouverait que le code appelle les
  * bonnes fonctions, pas qu'il produit le bon résultat. Pour la seule chose qui
- * compte ici — l'état du disque après une panne — il faut un vrai disque.
+ * compte ici l'état du disque après une panne il faut un vrai disque.
  */
 
 const created: string[] = [];
@@ -96,7 +96,7 @@ describe('écriture nominale', () => {
     expect((await generate(planOf(target, [file('README.md')]))).ok).toBe(true);
   });
 
-  it('refuse un dossier cible non vide — la génération n’écrase pas un projet', async () => {
+  it('refuse un dossier cible non vide la génération n’écrase pas un projet', async () => {
     const target = await tempDir();
     await writeFile(join(target, 'deja-la.txt'), 'important');
     const result = await generate(planOf(target, [file('README.md')]));
@@ -184,7 +184,7 @@ describe('generate ne lève jamais', () => {
     await expect(generate(planOf(target, [file('a.ts')]), failingAfter(0))).resolves.toBeDefined();
   });
 
-  it('sur une panne d’annulation — l’erreur d’origine reste rapportée', async () => {
+  it('sur une panne d’annulation l’erreur d’origine reste rapportée', async () => {
     const target = join(await tempDir(), 'projet');
     const brutal: FileSystem = {
       ...nodeFileSystem,
@@ -203,7 +203,7 @@ describe('generate ne lève jamais', () => {
   });
 });
 
-describe('le plan seul n’écrit rien — dry-run', () => {
+describe('le plan seul n’écrit rien dry-run', () => {
   it('construire un plan ne touche pas au disque', async () => {
     const target = await tempDir();
     planFiles(target, [file('README.md'), file('src/app.ts')]);
@@ -211,7 +211,7 @@ describe('le plan seul n’écrit rien — dry-run', () => {
   });
 });
 
-describe('liens symboliques — §24', () => {
+describe('liens symboliques §24', () => {
   it('refuse d’écrire à travers un dossier qui est un lien symbolique', async () => {
     const target = join(await tempDir(), 'projet');
     const linked: FileSystem = {

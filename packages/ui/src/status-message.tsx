@@ -21,7 +21,7 @@ export type StatusMessageProps = {
  * Une ligne d'état annoncée aux lecteurs d'écran.
  *
  * Le rôle ARIA suit le ton : une aide est une région `status` (polie), une
- * erreur est un `alert` (assertif) — c'est précisément ce qu'un `<p>` stylé
+ * erreur est un `alert` (assertif) c'est précisément ce qu'un `<p>` stylé
  * seul ne dit pas. Les deux rendent les mêmes classes que le balisage manuel.
  */
 export function StatusMessage({

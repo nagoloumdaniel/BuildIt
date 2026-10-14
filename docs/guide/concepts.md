@@ -2,7 +2,7 @@
 
 BuildIt tient en une phrase : **décrire un projet, choisir ses
 plateformes et ses technologies, obtenir un projet prêt à développer**. Ce qui
-suit explique comment, et surtout *qui décide quoi* — c'est la partie qu'on ne
+suit explique comment, et surtout *qui décide quoi* c'est la partie qu'on ne
 peut pas deviner en lisant une sortie de commande.
 
 ## Un seul chemin, deux façades
@@ -24,7 +24,7 @@ peut pas deviner en lisant une sortie de commande.
                         Post-install (install, Git) ──► Validation
 ```
 
-Le CLI et l'interface web produisent le **même objet** — un Project Manifest —
+Le CLI et l'interface web produisent le **même objet** un Project Manifest —
 et le passent au **même pipeline**. C'est ce qui rend vérifiable la promesse
 « mêmes choix ⇒ même projet », et c'est testé des deux côtés :
 
@@ -41,7 +41,7 @@ l'analyse de projet, le Project Doctor, la couche GitHub et le déploiement.
 
 ## La frontière qui structure tout : forme, identité, combinaison
 
-Trois questions différentes, trois paquets différents — et aucun ne fait le
+Trois questions différentes, trois paquets différents et aucun ne fait le
 travail d'un autre.
 
 | Question | Qui répond | Où |
@@ -50,7 +50,7 @@ travail d'un autre.
 | Est-ce que ce **slug existe** au catalogue, et qu'est-ce que c'est ? | `packages/registry` | [`schema/entry.ts`](../../packages/registry/src/schema/entry.ts), [`load.ts`](../../packages/registry/src/load.ts) |
 | Est-ce que ces technologies **vont ensemble**, pour ces cibles ? | `packages/compatibility` | [`rules.ts`](../../packages/compatibility/src/rules.ts), [`resolve.ts`](../../packages/compatibility/src/resolve.ts) |
 
-Concrètement, chaque refus vient de la bonne couche — vérifié :
+Concrètement, chaque refus vient de la bonne couche vérifié :
 
 ```text
 $ pnpm pf graph manifest-avec-un-champ-inconnu.json
@@ -93,7 +93,7 @@ comment le fabriquer :
 
 Deux invariants, tenus par des tests :
 
-- **un seul champ à contenu libre** : `name` — c'est ce qui rend le manifest
+- **un seul champ à contenu libre** : `name` c'est ce qui rend le manifest
   structurellement incapable de porter une valeur sensible ;
 - **`parseManifest` rend une forme canonique** : ensembles triés, clés dans
   l'ordre déclaré. Deux manifests exprimant les mêmes choix produisent donc la
@@ -122,8 +122,8 @@ est le travail du compatibility engine. Détail :
 
 Il fait trois choses, dans cet ordre :
 
-1. **il complète** : `requires` est suivi de façon transitive — choisir `hono`
-   fait entrer `zod` et `openapi` — et il **dit ce qu'il a ajouté, et qui
+1. **il complète** : `requires` est suivi de façon transitive choisir `hono`
+   fait entrer `zod` et `openapi` et il **dit ce qu'il a ajouté, et qui
    l'exigeait** (`← ajoutée : exigée par hono`) ;
 2. **il refuse** ce qui ne peut pas tenir : deux technologies d'une catégorie
    **exclusive** (deux ORM, deux frameworks front), un conflit déclaré
@@ -133,7 +133,7 @@ Il fait trois choses, dans cet ordre :
    technologie dépréciée, combinaison non certifiée.
 
 L'**arité** d'une catégorie est une propriété invariante de la catégorie, pas de
-la fiche : `testing` est cumulative (Vitest *et* Playwright cohabitent — c'est le
+la fiche : `testing` est cumulative (Vitest *et* Playwright cohabitent c'est le
 cas du preset SaaS), `orm` est exclusive. La déduire de la seule catégorie serait
 faux ; elle vit dans
 [`packages/compatibility/src/arity.ts`](../../packages/compatibility/src/arity.ts).
@@ -148,7 +148,7 @@ sans être compilée. Aucun avertissement n'est affiché : le moteur refuse ce q
 ne peut pas fonctionner, il ne prévient pas pour ce qui le peut.
 
 ```text
-mon-api — 12 technologies, stack déclarée
+mon-api 12 technologies, stack déclarée
   · orm              Drizzle (drizzle)          ← déclarée : hors test de fumée
   ✓ backend          Hono (hono)
 ```
@@ -159,15 +159,15 @@ serait ingérable face à la combinatoire du catalogue.
 ## Presets et recettes
 
 Un **preset** est un manifest nommé, plus des recettes. Les quatre presets sont
-partagés par le CLI et l'UI (`packages/presets/src/index.ts`) — deux listes
+partagés par le CLI et l'UI (`packages/presets/src/index.ts`) deux listes
 finiraient par diverger, et « le même preset » ne donnerait plus le même projet.
 
 | Preset | Cibles | Architecture | Recettes |
 |---|---|---|---|
 | `saas` | web | single-app | `resend-transactional`, `stripe-checkout` |
 | `dashboard` | web | single-app | `dashboard-admin` |
-| `api` | api | single-app | — |
-| `fullstack` | web + api | monorepo | — |
+| `api` | api | single-app | |
+| `fullstack` | web + api | monorepo | |
 
 Une **recette** ajoute du code applicatif qui n'appartient à aucune technologie
 seule : le parcours de paiement Stripe, la page de connexion, l'espace

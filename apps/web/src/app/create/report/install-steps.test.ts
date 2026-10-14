@@ -7,7 +7,7 @@ function commands(steps: ReturnType<typeof installSteps>): readonly string[] {
   return steps.flatMap((step) => (step.command === undefined ? [] : [step.command]));
 }
 
-describe('installSteps — la marche à suivre après une génération réussie', () => {
+describe('installSteps la marche à suivre après une génération réussie', () => {
   it('le socle minimal : ouvrir un terminal, installer, démarrer', () => {
     const steps = installSteps({ directory: '', docker: false, envVarNames: [] }, FR);
     expect(commands(steps)).toEqual(['pnpm install', 'pnpm dev']);
@@ -118,7 +118,7 @@ describe('installSteps — la marche à suivre après une génération réussie'
   });
 });
 
-describe('installSteps — après une sortie en dossier', () => {
+describe('installSteps après une sortie en dossier', () => {
   it('des dépendances déjà installées ne sont pas à réinstaller', () => {
     const steps = installSteps(
       { directory: '/home/dev/app', docker: false, envVarNames: [], installed: true },

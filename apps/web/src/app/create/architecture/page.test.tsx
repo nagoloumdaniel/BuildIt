@@ -22,7 +22,7 @@ function rendered(html: string): number {
 describe('les architectures réelles du manifest (§6.5)', () => {
   it('décrit chacune et donne son impact : complexité ET coût d’exploitation', () => {
     // Table complète : ajouter une architecture au manifest casse ici, et force
-    // à écrire sa phrase — même garde-fou que l'écran cible.
+    // à écrire sa phrase même garde-fou que l'écran cible.
     const notes = FR.wizard.architecture.labels;
     expect(Object.keys(notes).sort()).toEqual([...ARCHITECTURES].sort());
     for (const architecture of ARCHITECTURES) {

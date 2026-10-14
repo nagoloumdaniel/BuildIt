@@ -80,7 +80,7 @@ describe('cloneRepository', () => {
     expect(call?.options?.env).toMatchObject({ GIT_TERMINAL_PROMPT: '0' });
   });
 
-  it('le jeton passe par l’environnement de git seul — jamais en argument ni dans l’URL', async () => {
+  it('le jeton passe par l’environnement de git seul jamais en argument ni dans l’URL', async () => {
     const runner = fakeGit();
     await cloneRepository(remote('octocat/Hello-World'), join(await temp(), 'x'), {
       runner,
@@ -194,7 +194,7 @@ async function realRepository(withCommit: boolean): Promise<string> {
   return dir;
 }
 
-describe('repositoryState — vrai git', () => {
+describe('repositoryState vrai git', () => {
   it('un dossier hors dépôt', async () => {
     const state = await repositoryState(await temp(), nodeCommandRunner);
     expect(state).toEqual({ isRepository: false, hasCommit: false });

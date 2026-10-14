@@ -1,4 +1,4 @@
-# Phase 6.7b — Monorepo multi-applications et preset Full-stack : design
+# Phase 6.7b Monorepo multi-applications et preset Full-stack : design
 
 **Date :** 2026-09-28 · **Phase roadmap :** 6.7b · **Sections :** §8 (Full-stack), §9, §13, §22
 
@@ -16,30 +16,30 @@ Aucun second générateur. La stack résolue est **répartie** entre les applica
 racine/                package.json (turbo), turbo.json, pnpm-workspace.yaml,
                        biome.json, .gitignore, README.md, docker-compose.yml,
                        .github/workflows/ci.yml
-apps/web/              Next.js — généré comme une application seule
-apps/api/              Hono — généré comme une application seule
+apps/web/              Next.js généré comme une application seule
+apps/api/              Hono généré comme une application seule
 ```
 
 Conséquence : tout ce que le test de fumée prouve pour les presets SaaS et API reste vrai dans le monorepo, fichier pour fichier.
 
-## Répartition — donnée, pas logique
+## Répartition donnée, pas logique
 
 Chaque technologie va à un **rôle** selon sa catégorie (table `monorepo.data.ts`), avec quelques exceptions par identifiant :
 
 | Rôle | Catégories | Exceptions |
 |---|---|---|
 | `web` | frontend, styling, ui, authentication, authorization, state, data-fetching, forms, analytics, observability, payments, email, cms, ecommerce, build | `playwright` |
-| `api` | backend, api, cache, queue, search | — |
+| `api` | backend, api, cache, queue, search | |
 | `data` | database, orm | va au `web` s'il existe (Better Auth y vit), sinon à l'`api` |
-| `both` | language, validation, testing | — |
-| `root` | linting, formatting, monorepo, package-manager, git-hooks, containers, ci-cd, hosting, dev-environment, security | — |
+| `both` | language, validation, testing | |
+| `root` | linting, formatting, monorepo, package-manager, git-hooks, containers, ci-cd, hosting, dev-environment, security | |
 
 Une technologie `both` est générée dans chaque application. Une technologie `root` n'est générée qu'à la racine.
 
 ## Racine
 
 - `package.json` : `build`, `typecheck`, `test`, `dev` délèguent à `turbo run` ; `lint` lance Biome une fois pour tout le dépôt (sa configuration est à la racine, les applications en héritent).
-- `pnpm-workspace.yaml` : `apps/*`, `packages/*`, et la **réunion** des politiques `allowBuilds` de toutes les applications — pnpm ne lit que celle de la racine.
+- `pnpm-workspace.yaml` : `apps/*`, `packages/*`, et la **réunion** des politiques `allowBuilds` de toutes les applications pnpm ne lit que celle de la racine.
 - `docker-compose.yml` : la réunion des services de toutes les applications.
 - `.github/workflows/ci.yml` : les scripts de la racine.
 - Les fichiers propres à une application seule (`.gitignore`, `README.md`, workflow, compose, `pnpm-workspace.yaml`, `biome.json`) produits par les générations d'applications sont **écartés** : la racine les porte une fois.

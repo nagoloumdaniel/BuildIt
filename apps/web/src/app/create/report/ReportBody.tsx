@@ -14,7 +14,7 @@ import type { GenerationReport } from './result';
 
 export interface ReportBodyProps {
   readonly report: GenerationReport;
-  /** Ce que le brouillon porte encore — un refus doit permettre de le corriger. */
+  /** Ce que le brouillon porte encore un refus doit permettre de le corriger. */
   readonly technologies: readonly string[];
   readonly docker: boolean;
   readonly envVarNames: readonly string[];
@@ -35,7 +35,7 @@ export interface ReportBodyProps {
 }
 
 /**
- * Le rapport du §6.14 — il reçoit son rapport et ne relit rien : ni le
+ * Le rapport du §6.14 il reçoit son rapport et ne relit rien : ni le
  * brouillon, ni le moteur. Seule la langue vient du contexte (`useLocale`),
  * parce que le poids en dépend.
  *

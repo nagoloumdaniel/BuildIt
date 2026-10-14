@@ -1,8 +1,8 @@
 /**
  * La règle unique « catégorie du catalogue → emplacement dans le manifest ».
  *
- * Elle vivait en deux copies — `PLACES` dans `apps/cli/src/commands/add.ts` et
- * `SLOTS` dans `apps/web/src/lib/draft-to-manifest.ts` — tenues ensemble par un
+ * Elle vivait en deux copies `PLACES` dans `apps/cli/src/commands/add.ts` et
+ * `SLOTS` dans `apps/web/src/lib/draft-to-manifest.ts` tenues ensemble par un
  * test d'égalité octet pour octet. Deux copies qui doivent dire la même chose
  * finissent toujours par diverger : la règle est donc ici, une fois (§10).
  *
@@ -13,7 +13,7 @@
  *
  * La table est complète : `Record<Category, Slot>` fait échouer la compilation
  * dès qu'une catégorie est ajoutée au catalogue, et force à décider de sa place
- * — c'est une décision de produit, pas un détail d'implémentation.
+ * c'est une décision de produit, pas un détail d'implémentation.
  */
 import type { Category } from './schema/entry.js';
 

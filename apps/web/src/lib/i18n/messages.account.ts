@@ -4,14 +4,14 @@ import type { Widen } from './widen';
  * Les textes du compte GitHub, du dépôt, du partage par lien et du graphe de
  * dépendances. Voir `messages.ts` pour la composition.
  *
- * Les identifiants techniques — noms de dépôts, chemins, URLs, slugs de rôle,
- * codes d'erreur de `?error=` — ne sont jamais traduits : ils sont les mêmes
+ * Les identifiants techniques noms de dépôts, chemins, URLs, slugs de rôle,
+ * codes d'erreur de `?error=` ne sont jamais traduits : ils sont les mêmes
  * dans un terminal et dans la barre d'adresse. Ce qui est traduit, c'est le
  * cadre autour, et les phrases qui expliquent quoi faire.
  */
 
 export const FR_ACCOUNT = {
-  /** L'écran 21 — connexion GitHub (§6.21, §20bis). */
+  /** L'écran 21 connexion GitHub (§6.21, §20bis). */
   account: {
     title: 'Compte GitHub',
     connection: 'Connexion',
@@ -34,7 +34,7 @@ export const FR_ACCOUNT = {
     contactingGithub: 'En attente de GitHub…',
     disconnect: 'Se déconnecter',
     /* L'attente de validation dans le navigateur : le code court, l'adresse, et
-       le geste qui en sort — sans lui, l'écran resterait bloqué sur GitHub. */
+       le geste qui en sort sans lui, l'écran resterait bloqué sur GitHub. */
     deviceTitle: 'Validation dans le navigateur',
     deviceInstruction: 'Ouvrez la page GitHub et saisissez ce code :',
     deviceAddress: 'Adresse :',
@@ -54,7 +54,7 @@ export const FR_ACCOUNT = {
       }
     },
     /* Les refus d'un dépôt : ils viennent du moteur, ils sont affichés tels
-       quels — seul le cadre est traduit. */
+       quels seul le cadre est traduit. */
     connectionIssueTitle: 'La connexion ne peut pas aboutir',
     connectionIssueBody:
       'Ce qui bloque est listé ci-dessous, tel que GitHub et le système le renvoient. Rien n’a été connecté.',
@@ -127,7 +127,7 @@ export const FR_ACCOUNT = {
       'Ce lien n’est pas une adresse de partage exploitable : collez le lien complet, ou ouvrez un projet depuis l’accueil.',
   },
 
-  /** L'écran 24 — dépôt & partage (§6.24, §20bis). */
+  /** L'écran 24 dépôt & partage (§6.24, §20bis). */
   repo: {
     title: 'Dépôt & partage',
     description:
@@ -208,7 +208,7 @@ export const FR_ACCOUNT = {
     },
   },
 
-  /** L'écran 11 — graphe de dépendances (§6.11), hors parcours. */
+  /** L'écran 11 graphe de dépendances (§6.11), hors parcours. */
   graph: {
     title: 'Graphe de dépendances',
     description:

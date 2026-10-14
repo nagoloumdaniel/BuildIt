@@ -5,7 +5,7 @@ import type { Architecture } from './schema/enums.js';
  *
  * Donnée pure, sans `fs` : le générateur en tire les README posés dans le
  * projet, et l'écran Architecture de l'assistant en tire son aperçu
- * d'arborescence — une seule source, donc jamais deux versions qui divergent.
+ * d'arborescence une seule source, donc jamais deux versions qui divergent.
  *
  * Trois niveaux distincts, à ne pas confondre :
  * - l'organisation du dépôt (monorepo : `apps/`, `packages/`, `infra/`) ;

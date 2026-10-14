@@ -19,7 +19,7 @@ export const FR_BUILD = {
     /** Le statut d'une génération en cours, partagé par la page et la barre. */
 
     /**
-     * Écran 7 — Environment & Secrets : noms de variables uniquement, où poser
+     * Écran 7 Environment & Secrets : noms de variables uniquement, où poser
      * les valeurs, et ce que le brouillon a le droit de retenir.
      */
     env: {
@@ -60,7 +60,7 @@ export const FR_BUILD = {
     },
 
     /**
-     * Écran 8 — Infrastructure : les deux booléens (Docker, CI), le cloud cible
+     * Écran 8 Infrastructure : les deux booléens (Docker, CI), le cloud cible
      * et la traduction assumée dans le champ `infra` du manifest.
      */
     infrastructure: {
@@ -85,7 +85,7 @@ export const FR_BUILD = {
     },
 
     /**
-     * Écran 9 — Project Blueprint : le manifest canonique dit en clair. Les
+     * Écran 9 Project Blueprint : le manifest canonique dit en clair. Les
      * rôles et les libellés de plateforme/architecture y vivent, parce que le
      * résumé est un texte avant d'être une donnée.
      */
@@ -136,7 +136,7 @@ export const FR_BUILD = {
     },
 
     /**
-     * Écran 11 — Generation Progress : le dossier montré avant d'écrire, le
+     * Écran 11 Generation Progress : le dossier montré avant d'écrire, le
      * lancement, le refus, et le vocabulaire des étapes du pipeline.
      */
     generate: {
@@ -148,7 +148,7 @@ export const FR_BUILD = {
     },
 
     /**
-     * Écran 12 — Generation Report : le verdict, ce qui a été écrit, les
+     * Écran 12 Generation Report : le verdict, ce qui a été écrit, les
      * avertissements, les refus, et la marche à suivre pour reprendre le projet.
      */
     report: {

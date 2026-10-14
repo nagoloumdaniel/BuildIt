@@ -13,7 +13,7 @@ import {
  *
  * Même source que la génération (`skeletonTree` + `skeletonFiles`, dans
  * `@buildit/manifest`) : un projet ouvert reçoit exactement ce qu'un projet
- * généré aurait eu. Module pur, sans `fs` — il tourne dans le navigateur en
+ * généré aurait eu. Module pur, sans `fs` il tourne dans le navigateur en
  * hébergé comme sur le serveur en local.
  *
  * Règle d'or : on ne propose que ce qui **manque**. Un fichier présent n'est
@@ -172,7 +172,7 @@ export function projectShape(input: ShapeInput): ProjectShape {
   };
 }
 
-/** La date du jour, locale, en `AAAA-MM-JJ` — celle inscrite dans l'ADR. */
+/** La date du jour, locale, en `AAAA-MM-JJ` celle inscrite dans l'ADR. */
 export function localIsoDate(date: Date = new Date()): string {
   const pad = (value: number) => String(value).padStart(2, '0');
   return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
@@ -231,7 +231,7 @@ export function dirsOfPaths(paths: readonly string[]): Set<string> {
   return dirs;
 }
 
-/** Seulement ce qui manque — un fichier présent n'est jamais réécrit. */
+/** Seulement ce qui manque un fichier présent n'est jamais réécrit. */
 export function missingBaseFiles(
   files: readonly SkeletonFile[],
   exists: (path: string) => boolean,

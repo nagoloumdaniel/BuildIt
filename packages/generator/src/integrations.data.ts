@@ -2,7 +2,7 @@
  * Ce que chaque technologie apporte au projet généré, au-delà de ses paquets.
  *
  * Le registry dit ce qu'**est** une technologie : catégorie, licence, paquets,
- * relations. Il ne dit pas ce qu'elle **fait** dans un projet — quels scripts
+ * relations. Il ne dit pas ce qu'elle **fait** dans un projet quels scripts
  * npm elle installe, quel service Docker elle demande. C'est une couche
  * d'intégration, pas d'identité, et la mélanger au registry brouillerait une
  * frontière qui tient depuis la Phase 3.
@@ -17,7 +17,7 @@
  * Service à lancer en local pour développer contre cette technologie (§15).
  *
  * Volontairement minimal : image, port, variables, volume. Tout ce qui relève
- * du déploiement — répliques, réseaux, secrets managés — sort du périmètre du
+ * du déploiement répliques, réseaux, secrets managés sort du périmètre du
  * MVP et alourdirait un fichier que l'utilisateur doit pouvoir relire.
  */
 export interface DockerService {
@@ -39,7 +39,7 @@ export interface DockerService {
    * Le chemin doit venir de la donnee, jamais etre derive du nom du service :
    * PostgreSQL ecrit dans /var/lib/postgresql/data, Redis dans /data, MySQL
    * dans /var/lib/mysql. Une regle generique monterait le volume a cote des
-   * donnees, et rien ne serait persiste — sans erreur visible.
+   * donnees, et rien ne serait persiste sans erreur visible.
    */
   readonly volume?: { readonly name: string; readonly path: string };
   /** Commande de vérification de démarrage. */
@@ -48,7 +48,7 @@ export interface DockerService {
    * Variable d'environnement et URL qui joignent ce service en local.
    *
    * Écrite en **commentaire** dans docker-compose.yml, à côté des identifiants
-   * de bac à sable qu'elle reprend — jamais dans `.env.example`, qui ne porte
+   * de bac à sable qu'elle reprend jamais dans `.env.example`, qui ne porte
    * aucune valeur (§24).
    */
   readonly connection?: { readonly env: string; readonly url: string };
@@ -56,7 +56,7 @@ export interface DockerService {
 
 /** Ce qu'un fichier de configuration peut savoir du projet qu'il configure. */
 export interface IntegrationContext {
-  /** Noms des variables d'environnement, triés — les mêmes que `.env.example`. */
+  /** Noms des variables d'environnement, triés les mêmes que `.env.example`. */
   readonly env: readonly string[];
 }
 
@@ -87,7 +87,7 @@ export interface Integration {
    */
   readonly when?: string | readonly string[];
   /**
-   * Variables d'environnement propres à la combinaison — les clés exposées au
+   * Variables d'environnement propres à la combinaison les clés exposées au
    * navigateur, par exemple, dont le préfixe dépend du framework
    * (`NEXT_PUBLIC_`). Des noms, jamais des valeurs.
    */
@@ -100,7 +100,7 @@ export interface Integration {
    * le socle compose le fichier commun qui les importe. Aucun n'écrase l'autre.
    */
   readonly clientInstrumentation?: string;
-  /** Paquets que l'intégration ajoute, avec leur plage — jamais de `*`. */
+  /** Paquets que l'intégration ajoute, avec leur plage jamais de `*`. */
   readonly dependencies?: Readonly<Record<string, string>>;
   readonly devDependencies?: Readonly<Record<string, string>>;
   /** Scripts npm à ajouter au package.json généré. */
@@ -111,7 +111,7 @@ export interface Integration {
    *
    * Ils ne sont émis que pour une fiche `certified`, c'est-à-dire quand un
    * template pose réellement ce code. Sur une fiche seulement déclarée,
-   * `next build` échouerait faute d'application — et la CI générée avec lui.
+   * `next build` échouerait faute d'application et la CI générée avec lui.
    */
   readonly appScripts?: Readonly<Record<string, string>>;
   /**
@@ -170,7 +170,7 @@ export interface Toolchain {
 
 /**
  * `strict` et `noEmit` : le projet généré vérifie ses types, il ne compile pas
- * avec tsc — c'est le travail du framework ou du bundler.
+ * avec tsc c'est le travail du framework ou du bundler.
  */
 const TSCONFIG = `{
   "compilerOptions": {
@@ -267,8 +267,8 @@ const BIOME_JSON = `{
  * Configuration Prisma 7.
  *
  * `process.env` et non `env('DATABASE_URL')` de prisma/config : ce dernier
- * **lève** quand la variable manque, et `prisma generate` — qui n'a pas besoin
- * de base — échouerait en CI et à l'installation. Schéma en dossier : chaque
+ * **lève** quand la variable manque, et `prisma generate` qui n'a pas besoin
+ * de base échouerait en CI et à l'installation. Schéma en dossier : chaque
  * intégration (Better Auth, notamment) y ajoute son fichier sans réécrire
  * celui des autres.
  */
@@ -349,7 +349,7 @@ test('la page d’accueil répond et affiche son titre', async ({ page }) => {
 
 /**
  * Tables de Better Auth, telles que les produit son CLI officiel (1.7.6,
- * `auth generate`) — reprises sans retouche, sauf le générateur et la source
+ * `auth generate`) reprises sans retouche, sauf le générateur et la source
  * de données, que le schéma en dossier déclare déjà une fois.
  */
 const BETTER_AUTH_PRISMA_MODELS = `// Tables de Better Auth. Produites par son CLI ; pour les régénérer après
@@ -606,7 +606,7 @@ export const INTEGRATIONS: readonly Integration[] = [
   },
   {
     // Better Auth câblé de bout en bout : tables Prisma, adaptateur, route
-    // Next.js. Chacun des trois dépend d'un autre choix — d'où une combinaison
+    // Next.js. Chacun des trois dépend d'un autre choix d'où une combinaison
     // entière, la seule que le test de fumée vérifie (jusqu'à une inscription
     // réelle en base). Email et mot de passe : la méthode qui ne demande
     // aucun compte tiers.
@@ -678,7 +678,7 @@ export const INTEGRATIONS: readonly Integration[] = [
   },
   {
     // Expo géré : l'application vient du template frontend/expo. `build`
-    // exporte le bundle Android avec Metro — la preuve que l'application
+    // exporte le bundle Android avec Metro la preuve que l'application
     // compile, sans SDK Android ni Xcode.
     id: 'expo',
     main: 'index.ts',
@@ -707,7 +707,7 @@ export const INTEGRATIONS: readonly Integration[] = [
   },
   {
     // Tauri 2 : interface Vite, cœur Rust dans src-tauri/. Les icônes sont
-    // engendrées depuis app-icon.svg avant chaque compilation Rust — un
+    // engendrées depuis app-icon.svg avant chaque compilation Rust un
     // template ne porte que du texte, et tauri-build les exige.
     id: 'tauri',
     appScripts: {

@@ -34,21 +34,21 @@ function decoded(): ReturnType<typeof decodeSharePayload> {
   return decodeSharePayload(encodeSharePayload(MANIFEST));
 }
 
-describe('metadata — la page ne s’indexe pas', () => {
+describe('metadata la page ne s’indexe pas', () => {
   it('pose noindex, nofollow', () => {
     expect(metadata.robots).toEqual({ index: false, follow: false });
     expect(String(metadata.title)).toContain('Configuration partagée');
   });
 });
 
-describe('SharePage — le rendu serveur attend le fragment', () => {
+describe('SharePage le rendu serveur attend le fragment', () => {
   it('n’affiche rien du manifest tant que le navigateur n’a pas lu le fragment', () => {
     const html = renderToStaticMarkup(createElement(SharePage));
     expect(html).toContain('Lecture du lien');
   });
 });
 
-describe('SharePreview — lecture seule, et rien de plus', () => {
+describe('SharePreview lecture seule, et rien de plus', () => {
   it('rend le Blueprint du manifest partagé', () => {
     const result = decoded();
     expect(result.ok).toBe(true);
@@ -90,7 +90,7 @@ describe('SharePreview — lecture seule, et rien de plus', () => {
   });
 });
 
-describe('ShareView — le fragment fait foi', () => {
+describe('ShareView le fragment fait foi', () => {
   it('décode le fragment du lien et rend la configuration', () => {
     const payload = encodeSharePayload(MANIFEST);
     const html = renderToStaticMarkup(createElement(ShareView, { hash: `#${payload}` }));

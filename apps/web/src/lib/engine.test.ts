@@ -36,7 +36,7 @@ describe('stackOptions', () => {
     const blocked = options.filter((option) => option.state === 'blocked');
     expect(blocked.length).toBeGreaterThan(0);
     // L'invariant du §5 : bloquée *et* expliquée. Une option grisée sans raison
-    // ne dit rien à l'utilisateur — c'est pire que de l'avoir masquée.
+    // ne dit rien à l'utilisateur c'est pire que de l'avoir masquée.
     for (const option of blocked) {
       expect(option.reason).toBeTruthy();
     }
@@ -68,7 +68,7 @@ describe('resolveSelection', () => {
 
   /**
    * Bug rapporté : un framework frontend choisi seul affichait « Combinaison
-   * certifiée », aucun problème — puis le Blueprint refusait le manifest
+   * certifiée », aucun problème puis le Blueprint refusait le manifest
    * (`frontend.language` obligatoire, §10) sans que rien ne l'ait annoncé sur
    * l'écran où le choix a été fait. Le moteur de compatibilité ignore à bon
    * droit `language` (ce n'est pas un conflit de combinaison) ; c'est donc ici,
@@ -81,7 +81,7 @@ describe('resolveSelection', () => {
     expect(resolution.issues.join(' ')).toMatch(/langage/i);
   });
 
-  it('le langage choisi fait taire l’alerte — plus de faux positif une fois complet', async () => {
+  it('le langage choisi fait taire l’alerte plus de faux positif une fois complet', async () => {
     const resolution = await resolveSelection({
       targets: ['web'],
       technologies: ['next', 'typescript'],

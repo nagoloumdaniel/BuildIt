@@ -50,7 +50,7 @@ describe('répartition production / développement', () => {
     expect(value.dependencies).toEqual({});
   });
 
-  it('sépare les deux rôles d’une même fiche — le cas Prisma', () => {
+  it('sépare les deux rôles d’une même fiche le cas Prisma', () => {
     // `prisma` est la CLI, `@prisma/client` tourne à l'exécution. C'est ce cas
     // qui impose une distinction au paquet et non à la fiche.
     const value = resolved([
@@ -79,7 +79,7 @@ describe('répartition production / développement', () => {
     expect(Object.keys(value.dependencies)).toEqual(['next', 'stripe']);
   });
 
-  it('trie les paquets par nom — un package.json reproductible', () => {
+  it('trie les paquets par nom un package.json reproductible', () => {
     const value = resolved([
       entry({
         id: 'x',
@@ -123,7 +123,7 @@ describe('origine de la plage de versions', () => {
 
 /**
  * §22, décision du spec : « jamais de `*` en silence ». Une version non épinglée
- * rend la génération non reproductible — on l'écrit quand même, mais on le dit.
+ * rend la génération non reproductible on l'écrit quand même, mais on le dit.
  */
 describe('versions non épinglées', () => {
   it('avertit sur un paquet sans plage connue', () => {

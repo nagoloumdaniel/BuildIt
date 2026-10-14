@@ -12,8 +12,8 @@ import type { GenerationView } from '../../actions';
  * La mémoire des projets générés (§6.14).
  *
  * Un projet généré **n'est plus un brouillon** : il est sur le disque, il ne se
- * modifie plus depuis BuildIt, et c'est la liste des projets — pas la reprise de
- * parcours — qui le porte. Cette fonction est le seul endroit qui écrit cette
+ * modifie plus depuis BuildIt, et c'est la liste des projets pas la reprise de
+ * parcours qui le porte. Cette fonction est le seul endroit qui écrit cette
  * mémoire, et elle n'écrit **rien** si la génération a été refusée : un refus
  * reste à corriger, il n'a produit aucun projet.
  *

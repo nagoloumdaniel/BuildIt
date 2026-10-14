@@ -2,7 +2,7 @@ import { invoke } from '@tauri-apps/api/core';
 
 /**
  * Interface : demande un message au cœur Rust (commande `greet`, déclarée
- * dans src-tauri/src/lib.rs) et l'affiche. Hors de Tauri — page ouverte dans
+ * dans src-tauri/src/lib.rs) et l'affiche. Hors de Tauri page ouverte dans
  * un simple navigateur —, l'appel échoue et le message d'origine reste.
  */
 async function main(): Promise<void> {

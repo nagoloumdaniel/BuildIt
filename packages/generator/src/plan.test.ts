@@ -25,11 +25,11 @@ describe('plan valide', () => {
     expect(codesOf([{ ...FILE, path: '.env.example' }])).toEqual([]);
   });
 
-  it('accepte un contenu vide — un fichier vide reste un fichier', () => {
+  it('accepte un contenu vide un fichier vide reste un fichier', () => {
     expect(codesOf([{ ...FILE, contents: '' }])).toEqual([]);
   });
 
-  it('trie les fichiers par chemin — un plan est reproductible', () => {
+  it('trie les fichiers par chemin un plan est reproductible', () => {
     const result = planFiles('/cible', [
       { ...FILE, path: 'src/b.ts' },
       { ...FILE, path: 'README.md' },
@@ -50,7 +50,7 @@ describe('plan valide', () => {
  * Les six règles qui séparent un générateur d'un effaceur de disque.
  * Chacune se prouve en refusant, pas en acceptant.
  */
-describe('sécurité des chemins — §24', () => {
+describe('sécurité des chemins §24', () => {
   it('refuse un chemin absolu POSIX', () => {
     expect(codesOf([{ ...FILE, path: '/etc/passwd' }])).toContain('GEN_PATH_TRAVERSAL');
   });
@@ -102,7 +102,7 @@ describe('sécurité des chemins — §24', () => {
     ).toContain('GEN_FILE_CONFLICT');
   });
 
-  it('nomme les deux sources en conflit — on doit savoir qui se marche dessus', () => {
+  it('nomme les deux sources en conflit on doit savoir qui se marche dessus', () => {
     const result = planFiles('/cible', [
       { ...FILE, path: 'README.md', source: 'base' },
       { ...FILE, path: 'README.md', source: 'auth' },
@@ -114,7 +114,7 @@ describe('sécurité des chemins — §24', () => {
     }
   });
 
-  it('refuse une source vide — un fichier sans origine est intraçable', () => {
+  it('refuse une source vide un fichier sans origine est intraçable', () => {
     expect(codesOf([{ ...FILE, source: '' }])).toContain('GEN_MISSING_SOURCE');
   });
 
@@ -124,7 +124,7 @@ describe('sécurité des chemins — §24', () => {
       { ...FILE, path: '../dehors' },
       { ...FILE, path: 'src\\x' },
     ]);
-    // Trois fichiers fautifs, trois problèmes — mais seulement deux codes :
+    // Trois fichiers fautifs, trois problèmes mais seulement deux codes :
     // « chemin absolu » et « remontée » sont deux causes d'une même sortie du
     // dossier cible, et l'utilisateur n'a pas à distinguer les deux.
     expect(codes).toHaveLength(3);
@@ -149,7 +149,7 @@ describe('sécurité des chemins — §24', () => {
   });
 });
 
-describe('describePlan — le dry-run du §6.12', () => {
+describe('describePlan le dry-run du §6.12', () => {
   it('rend une arborescence lisible', () => {
     const result = planFiles('/cible', [
       { ...FILE, path: 'README.md' },
@@ -200,9 +200,9 @@ describe('describePlan — le dry-run du §6.12', () => {
 /**
  * Revue sécurité 5B.7. Un template qui écrit dans `.git/` peut poser un hook
  * (`.git/hooks/pre-commit`) ou une configuration (`core.fsmonitor`) : du code
- * exécuté au prochain `git commit` — celui de l'étape git du pipeline, déjà.
+ * exécuté au prochain `git commit` celui de l'étape git du pipeline, déjà.
  */
-describe('chemins réservés — revue sécurité', () => {
+describe('chemins réservés revue sécurité', () => {
   it.each([
     '.git/hooks/pre-commit',
     '.git/config',
@@ -222,7 +222,7 @@ describe('chemins réservés — revue sécurité', () => {
   );
 });
 
-describe('conflits sur le chemin réel — revue sécurité', () => {
+describe('conflits sur le chemin réel revue sécurité', () => {
   it('deux écritures du même fichier sous deux formes sont un conflit', () => {
     expect(
       codesOf([

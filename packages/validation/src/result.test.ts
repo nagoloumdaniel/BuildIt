@@ -28,7 +28,7 @@ describe('fail', () => {
     }
   });
 
-  it('accepte plusieurs problèmes — la validation ne s’arrête pas au premier', () => {
+  it('accepte plusieurs problèmes la validation ne s’arrête pas au premier', () => {
     const result = fail([issue, { ...issue, path: ['targets'] }]);
     expect(result.ok).toBe(false);
     if (!result.ok) {
@@ -36,7 +36,7 @@ describe('fail', () => {
     }
   });
 
-  it('refuse une liste vide — un échec sans raison est un bug', () => {
+  it('refuse une liste vide un échec sans raison est un bug', () => {
     expect(() => fail([])).toThrow();
   });
 });

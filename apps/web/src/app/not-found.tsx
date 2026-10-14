@@ -12,19 +12,19 @@ import { NEW_PROJECT_HREF } from '../lib/new-project';
 /**
  * L'écran 404.
  *
- * Il ne s'excuse pas et ne plaisante pas : il dit l'adresse demandée — la
+ * Il ne s'excuse pas et ne plaisante pas : il dit l'adresse demandée la
  * seule information que le visiteur n'a pas sous les yeux s'il est arrivé par
- * un lien — puis les endroits d'où repartir. Trois, pas six : une page
+ * un lien puis les endroits d'où repartir. Trois, pas six : une page
  * d'erreur n'est pas un plan du site, mais une seule sortie serait un
  * cul-de-sac.
  *
  * Le « 404 » est en chasse fixe et grand : c'est un code, et c'est le seul
- * endroit de l'application où la typographie fait du bruit. C'est voulu — une
+ * endroit de l'application où la typographie fait du bruit. C'est voulu une
  * page d'erreur doit se reconnaître sans être lue.
  *
  * L'adresse demandée n'est **pas** rendue au premier passage : le rendu serveur
  * de la 404 ne connaît pas de chemin (`usePathname()` y est vide), et l'afficher
- * tout de suite faisait diverger l'hydratation (`#418`) — trouvé par les
+ * tout de suite faisait diverger l'hydratation (`#418`) trouvé par les
  * captures d'écran, pas par un test. Elle apparaît donc après le montage, ce qui
  * ne coûte rien : personne n'attend une fraction de seconde pour lire un chemin.
  */

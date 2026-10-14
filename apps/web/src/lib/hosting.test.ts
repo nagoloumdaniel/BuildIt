@@ -4,7 +4,7 @@ import { allowedHosts, isAllowedHost, isHostedEnvironment } from './hosting';
 /**
  * Détection d'environnement et liste des hôtes autorisés (Phase 12).
  *
- * Décision : le mode local (décision 8B.6) n'est **jamais** élargi — même si
+ * Décision : le mode local (décision 8B.6) n'est **jamais** élargi même si
  * `PF_SITE_URL` est définie par erreur sur une machine locale, seuls
  * `127.0.0.1`/`localhost`/`::1` passent. Seul `VERCEL=1` (ou `PF_HOSTED=1`,
  * pour les tests/autres hébergeurs) ouvre la porte à un domaine public.
@@ -24,7 +24,7 @@ describe('isHostedEnvironment', () => {
   });
 });
 
-describe('allowedHosts — mode local', () => {
+describe('allowedHosts mode local', () => {
   it('ignore PF_SITE_URL en local : seuls les hôtes de boucle locale passent', () => {
     const hosts = allowedHosts({ PF_SITE_URL: 'https://trybuildit.vercel.app' });
     expect(hosts.has('127.0.0.1')).toBe(true);
@@ -32,7 +32,7 @@ describe('allowedHosts — mode local', () => {
   });
 });
 
-describe('allowedHosts — mode hébergé', () => {
+describe('allowedHosts mode hébergé', () => {
   it('ajoute l’hôte de PF_SITE_URL', () => {
     const hosts = allowedHosts({ VERCEL: '1', PF_SITE_URL: 'https://trybuildit.vercel.app' });
     expect(hosts.has('trybuildit.vercel.app')).toBe(true);
@@ -49,7 +49,7 @@ describe('allowedHosts — mode hébergé', () => {
   });
 });
 
-describe('isAllowedHost — refus d’un hôte non autorisé, en local comme en hébergé', () => {
+describe('isAllowedHost refus d’un hôte non autorisé, en local comme en hébergé', () => {
   it('refuse un hôte d’attaquant en local', () => {
     expect(isAllowedHost('attaquant.example', {})).toBe(false);
   });

@@ -4,7 +4,7 @@
   "private": true,
   "type": "module",
   "license": "MIT",
-  "description": "Project Manifest — le contrat d'entrée partagé par l'UI et le CLI (cahier des charges §10).",
+  "description": "Project Manifest le contrat d'entrée partagé par l'UI et le CLI (cahier des charges §10).",
   "exports": {
     ".": {
       "types": "./src/index.ts",

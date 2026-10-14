@@ -15,11 +15,11 @@ import type { LocalOpenController } from './local-open';
 import { PickCard } from './pick-card';
 
 /**
- * La vue de l'écran 23 — Open Local Project (§6.23).
+ * La vue de l'écran 23 Open Local Project (§6.23).
  *
  * **Aucun champ « collez un chemin », dans aucun mode.** Le dossier se choisit
  * dans l'explorateur : celui de la machine quand BuildIt tourne en local
- * (`pf web`), celui du navigateur quand il est hébergé — dans les deux cas une
+ * (`pf web`), celui du navigateur quand il est hébergé dans les deux cas une
  * vraie fenêtre de l'explorateur de Windows, et dans les deux cas l'analyse
  * part au choix du dossier, parce que choisir, c'est demander.
  *

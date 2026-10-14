@@ -34,8 +34,8 @@ export interface SessionStore {
    *
    * C'est le troisième argument de `useSyncExternalStore`, et il n'est pas
    * décoratif : React s'en sert pour **l'hydratation**. Le serveur a rendu un
-   * brouillon vide ; si le composant qui s'hydrate lit l'état courant — déjà
-   * enrichi par `attach` — il rend une sélection que le HTML ne porte pas, et
+   * brouillon vide ; si le composant qui s'hydrate lit l'état courant déjà
+   * enrichi par `attach` il rend une sélection que le HTML ne porte pas, et
    * React signale une divergence (`#418`), exactement ce qui arrivait sur
    * `/create/target`, `/create/preview` et `/create/generate` : la case cochée
    * par le brouillon relu face à `aria-pressed="false"` dans le HTML.
@@ -55,7 +55,7 @@ export interface SessionStore {
    *
    * Relire un brouillon **identique** à l'état courant n'est pas un
    * changement : `attach` ne notifie pas les abonnés dans ce cas, sans quoi
-   * les écrans rejouent leurs effets pour la même valeur — c'est ce qui
+   * les écrans rejouent leurs effets pour la même valeur c'est ce qui
    * chargeait le catalogue du Stack Builder deux fois par visite (§8bis).
    * Un brouillon relu différent, lui, est annoncé : c'est la reprise.
    */
@@ -114,14 +114,14 @@ export function createSessionStore(storage: Storage | null, initial?: DraftState
       }
       const restored = restorePersistedDraft(loadDraft(current), state, baseline);
       // Un brouillon relu identique n'est pas un changement : le notifier ferait
-      // rejouer les effets des écrans pour les mêmes valeurs — c'est ce qui
+      // rejouer les effets des écrans pour les mêmes valeurs c'est ce qui
       // chargeait le catalogue du Stack Builder deux fois par visite (§8bis).
       return samePersistedDraft(restored, state) ? state : commit(restored);
     },
   };
 }
 
-/** Ajoute ou retire une valeur d'une liste — le geste de presque tous les écrans. */
+/** Ajoute ou retire une valeur d'une liste le geste de presque tous les écrans. */
 export function toggle(list: readonly string[], value: string): string[] {
   return list.includes(value) ? list.filter((item) => item !== value) : [...list, value];
 }
@@ -133,7 +133,7 @@ export function toggle(list: readonly string[], value: string): string[] {
  * trois les 37 catégories du catalogue, chacun greffé sur le même geste :
  * cocher une option en attendant le prochain aller-retour serveur pour la
  * voir grisée si elle devient incompatible. Une catégorie **exclusive**
- * (`isExclusive`, §12 — un seul ORM, un seul moyen de paiement…) n'admet
+ * (`isExclusive`, §12 un seul ORM, un seul moyen de paiement…) n'admet
  * qu'un choix ; en ajouter un second sans retirer le premier produit une
  * sélection que le moteur refuse, mais seulement au Blueprint, des écrans
  * plus loin, sans lien visible avec le clic qui l'a causée (bug rapporté :
@@ -143,7 +143,7 @@ export function toggle(list: readonly string[], value: string): string[] {
  * aller-retour serveur, donc aucune fenêtre où un second clic rapproché
  * passerait avant que l'option visée n'ait eu le temps d'être grisée.
  *
- * `categoryOf` vient des options déjà chargées par l'écran — cette fonction
+ * `categoryOf` vient des options déjà chargées par l'écran cette fonction
  * ne requiert pas le catalogue, seulement de savoir qui d'autre appartient à
  * la même catégorie que l'identifiant choisi.
  */

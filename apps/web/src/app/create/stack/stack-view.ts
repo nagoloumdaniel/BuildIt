@@ -4,8 +4,8 @@ import type { Messages } from '../../../lib/i18n/messages';
 /**
  * La logique du Stack Builder (§5, §6.6), hors JSX.
  *
- * Tout ce qui décide — ordre de recommandation, budget « 2 à 4 », sort des
- * options bloquées, recherche, filtre de compatibilité — vit ici et se teste
+ * Tout ce qui décide ordre de recommandation, budget « 2 à 4 », sort des
+ * options bloquées, recherche, filtre de compatibilité vit ici et se teste
  * sans DOM. Le composant ne fait que rendre ces décisions : une règle du §5
  * écrite dans le JSX serait invérifiable, et le prochain écran la recopierait.
  *
@@ -15,7 +15,7 @@ import type { Messages } from '../../../lib/i18n/messages';
  *    longue traîne des options compatibles, jamais les incompatibles : elles
  *    restent visibles, grisées, avec leur raison (`optionReason`).
  * 2. **Un choix déjà fait reste visible.** Le budget de recommandation
- *    s'applique aux options proposées, pas aux options sélectionnées — masquer
+ *    s'applique aux options proposées, pas aux options sélectionnées masquer
  *    celles-ci empêcherait de les retirer.
  */
 
@@ -33,7 +33,7 @@ export interface StackOption {
   readonly label: string;
   readonly category: string;
   readonly state: OptionState;
-  /** La raison d'un blocage — toujours présente côté moteur pour un `blocked`. */
+  /** La raison d'un blocage toujours présente côté moteur pour un `blocked`. */
   readonly reason?: string;
   /** La documentation officielle de la technologie. */
   readonly docs?: string;
@@ -60,7 +60,7 @@ export const GUIDED_MAX = 4;
  * La raison affichée sous une option, ou `undefined` si elle est utilisable.
  *
  * Un blocage sans raison reste un blocage : l'écran ne montre jamais un bouton
- * grisé muet (§5, §12 — un refus dit pourquoi). `fallback` vient du dictionnaire
+ * grisé muet (§5, §12 un refus dit pourquoi). `fallback` vient du dictionnaire
  * de la langue courante : ce module ne connaît aucune phrase.
  */
 export function optionReason(option: StackOption, fallback: string): string | undefined {
@@ -76,7 +76,7 @@ export function optionReason(option: StackOption, fallback: string): string | un
  *
  * La table vit au dictionnaire (`wizard.stack.categories`) et couvre les 37
  * catégories du registry : `satisfies Record<Category, string>` y fait du
- * libellé manquant une erreur de compilation — même garde-fou que les cibles
+ * libellé manquant une erreur de compilation même garde-fou que les cibles
  * du §4.
  */
 export function categoryLabel(t: Messages, category: Category): string {
@@ -104,7 +104,7 @@ export function matchesQuery(option: StackOption, query: string): boolean {
 export interface GuidedView {
   /** Les propositions du §5 : les choix faits, puis les disponibles. */
   readonly recommended: readonly StackOption[];
-  /** Toutes les incompatibles, grisées avec leur raison — jamais masquées. */
+  /** Toutes les incompatibles, grisées avec leur raison jamais masquées. */
   readonly blocked: readonly StackOption[];
   /** La longue traîne compatible, derrière « Voir toutes les options ». */
   readonly hidden: readonly StackOption[];
@@ -169,7 +169,7 @@ export interface FilteredCatalogue {
 /**
  * La recherche globale du §5 : un seul champ, toutes catégories.
  *
- * Une catégorie sans résultat disparaît — c'est le sens d'une recherche — mais
+ * Une catégorie sans résultat disparaît c'est le sens d'une recherche mais
  * ce que le filtre de compatibilité écarte est **compté**, pour que rien ne
  * disparaisse en silence.
  */

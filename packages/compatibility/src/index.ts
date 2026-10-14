@@ -1,5 +1,5 @@
 /**
- * Compatibility Engine — raisonne sur les relations déclarées par le registry.
+ * Compatibility Engine raisonne sur les relations déclarées par le registry.
  *
  * Le registry déclare (`requires`, `compatibleWith`, `conflictsWith`), ce
  * paquet en tire des conclusions : il complète une sélection, détecte les

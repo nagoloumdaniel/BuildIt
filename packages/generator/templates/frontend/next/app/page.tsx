@@ -20,7 +20,7 @@ export default function HomePage() {
         </h2>
         <ul className="space-y-2 text-sm">
           <li>Next.js, TypeScript strict et Tailwind</li>
-          <li>Lint, tests et vérification de types — voir les scripts du package.json</li>
+          <li>Lint, tests et vérification de types voir les scripts du package.json</li>
           <li>Variables d’environnement listées dans .env.example</li>
         </ul>
       </Card>

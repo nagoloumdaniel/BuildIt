@@ -15,7 +15,7 @@ import {
  * - le jeton ne sort **jamais** de ce module autrement que rangé dans le
  *   trousseau : aucune vue, aucun retour de Server Action, aucun journal ;
  * - le jeton vient de `PF_GITHUB_TOKEN` (CI) s'il est défini, sinon du
- *   trousseau du système — même ordre que le CLI (`apps/cli/src/github-session.ts`) ;
+ *   trousseau du système même ordre que le CLI (`apps/cli/src/github-session.ts`) ;
  * - un `fetch` est **injecté** : les tests rejouent les réponses de l'API sans
  *   réseau, et le vrai client n'est monté qu'en production.
  */
@@ -93,7 +93,7 @@ export const DEVICE_FLOW_UNAVAILABLE: readonly string[] = [
 /**
  * L'état de la connexion, **sans le jeton**.
  *
- * `store` dit seulement *où* le jeton est rangé — de quoi rassurer sans rien
+ * `store` dit seulement *où* le jeton est rangé de quoi rassurer sans rien
  * divulguer. `issues` porte ce qui empêche de se connecter (device flow non
  * configuré, jeton révoqué), jamais une valeur secrète.
  */
@@ -142,7 +142,7 @@ export async function githubStatus(deps: SessionDeps): Promise<GithubStatusView>
 
 /**
  * Déconnexion : on retire le jeton du trousseau. Un jeton venu de
- * l'environnement n'est **pas** effacé par BuildIt — le trousseau le
+ * l'environnement n'est **pas** effacé par BuildIt le trousseau le
  * refuse, et ce refus est affiché tel quel.
  */
 export async function githubDisconnect(deps: SessionDeps): Promise<GithubStatusView> {

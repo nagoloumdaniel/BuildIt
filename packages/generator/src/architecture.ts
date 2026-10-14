@@ -1,5 +1,4 @@
 import {
-  type Architecture,
   isoDate,
   type Manifest,
   type SkeletonDir,
@@ -15,7 +14,7 @@ import type { PlannedFile } from './plan.js';
  *
  * L'arborescence vient de `skeletonTree` (@buildit/manifest), la même que
  * l'aperçu de l'assistant. Ici, chaque dossier reçoit un README court qui dit
- * sa responsabilité et sa règle de dépendance — pas de code factice : des
+ * sa responsabilité et sa règle de dépendance pas de code factice : des
  * fichiers qui compilent dans toutes les stacks, quel que soit le langage.
  * S'y ajoutent l'ADR-001 qui explique le choix, la vue d'architecture, et
  * CONTRIBUTING.md / SECURITY.md.

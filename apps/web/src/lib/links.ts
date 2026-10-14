@@ -7,12 +7,12 @@
  * sans toucher au balisage.
  *
  * `NEXT_PUBLIC_` est volontaire : le lien est rendu dans l'en-tête, donc côté
- * navigateur — une variable serveur y arriverait vide.
+ * navigateur une variable serveur y arriverait vide.
  */
 
 const CONFIGURED = process.env['NEXT_PUBLIC_PF_REPO_URL'];
 
-/** Le dépôt de BuildIt — la cible du bouton GitHub de l'en-tête. */
+/** Le dépôt de BuildIt la cible du bouton GitHub de l'en-tête. */
 export const REPO_URL: string =
   CONFIGURED === undefined || CONFIGURED === ''
     ? 'https://github.com/nagoloumdaniel/BuildIt'

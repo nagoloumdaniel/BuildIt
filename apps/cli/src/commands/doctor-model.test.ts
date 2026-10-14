@@ -87,7 +87,7 @@ describe('la lecture des faits ne décide de rien', () => {
   });
 });
 
-describe('readFacts — ce que le Doctor voit d’un projet', () => {
+describe('readFacts ce que le Doctor voit d’un projet', () => {
   const catalogue = loadCatalogue();
   const registry = catalogue.ok ? catalogue.value : undefined;
 
@@ -165,7 +165,7 @@ describe('readFacts — ce que le Doctor voit d’un projet', () => {
   });
 });
 
-describe('applyFixes — le Doctor propose, il n’écrase pas', () => {
+describe('applyFixes le Doctor propose, il n’écrase pas', () => {
   it('crée un fichier absent, et n’écrase jamais celui qui existe', async () => {
     const root = await mkdtemp(join(tmpdir(), 'pf-doctor-create-'));
     await writeFile(join(root, '.dockerignore'), 'deja-la', 'utf8');
@@ -247,7 +247,7 @@ describe('applyFixes — le Doctor propose, il n’écrase pas', () => {
   });
 });
 
-describe('formatReport — le rapport se lit', () => {
+describe('formatReport le rapport se lit', () => {
   it('affiche le score, les symboles du §16 et les corrections proposées', () => {
     const report = runDoctor(
       {

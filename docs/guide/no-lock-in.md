@@ -1,12 +1,12 @@
 # Le code généré ne dépend pas de BuildIt
 
 C'est le principe fondateur du produit (§1), et il est vérifié par un test
-automatisé — pas seulement affirmé.
+automatisé pas seulement affirmé.
 
-> **Principe de non-dépendance (no-lock-in)** — à afficher explicitement dans le
+> **Principe de non-dépendance (no-lock-in)** à afficher explicitement dans le
 > produit et la documentation : le code généré est autonome, sans dépendance
 > runtime à BuildIt. Quitter l'outil après génération ne casse rien.
-> — [Cahier des charges, §1](../cahier-des-charges.md)
+> [Cahier des charges, §1](../cahier-des-charges.md)
 
 ## Ce que le projet généré contient
 
@@ -43,7 +43,7 @@ embarqué dans l'outil, le projet généré n'en a pas besoin.
 ## Le test qui le prouve
 
 `packages/generator/src/pipeline.test.ts`, groupe
-« **le projet généré ne dépend pas de BuildIt — §1** », deux tests :
+« **le projet généré ne dépend pas de BuildIt §1** », deux tests :
 
 | Test | Ce qu'il fait |
 |---|---|
@@ -62,7 +62,7 @@ $ pnpm --filter @buildit/generator exec vitest run src/pipeline.test.ts -t "ne d
 
 Le test parcourt les fichiers, il ne relit pas une liste écrite à la main : une
 nouvelle intégration qui importerait un paquet de l'outil dans un template ferait
-échouer la CI au prochain push — le gate M6 du [§10 de la
+échouer la CI au prochain push le gate M6 du [§10 de la
 roadmap](../roadmap.md) l'exige (« No-lock-in vérifié par un test automatisé,
 pas par relecture »).
 
@@ -74,14 +74,14 @@ Le `README.md` du projet généré se termine par :
 > dépendance à BuildIt ne subsiste. Vous pouvez désinstaller l'outil,
 > rien ne cassera.
 
-## Ce dont vous dépendez quand même — honnêtement
+## Ce dont vous dépendez quand même honnêtement
 
 - **Des paquets upstream** : Next.js, Prisma, Stripe… C'est le principe même du
   produit : vous obtenez le code que vous auriez écrit, avec ses dépendances
   normales.
 - **D'un gestionnaire de paquets** : `packageManager` épingle `pnpm@11.13.1`, et
   `pnpm-workspace.yaml` déclare les autorisations de scripts d'installation
-  (`allowBuilds`) — deux fichiers que vous pouvez changer, mais qu'il faut changer
+  (`allowBuilds`) deux fichiers que vous pouvez changer, mais qu'il faut changer
   consciemment.
 - **Des choix par défaut du preset** : versions, scripts, structure. Tous sont
   dans vos fichiers.
@@ -98,10 +98,10 @@ grep -r "@buildit" /tmp/mon-projet        # rien
 grep -c "buildit" /tmp/mon-projet/package.json   # 0
 ```
 
-Ces deux commandes refont à la main ce que fait le test ci-dessus — c'est
+Ces deux commandes refont à la main ce que fait le test ci-dessus c'est
 exactement la vérification qui a été faite ici sur un projet réellement généré :
 aucune occurrence.
 
 Et si vous voulez partir sans jamais générer : `pf template show saas --name
 mon-projet` imprime le manifest, que vous pouvez relire, versionner, ou passer à
-`pf generate` plus tard — ou ne pas passer du tout.
+`pf generate` plus tard ou ne pas passer du tout.

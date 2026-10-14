@@ -6,14 +6,14 @@ import type { DraftState } from '../../../lib/draft';
 import { useMessages } from '../../../lib/i18n/provider';
 
 /**
- * Écran 4 — **Architecture Builder** (§6.5) : la forme du projet, avec sa
+ * Écran 4 **Architecture Builder** (§6.5) : la forme du projet, avec sa
  * description courte **et son impact** (complexité, coût d'exploitation).
  *
  * Module co-localisé, pas `page.tsx` : Next refuse tout export autre que
  * `default` dans un écran (validateur engendré). Même convention que les autres
  * écrans (`capabilities.ts`, `summary.ts`).
  *
- * Les valeurs viennent de `ARCHITECTURES` du manifest — jamais recopiées. Les
+ * Les valeurs viennent de `ARCHITECTURES` du manifest jamais recopiées. Les
  * phrases d'impact vivent au dictionnaire (`wizard.architecture.labels`), où
  * chaque forme est une clé : ajouter une architecture au manifest sans lui
  * écrire sa phrase casse la compilation au point d'usage. Même garde-fou que
@@ -107,21 +107,21 @@ export function stackProfile(
  */
 export const DEFAULT_ARCHITECTURE: Architecture = 'single-app';
 
-/** Le changement de brouillon d'une sélection — testable hors React. */
+/** Le changement de brouillon d'une sélection testable hors React. */
 export function withArchitecture(draft: DraftState, architecture: Architecture): DraftState {
   return { ...draft, architecture };
 }
 
 export interface ArchitectureChoicesProps {
   readonly selected: string | undefined;
-  /** Les technologies déjà choisies — elles dessinent l'arborescence montrée. */
+  /** Les technologies déjà choisies elles dessinent l'arborescence montrée. */
   readonly technologies?: readonly string[];
-  /** Les cibles de l'écran 2 — elles devinent front et back avant la stack. */
+  /** Les cibles de l'écran 2 elles devinent front et back avant la stack. */
   readonly targets?: readonly string[];
   readonly onSelect: (architecture: Architecture) => void;
 }
 
-/** Le contenu de l'écran, hors contexte React — donc testable au rendu serveur. */
+/** Le contenu de l'écran, hors contexte React donc testable au rendu serveur. */
 export function ArchitectureChoices({
   selected,
   technologies = [],

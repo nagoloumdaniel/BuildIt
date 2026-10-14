@@ -9,7 +9,7 @@ import { isAbsolute, normalize } from 'node:path';
  * Pourquoi côté serveur. Un navigateur ne rend jamais un chemin absolu : la
  * File System Access API donne une poignée opaque, `<input type="file"
  * webkitdirectory>` donne des chemins relatifs et copie les fichiers. Or ce
- * configurateur a besoin de `C:\projets\mon-projet` — un chemin que seul le
+ * configurateur a besoin de `C:\projets\mon-projet` un chemin que seul le
  * système sait produire. Comme l'interface tourne dans le **même processus que
  * le moteur, sur la machine de l'utilisateur** (`pf web`), ouvrir la boîte de
  * dialogue native côté serveur est exactement ce que le CLI ferait, et ça
@@ -22,7 +22,7 @@ import { isAbsolute, normalize } from 'node:path';
  *
  * Invariants tenus ici :
  * - **jamais de shell** : `spawn` sans `shell`, arguments passés en tableau ;
- * - aucune entrée utilisateur n'entre dans le script — seul un titre choisi
+ * - aucune entrée utilisateur n'entre dans le script seul un titre choisi
  *   dans une table figée, et un dossier de départ validé comme absolu ;
  * - une attente bornée : une boîte laissée ouverte ne retient pas la requête
  *   indéfiniment.
@@ -132,7 +132,7 @@ function dialogCommand(
     return { file: 'osascript', args: ['-e', macosScript(kind, startAt)] };
   }
   // Linux : un bureau est nécessaire. Sans `DISPLAY` ni `WAYLAND_DISPLAY`,
-  // zenity échoue de toute façon — autant le dire tout de suite.
+  // zenity échoue de toute façon autant le dire tout de suite.
   if (env['DISPLAY'] === undefined && env['WAYLAND_DISPLAY'] === undefined) {
     return undefined;
   }
@@ -173,7 +173,7 @@ async function usableStart(startAt: unknown): Promise<string | undefined> {
  * Le chemin rendu n'est **pas** considéré comme sûr pour autant : il repart au
  * navigateur, qui le renverra au serveur dans une autre action, où
  * `resolveLocalDirectory` le validera comme n'importe quelle saisie. Cette
- * fonction ne court-circuite aucune vérification — elle remplace un clavier.
+ * fonction ne court-circuite aucune vérification elle remplace un clavier.
  */
 export async function openNativeDialog(
   kind: DialogKind,

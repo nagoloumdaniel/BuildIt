@@ -33,7 +33,7 @@ const DOCKER_BY_ID = new Map<string, DockerService>(
  *
  * `test:e2e` en est **volontairement absent**. Les tests de bout en bout
  * exigent des navigateurs installés (`playwright install --with-deps`) et une
- * application qui tourne — deux choses qu'un socle fraîchement généré n'a pas.
+ * application qui tourne deux choses qu'un socle fraîchement généré n'a pas.
  * Les lancer produirait une CI rouge au premier passage, avant même que
  * l'utilisateur ait écrit une ligne. Le workflow le dit, plutôt que de le taire.
  */
@@ -198,7 +198,7 @@ export function toolchainWorkflow(toolchain: Toolchain, checks: readonly Command
  * Image de production en trois étapes : dépendances, construction, exécution.
  *
  * Posée seulement quand le projet a de quoi se construire et démarrer
- * (`build` et `start`) — un Dockerfile qui échoue à `docker build` sur un
+ * (`build` et `start`) un Dockerfile qui échoue à `docker build` sur un
  * projet neuf est pire que pas de Dockerfile. `pnpm-workspace.yaml` n'est
  * copié que s'il existe : un `COPY` d'un fichier absent casse la construction.
  */
@@ -245,7 +245,7 @@ function dockerfile(workspaceFile: boolean): string {
   ].join('\n')}\n`;
 }
 
-/** Ce qui n'entre jamais dans le contexte de construction — les secrets d'abord. */
+/** Ce qui n'entre jamais dans le contexte de construction les secrets d'abord. */
 /**
  * Motifs en `**\/` : ils valent à toutes les profondeurs, donc aussi pour les
  * applications d'un monorepo, construit depuis la racine.
@@ -265,7 +265,7 @@ export const DOCKERIGNORE: string = `**/.env
  * Image d'une application de monorepo, construite depuis la racine.
  *
  * `turbo prune --docker` réduit le dépôt à l'application et à ce dont elle
- * dépend (paquet partagé compris) : les manifestes d'abord — l'étape de
+ * dépend (paquet partagé compris) : les manifestes d'abord l'étape de
  * téléchargement reste en cache tant qu'ils ne changent pas —, le code
  * ensuite. Même principe que l'image d'une application seule : pnpm embarqué,
  * installation après la copie du code (postinstall), jamais root.

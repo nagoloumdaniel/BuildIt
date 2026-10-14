@@ -13,7 +13,7 @@ import {
  * Le danger est réel : `git clone` interprète un lien qui commence par `-`
  * comme une option (`--upload-pack=<commande>` exécute la commande), et le
  * transport `ext::` exécute une commande par construction. Une liste blanche
- * — HTTPS, SSH, le raccourci `propriétaire/dépôt` — plutôt qu'une liste noire
+ * HTTPS, SSH, le raccourci `propriétaire/dépôt` plutôt qu'une liste noire
  * qu'un schéma oublié contournerait.
  */
 

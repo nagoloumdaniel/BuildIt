@@ -76,7 +76,7 @@ const PROBE_TIMEOUT_MS = 2000;
  * La vraie sonde de port : une connexion TCP, refermée aussitôt.
  *
  * Une connexion acceptée veut dire qu'un serveur répond ; un refus, un délai
- * dépassé ou une erreur réseau veulent dire que le port est libre — la sonde
+ * dépassé ou une erreur réseau veulent dire que le port est libre la sonde
  * ne doit jamais faire échouer la commande qui l'interroge.
  */
 function tcpPortProbe(host: string, port: number): Promise<boolean> {

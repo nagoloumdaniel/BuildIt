@@ -1,5 +1,5 @@
 /**
- * Configuration Next — en `.mjs`, pas en `.ts`.
+ * Configuration Next en `.mjs`, pas en `.ts`.
  *
  * Next charge `next.config.ts` en appelant l'API JavaScript de TypeScript
  * (`ts.sys.fileExists`) ; c'est cette API que TypeScript 7 a supprimée. Un
@@ -17,7 +17,7 @@ const config = {
   poweredByHeader: false,
   /**
    * Aucun composant n'utilise `next/image` : le moteur d'images de Next exige
-   * `sharp`, qui n'est pas installé ici — toute requête `/_next/image` répondait
+   * `sharp`, qui n'est pas installé ici toute requête `/_next/image` répondait
    * 400 et le logo s'affichait cassé. Les deux logos sont des WebP préparés à
    * leur taille d'affichage (`scripts/build-brand-webp.py`) et posés en image
    * de fond, donc une seule requête par thème, sans dépendance native.
@@ -66,7 +66,7 @@ const config = {
    * Les paquets du moteur écrivent leurs imports internes en `.js`
    * (`./rules.js`) : c'est la forme qu'exige `moduleResolution: NodeNext` pour
    * rester exécutable tel quel par Node. TypeScript la résout vers le `.ts` d'à
-   * côté, webpack non — transpiler ces paquets depuis leur source échoue donc
+   * côté, webpack non transpiler ces paquets depuis leur source échoue donc
    * sur chaque import interne. On applique au bundler la règle du compilateur.
    *
    * Réglage inutile sous Turbopack, qui n'est pas utilisé ici (`next dev` /
@@ -83,7 +83,7 @@ const config = {
     // `new URL('../templates', import.meta.url)` : webpack y voit une
     // requête de module vers un **dossier**, qu'il ne sait pas résoudre, et le
     // build s'arrête là. On lui demande de laisser l'expression telle quelle
-    // pour les paquets du monorepo — la résolution redevient une affaire
+    // pour les paquets du monorepo la résolution redevient une affaire
     // d'exécution. Réglage limité à `packages/` : la découpe d'assets de Next
     // lui-même continue de fonctionner normalement.
     webpackConfig.module.rules.push({

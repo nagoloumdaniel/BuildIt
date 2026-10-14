@@ -37,7 +37,7 @@ afterEach(() => {
  *
  * Rendu sans DOM (`renderToStaticMarkup`) : c'est le HTML que le serveur envoie,
  * donc ce que voit un lecteur d'écran avant toute hydratation. Un `Continuer`
- * grisé sans explication est un cul-de-sac — le test l'interdit.
+ * grisé sans explication est un cul-de-sac le test l'interdit.
  */
 function render(node: React.ReactElement): string {
   return renderToStaticMarkup(<DraftProvider>{node}</DraftProvider>);

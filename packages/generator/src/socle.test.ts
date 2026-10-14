@@ -9,7 +9,7 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { generateProject, planProject } from './pipeline.js';
 
 /**
- * Le socle généré, soumis aux outils qu'il déclare — sans réseau.
+ * Le socle généré, soumis aux outils qu'il déclare sans réseau.
  *
  * Les autres tests prouvent que chaque étage produit ce qu'on attend de lui.
  * Celui-ci prouve que le résultat **passe ses propres vérifications** : c'est
@@ -56,7 +56,7 @@ const SAAS: Manifest = {
 
 let root: string;
 let target: string;
-/** Chemins produits par un template certifie — hors perimetre hors-ligne. */
+/** Chemins produits par un template certifie hors perimetre hors-ligne. */
 let fromTemplates: string[] = [];
 
 beforeAll(async () => {
@@ -70,7 +70,7 @@ beforeAll(async () => {
       .filter((file) => file.source.startsWith('template:'))
       .map((file) => file.path.split('/')[0] ?? file.path);
     // Le code d'une intégration par combinaison (`integration:prisma+postgresql`)
-    // importe lui aussi des paquets — client Prisma, adaptateur : même
+    // importe lui aussi des paquets client Prisma, adaptateur : même
     // périmètre que les templates, fichier par fichier.
     fromTemplates.push(
       ...planned.value.plan.files
@@ -94,10 +94,10 @@ afterAll(async () => {
   await rm(root, { recursive: true, force: true });
 });
 
-describe('le socle SaaS passe ses propres vérifications — 5B.1', () => {
+describe('le socle SaaS passe ses propres vérifications 5B.1', () => {
   it('typecheck : la configuration et les fichiers sans dépendance sont propres', () => {
     // Ce test tourne hors-ligne : le `node_modules` du projet généré n'existe
-    // pas. Du code React ne peut donc pas être typé ici — ni ses imports, ni
+    // pas. Du code React ne peut donc pas être typé ici ni ses imports, ni
     // `JSX.IntrinsicElements`, ni les types de ses props.
     //
     // J'ai d'abord filtré les codes d'erreur concernés. La liste s'allongeait à

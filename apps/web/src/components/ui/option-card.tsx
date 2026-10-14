@@ -8,7 +8,7 @@ import { InfoTip } from './info-tip';
 import { hasBrand, TechIcon } from './tech-icon';
 
 /**
- * La carte d'une technologie — **une** pour le Stack Builder et les capacités.
+ * La carte d'une technologie **une** pour le Stack Builder et les capacités.
  *
  * Les deux écrans dessinaient chacun la leur, avec deux façons de dire « choisi »
  * et deux de dire « bloqué ». Ici :
@@ -20,11 +20,11 @@ import { hasBrand, TechIcon } from './tech-icon';
  * - **incompatible** : la carte est grisée, le nom passe au rouge, et une
  *   pastille `!` rouge ouvre le détail. La raison n'est plus écrite **dans** la
  *   carte : trois lignes de refus sous chaque option noyaient la grille ;
- * - **toujours** : la pastille `!` ouvre la fiche — documentation officielle,
+ * - **toujours** : la pastille `!` ouvre la fiche documentation officielle,
  *   et pour un refus, les technologies en cause, la conséquence et la solution.
  *
  * La carte ne porte que le logo et le nom : l'identifiant du catalogue, qui
- * répétait le nom en dessous, n'apparaît plus — la fiche `!` dit le reste.
+ * répétait le nom en dessous, n'apparaît plus la fiche `!` dit le reste.
  *
  * Une option bloquée n'est **pas** `disabled` : elle resterait hors de l'ordre
  * de tabulation, et la personne au clavier n'atteindrait jamais l'explication.
@@ -57,7 +57,7 @@ export interface OptionCardProps {
    * faire.
    */
   readonly pressed?: boolean;
-  /** Badge « Recommandé » — jamais posé sur une option bloquée. */
+  /** Badge « Recommandé » jamais posé sur une option bloquée. */
   readonly recommended?: boolean;
   /** Les options compatibles de la même famille, proposées comme solution. */
   readonly alternatives?: readonly TechnologyLink[];

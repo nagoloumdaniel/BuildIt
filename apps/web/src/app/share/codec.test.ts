@@ -22,7 +22,7 @@ import {
  *   côtés dérive, un test tombe ;
  * - les **refus** : un lien reçu n'est pas de confiance, et un manifest qui
  *   transporterait autre chose que des choix de configuration est rejeté par le
- *   schéma strict — pas ignoré.
+ *   schéma strict pas ignoré.
  */
 
 const MANIFEST: Manifest = {
@@ -56,7 +56,7 @@ function payloadOrText(text: string): string {
   return referencePayload(text);
 }
 
-describe('encodeSharePayload — la forme canonique, en base64url', () => {
+describe('encodeSharePayload la forme canonique, en base64url', () => {
   it('produit le littéral de référence, partagé avec le CLI', () => {
     expect(encodeSharePayload(MANIFEST)).toBe(GOLDEN_PAYLOAD);
     // Et ce littéral se relit : c'est la seule copie du contrat.
@@ -101,7 +101,7 @@ describe('encodeSharePayload — la forme canonique, en base64url', () => {
   });
 });
 
-describe('encodeShareLink — le lien complet', () => {
+describe('encodeShareLink le lien complet', () => {
   it('reste relatif sans origine : l’origine est celle qui sert l’UI', () => {
     expect(encodeShareLink(MANIFEST)).toBe(sharePath(encodeSharePayload(MANIFEST)));
     expect(encodeShareLink(MANIFEST).startsWith('/share#')).toBe(true);
@@ -121,7 +121,7 @@ describe('encodeShareLink — le lien complet', () => {
   });
 });
 
-describe('shareOrigin — l’origine retenue', () => {
+describe('shareOrigin l’origine retenue', () => {
   it('préfère la base configurée, sinon celle du navigateur', () => {
     expect(shareOrigin('', 'http://127.0.0.1:4173')).toBe('http://127.0.0.1:4173');
     expect(shareOrigin('   ', 'http://127.0.0.1:4173')).toBe('http://127.0.0.1:4173');
@@ -141,7 +141,7 @@ describe('shareOrigin — l’origine retenue', () => {
   });
 });
 
-describe('decodeSharePayload — décoder, ou dire pourquoi', () => {
+describe('decodeSharePayload décoder, ou dire pourquoi', () => {
   it('retrouve le manifest tel qu’il a été encodé', () => {
     const result = decodeSharePayload(encodeSharePayload(MANIFEST));
     expect(result.ok).toBe(true);
@@ -165,7 +165,7 @@ describe('decodeSharePayload — décoder, ou dire pourquoi', () => {
     let refusals = 0;
     // Toutes les troncatures possibles : un lien recopié à la main s'arrête
     // n'importe où. Aucune ne doit lever, et aucune ne doit rendre un manifest
-    // différent — soit elle est refusée, soit elle est identique (perdre le
+    // différent soit elle est refusée, soit elle est identique (perdre le
     // saut de ligne final ne change pas les choix).
     for (let cut = 1; cut < payload.length; cut += 1) {
       const result = decodeSharePayload(payload.slice(0, cut));
@@ -225,11 +225,11 @@ describe('decodeSharePayload — décoder, ou dire pourquoi', () => {
   });
 });
 
-describe('§9.4 — rien d’autre que des choix de configuration', () => {
+describe('§9.4 rien d’autre que des choix de configuration', () => {
   it('refuse une variable d’environnement glissée dans la charge', () => {
     // La chaîne est composée à l'exécution : un faux identifiant écrit en clair
     // ferait échouer le scan de secrets du dépôt (`pnpm lint:secrets`), qui a
-    // raison de refuser toute chaîne en forme de secret — même fausse.
+    // raison de refuser toute chaîne en forme de secret même fausse.
     const fakeDatabaseUrl = ['postgres', '://secret:motdepasse@localhost/db'].join('');
     const hostile = {
       ...MANIFEST,
@@ -253,7 +253,7 @@ describe('§9.4 — rien d’autre que des choix de configuration', () => {
     }
   });
 
-  it('refuse un champ qui n’existe pas dans le manifest — nom d’auteur compris', () => {
+  it('refuse un champ qui n’existe pas dans le manifest nom d’auteur compris', () => {
     for (const field of ['author', 'user', 'owner', 'path', 'directory', 'host']) {
       const result = decodeSharePayload(payloadOf({ ...MANIFEST, [field]: 'quelqu’un' }));
       expect(result.ok).toBe(false);
@@ -268,7 +268,7 @@ describe('§9.4 — rien d’autre que des choix de configuration', () => {
   });
 });
 
-describe('payloadFromHash — du fragment à la charge', () => {
+describe('payloadFromHash du fragment à la charge', () => {
   it('retire le croisillon et décode un fragment échappé', () => {
     expect(payloadFromHash('#abc')).toBe('abc');
     expect(payloadFromHash('abc')).toBe('abc');
@@ -282,7 +282,7 @@ describe('payloadFromHash — du fragment à la charge', () => {
   });
 });
 
-describe('decodeShareHash — le chemin complet', () => {
+describe('decodeShareHash le chemin complet', () => {
   it('décode un lien réel', () => {
     const link = encodeShareLink(MANIFEST, 'http://127.0.0.1:4173');
     const hash = link.slice(link.indexOf('#'));

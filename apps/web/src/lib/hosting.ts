@@ -6,7 +6,7 @@
  * multi-visiteurs) sans y toucher serait soit un 403 permanent (le `Host` du
  * domaine public n'est jamais `127.0.0.1`), soit, si on l'enlevait, une
  * régression de sécurité. La solution retenue : une détection d'environnement
- * qui bascule le comportement, jamais le supprime — `pf web` reste identique.
+ * qui bascule le comportement, jamais le supprime `pf web` reste identique.
  *
  * `VERCEL=1` est la variable que Vercel définit lui-même sur tout déploiement
  * (build et runtime) : la détecter ne demande aucune configuration. `PF_HOSTED`
@@ -19,7 +19,7 @@ export function isHostedEnvironment(env: EnvLike = process.env): boolean {
   return env['VERCEL'] === '1' || env['PF_HOSTED'] === '1';
 }
 
-/** Les hôtes de boucle locale — seuls autorisés tant que le mode n'est pas hébergé. */
+/** Les hôtes de boucle locale seuls autorisés tant que le mode n'est pas hébergé. */
 const LOCAL_HOSTS: readonly string[] = ['127.0.0.1', 'localhost', '::1', '[::1]'];
 
 /** Le nom d'hôte sans son port, en minuscules. */
@@ -43,7 +43,7 @@ function hostnameOf(url: string): string | undefined {
  * que `pf web` ne change pas de comportement. En hébergé, on y ajoute le ou
  * les domaines publics réels : `PF_SITE_URL` (déjà utilisée par `robots.ts` et
  * `sitemap.ts`) et `VERCEL_URL` (le domaine du déploiement courant, posé par
- * Vercel lui-même — utile pour les URLs de prévisualisation).
+ * Vercel lui-même utile pour les URLs de prévisualisation).
  */
 export function allowedHosts(env: EnvLike = process.env): Set<string> {
   const hosts = new Set(LOCAL_HOSTS);

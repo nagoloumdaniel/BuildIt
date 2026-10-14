@@ -18,7 +18,7 @@ import { encodeShareLink, shareOrigin } from '../share/codec';
 import type { AccessView, RepositoryStatusView, RoleView } from './sharing';
 import { RepoView } from './view';
 
-/** Écran 24 — Repository & Sharing (§6.24) : le branchement des Server Actions. */
+/** Écran 24 Repository & Sharing (§6.24) : le branchement des Server Actions. */
 export default function RepoPage(): ReactElement {
   const t = useMessages();
   const draft = useDraft();
@@ -40,7 +40,7 @@ export default function RepoPage(): ReactElement {
    * Le manifest du brouillon, pour le lien de partage en lecture seule.
    *
    * Il est recalculé avec le brouillon : le lien suit les choix, il ne fige pas
-   * une version périmée. Un brouillon incomplet n'a pas de manifest — l'écran
+   * une version périmée. Un brouillon incomplet n'a pas de manifest l'écran
    * dit alors pourquoi le lien n'est pas encore possible.
    */
   const manifest = useMemo(() => draftToManifest(draft), [draft]);

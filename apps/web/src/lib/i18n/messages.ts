@@ -15,7 +15,7 @@ import type { Widen } from './widen';
  *
  * Pas de clés en chaîne : le français est la **forme** du dictionnaire
  * (`typeof FR`), l'anglais doit la satisfaire exactement, et chaque écran lit
- * `t.dashboard.title` — une faute de frappe devient une erreur de compilation,
+ * `t.dashboard.title` une faute de frappe devient une erreur de compilation,
  * et une entrée ajoutée d'un côté sans l'autre fait échouer `pnpm typecheck`.
  *
  * Les valeurs variables passent par une fonction (`t.generate.files(3)`) plutôt
@@ -24,7 +24,7 @@ import type { Widen } from './widen';
  *
  * Ce qui **n'est pas** traduit, à dessein : les identifiants techniques
  * (`next`, `pnpm install`), les chemins, les sorties de commande et les
- * messages d'erreur venus du moteur — ils sont les mêmes dans un terminal.
+ * messages d'erreur venus du moteur ils sont les mêmes dans un terminal.
  */
 
 const FR_CORE = {
@@ -90,7 +90,7 @@ const FR_CORE = {
 
   /**
    * Le pied de page : ce qui reste utile une fois la page lue. La version est
-   * une valeur technique, la même dans les deux langues — elle n'est pas
+   * une valeur technique, la même dans les deux langues elle n'est pas
    * traduite, seulement affichée.
    */
   footer: {
@@ -332,7 +332,7 @@ const EN_CORE: Widen<typeof FR_CORE> = {
 /**
  * Le dictionnaire complet : le noyau plus chaque zone.
  *
- * La composition est explicite et plate — pas de fusion profonde, pas de
+ * La composition est explicite et plate pas de fusion profonde, pas de
  * `Object.assign` récursif. Chaque zone possède ses propres clés de premier
  * niveau, donc une collision serait une faute de conception, et TypeScript la
  * signalerait ici plutôt que de la résoudre en silence à l'exécution.

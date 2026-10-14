@@ -6,7 +6,7 @@ import { formatBytes, targetDirectory } from './steps';
  * toute mesure du moteur : le poids, et le dossier montré avant d'écrire.
  */
 
-describe('formatBytes — le poids du rapport', () => {
+describe('formatBytes le poids du rapport', () => {
   it.each([
     [0, '0 o'],
     [1, '1 o'],
@@ -25,7 +25,7 @@ describe('formatBytes — le poids du rapport', () => {
   });
 });
 
-describe('targetDirectory — le dossier montré AVANT d’écrire', () => {
+describe('targetDirectory le dossier montré AVANT d’écrire', () => {
   it('compose un chemin POSIX', () => {
     expect(targetDirectory('/tmp/pf', 'mon-projet')).toBe('/tmp/pf/mon-projet');
   });

@@ -44,7 +44,7 @@ function render() {
   entryCount = entries.length;
 
   return [
-    '// Fichier engendré par scripts/build-index.mjs — ne pas modifier à la main.',
+    '// Fichier engendré par scripts/build-index.mjs ne pas modifier à la main.',
     '// Source de vérité : le dossier data/. Relancer le script après toute modification.',
     '',
     '/** Recettes brutes, non validées. `loadRecipeCatalogue()` les valide. */',

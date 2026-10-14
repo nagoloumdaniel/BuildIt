@@ -54,7 +54,7 @@ const failure = (item: GitIssue, retryable = false): GitFailure => ({ issues: [i
  */
 const HARDENING = ['-c', 'protocol.ext.allow=never', '-c', 'protocol.file.allow=never'];
 
-/** Variable par laquelle le jeton atteint le credential helper — et lui seul. */
+/** Variable par laquelle le jeton atteint le credential helper et lui seul. */
 const TOKEN_VARIABLE = 'PF_GIT_TOKEN';
 
 /**
@@ -114,7 +114,7 @@ export interface CloneOptions {
    * Donné, le clone passe `--progress` : git écrit alors son avancement même
    * quand sa sortie n'est pas un terminal, et l'appelant peut afficher
    * « Réception des objets : 42 % » au lieu d'un rotor. Absent, rien ne
-   * change — pas de `--progress`, pas de sortie supplémentaire à lire.
+   * change pas de `--progress`, pas de sortie supplémentaire à lire.
    *
    * Le caviardage est fait **ici** et pas chez l'appelant : c'est le seul
    * endroit qui connaît le jeton, et un flux d'avancement qui transiterait par
@@ -284,7 +284,7 @@ export function isGitFailure(value: RepositoryState | GitFailure): value is GitF
 /**
  * Crée le dépôt local et son premier commit, si besoin. Un dépôt qui a déjà
  * un commit est laissé tel quel ; un dossier à l'intérieur d'un autre dépôt
- * est refusé — pas de dépôt imbriqué.
+ * est refusé pas de dépôt imbriqué.
  */
 export async function ensureInitialCommit(
   dir: string,

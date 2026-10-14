@@ -21,7 +21,7 @@ const TOAST_GLYPH: Readonly<Record<ActiveToast['kind'], IconName>> = {
 };
 
 /**
- * La liste des toasts — pure : elle reçoit son état, ne le lit pas. C'est ce qui
+ * La liste des toasts pure : elle reçoit son état, ne le lit pas. C'est ce qui
  * la rend vérifiable sans DOM (`renderToStaticMarkup`), là où le composant
  * connecté, lui, n'est monté que par React dans le navigateur.
  *
@@ -46,7 +46,7 @@ export function ToastList({ toasts }: ToastListProps): ReactElement {
 
 /**
  * Le point de branchement : `useSyncExternalStore` plutôt qu'un `useEffect`,
- * parce que le store est un module à état partagé — React lit l'instantané,
+ * parce que le store est un module à état partagé React lit l'instantané,
  * s'abonne, et se désabonne au démontage. Aucune dépendance, aucun contexte.
  */
 export function Toaster(): ReactElement {

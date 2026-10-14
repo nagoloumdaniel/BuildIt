@@ -5,7 +5,7 @@ import { shareLinkBaseAction } from '../actions-share';
  * La seule chose que le serveur ajoute au partage : l'origine publique, quand
  * l'UI est atteinte par un autre nom que `127.0.0.1`.
  *
- * Le manifest, lui, ne passe jamais par ici — c'est le fragment qui le porte.
+ * Le manifest, lui, ne passe jamais par ici c'est le fragment qui le porte.
  */
 
 afterEach(() => {

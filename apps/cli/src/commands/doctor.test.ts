@@ -8,7 +8,7 @@ import { doctor } from './doctor.js';
 /**
  * `pf doctor` de bout en bout : un vrai dossier, un faux terminal. Les constats
  * et les scores appartiennent au paquet `doctor` ; ici on vérifie ce que la
- * commande en **fait** — ce qu'elle affiche, ce qu'elle écrit, et son code de
+ * commande en **fait** ce qu'elle affiche, ce qu'elle écrit, et son code de
  * sortie, qui doit rester utilisable dans un pipeline.
  */
 async function project(files: Readonly<Record<string, string>> = {}): Promise<string> {
@@ -83,7 +83,7 @@ describe('pf doctor', () => {
     });
     const io = fakeIo({ cwd: root });
     // Les constats sans objet (base de données, Docker) sortent de l'équation.
-    // `rate-limiting` et `monitoring` avertissent — deux demi-points — et rien
+    // `rate-limiting` et `monitoring` avertissent deux demi-points et rien
     // n'échoue : 8 / 9 ≈ 89, et la commande rend 0.
     expect(await doctor(['--json'], io)).toBe(0);
     const report = JSON.parse(io.text().out) as {

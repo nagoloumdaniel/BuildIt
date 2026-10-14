@@ -21,7 +21,7 @@ export const VIEWPORT = { width: 1280, height: 900 };
 /**
  * Le navigateur n'est pas téléchargé : on pilote celui de la machine
  * (`PF_E2E_CHROMIUM`, sinon Edge ou Chrome installé). Sans navigateur trouvé,
- * le test **échoue** en disant quoi faire — sauf `PF_E2E_SKIP=1`, qui saute la
+ * le test **échoue** en disant quoi faire sauf `PF_E2E_SKIP=1`, qui saute la
  * preuve explicitement (une preuve sautée doit être demandée).
  */
 const BROWSERS = [
@@ -111,7 +111,7 @@ export async function startServer(workspace) {
    * - `PF_E2E_SERVER=dev` : `next dev`, où React détaille une erreur
    *   d'hydratation au lieu du code minifié `#418` ;
    * - `PF_E2E_EXTERNAL=1` : ne démarre rien, se contente d'attendre un serveur
-   *   déjà lancé sur `PF_E2E_PORT` — le serveur de développement est ainsi
+   *   déjà lancé sur `PF_E2E_PORT` le serveur de développement est ainsi
    *   **chaud** (toutes les routes compilées), ce que le parcours exige : ses
    *   attentes de 5 s ne survivent pas à une première compilation.
    *

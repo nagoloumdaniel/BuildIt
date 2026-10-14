@@ -4,8 +4,8 @@ import type { ReactNode } from 'react';
 import { AppShell } from '../components/ui/app-shell';
 import { DraftProvider } from '../components/wizard/draft-provider';
 import { LocaleProvider } from '../lib/i18n/provider';
-import { Toaster } from './toaster';
 import './globals.css';
+import { Toaster } from './toaster';
 
 /**
  * Les deux familles, auto-hébergées par Next.
@@ -14,7 +14,7 @@ import './globals.css';
  * domaine : pas de requête vers fonts.gstatic.com au chargement, pas de
  * dépendance réseau à l'exécution, et le `font-display: swap` évite le texte
  * invisible. Les variables CSS rejoignent `globals.css`, qui garde les
- * familles de repli — une police qui n'arrive pas ne doit pas casser la page.
+ * familles de repli une police qui n'arrive pas ne doit pas casser la page.
  *
  * Deux familles et deux rôles, tenus partout : Inter pour la prose, JetBrains
  * Mono pour la donnée (chemins, identifiants, compteurs, pourcentages).
@@ -76,7 +76,7 @@ export const viewport: Viewport = {
 
 /**
  * Posé avant le premier rendu : sans lui, la page s'affiche en clair puis
- * bascule en sombre — le « flash » que le §6 rend inacceptable. Le script est
+ * bascule en sombre le « flash » que le §6 rend inacceptable. Le script est
  * volontairement minuscule, sans dépendance, et ne lève jamais : un thème est
  * un confort, pas une condition d'affichage.
  *
@@ -90,7 +90,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html className={`${sans.variable} ${mono.variable}`} lang="fr" suppressHydrationWarning>
       <head>
-        {/* biome-ignore lint/security/noDangerouslySetInnerHtml: le script anti-flash doit être inline et posé avant le premier rendu — c'est le motif que Next documente pour éviter le flash de thème. Aucune donnée n'y entre. */}
+        {/* biome-ignore lint/security/noDangerouslySetInnerHtml: le script anti-flash doit être inline et posé avant le premier rendu c'est le motif que Next documente pour éviter le flash de thème. Aucune donnée n'y entre. */}
         <script dangerouslySetInnerHTML={{ __html: ANTI_FLASH }} />
       </head>
       <body className="flex min-h-dvh flex-col">

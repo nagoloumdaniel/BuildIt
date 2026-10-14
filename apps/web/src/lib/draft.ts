@@ -7,7 +7,7 @@ import { STEP_ORDER, type StepId } from './flow';
  * Deux invariants, tenus par des tests :
  *
  * 1. **Aucune valeur sensible.** Une variable d'environnement n'a ici qu'un
- *    *nom* (`envVarNames`) — le §6.8 interdit d'afficher ou de stocker une
+ *    *nom* (`envVarNames`) le §6.8 interdit d'afficher ou de stocker une
  *    valeur, et le type du brouillon est ce qui le rend impossible.
  * 2. **Une reprise impossible rend un brouillon frais.** JSON corrompu,
  *    version décalée, champ manquant : l'écran s'ouvre, il ne plante pas.
@@ -29,10 +29,10 @@ export interface DraftState {
   architecture?: string;
   technologies: string[];
   capabilities: string[];
-  /** Noms des variables d'environnement requises — jamais leurs valeurs (§6.8). */
+  /** Noms des variables d'environnement requises jamais leurs valeurs (§6.8). */
   envVarNames: string[];
   /**
-   * Variables ajoutées à la main à l'écran Environnement — des **noms**
+   * Variables ajoutées à la main à l'écran Environnement des **noms**
    * seulement (`ENV_NAME_PATTERN`), écrits vides dans `.env.example`.
    * Absent : aucune.
    */
@@ -45,7 +45,7 @@ export interface DraftState {
    * encore généré.
    */
   generated?: true;
-  /** Résolution du moteur, recalculée à chaque changement — jamais persistée. */
+  /** Résolution du moteur, recalculée à chaque changement jamais persistée. */
   resolution?: { status: 'certified' | 'experimental'; issues: readonly string[] };
 }
 
@@ -84,7 +84,7 @@ export function freshDraft(): DraftState {
  * Le JSON relu, ou `null` s'il n'est pas exploitable.
  *
  * Les valeurs sont lues par **déstructuration** : le brouillon vient de
- * `localStorage`, donc d'un `Record<string, unknown>` — or le tsconfig interdit
+ * `localStorage`, donc d'un `Record<string, unknown>` or le tsconfig interdit
  * l'accès par point sur une signature d'index (`noPropertyAccessFromIndexSignature`),
  * et les crochets feraient râler Biome. La déstructuration satisfait les deux.
  */
@@ -108,7 +108,7 @@ function parsePersisted(raw: string): Record<string, unknown> | null {
   }
 }
 
-/** Les seules chaînes d'un tableau JSON — le reste est écarté, sans lever. */
+/** Les seules chaînes d'un tableau JSON le reste est écarté, sans lever. */
 function strings(value: unknown): string[] {
   if (!Array.isArray(value)) {
     return [];
@@ -205,8 +205,8 @@ function toPersisted(draft: DraftState): PersistedDraft {
  * l'annoncer comme un changement fait rejouer les effets des écrans pour rien
  * (mesuré : le Stack Builder chargeait son catalogue deux fois par visite,
  * §8bis). La comparaison passe par la forme **persistée** : un champ ajouté à
- * `toPersisted` est donc comparé sans qu'on y pense, et `resolution` — jamais
- * persistée, recalculée par le moteur — ne compte pas.
+ * `toPersisted` est donc comparé sans qu'on y pense, et `resolution` jamais
+ * persistée, recalculée par le moteur ne compte pas.
  *
  * Elle est volontairement stricte sur l'ordre des tableaux : notifier un
  * changement qui n'en est pas un coûte un rendu, ne pas notifier un vrai
@@ -240,7 +240,7 @@ function keepList(stored: string[], current: string[], baseline: string[]): stri
  * changé en mémoire depuis la création du store.
  *
  * `attach` branche le stockage dans un effet du provider, donc **après** les
- * effets des écrans, qui sont ses enfants — et `StepShell` y écrit l'étape de
+ * effets des écrans, qui sont ses enfants et `StepShell` y écrit l'étape de
  * l'URL courante. Le brouillon persisté est plus ancien que cette écriture :
  * le relire ne doit pas la défaire (sans quoi le brouillon retient l'étape
  * quittée, et la reprise du §3 repart du mauvais écran).
@@ -249,7 +249,7 @@ function keepList(stored: string[], current: string[], baseline: string[]): stri
  * la valeur ne change pas **garde sa référence**. Sans cela, `targets` et
  * `technologies` sont neufs à chaque branchement, la sélection mémoïsée de
  * l'écran change d'identité, et l'écran recharge son catalogue pour des valeurs
- * identiques — mesuré deux fois par visite sur le Stack Builder (§8bis).
+ * identiques mesuré deux fois par visite sur le Stack Builder (§8bis).
  */
 export function restorePersistedDraft(
   stored: DraftState,

@@ -13,7 +13,7 @@ import {
  *
  * `globalThis.fetch` est remplacé par un faux et `PF_GITHUB_TOKEN` court-circuite
  * le trousseau : aucun test d'ici ne touche le réseau ni un vrai trousseau.
- * C'est aussi la preuve du §24 au niveau de l'API publique — ce que l'action
+ * C'est aussi la preuve du §24 au niveau de l'API publique ce que l'action
  * rend au navigateur ne contient jamais le jeton.
  */
 

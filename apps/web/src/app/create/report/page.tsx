@@ -13,12 +13,12 @@ import { ReportBody } from './ReportBody';
 import { browserSessionStorage, clearReport, type GenerationReport, loadReport } from './result';
 
 /**
- * Generation Report (§6.14) — ce qui a été généré, avec erreurs et
+ * Generation Report (§6.14) ce qui a été généré, avec erreurs et
  * avertissements.
  *
  * Le rapport vient de l'écran Generation par `sessionStorage` : c'est une
  * frontière non fiable, donc `loadReport` revalide la forme relue. Sans rapport
- * — onglet rouvert, session effacée — l'écran le dit et propose d'aller
+ * onglet rouvert, session effacée l'écran le dit et propose d'aller
  * générer ; il n'affiche pas un rapport vide qui aurait l'air valide.
  *
  * `nextStep('report')` est `null` : pas de « Continuer » après le rapport.

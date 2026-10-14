@@ -10,8 +10,8 @@ import { Icon } from './icon';
  * Trois écrans portaient leur propre version de ce geste, et deux ne savaient
  * que déplier : une fois les seize architectures affichées, plus moyen de
  * revenir aux trois recommandées. Ici l'état est explicite (`aria-expanded`),
- * le chevron dit le sens — vers le bas pour déplier, vers le haut pour replier
- * — et le libellé change avec lui.
+ * le chevron dit le sens vers le bas pour déplier, vers le haut pour replier
+ * et le libellé change avec lui.
  *
  * Il est mis en valeur sans crier : contour accentué et chevron, pas un
  * deuxième bouton principal qui disputerait « Continuer ».

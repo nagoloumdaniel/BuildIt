@@ -5,7 +5,7 @@ import { afterEach, describe, expect, it } from 'vitest';
 import type { TemplateContext } from './template.js';
 import { loadTemplateFiles, type TemplateRequest } from './templates.js';
 
-/** Template Resolver (§22, 5.4) — sur un vrai disque, dans un dossier jetable. */
+/** Template Resolver (§22, 5.4) sur un vrai disque, dans un dossier jetable. */
 
 const created: string[] = [];
 
@@ -148,7 +148,7 @@ describe('fichier de recette : un template vers une cible', () => {
   });
 });
 
-describe('liens symboliques en chemin — revue sécurité', () => {
+describe('liens symboliques en chemin revue sécurité', () => {
   it('refuse un dossier intermédiaire qui est un lien, pour un fichier de recette', async () => {
     const outside = await templatesRoot({ 'a.ts': 'dehors\n' });
     const root = await templatesRoot({});

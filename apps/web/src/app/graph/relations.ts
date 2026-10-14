@@ -1,7 +1,7 @@
 /**
  * Le Dependency Graph (§6.11), hors du dessin.
  *
- * Le catalogue déclare deux natures de lien — `requires` et `compatibleWith` —
+ * Le catalogue déclare deux natures de lien `requires` et `compatibleWith` —
  * et le moteur distingue un nœud **choisi** d'un nœud **ajouté** pour tenir une
  * exigence. Ces fonctions traduisent ces faits, dans un ordre stable, et
  * produisent l'équivalent textuel complet : le graphe doit rester lisible sans
@@ -9,7 +9,7 @@
  *
  * Les **mots** ne sont pas ici : ils viennent du dictionnaire (`t.graph`), pour
  * que le même graphe se lise en français comme en anglais. Ce module ne porte
- * que la structure — ordre, mise en page, assemblage des phrases.
+ * que la structure ordre, mise en page, assemblage des phrases.
  */
 
 export interface RelationNode {
@@ -72,7 +72,7 @@ function labelOf(id: string, labels: ReadonlyMap<string, string>): string {
   return labels.get(id) ?? id;
 }
 
-/** « A exige B. » — une phrase, jamais un pictogramme seul. */
+/** « A exige B. » une phrase, jamais un pictogramme seul. */
 export function describeEdge(
   edge: RelationEdge,
   labels: ReadonlyMap<string, string>,
@@ -85,7 +85,7 @@ export function describeEdge(
   );
 }
 
-/** « Next.js (frontend, Choisi) » — la ligne de l'équivalent textuel. */
+/** « Next.js (frontend, Choisi) » la ligne de l'équivalent textuel. */
 export function describeNode(node: RelationNode, wording: GraphWording): string {
   return wording.describeNode(node.label, node.category, stateLabel(node.state, wording));
 }

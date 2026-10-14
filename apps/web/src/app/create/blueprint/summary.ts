@@ -4,11 +4,11 @@ import type { Messages } from '../../../lib/i18n/messages';
 /**
  * Le Project Blueprint (§6.10) : le manifest canonique, en clair.
  *
- * Ce module ne construit **pas** la sélection — `draftToManifest`
+ * Ce module ne construit **pas** la sélection `draftToManifest`
  * (`src/lib/draft-to-manifest.ts`) le fait, et c'est lui qui fait foi. Il ne
  * décide pas non plus *ce qui existe* : les noms lisibles viennent du catalogue,
  * via les libellés que l'écran a reçus du serveur (`loadGraphAction`), et un
- * identifiant que personne ne nomme s'affiche tel quel — jamais remplacé par un
+ * identifiant que personne ne nomme s'affiche tel quel jamais remplacé par un
  * nom inventé.
  *
  * Les rôles et les libellés de plateforme/architecture vivent au dictionnaire
@@ -53,12 +53,12 @@ export interface SummaryRow {
 
 export interface BlueprintView {
   readonly name: string;
-  /** L'étape où le nom se modifie — même règle que `SummaryItem.edit`. */
+  /** L'étape où le nom se modifie même règle que `SummaryItem.edit`. */
   readonly nameEdit?: string;
-  /** « Next.js + PostgreSQL + Stripe » — la phrase du §6.10. */
+  /** « Next.js + PostgreSQL + Stripe » la phrase du §6.10. */
   readonly headline: string;
   readonly rows: readonly SummaryRow[];
-  /** Les identifiants du manifest, dans l'ordre canonique — la sélection du graphe. */
+  /** Les identifiants du manifest, dans l'ordre canonique la sélection du graphe. */
   readonly technologyIds: readonly string[];
 }
 
@@ -160,7 +160,7 @@ function headlineOf(manifest: Manifest, labels: ReadonlyMap<string, string>): st
 /**
  * La vue complète : nom, phrase, et une ligne par rôle du manifest.
  *
- * Un rôle sans valeur n'apparaît pas — un bloc vide se lirait comme un oubli
+ * Un rôle sans valeur n'apparaît pas un bloc vide se lirait comme un oubli
  * du produit, pas comme un choix de l'utilisateur.
  */
 export function blueprintView(

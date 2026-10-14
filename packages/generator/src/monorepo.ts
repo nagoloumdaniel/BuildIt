@@ -29,7 +29,7 @@ import {
  * Monorepo multi-applications (spec 2026-09-28).
  *
  * Aucun second générateur : la stack est répartie entre les applications, et
- * chacune est générée par le chemin des applications seules — celui que le
+ * chacune est générée par le chemin des applications seules celui que le
  * test de fumée certifie —, puis placée sous `apps/<nom>/`. La racine reçoit
  * ce qui appartient au dépôt entier.
  */
@@ -80,7 +80,7 @@ const ROOT_ONLY = new Set([
 /** Fichiers d'application que la racine n'a pas à porter : elle n'a pas de code. */
 const APP_ONLY = new Set(['.env.example', 'env.d.ts', 'tsconfig.json']);
 
-/** Ce que génère une application seule — fourni par le pipeline. */
+/** Ce que génère une application seule fourni par le pipeline. */
 export interface GeneratedFiles {
   readonly files: readonly PlannedFile[];
   readonly warnings: readonly Issue<string>[];
@@ -230,8 +230,8 @@ function rootScripts(
 /**
  * `packages/contracts` : les types et constantes que les interfaces
  * partagent. Compilé à l'installation (`prepare`) comme à la construction :
- * chaque application le lit en JavaScript, quel que soit son outil — Next.js,
- * Metro ou tsc — et ses types existent avant le premier `typecheck`.
+ * chaque application le lit en JavaScript, quel que soit son outil Next.js,
+ * Metro ou tsc et ses types existent avant le premier `typecheck`.
  */
 function contractsPackage(name: string, clients: readonly AppName[]): PlannedFile[] {
   const source = 'monorepo:contracts';
@@ -397,7 +397,7 @@ export function planMonorepo(
     files.splice(0, files.length, ...linked, ...contractsPackage(contracts, clients));
   }
 
-  // Les variables ajoutées à la main vont à l'API quand il y en a une — le
+  // Les variables ajoutées à la main vont à l'API quand il y en a une le
   // serveur est l'endroit des secrets —, sinon à la première application.
   const custom = manifest.env ?? [];
   const home = apps.has('api') ? 'api' : [...apps.keys()][0];
@@ -406,7 +406,7 @@ export function planMonorepo(
   }
 
   // La racine : le socle de ses propres fiches (Biome, Turborepo…), puis ce
-  // qui doit réunir toutes les applications — scripts, scripts d'installation,
+  // qui doit réunir toutes les applications scripts, scripts d'installation,
   // services locaux, CI.
   const scaffold = buildScaffold(manifest, root);
   if (!scaffold.ok) {
@@ -452,7 +452,7 @@ export function planMonorepo(
   );
 
   // Une image par application, construite depuis la racine ; un seul
-  // .dockerignore, à la racine — le contexte de construction.
+  // .dockerignore, à la racine le contexte de construction.
   if (entries.some((entry) => entry.id === 'docker')) {
     let images = 0;
     for (const app of [...apps.keys()].filter((name) => SERVED_APPS.has(name))) {

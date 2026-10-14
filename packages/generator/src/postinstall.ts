@@ -1,5 +1,3 @@
-import { existsSync } from 'node:fs';
-import { join } from 'node:path';
 import {
   type CommandResult,
   type CommandRunner,
@@ -18,7 +16,7 @@ export {
 
 /**
  * Post Install et Validation (§22) : ce qui se passe une fois les fichiers
- * écrits — installer les dépendances, initialiser Git, lancer les
+ * écrits installer les dépendances, initialiser Git, lancer les
  * vérifications du projet généré.
  *
  * Toutes les commandes passent par un `CommandRunner` injectable. Les tests
@@ -116,7 +114,7 @@ export async function runInstall(
 
 export interface GitOutcome {
   readonly failure?: StepFailure;
-  /** Git volontairement sauté — le projet est dans un autre dépôt. */
+  /** Git volontairement sauté le projet est dans un autre dépôt. */
   readonly warning?: PostInstallIssue;
 }
 

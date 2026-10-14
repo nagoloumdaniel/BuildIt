@@ -11,7 +11,7 @@ interface SealedState {
 /**
  * Retour de github.com (§20bis, mode hébergé) : échange le `code` contre un
  * jeton, le range dans le même trousseau que le device flow, puis redirige
- * vers l'écran de connexion — jamais vers une page qui afficherait le jeton.
+ * vers l'écran de connexion jamais vers une page qui afficherait le jeton.
  *
  * Tout refus (état absent ou différent, code manquant ou invalide, accès
  * refusé sur github.com) redirige vers `/github?error=...` plutôt que

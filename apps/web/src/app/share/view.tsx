@@ -17,7 +17,7 @@ import { decodeSharePayload, payloadFromHash, type ShareDecodeResult } from './c
  * La page de partage en lecture seule (§20).
  *
  * Elle ne fait que **montrer** : pas d'édition, pas de génération, pas d'appel
- * qui modifie quoi que ce soit. Le manifest vient du fragment de l'URL — jamais
+ * qui modifie quoi que ce soit. Le manifest vient du fragment de l'URL jamais
  * du serveur —, donc le rendu a lieu côté navigateur : le serveur ne voit ni le
  * payload, ni son contenu.
  *
@@ -53,7 +53,7 @@ export interface SharePreviewProps {
  * Le rendu d'un lien : le Blueprint, ou la raison du refus.
  *
  * Pure : elle reçoit un résultat déjà décodé. Un lien illisible rend une phrase
- * — jamais une pile, jamais une invite à « réessayer » sans dire quoi corriger.
+ * jamais une pile, jamais une invite à « réessayer » sans dire quoi corriger.
  */
 export function SharePreview({
   result,

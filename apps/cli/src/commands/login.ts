@@ -17,7 +17,7 @@ aucun mot de passe ne passe par BuildIt. Le jeton est rangé dans le
 trousseau du système, jamais dans un fichier.
 
   --with-token   Lit un jeton existant sur l'entrée standard, ou par une saisie
-                 masquée — jamais en argument
+                 masquée jamais en argument
   --public-only  Dépôts publics seulement (permission public_repo)`;
 
 export const LOGOUT_USAGE: string = `Usage : pf logout
@@ -27,7 +27,7 @@ Retire le jeton GitHub du trousseau de cette machine.`;
 /**
  * Identifiant de l'application OAuth de BuildIt. Pas un secret : il
  * figure dans chaque URL d'autorisation. Vide tant que l'application n'est pas
- * enregistrée sur GitHub (action de mainteneur) — `PF_GITHUB_CLIENT_ID` le
+ * enregistrée sur GitHub (action de mainteneur) `PF_GITHUB_CLIENT_ID` le
  * fournit en attendant.
  */
 const CLIENT_ID = '';

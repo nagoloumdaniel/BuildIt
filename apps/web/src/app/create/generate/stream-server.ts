@@ -7,7 +7,7 @@ import { installProject } from '../../open/project';
 import { checkOutputDestination, HOSTED_FOLDER_REFUSAL } from './output-destination';
 
 /**
- * La génération dans un dossier choisi, **en flux** — la logique de la route
+ * La génération dans un dossier choisi, **en flux** la logique de la route
  * `POST /api/generate`, sans Next.
  *
  * Séparée de la route pour une seule raison : se prouver avec un vrai dossier

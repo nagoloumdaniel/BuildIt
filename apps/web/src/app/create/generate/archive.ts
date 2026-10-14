@@ -7,7 +7,7 @@ import { createZip } from '../../../lib/zip';
 import type { GenerationView } from '../../actions';
 
 /**
- * Le projet entier, en archive `.zip` — **une seule** implémentation pour les
+ * Le projet entier, en archive `.zip` **une seule** implémentation pour les
  * deux modes.
  *
  * En hébergé, c'est la seule sortie possible : rien ne peut être écrit sur la

@@ -20,7 +20,7 @@ import {
 import { CapabilityOptions } from './option-list';
 
 /**
- * Écran 6 — Capabilities (§6.7).
+ * Écran 6 Capabilities (§6.7).
  *
  * L'écran ne connaît **aucune** technologie : il demande au moteur les options
  * d'une famille du catalogue (`loadOptionsAction`) et affiche ce qu'il rend,
@@ -136,7 +136,7 @@ export default function CapabilitiesPage(): ReactElement {
     };
   }, [wanted, draft, attempt, t]);
 
-  // Qui appartient à quelle famille — ce que `toggleCapability` consulte pour
+  // Qui appartient à quelle famille ce que `toggleCapability` consulte pour
   // retirer un choix concurrent sans se tromper.
   const categoryOf = useMemo(() => {
     const byId = new Map<string, Category>();

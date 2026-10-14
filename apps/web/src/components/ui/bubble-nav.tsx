@@ -13,10 +13,10 @@ import { Icon, type IconName } from './icon';
  * Une pilule par destination, l'active en orange. Le repère n'est pas un
  * soulignement de 2 px qu'il faut chercher : la pastille entière change de
  * fond **et** de contour, ce qui se voit du coin de l'œil, survit au zoom à
- * 200 % et reste lisible sans couleur — c'est la forme du cadre qui le dit,
+ * 200 % et reste lisible sans couleur c'est la forme du cadre qui le dit,
  * pas une pastille ajoutée à côté du libellé.
  *
- * Sur mobile, les libellés tombent et il ne reste que les icônes — la rangée
+ * Sur mobile, les libellés tombent et il ne reste que les icônes la rangée
  * tient alors dans la largeur sans défilement horizontal. L'`aria-label` de
  * chaque lien porte le libellé dans les deux cas : l'icône seule ne nomme rien.
  */

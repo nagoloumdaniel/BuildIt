@@ -12,7 +12,7 @@ export const TEMPLATE_USAGE = `Usage : pf template <list|show|use>
                     Le manifest d'un preset, sur la sortie standard :
                     pf template show api --name mon-api > pf.manifest.json
   use <preset> [nom] [options]
-                    Crée un projet — alias de pf create --preset <preset>`;
+                    Crée un projet alias de pf create --preset <preset>`;
 
 export async function template(args: readonly string[], io: Io): Promise<ExitCode> {
   const [action, id, ...rest] = args;

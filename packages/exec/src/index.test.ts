@@ -10,7 +10,7 @@ import {
   resolveWindowsCommand,
 } from './index.js';
 
-describe('nodeCommandRunner — le seul exécuteur réel', () => {
+describe('nodeCommandRunner le seul exécuteur réel', () => {
   it('rend le code de sortie et la sortie combinée', async () => {
     const result = await nodeCommandRunner.run(
       process.execPath,
@@ -38,7 +38,7 @@ describe('nodeCommandRunner — le seul exécuteur réel', () => {
   });
 });
 
-describe('nodeCommandRunner — entrée standard et environnement', () => {
+describe('nodeCommandRunner entrée standard et environnement', () => {
   it('passe `input` sur l’entrée standard, jamais en argument', async () => {
     const result = await nodeCommandRunner.run(
       process.execPath,
@@ -65,12 +65,12 @@ describe('nodeCommandRunner — entrée standard et environnement', () => {
 });
 
 /**
- * La résolution Windows ne tourne que sous Windows, mais sa logique — chercher
- * dans le PATH, lancer le script JavaScript derrière un `.cmd` — se vérifie
+ * La résolution Windows ne tourne que sous Windows, mais sa logique chercher
+ * dans le PATH, lancer le script JavaScript derrière un `.cmd` se vérifie
  * partout avec de faux dossiers. Sans ces tests, la CI Linux ne l'exécuterait
  * jamais.
  */
-describe('resolveWindowsCommand — aucun shell, même pour un .cmd', () => {
+describe('resolveWindowsCommand aucun shell, même pour un .cmd', () => {
   const created: string[] = [];
   afterEach(async () => {
     while (created.length > 0) {
@@ -147,7 +147,7 @@ describe('resolveCommand', () => {
   });
 });
 
-describe('nodeCommandRunner — processus tué', () => {
+describe('nodeCommandRunner processus tué', () => {
   it.skipIf(process.platform === 'win32')(
     'un processus tué par un signal sort en échec',
     async () => {
@@ -171,7 +171,7 @@ describe('outputTail', () => {
   });
 });
 
-describe('isTransientFailure — git aussi', () => {
+describe('isTransientFailure git aussi', () => {
   it.each([
     "fatal: unable to access 'https://github.com/a/b.git/': Could not resolve host: github.com",
     'fatal: unable to access: Failed to connect to github.com port 443',

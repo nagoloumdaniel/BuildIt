@@ -14,13 +14,13 @@ export const FR_WORKSPACE = {
     folderHint:
       'Seuls les fichiers qui nomment l’outillage sont lus : package.json, pyproject.toml, Cargo.toml…',
     /* En hébergé, l'explorateur est celui du **navigateur** : il ouvre bien
-       l'explorateur de Windows, mais ne rend aucun chemin — assez pour
+       l'explorateur de Windows, mais ne rend aucun chemin assez pour
        reconnaître le projet, pas pour l'installer. La phrase le dit au moment
        où c'est utile, au lieu de proposer un champ de saisie de chemin. */
     browserNote:
       'Le dossier est lu dans votre navigateur : BuildIt reconnaît le projet, mais n’installe rien sur votre machine depuis cette page. La commande est affichée, à lancer dans votre terminal.',
     noPickerNote:
-      'Ce navigateur ne sait pas ouvrir de dossier (navigateur mobile ?). Utilisez un navigateur de bureau — Chrome, Edge, Firefox ou Safari — ou lancez BuildIt en local avec « pf web ».',
+      'Ce navigateur ne sait pas ouvrir de dossier (navigateur mobile ?). Utilisez un navigateur de bureau Chrome, Edge, Firefox ou Safari ou lancez BuildIt en local avec « pf web ».',
     /* Firefox, Safari : le dossier se choisit par le sélecteur du navigateur,
        en lecture seule. Le navigateur peut demander de confirmer « l'envoi » :
        rien ne quitte la machine hormis les noms et package.json. */
@@ -64,7 +64,7 @@ export const FR_WORKSPACE = {
     runYourself: 'À lancer dans votre terminal',
     /* Choisir, c'est demander : l'analyse part au choix du dossier. Ce bouton
        n'est donc pas « l'étape suivante » mais la reprise d'une analyse déjà
-       faite — le dossier a pu changer sur le disque entre-temps. */
+       faite le dossier a pu changer sur le disque entre-temps. */
     reanalyse: 'Analyser à nouveau',
     reanalyseFolder: 'Choisir un autre dossier',
     pathWhat: 'le chemin du dossier',
@@ -304,7 +304,7 @@ export const EN_WORKSPACE: Widen<typeof FR_WORKSPACE> = {
     browserNote:
       'The folder is read inside your browser: BuildIt recognises the project, but installs nothing on your machine from this page. The command is shown, to run in your own terminal.',
     noPickerNote:
-      'This browser cannot open a folder (mobile browser?). Use a desktop browser — Chrome, Edge, Firefox or Safari — or run BuildIt locally with “pf web”.',
+      'This browser cannot open a folder (mobile browser?). Use a desktop browser Chrome, Edge, Firefox or Safari or run BuildIt locally with “pf web”.',
     inputNote:
       'The folder is read inside your browser, read-only: the browser may ask you to confirm, but only file names and package.json are analysed. Missing base files download as an archive.',
     fallbackNote:

@@ -4,7 +4,7 @@ import type { ReactElement } from 'react';
  * Les illustrations de la plateforme.
  *
  * Trois traits, un seul vocabulaire : des formes géométriques larges, un trait
- * de 1,5 px, aucune perspective, aucune couleur en dur — tout vient de
+ * de 1,5 px, aucune perspective, aucune couleur en dur tout vient de
  * `currentColor`, donc du thème. C'est ce qui permet à la même illustration de
  * servir en clair et en sombre sans second fichier.
  *
@@ -12,9 +12,9 @@ import type { ReactElement } from 'react';
  * d'un arrêt sans le remplir de bruit. Une page d'erreur sans image est un
  * cul-de-sac gris ; une page d'erreur avec une saynète est une excuse.
  *
- * - `forge` : deux pièces qui se composent — la matière et la pièce finie ;
- * - `lost` : un chemin qui s'interrompt — la page n'existe pas ;
- * - `empty` : une caisse ouverte — il n'y a encore rien, et c'est normal.
+ * - `forge` : deux pièces qui se composent la matière et la pièce finie ;
+ * - `lost` : un chemin qui s'interrompt la page n'existe pas ;
+ * - `empty` : une caisse ouverte il n'y a encore rien, et c'est normal.
  */
 
 export type IllustrationName = 'forge' | 'lost' | 'empty';

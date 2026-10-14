@@ -1,8 +1,8 @@
 import { z } from 'zod';
 
 /**
- * Schéma d'une recette : une capacité câblée — « auth email + mot de passe »,
- * « paiement Checkout » — que le generator ajoute au projet sur demande
+ * Schéma d'une recette : une capacité câblée « auth email + mot de passe »,
+ * « paiement Checkout » que le generator ajoute au projet sur demande
  * explicite.
  *
  * Une recette est de la **donnée**, jamais du code : des paquets, des noms de

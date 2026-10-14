@@ -5,7 +5,7 @@
  * Sert sur iPhone, iPad et Android, où `<input webkitdirectory>` n'ouvre pas
  * de dossier : le visiteur choisit l'archive de son projet à la place.
  *
- * Entrées STORED (0) et DEFLATE (8) — ce que produisent Fichiers (iOS),
+ * Entrées STORED (0) et DEFLATE (8) ce que produisent Fichiers (iOS),
  * l'explorateur Windows, macOS, `zip` et GitHub. DEFLATE passe par
  * `DecompressionStream('deflate-raw')`, natif dans Safari 16.4+, Chrome 80+,
  * Firefox 113+. Zip64 et chiffrement : refusés, dit.

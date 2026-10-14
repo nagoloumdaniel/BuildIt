@@ -90,7 +90,7 @@ function issue(
  * Pourquoi un port plutôt qu'un chemin : la même règle doit valoir pour un
  * dossier du disque (`pf web` en local, le CLI) **et** pour un dossier que le
  * visiteur a désigné dans son navigateur, dont le serveur ne verra jamais le
- * chemin — seulement ces quelques noms. Deux détections auraient divergé au
+ * chemin seulement ces quelques noms. Deux détections auraient divergé au
  * premier verrou ajouté.
  */
 export interface ProjectEntries {
@@ -218,7 +218,7 @@ const OTHERS: readonly {
  * Reconnaît un projet à partir de ses entrées. JavaScript d'abord : c'est le
  * seul écosystème installé automatiquement.
  *
- * `label` ne sert qu'aux messages de refus — c'est le dossier tel que
+ * `label` ne sert qu'aux messages de refus c'est le dossier tel que
  * l'utilisateur l'a désigné : un chemin absolu en local, un simple nom de
  * dossier quand il vient du navigateur.
  */
@@ -251,7 +251,7 @@ export function detectFromEntries(
   ]);
 }
 
-/** Les entrées d'un dossier du disque — le port de `detectFromEntries`, côté Node. */
+/** Les entrées d'un dossier du disque le port de `detectFromEntries`, côté Node. */
 async function entriesOf(dir: string): Promise<ProjectEntries> {
   let names: string[];
   try {
@@ -300,7 +300,7 @@ function isModernYarn(detection: Detection): boolean {
 }
 
 /**
- * La commande d'installation, exacte — à afficher **avant** de la lancer.
+ * La commande d'installation, exacte à afficher **avant** de la lancer.
  * `undefined` hors JavaScript : l'installation n'y est pas encore automatisée.
  */
 export function installCommand(
@@ -320,7 +320,7 @@ export function installCommand(
   return { command: manager, args };
 }
 
-/** `pnpm install --ignore-scripts` — tel que l'utilisateur le taperait. */
+/** `pnpm install --ignore-scripts` tel que l'utilisateur le taperait. */
 export function formatCommand(command: Command): string {
   return [command.command, ...command.args].join(' ');
 }

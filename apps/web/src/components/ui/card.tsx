@@ -6,7 +6,7 @@ import { Icon, type IconName } from './icon';
  *
  * Une carte n'est pas un conteneur par défaut : elle délimite **une unité de
  * décision** (un réglage, un résultat, un refus). Du contenu qui n'a pas de
- * frontière propre reste dans le flux de la page — c'est ce qui évite la
+ * frontière propre reste dans le flux de la page c'est ce qui évite la
  * grille de rectangles identiques où plus rien ne hiérarchise.
  *
  * Trois tons seulement, et chacun dit quelque chose :

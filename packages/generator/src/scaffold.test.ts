@@ -78,7 +78,7 @@ describe('fichiers produits', () => {
     expect(files.map((file) => file.path)).toContain('turbo.json');
   });
 
-  it('chaque fichier indique son origine — traçabilité du §6.14', () => {
+  it('chaque fichier indique son origine traçabilité du §6.14', () => {
     for (const file of scaffoldFiles(MANIFEST, [])) {
       expect(file.source.length, `origine manquante : ${file.path}`).toBeGreaterThan(0);
     }
@@ -176,7 +176,7 @@ describe('package.json', () => {
     expect(json.packageManager).toMatch(/^pnpm@/);
   });
 
-  it('trie les clés — deux générations identiques donnent le même fichier', () => {
+  it('trie les clés deux générations identiques donnent le même fichier', () => {
     const a = fileNamed(
       scaffoldFiles(MANIFEST, [entry({ id: 'vitest', category: 'testing' })]),
       'package.json',
@@ -192,7 +192,7 @@ describe('package.json', () => {
 /**
  * §24 : aucune valeur sensible dans un fichier généré. Le registry interdit
  * déjà le signe « = » dans un nom de variable, mais le générateur ne fait pas
- * confiance à son entrée — il revérifie.
+ * confiance à son entrée il revérifie.
  */
 describe('.env.example', () => {
   it('liste les variables des technologies choisies', () => {
@@ -229,7 +229,7 @@ describe('.env.example', () => {
     expect(names).toEqual(['ALPHA', 'ZED']);
   });
 
-  it('refuse une variable qui porte une valeur — défense en profondeur', () => {
+  it('refuse une variable qui porte une valeur défense en profondeur', () => {
     expect(
       codesOf(MANIFEST, [
         entry({ id: 'a', env: ['AWS_SECRET_ACCESS_KEY=wJalrXUtnFEMIK7MDENGbPxRfiCYEXAMPLEKEY'] }),
@@ -267,7 +267,7 @@ describe('README.md', () => {
     expect(fileNamed(scaffoldFiles(MANIFEST, []), 'README.md')).toContain('quai3');
   });
 
-  it('énonce le principe de non-dépendance — §1', () => {
+  it('énonce le principe de non-dépendance §1', () => {
     const readme = fileNamed(scaffoldFiles(MANIFEST, []), 'README.md');
     expect(readme).toContain('BuildIt');
     expect(readme.toLowerCase()).toContain('autonome');
@@ -321,7 +321,7 @@ describe('problèmes transmis par le résolveur de dépendances', () => {
     expect(codes).toContain('GEN_DEPENDENCY_CONFLICT');
   });
 
-  it('conserve le message d’origine — c’est le résolveur qui connaît les plages', () => {
+  it('conserve le message d’origine c’est le résolveur qui connaît les plages', () => {
     const result = buildScaffold(MANIFEST, [
       entry({ id: 'a', packages: ['react'], packageRanges: { react: '^19.0.0' } }),
       entry({ id: 'b', category: 'ui', packages: ['react'], packageRanges: { react: '^18.0.0' } }),
@@ -346,7 +346,7 @@ describe('problèmes transmis par le résolveur de dépendances', () => {
 });
 
 /**
- * 5B.1 — le socle doit passer ses propres vérifications.
+ * 5B.1 le socle doit passer ses propres vérifications.
  *
  * Un preset SaaS réellement généré puis installé échouait à `typecheck` (pas
  * de tsconfig) et à `lint` (formatage par défaut de Biome, en tabulations). La
@@ -354,7 +354,7 @@ describe('problèmes transmis par le résolveur de dépendances', () => {
  * ci-dessous verrouille une des causes, sans réseau ; le test de fumée
  * (`pnpm test:smoke`) vérifie l'ensemble pour de vrai.
  */
-describe('le socle passe ses propres vérifications — 5B.1', () => {
+describe('le socle passe ses propres vérifications 5B.1', () => {
   const TYPESCRIPT = entry({ id: 'typescript', category: 'language' });
   const BIOME = entry({ id: 'biome', category: 'linting' });
 
@@ -453,7 +453,7 @@ describe('le socle passe ses propres vérifications — 5B.1', () => {
  * approuvé (`ERR_PNPM_IGNORED_BUILDS`). Trouvé par le test de fumée : le
  * preset SaaS ne s'installait pas, à cause de Prisma.
  */
-describe('scripts d’installation approuvés — pnpm 11', () => {
+describe('scripts d’installation approuvés pnpm 11', () => {
   const PRISMA = entry({ id: 'prisma', category: 'orm' });
 
   it('approuve les scripts de Prisma, même hors monorepo', () => {
@@ -498,10 +498,10 @@ describe('scripts d’installation approuvés — pnpm 11', () => {
   });
 });
 
-describe('recettes dans le socle — 5B.5', () => {
+describe('recettes dans le socle 5B.5', () => {
   const RECIPE: Recipe = {
     id: 'stripe-checkout',
-    name: 'Stripe — Checkout',
+    name: 'Stripe Checkout',
     description: 'x',
     for: ['stripe'],
     packages: { stripe: '^18.0.0' },
@@ -552,7 +552,7 @@ describe('recettes dans le socle — 5B.5', () => {
   });
 
   it('le README liste les recettes appliquées', () => {
-    expect(fileNamed(withRecipes([RECIPE]), 'README.md')).toContain('Stripe — Checkout');
+    expect(fileNamed(withRecipes([RECIPE]), 'README.md')).toContain('Stripe Checkout');
   });
 
   it('sans recette, le README n’a pas de section recettes', () => {
@@ -560,7 +560,7 @@ describe('recettes dans le socle — 5B.5', () => {
   });
 });
 
-describe('Docker dans le socle — 5B.6', () => {
+describe('Docker dans le socle 5B.6', () => {
   const DOCKER = entry({ id: 'docker', category: 'containers' });
 
   it('Docker choisi sans application à construire : pas de Dockerfile, un avertissement', () => {
@@ -596,7 +596,7 @@ describe('Docker dans le socle — 5B.6', () => {
 });
 
 /**
- * Phase 6.7a — Prisma câblé sur PostgreSQL. Le code dépend de la base :
+ * Phase 6.7a Prisma câblé sur PostgreSQL. Le code dépend de la base :
  * fournisseur du schéma, adaptateur de pilote. Il n'est donc produit que pour
  * la combinaison vérifiée par le test de fumée, jamais pour Prisma seul.
  */
@@ -734,7 +734,7 @@ describe('intégration par combinaison : better-auth + next + prisma + postgresq
 });
 
 /**
- * 6.7a — observabilité. Next.js n'a qu'un `instrumentation-client.ts`, et
+ * 6.7a observabilité. Next.js n'a qu'un `instrumentation-client.ts`, et
  * Sentry comme PostHog veulent y initialiser leur client : chacun pose son
  * module, le socle compose le fichier commun. Aucun des deux n'écrase l'autre.
  */
@@ -800,7 +800,7 @@ describe('observabilité : sentry et posthog sur next', () => {
   });
 });
 
-describe('scripts d’installation refusés explicitement — moindre privilège', () => {
+describe('scripts d’installation refusés explicitement moindre privilège', () => {
   it('refuse ce qui ne sert pas, sans faire échouer pnpm', () => {
     const workspace = fileNamed(
       scaffoldFiles(MANIFEST, [
@@ -812,7 +812,7 @@ describe('scripts d’installation refusés explicitement — moindre privilège
     );
     // @sentry/cli télécharge un binaire pour envoyer les source maps, non
     // configuré ; core-js n'affiche qu'un message. Ni l'un ni l'autre ne
-    // s'exécute — mais pnpm 11 échouerait s'ils n'étaient pas nommés.
+    // s'exécute mais pnpm 11 échouerait s'ils n'étaient pas nommés.
     expect(workspace).toContain('  "@sentry/cli": false');
     expect(workspace).toContain('  core-js: false');
   });

@@ -2,13 +2,13 @@
  * Couverture des cibles par le catalogue (§7.9, §7.10, §10).
  *
  * Le §10 décrit chaque cible par une **application** : `web` par `frontend`,
- * `mobile` par `mobile`, `desktop` par `desktop`, `api` par `backend` — et
+ * `mobile` par `mobile`, `desktop` par `desktop`, `api` par `backend` et
  * chacune exige un `framework`. Une cible dont le catalogue n'offre aucun
  * framework produit donc un brouillon qui ne peut pas devenir un manifest
  * valide : c'est un cul-de-sac, et il ne se voit qu'à la fin du parcours.
  *
  * Ce module répond à la seule question qui le dise sans se tromper —
- * « qu'est-ce que le catalogue offre pour cette cible ? » — et ne recopie
+ * « qu'est-ce que le catalogue offre pour cette cible ? » et ne recopie
  * jamais une liste de technologies (§11). Il ne dit pas **quelles** cibles
  * exigent une application : c'est la forme du §10, qui vit dans `manifest` et
  * dans l'assemblage du brouillon. Il dit ce que le catalogue contient.
@@ -17,7 +17,7 @@
  * une cible répond à côté. Des linters, des CI et des langages citent `mobile`
  * et `desktop` sans pouvoir en être le framework. Le compte qui décide est
  * celui des fiches dont la **catégorie** occupe le champ `framework` d'une
- * application — `frontend` et `backend`, d'après `SLOTS`.
+ * application `frontend` et `backend`, d'après `SLOTS`.
  */
 import { TARGETS, type Target } from '@buildit/manifest';
 import type { Category, RegistryEntry } from './schema/entry.js';
@@ -46,7 +46,7 @@ export interface TargetCoverage {
   readonly frameworks: number;
 }
 
-/** La couverture par cible, dans l'ordre de `TARGETS` — stable, donc comparable. */
+/** La couverture par cible, dans l'ordre de `TARGETS` stable, donc comparable. */
 export function targetCoverage(entries: Iterable<RegistryEntry>): readonly TargetCoverage[] {
   const all = [...entries];
   const frameworks = all.filter((entry) => FRAMEWORK_CATEGORIES.includes(entry.category));
@@ -63,7 +63,7 @@ export function targetCoverage(entries: Iterable<RegistryEntry>): readonly Targe
  *
  * C'est une réponse **par cible**, pas une liste d'interdits : le jour où une
  * fiche `expo` vise `mobile`, `mobile` sort de cette liste et l'écran qui s'y
- * réfère cesse de la retirer — sans qu'aucune liste à tenir à jour n'existe.
+ * réfère cesse de la retirer sans qu'aucune liste à tenir à jour n'existe.
  *
  * Attention : une cible sans framework n'est pas forcément inutilisable. Le
  * §10 ne décrit pas `library` par une application, donc aucune n'y exige de

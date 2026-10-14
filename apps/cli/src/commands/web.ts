@@ -22,7 +22,7 @@ Options :
  * En **monorepo**, Next trace depuis la racine du dépôt (celle de
  * `pnpm-workspace.yaml`) et recopie l'arborescence : le serveur se trouve sous
  * `standalone/apps/web/server.js`, pas à la racine de `standalone/`. Lancée
- * seule — la racine de traçage est alors l'application — la sortie le met bien
+ * seule la racine de traçage est alors l'application la sortie le met bien
  * sous `standalone/server.js`. Les deux formes existent dans la nature.
  */
 const MONOREPO_SERVER = join('apps', 'web', '.next', 'standalone', 'apps', 'web', 'server.js');
@@ -39,7 +39,7 @@ const NEXT_BIN = join(WEB_DIR, 'node_modules', 'next', 'dist', 'bin', 'next');
 interface ServeTarget {
   /** Les arguments de `node` : le script à lancer, puis ses options. */
   readonly args: readonly string[];
-  /** Le dossier de lancement — `next start` lit `.next` depuis là. */
+  /** Le dossier de lancement `next start` lit `.next` depuis là. */
   readonly cwd: string;
 }
 
@@ -50,7 +50,7 @@ interface ServeTarget {
  * marche sur une machine de développement. La sortie autonome recopie les liens
  * symboliques pnpm de `node_modules` ; sous Windows, Node n'arrive pas toujours
  * à les résoudre (`EPERM` sur `realpathSync`), et `.next/standalone` n'est pas
- * nettoyé entre deux builds — un lien mort d'un build précédent y survit. Le
+ * nettoyé entre deux builds un lien mort d'un build précédent y survit. Le
  * standalone reste le bon mode pour ce qu'on **distribue**, d'où le repli.
  */
 async function findServeTarget(root: string, port: number): Promise<ServeTarget | undefined> {
@@ -118,7 +118,7 @@ function browserCommand(platform: NodeJS.Platform): string {
 
 /**
  * Ouvre l'URL, sans jamais faire échouer la commande : un navigateur absent se
- * dit, le serveur continue. Le code de sortie est ignoré — `explorer` rend 1
+ * dit, le serveur continue. Le code de sortie est ignoré `explorer` rend 1
  * même quand la page s'ouvre.
  */
 async function openBrowser(io: Io, url: string): Promise<void> {
@@ -131,7 +131,7 @@ async function openBrowser(io: Io, url: string): Promise<void> {
 }
 
 /**
- * Lance le serveur et attend sa fin — c'est lui qui tient le premier plan.
+ * Lance le serveur et attend sa fin c'est lui qui tient le premier plan.
  *
  * L'hôte et le port passent par l'environnement de **cette commande seule** :
  * c'est ce que lisent le serveur autonome de Next (`process.env.HOSTNAME`,

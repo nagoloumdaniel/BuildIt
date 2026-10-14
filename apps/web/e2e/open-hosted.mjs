@@ -1,6 +1,6 @@
 /**
  * Ouvrir un projet local **depuis le site hébergé**, dans un vrai navigateur,
- * sur le serveur de production (`next start`, `PF_HOSTED=1` — l'interrupteur
+ * sur le serveur de production (`next start`, `PF_HOSTED=1` l'interrupteur
  * que `VERCEL=1` pose sur Vercel).
  *
  * Deux navigateurs simulés, deux voies :
@@ -140,7 +140,7 @@ function hidePicker() {
 
 /**
  * Firefox, Safari, mobile : aucune File System Access API. Sur un vrai Firefox
- * ou WebKit rien n'est masqué — c'est le moteur réel qui est jugé.
+ * ou WebKit rien n'est masqué c'est le moteur réel qui est jugé.
  */
 async function inputWay(page, project, mask) {
   if (mask) {
@@ -268,23 +268,13 @@ await writeFile(join(project, 'pnpm-lock.yaml'), '');
 await writeFile(join(project, 'src', 'index.ts'), 'export {};\n');
 
 const RUNS = [
-  [
-    'Chromium — File System Access API (poignée simulée)',
-    chromium,
-    {},
-    (page) => chromiumWay(page),
-  ],
-  ['Chromium — repli webkitdirectory', chromium, {}, (page) => inputWay(page, project, true)],
-  ['Firefox — webkitdirectory réel', firefox, {}, (page) => inputWay(page, project, false)],
-  ['WebKit — webkitdirectory réel', webkit, {}, (page) => inputWay(page, project, false)],
+  ['Chromium File System Access API (poignée simulée)', chromium, {}, (page) => chromiumWay(page)],
+  ['Chromium repli webkitdirectory', chromium, {}, (page) => inputWay(page, project, true)],
+  ['Firefox webkitdirectory réel', firefox, {}, (page) => inputWay(page, project, false)],
+  ['WebKit webkitdirectory réel', webkit, {}, (page) => inputWay(page, project, false)],
   // Android Chrome n'a pas showDirectoryPicker : on le masque comme lui.
   ['Pixel 7 (Chromium mobile)', chromium, devices['Pixel 7'], (page) => zipWay(page)],
-  [
-    'iPhone 15 (WebKit mobile) — archive .zip',
-    webkit,
-    devices['iPhone 15'],
-    (page) => zipWay(page),
-  ],
+  ['iPhone 15 (WebKit mobile) archive .zip', webkit, devices['iPhone 15'], (page) => zipWay(page)],
 ];
 
 const workspace = await mkdtemp(join(tmpdir(), 'pf-open-ws-'));

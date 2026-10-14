@@ -3,7 +3,7 @@ import { skeletonTree } from './architecture-skeleton.js';
 import { ARCHITECTURES } from './schema/enums.js';
 import { skeletonFiles } from './skeleton-files.js';
 
-describe('skeletonFiles — le contenu des fichiers de base, sans fs', () => {
+describe('skeletonFiles le contenu des fichiers de base, sans fs', () => {
   it.each(ARCHITECTURES)(
     '%s : README par dossier, vue, ADR, CONTRIBUTING, SECURITY',
     (architecture) => {
@@ -18,7 +18,7 @@ describe('skeletonFiles — le contenu des fichiers de base, sans fs', () => {
       expect(paths).toContain('SECURITY.md');
       expect(new Set(paths).size).toBe(paths.length);
       const view = files.find((file) => file.path === 'docs/architecture/README.md');
-      expect(view?.contents).toContain('# Architecture — mon-app');
+      expect(view?.contents).toContain('# Architecture mon-app');
     },
   );
 
@@ -28,7 +28,7 @@ describe('skeletonFiles — le contenu des fichiers de base, sans fs', () => {
   });
 });
 
-describe('skeletonFiles — date de l’ADR', () => {
+describe('skeletonFiles date de l’ADR', () => {
   it('inscrit la date fournie, jamais « à la génération »', () => {
     const files = skeletonFiles('x', 'monorepo', [], { date: '2026-03-04' });
     const adr = files.find((file) => file.path === 'docs/decisions/ADR-001-monorepo.md');

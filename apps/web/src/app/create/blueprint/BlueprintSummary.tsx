@@ -28,7 +28,7 @@ function EditLink({ href, label }: { href: string; label: string }): ReactElemen
 }
 
 /**
- * Le résumé du §6.10 — un composant **pur** : il reçoit sa vue, il ne lit ni le
+ * Le résumé du §6.10 un composant **pur** : il reçoit sa vue, il ne lit ni le
  * brouillon ni le moteur. Ce qui s'affiche a donc été construit par
  * `blueprintView` à partir du manifest canonique, et rien n'est recomposé ici.
  *

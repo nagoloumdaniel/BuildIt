@@ -44,7 +44,7 @@ const OWN_CODES = [
  *
  * Ils appartiennent au résolveur de dépendances, qui les rédige mieux que le
  * socle ne le ferait : c'est lui qui connaît les plages en cause. Ils n'ont
- * donc pas d'entrée dans le catalogue ci-dessous — une entrée existerait sans
+ * donc pas d'entrée dans le catalogue ci-dessous une entrée existerait sans
  * jamais servir, et produirait un message dégradé le jour où quelqu'un
  * l'appellerait par erreur.
  */
@@ -89,7 +89,7 @@ function integrationsFor(entry: RegistryEntry, stack: ReadonlySet<string>): Inte
   );
 }
 
-/** Fiches compagnes exigées par une intégration — aucune, une ou plusieurs. */
+/** Fiches compagnes exigées par une intégration aucune, une ou plusieurs. */
 function companionsOf(integration: Integration): readonly string[] {
   if (integration.when === undefined) {
     return [];
@@ -160,7 +160,7 @@ function integrationEnvSources(entries: readonly RegistryEntry[]): EnvSource[] {
  *
  * Le fichier est unique côté Next.js, et plusieurs outils veulent y
  * initialiser leur client. Le composer ici, par donnée, évite qu'une
- * intégration écrase l'autre — et évite toute logique dans un template.
+ * intégration écrase l'autre et évite toute logique dans un template.
  */
 function clientInstrumentation(entries: readonly RegistryEntry[]): PlannedFile[] {
   const stack = stackOf(entries);
@@ -391,7 +391,7 @@ const WORKSPACE_PACKAGES = ['packages:', '  - "apps/*"', '  - "packages/*"'];
  * - un monorepo y déclare ses paquets ;
  * - pnpm 11 y lit `allowBuilds`, la liste des paquets autorisés à exécuter leur
  *   script d'installation. Sans elle, `pnpm install` **échoue** dès qu'un tel
- *   paquet est présent (Prisma, notamment) — même dans une application seule.
+ *   paquet est présent (Prisma, notamment) même dans une application seule.
  */
 export function pnpmWorkspace(
   monorepo: boolean,
@@ -453,7 +453,7 @@ const TURBO_JSON = `{
 export interface Scaffold {
   readonly files: readonly PlannedFile[];
   /**
-   * Avertissements non bloquants — versions non épinglées, notamment.
+   * Avertissements non bloquants versions non épinglées, notamment.
    *
    * Ils remontent jusqu'à l'appelant au lieu d'être consommés ici : un
    * avertissement calculé puis jeté est pire que pas d'avertissement, parce
@@ -659,7 +659,7 @@ export function buildScaffold(
 
   const { scripts, issues: scriptIssues } = collectScripts(entries);
   // Les variables ajoutées à la main (`manifest.env`) rejoignent celles de la
-  // stack : mêmes fichiers, triées, sans doublon, et la même vérification — un
+  // stack : mêmes fichiers, triées, sans doublon, et la même vérification un
   // manifest fabriqué à la main pourrait y glisser une valeur.
   const { names, issues: envIssues } = collectEnv([
     ...entries,
@@ -680,7 +680,7 @@ export function buildScaffold(
   if (!dependencies.ok) {
     // Les problèmes de dépendances sont transmis tels quels : l'utilisateur lit
     // le même message qu'il ait lancé le résolveur seul ou le socle complet.
-    // Ils partent avec les problèmes propres au socle — une seule liste, tous
+    // Ils partent avec les problèmes propres au socle une seule liste, tous
     // les défauts d'un coup.
     return fail([
       ...ownIssues,

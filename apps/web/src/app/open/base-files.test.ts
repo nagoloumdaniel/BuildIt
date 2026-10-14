@@ -8,7 +8,7 @@ import {
   projectShape,
 } from './base-files';
 
-describe('projectShape — l’architecture d’un projet ouvert', () => {
+describe('projectShape l’architecture d’un projet ouvert', () => {
   it('lit le manifest BuildIt quand il existe', () => {
     const shape = projectShape({
       folder: 'dossier',
@@ -100,7 +100,7 @@ describe('baseFilesFor / missingBaseFiles', () => {
   });
 });
 
-describe('baseFilesFor — sans doublon, ADR daté', () => {
+describe('baseFilesFor sans doublon, ADR daté', () => {
   const next = projectShape({
     folder: 'site',
     files: ['package.json'],

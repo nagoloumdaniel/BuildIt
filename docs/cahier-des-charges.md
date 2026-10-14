@@ -1,4 +1,4 @@
-# BuildIt — Cahier des charges (v2)
+# BuildIt Cahier des charges (v2)
 
 Document de cadrage produit et technique. Fusionne le document source (septembre 2026), les améliorations proposées et les décisions produit validées. Prêt à servir de base de développement.
 
@@ -6,25 +6,25 @@ Document de cadrage produit et technique. Fusionne le document source (septembre
 
 ## 0. Décisions produit (nouveau)
 
-Ces choix conditionnent toute la suite du document — ils remplacent les zones d'ambiguïté du document source.
+Ces choix conditionnent toute la suite du document ils remplacent les zones d'ambiguïté du document source.
 
 | Sujet | Décision |
 |---|---|
-| Modèle économique | Gratuit au départ (MVP + V1), monétisation introduite à partir de la V2 : freemium (fonctions avancées, templates premium, génération cloud, gestion d'équipe payantes ; le cœur — CLI, moteur, registry, presets standards — reste gratuit). |
+| Modèle économique | Gratuit au départ (MVP + V1), monétisation introduite à partir de la V2 : freemium (fonctions avancées, templates premium, génération cloud, gestion d'équipe payantes ; le cœur CLI, moteur, registry, presets standards reste gratuit). |
 | Public cible | Daniel en premier utilisateur (optimiser son propre workflow, y compris pour Quai3 et ses autres projets), puis ouverture à tout développeur, freelance, agence ou entreprise voulant industrialiser son démarrage de projet. Pas de niche fermée : le produit doit rester utile en solo comme en équipe. |
 | Exécution / confidentialité | **Local-first** : le moteur, l'analyse de projet importé et l'AI Stack Advisor tournent en local via le CLI, avec la clé API LLM fournie par l'utilisateur (OpenAI/Anthropic/autre). Aucun code ni prompt ne transite par un serveur BuildIt par défaut. Le **cloud hébergé** (génération sans installation locale, exécution du LLM géré par BuildIt) devient une **option payante** en V2, pas une obligation. |
 | Dépôts & GitHub | **Ajouté le 26/09/2026.** BuildIt ne sert pas qu'à créer : il sait aussi **cloner** un dépôt (GitHub ou lien Git) et **ouvrir un projet local** pour en installer les dépendances. Le compte GitHub de l'utilisateur est le seul compte que le produit utilise : connexion GitHub, création du dépôt, partage et ajout de collaborateurs passent par **l'API GitHub**, pas par des comptes BuildIt. Le partage d'un **projet** (le code) n'existe que si ce projet est adossé à un dépôt GitHub ; sans dépôt, seul le lien de configuration en lecture seule (§20) est disponible. Détail en §18bis et §20bis. |
 | Collaboration | Partage léger dès le MVP : un lien en lecture seule vers une configuration (Project Manifest + Blueprint), sans compte ni authentification, pour faire valider un choix de stack à un collègue. La gestion d'équipe complète (comptes, permissions, organisations, édition collaborative) arrive en V2, une fois le modèle payant en place. |
 
 Argumentaire résumé (pour mémoire) :
-- **Local-first** a été retenu plutôt que cloud-first parce que la fonctionnalité d'import d'un projet existant (section 15) envoie potentiellement du code propriétaire à analyser — un frein rédhibitoire pour un usage en entreprise si tout part sur un serveur tiers par défaut. Partir local-first règle la confidentialité par défaut, évite un chantier infra/facturation dès le MVP, et n'empêche pas de proposer le cloud plus tard comme confort payant (moins de setup, pas de gestion de clé API).
-- **Partage léger dès le MVP** a été retenu parce qu'il ne coûte presque rien à construire (un identifiant + une page en lecture seule, pas de compte) mais débloque un usage réel dès le premier jour pour quiconque travaille à plusieurs — sans anticiper tout le chantier compte/organisation qui, lui, attend un modèle payant pour se justifier.
+- **Local-first** a été retenu plutôt que cloud-first parce que la fonctionnalité d'import d'un projet existant (section 15) envoie potentiellement du code propriétaire à analyser un frein rédhibitoire pour un usage en entreprise si tout part sur un serveur tiers par défaut. Partir local-first règle la confidentialité par défaut, évite un chantier infra/facturation dès le MVP, et n'empêche pas de proposer le cloud plus tard comme confort payant (moins de setup, pas de gestion de clé API).
+- **Partage léger dès le MVP** a été retenu parce qu'il ne coûte presque rien à construire (un identifiant + une page en lecture seule, pas de compte) mais débloque un usage réel dès le premier jour pour quiconque travaille à plusieurs sans anticiper tout le chantier compte/organisation qui, lui, attend un modèle payant pour se justifier.
 
 ---
 
 ## 1. Vision du produit
 
-BuildIt transforme un simple scaffolder en véritable **Development Environment Factory** : décrire un projet, choisir ses plateformes et technologies, obtenir un projet prêt à développer — cohérent, documenté et diagnostiqué.
+BuildIt transforme un simple scaffolder en véritable **Development Environment Factory** : décrire un projet, choisir ses plateformes et technologies, obtenir un projet prêt à développer cohérent, documenté et diagnostiqué.
 
 Fonctions cœur :
 - Choix initial de la cible : Web, Mobile, Desktop, ou combinaison.
@@ -37,10 +37,10 @@ Fonctions cœur :
 - **Project Doctor** : analyse du projet généré/existant, score et corrections automatiques.
 - Registry extensible de templates, recipes, services et règles de compatibilité.
 - Partage en lecture seule d'une configuration avant génération (cf. §0).
-- **Trois points d'entrée** — créer un projet, cloner un dépôt, ouvrir un projet déjà présent sur la machine — choisis dans un menu d'accueil unique (§18bis).
+- **Trois points d'entrée** créer un projet, cloner un dépôt, ouvrir un projet déjà présent sur la machine choisis dans un menu d'accueil unique (§18bis).
 - **Intégration GitHub** : connexion, clonage d'un dépôt personnel ou de n'importe quel lien, création du dépôt d'un projet généré, partage et ajout de collaborateurs (§20bis).
 
-**Principe de non-dépendance (no-lock-in)** — à afficher explicitement dans le produit et la documentation : le code généré est autonome, sans dépendance runtime à BuildIt. Quitter l'outil après génération ne casse rien.
+**Principe de non-dépendance (no-lock-in)** à afficher explicitement dans le produit et la documentation : le code généré est autonome, sans dépendance runtime à BuildIt. Quitter l'outil après génération ne casse rien.
 
 ---
 
@@ -48,26 +48,26 @@ Fonctions cœur :
 
 À garder en tête pour prioriser catalogue, presets et niveaux de configuration :
 
-1. **Daniel / dev solo** — veut démarrer vite un projet cohérent (ex. Quai3), sans reconfigurer Docker/CI/lint à chaque fois. Utilise surtout les presets et le mode guidé.
-2. **Freelance / indépendant** — plusieurs projets clients différents, besoin de rapidité et de presets variés, sensible à la gratuité du MVP.
-3. **Équipe / agence** — veut imposer une stack cohérente entre projets, partager une configuration pour validation (lien de partage), potentiellement passer au cloud/payant plus tard pour la gestion d'équipe.
-4. **Entreprise avec contraintes internes** — sensible à la confidentialité du code (d'où le local-first), veut auditer chaque dépendance (mode expert), a besoin du Project Doctor pour la gouvernance.
+1. **Daniel / dev solo** veut démarrer vite un projet cohérent (ex. Quai3), sans reconfigurer Docker/CI/lint à chaque fois. Utilise surtout les presets et le mode guidé.
+2. **Freelance / indépendant** plusieurs projets clients différents, besoin de rapidité et de presets variés, sensible à la gratuité du MVP.
+3. **Équipe / agence** veut imposer une stack cohérente entre projets, partager une configuration pour validation (lien de partage), potentiellement passer au cloud/payant plus tard pour la gestion d'équipe.
+4. **Entreprise avec contraintes internes** sensible à la confidentialité du code (d'où le local-first), veut auditer chaque dépendance (mode expert), a besoin du Project Doctor pour la gouvernance.
 
 ---
 
 ## 3. Parcours utilisateur principal
 
-0. **Menu d'accueil** — choisir : *Créer un projet*, *Cloner un projet* (puis installer les dépendances si voulu) ou *Ouvrir un projet local* (puis installer les dépendances). Seul *Créer* entre dans le parcours ci-dessous ; les deux autres sont décrits en §18bis.
+0. **Menu d'accueil** choisir : *Créer un projet*, *Cloner un projet* (puis installer les dépendances si voulu) ou *Ouvrir un projet local* (puis installer les dépendances). Seul *Créer* entre dans le parcours ci-dessous ; les deux autres sont décrits en §18bis.
 1. Créer un projet (ou partir d'un lien de configuration partagé).
-2. Choisir le mode **guidé** (choix par défaut acceptés, peu d'écrans) ou **expert** (tout configurable) — *nouveau, cf. §6*.
+2. Choisir le mode **guidé** (choix par défaut acceptés, peu d'écrans) ou **expert** (tout configurable) *nouveau, cf. §6*.
 3. Choisir les plateformes cibles : Web / Mobile / Desktop / combinaison.
 4. Choisir le profil du projet : SaaS, marketplace, e-commerce, dashboard, blog, AI, API, application métier, etc.
 5. Choisir une architecture : single app, monorepo, modular monolith, microservices, serverless, event-driven.
 6. Choisir ou accepter une stack recommandée.
 7. Configurer les capacités : Auth, DB, Storage, Email, Payments, Search, Realtime, Jobs, Analytics, AI, Monitoring, etc.
-8. Visualiser le Project Blueprint (vue simple) et, si besoin, le Dependency Graph (vue avancée) — *nouveau, cf. §6*.
+8. Visualiser le Project Blueprint (vue simple) et, si besoin, le Dependency Graph (vue avancée) *nouveau, cf. §6*.
 9. Prévisualiser les fichiers qui seront créés (arborescence + contenu, façon éditeur de code).
-10. Générer le lien de partage en lecture seule si validation à faire avant génération — *nouveau*.
+10. Générer le lien de partage en lecture seule si validation à faire avant génération *nouveau*.
 11. Générer le projet.
 12. Exécuter validation, tests, typecheck et checks de configuration.
 13. Initialiser Git et, si l'utilisateur est connecté à GitHub, créer le dépôt (privé par défaut) et y pousser le premier commit (§20bis). Une fois le dépôt créé : partager le projet, inviter des collaborateurs.
@@ -77,9 +77,9 @@ Fonctions cœur :
 
 ---
 
-## 4. Étape 0 — choix du type de projet
+## 4. Étape 0 choix du type de projet
 
-Premier écran, décision structurante — détermine le catalogue de technologies présenté ensuite.
+Premier écran, décision structurante détermine le catalogue de technologies présenté ensuite.
 
 - **Web** : site, SPA, SSR, SSG, full-stack web, PWA.
 - **Mobile** : Android + iOS, éventuellement Web via Expo.
@@ -101,7 +101,7 @@ Premier écran, décision structurante — détermine le catalogue de technologi
 
 ---
 
-## 5. Mécanisme de progressive disclosure (nouveau — comble une lacune du document source)
+## 5. Mécanisme de progressive disclosure (nouveau comble une lacune du document source)
 
 Le principe « ne pas exposer 100 technologies dès le premier écran » (cf. §22 points de vigilance) est appliqué concrètement ainsi :
 
@@ -114,32 +114,32 @@ Le principe « ne pas exposer 100 technologies dès le premier écran » (cf. §
 
 ## 6. Écrans (renumérotés et complétés)
 
-Pour chaque écran : objectif + ce qui bloque le passage à la suite. (Le document source ne listait que des noms d'écran sans description — corrigé ici.)
+Pour chaque écran : objectif + ce qui bloque le passage à la suite. (Le document source ne listait que des noms d'écran sans description corrigé ici.)
 
-1. **Dashboard** — liste des projets créés/en brouillon ; entrée vers un nouveau projet ou un lien partagé reçu. Porte le **menu d'accueil** à trois choix (§18bis) : Créer un projet · Cloner un projet · Ouvrir un projet local.
-2. **Create Project** — nom du projet, mode guidé/expert.
-3. **Target Selection** — Web/Mobile/Desktop/combinaison (cf. §4). Bloquant : au moins une cible choisie.
-4. **Project Type** — profil (SaaS, e-commerce, dashboard...).
-5. **Architecture Builder** — single app, monorepo, microservices, etc., avec description courte de chaque option et son impact (complexité, coût d'exploitation).
-6. **Stack Builder** — sélection technologie par catégorie, avec progressive disclosure (§5).
-7. **Capabilities** — Auth, DB, Storage, Payments, etc.
-8. **Environment & Secrets** — liste des variables d'environnement requises par les choix faits, sans jamais afficher/stocker de valeur sensible par défaut.
-9. **Infrastructure** — Docker, CI/CD, cloud cible.
-10. **Project Blueprint** — vue simple, résumé lisible (« Next.js + PostgreSQL + Stripe... »), bouton pour générer un lien de partage en lecture seule.
-11. **Dependency Graph** — vue avancée en graphe interactif, accessible depuis le Blueprint, pas imposée par défaut.
-12. **File Preview** — arborescence des fichiers à générer, contenu prévisualisable, diff si projet importé.
-13. **Generation Progress** — avancement, étape en cours, possibilité d'annuler proprement (rollback, cf. §9).
-14. **Generation Report** — ce qui a été généré, erreurs/avertissements.
-15. **Project Doctor** — score visuel, historique d'évolution, actions correctives avec diff avant application (« Fix automatically »).
-16. **Existing Project Import** — upload/chemin local du repo, détection (framework, DB, ORM, tests, CI), **étape de confirmation manuelle obligatoire** avant toute migration automatique (cf. §14).
-17. **AI Stack Advisor** — champ de description en langage naturel, justification de chaque choix proposé, indication claire que l'exécution est locale et utilise la clé API personnelle de l'utilisateur.
-18. **Templates Marketplace** — templates officiels/communautaires/premium (payants, à partir de la V2), recherche, notation.
-19. **Template Details** — changelog, compatibilité, licence affichée clairement.
-20. **Settings / Registry** — gestion de la clé API LLM personnelle, préférences de mode (guidé/expert), gestion des templates privés.
-21. **GitHub Connection** — connexion/déconnexion du compte GitHub, compte connecté, permissions accordées affichées en clair. Jamais le jeton lui-même (§20bis).
-22. **Clone Project** — deux onglets : *Mes dépôts* (liste des dépôts du compte connecté, recherche) et *Depuis un lien* (URL collée). Dossier de destination, puis case « Installer les dépendances » avec le gestionnaire détecté. Bloquant : URL valide et dossier de destination inexistant ou vide.
-23. **Open Local Project** — choix d'un dossier de la machine, détection du gestionnaire de paquets et de l'écosystème, aperçu de la commande d'installation **avant** de la lancer. Bloquant : dossier contenant un manifeste de dépendances reconnu.
-24. **Repository & Sharing** — état du dépôt GitHub du projet (lien, visibilité), création du dépôt si absent, liste des collaborateurs, invitation avec rôle, retrait. Le bouton « Partager le projet » est **grisé avec explication** tant que le projet n'a pas de dépôt GitHub.
+1. **Dashboard** liste des projets créés/en brouillon ; entrée vers un nouveau projet ou un lien partagé reçu. Porte le **menu d'accueil** à trois choix (§18bis) : Créer un projet · Cloner un projet · Ouvrir un projet local.
+2. **Create Project** nom du projet, mode guidé/expert.
+3. **Target Selection** Web/Mobile/Desktop/combinaison (cf. §4). Bloquant : au moins une cible choisie.
+4. **Project Type** profil (SaaS, e-commerce, dashboard...).
+5. **Architecture Builder** single app, monorepo, microservices, etc., avec description courte de chaque option et son impact (complexité, coût d'exploitation).
+6. **Stack Builder** sélection technologie par catégorie, avec progressive disclosure (§5).
+7. **Capabilities** Auth, DB, Storage, Payments, etc.
+8. **Environment & Secrets** liste des variables d'environnement requises par les choix faits, sans jamais afficher/stocker de valeur sensible par défaut.
+9. **Infrastructure** Docker, CI/CD, cloud cible.
+10. **Project Blueprint** vue simple, résumé lisible (« Next.js + PostgreSQL + Stripe... »), bouton pour générer un lien de partage en lecture seule.
+11. **Dependency Graph** vue avancée en graphe interactif, accessible depuis le Blueprint, pas imposée par défaut.
+12. **File Preview** arborescence des fichiers à générer, contenu prévisualisable, diff si projet importé.
+13. **Generation Progress** avancement, étape en cours, possibilité d'annuler proprement (rollback, cf. §9).
+14. **Generation Report** ce qui a été généré, erreurs/avertissements.
+15. **Project Doctor** score visuel, historique d'évolution, actions correctives avec diff avant application (« Fix automatically »).
+16. **Existing Project Import** upload/chemin local du repo, détection (framework, DB, ORM, tests, CI), **étape de confirmation manuelle obligatoire** avant toute migration automatique (cf. §14).
+17. **AI Stack Advisor** champ de description en langage naturel, justification de chaque choix proposé, indication claire que l'exécution est locale et utilise la clé API personnelle de l'utilisateur.
+18. **Templates Marketplace** templates officiels/communautaires/premium (payants, à partir de la V2), recherche, notation.
+19. **Template Details** changelog, compatibilité, licence affichée clairement.
+20. **Settings / Registry** gestion de la clé API LLM personnelle, préférences de mode (guidé/expert), gestion des templates privés.
+21. **GitHub Connection** connexion/déconnexion du compte GitHub, compte connecté, permissions accordées affichées en clair. Jamais le jeton lui-même (§20bis).
+22. **Clone Project** deux onglets : *Mes dépôts* (liste des dépôts du compte connecté, recherche) et *Depuis un lien* (URL collée). Dossier de destination, puis case « Installer les dépendances » avec le gestionnaire détecté. Bloquant : URL valide et dossier de destination inexistant ou vide.
+23. **Open Local Project** choix d'un dossier de la machine, détection du gestionnaire de paquets et de l'écosystème, aperçu de la commande d'installation **avant** de la lancer. Bloquant : dossier contenant un manifeste de dépendances reconnu.
+24. **Repository & Sharing** état du dépôt GitHub du projet (lien, visibilité), création du dépôt si absent, liste des collaborateurs, invitation avec rôle, retrait. Le bouton « Partager le projet » est **grisé avec explication** tant que le projet n'a pas de dépôt GitHub.
 
 Exigences transverses à tous les écrans : responsive, thème clair/sombre, navigation clavier, sauvegarde automatique du brouillon.
 
@@ -147,7 +147,7 @@ Exigences transverses à tous les écrans : responsive, thème clair/sombre, nav
 
 ## 7. Catalogue des stacks
 
-*(Contenu technique du document source, conservé intégralement — c'est la base du registry. Nettoyé des marqueurs de citation résiduels.)*
+*(Contenu technique du document source, conservé intégralement c'est la base du registry. Nettoyé des marqueurs de citation résiduels.)*
 
 ### 7.1 Web / Frontend
 React, Next.js, Vue, Nuxt, Angular, Svelte, SvelteKit, Astro, Remix, SolidJS, Vite, Preact, Qwik, HTMX.
@@ -224,18 +224,18 @@ Monolith, Modular Monolith, Monorepo, Microservices, Serverless, Event-driven, C
 
 ## 8. Presets / Blueprints
 
-- **SaaS Web** — Next.js + TypeScript + Tailwind + shadcn/ui + PostgreSQL + Prisma + Better Auth + Stripe + Resend + Sentry + PostHog + Vercel + Vitest + Playwright.
-- **Full-stack Monorepo** — Next.js + Hono + TypeScript + Tailwind + shared UI + PostgreSQL + Prisma + Better Auth + Redis + Zod + Vitest + Playwright + Docker + GitHub Actions.
-- **AI SaaS** — Next.js + TypeScript + Tailwind + shadcn/ui + PostgreSQL + Prisma + Better Auth + Vercel AI SDK + OpenAI/Anthropic + pgvector + Redis + Stripe + PostHog + Sentry.
-- **Marketplace** — Web + Mobile + Admin + API : Next.js + Expo + NestJS + PostgreSQL + Prisma + Auth + Storage + Payments + Notifications + Search + Redis.
-- **Mobile + API** — Expo + React Native + TypeScript + Expo Router + NativeWind + NestJS/Hono + PostgreSQL + Prisma + Auth + Redis + Docker.
-- **Desktop + Web** — Next.js/React + Tauri + TypeScript + shared packages + API + PostgreSQL + Auth.
-- **API** — Hono + TypeScript + PostgreSQL + Prisma + Redis + OpenAPI + Zod + Docker + GitHub Actions.
-- **Dashboard** — Next.js + TypeScript + Tailwind + shadcn/ui + PostgreSQL + Prisma + Better Auth + recette `dashboard-admin` (Recharts, TanStack Table) + Vitest + Playwright + Docker + GitHub Actions. Un espace d'administration complet et protégé : indicateurs, graphique des inscriptions, tableau des utilisateurs (tri, recherche, pagination), paramètres du compte, connexion et inscription — sur les données réelles de l'application, jamais d'exemple inventé.
+- **SaaS Web** Next.js + TypeScript + Tailwind + shadcn/ui + PostgreSQL + Prisma + Better Auth + Stripe + Resend + Sentry + PostHog + Vercel + Vitest + Playwright.
+- **Full-stack Monorepo** Next.js + Hono + TypeScript + Tailwind + shared UI + PostgreSQL + Prisma + Better Auth + Redis + Zod + Vitest + Playwright + Docker + GitHub Actions.
+- **AI SaaS** Next.js + TypeScript + Tailwind + shadcn/ui + PostgreSQL + Prisma + Better Auth + Vercel AI SDK + OpenAI/Anthropic + pgvector + Redis + Stripe + PostHog + Sentry.
+- **Marketplace** Web + Mobile + Admin + API : Next.js + Expo + NestJS + PostgreSQL + Prisma + Auth + Storage + Payments + Notifications + Search + Redis.
+- **Mobile + API** Expo + React Native + TypeScript + Expo Router + NativeWind + NestJS/Hono + PostgreSQL + Prisma + Auth + Redis + Docker.
+- **Desktop + Web** Next.js/React + Tauri + TypeScript + shared packages + API + PostgreSQL + Auth.
+- **API** Hono + TypeScript + PostgreSQL + Prisma + Redis + OpenAPI + Zod + Docker + GitHub Actions.
+- **Dashboard** Next.js + TypeScript + Tailwind + shadcn/ui + PostgreSQL + Prisma + Better Auth + recette `dashboard-admin` (Recharts, TanStack Table) + Vitest + Playwright + Docker + GitHub Actions. Un espace d'administration complet et protégé : indicateurs, graphique des inscriptions, tableau des utilisateurs (tri, recherche, pagination), paramètres du compte, connexion et inscription sur les données réelles de l'application, jamais d'exemple inventé.
 
-**Décision du 28/09/2026 — backend : Hono, pour l'API comme pour le Full-stack.** Plus léger que NestJS, standard Web (`fetch`), et une seule façon de faire à maintenir. Une API Hono est documentée (OpenAPI) et validée (Zod) par défaut : le moteur ajoute les deux s'ils manquent. NestJS reste au catalogue (§7.5).
+**Décision du 28/09/2026 backend : Hono, pour l'API comme pour le Full-stack.** Plus léger que NestJS, standard Web (`fetch`), et une seule façon de faire à maintenir. Une API Hono est documentée (OpenAPI) et validée (Zod) par défaut : le moteur ajoute les deux s'ils manquent. NestJS reste au catalogue (§7.5).
 
-**Décision du 23/09/2026 — ORM par défaut : Prisma.** Les presets livrés utilisent Prisma parce que c'est l'outil réellement employé par le premier utilisateur (§0). Drizzle reste au catalogue (§7.7) comme alternative certifiée. Conséquence sur le pipeline : Prisma exige un `prisma generate` à l'étape Post Install (§22), qui doit échouer explicitement plutôt que livrer un projet qui ne compile pas.
+**Décision du 23/09/2026 ORM par défaut : Prisma.** Les presets livrés utilisent Prisma parce que c'est l'outil réellement employé par le premier utilisateur (§0). Drizzle reste au catalogue (§7.7) comme alternative certifiée. Conséquence sur le pipeline : Prisma exige un `prisma generate` à l'étape Post Install (§22), qui doit échouer explicitement plutôt que livrer un projet qui ne compile pas.
 
 ---
 
@@ -245,7 +245,7 @@ Monolith, Modular Monolith, Monorepo, Microservices, Serverless, Event-driven, C
 buildit/
 ├── apps/
 │   ├── web/            # interface du configurateur
-│   ├── cli/            # CLI `pf` — même moteur que le web
+│   ├── cli/            # CLI `pf` même moteur que le web
 │   ├── api/             # API du produit (option cloud, V2)
 │   └── docs/
 ├── packages/
@@ -259,15 +259,15 @@ buildit/
 │   ├── ai/
 │   ├── validation/
 │   ├── project-manifest/
-│   ├── git/            # opérations Git locales (clone, init, commit, push) — §18bis
-│   ├── github/         # connexion et API GitHub (dépôts, collaborateurs) — §20bis
-│   ├── workspace/      # détection d'un projet local et plan d'installation — §18bis
+│   ├── git/            # opérations Git locales (clone, init, commit, push) §18bis
+│   ├── github/         # connexion et API GitHub (dépôts, collaborateurs) §20bis
+│   ├── workspace/      # détection d'un projet local et plan d'installation §18bis
 │   └── config/
 ├── infrastructure/
 └── tooling/
 ```
 
-Le moteur est indépendant de l'interface. **UI et CLI produisent tous deux un Project Manifest** en entrée du même pipeline (corrige l'incohérence du document source, où le CLI apparaissait sans lien explicite avec le schéma d'architecture — cf. §19bis).
+Le moteur est indépendant de l'interface. **UI et CLI produisent tous deux un Project Manifest** en entrée du même pipeline (corrige l'incohérence du document source, où le CLI apparaissait sans lien explicite avec le schéma d'architecture cf. §19bis).
 
 **Nommage** (tranché le 26/09/2026) : « BuildIt » est le nom du produit ; « Forge » est le nom du **moteur** ; le binaire du CLI s'appelle **`pf`**. UI et CLI sont deux façades du moteur Forge. À expliciter dans la documentation utilisateur pour éviter la confusion entre les trois noms.
 
@@ -301,7 +301,7 @@ Le champ `shareLink` matérialise la fonctionnalité de partage léger décidée
 
 ## 11. Registry : cœur extensible
 
-Chaque technologie est décrite par une fiche machine-readable, versionnée en semver — le registry n'est jamais codé en dur dans les écrans.
+Chaque technologie est décrite par une fiche machine-readable, versionnée en semver le registry n'est jamais codé en dur dans les écrans.
 
 ```json
 {
@@ -396,14 +396,14 @@ Authentication/Authorization, Database/ORM, Storage/Upload, Email/Notifications,
 - GitHub Actions / GitLab CI.
 - Terraform/OpenTofu/Pulumi en option.
 - Configuration de déploiement Vercel, Cloudflare, Railway, Render, AWS, GCP, Azure ou VPS.
-- Secrets et `.env.example` — jamais de valeur sensible stockée par défaut.
+- Secrets et `.env.example` jamais de valeur sensible stockée par défaut.
 - Health checks et scripts de diagnostic.
 
 ---
 
 ## 16. Project Doctor
 
-Rapport après génération ou import d'un projet, avec **présentation visuelle** (score graphique, historique d'évolution du score dans le temps — nouveau par rapport au document source qui ne prévoyait qu'un rapport texte) :
+Rapport après génération ou import d'un projet, avec **présentation visuelle** (score graphique, historique d'évolution du score dans le temps nouveau par rapport au document source qui ne prévoyait qu'un rapport texte) :
 
 ```
 Project Health: 87/100
@@ -435,17 +435,17 @@ L'utilisateur décrit le produit en langage naturel (« Je veux une marketplace 
 - Proposition de plateformes, d'architecture, de technologies, avec justification de chaque choix.
 - Détection des conflits, estimation de la complexité.
 - Génération du Blueprint, modifiable avant génération.
-- **Exécution locale par défaut, clé API personnelle de l'utilisateur** (cf. §0) — aucune donnée envoyée à un serveur BuildIt. Le prompt et son contexte ne sont ni stockés ni réutilisés par le produit.
+- **Exécution locale par défaut, clé API personnelle de l'utilisateur** (cf. §0) aucune donnée envoyée à un serveur BuildIt. Le prompt et son contexte ne sont ni stockés ni réutilisés par le produit.
 - Option cloud managé (V2, payant) pour qui ne veut pas gérer sa propre clé API.
 
 ---
 
 ## 18. Import / migration
 
-- Importer un repository existant (traité en local, cf. §0 — pas d'envoi de code à un serveur par défaut).
+- Importer un repository existant (traité en local, cf. §0 pas d'envoi de code à un serveur par défaut).
 - Détecter framework, package manager, DB, ORM, tests, CI et services.
 - Construire automatiquement le Project Blueprint.
-- **Étape de confirmation manuelle obligatoire (nouveau)** avant toute migration automatique majeure (ex. bascule vers monorepo) — la détection reste heuristique et peut se tromper sur un projet en production.
+- **Étape de confirmation manuelle obligatoire (nouveau)** avant toute migration automatique majeure (ex. bascule vers monorepo) la détection reste heuristique et peut se tromper sur un projet en production.
 - Créer les packages partagés, ajouter Docker, CI, documentation et observability.
 - Proposer des upgrades avec impact estimé.
 
@@ -469,9 +469,9 @@ Le menu d'accueil propose trois chemins, au même niveau dans l'UI et dans le CL
 - La commande exacte est affichée **avant** d'être lancée ; l'utilisateur confirme.
 - **Un dépôt cloné n'est pas du code de confiance** : ses scripts `postinstall` s'exécutent sur la machine. L'installation d'un projet cloné propose donc l'option « sans scripts » (`--ignore-scripts`) et le dit clairement.
 
-**Dossier de destination** : inexistant ou vide, comme pour la génération (§22) — un clone n'écrase jamais rien. Un échec de clonage supprime le dossier partiellement créé.
+**Dossier de destination** : inexistant ou vide, comme pour la génération (§22) un clone n'écrase jamais rien. Un échec de clonage supprime le dossier partiellement créé.
 
-**Exécution locale** : cloner, ouvrir un dossier et installer touchent le disque. Ces actions exigent que le moteur tourne sur la machine — elles sont dans le CLI dès le MVP ; côté configurateur web, la manière dont l'UI atteint le disque local (serveur local lancé par le CLI ou autre) est tranchée en Phase 8B.
+**Exécution locale** : cloner, ouvrir un dossier et installer touchent le disque. Ces actions exigent que le moteur tourne sur la machine elles sont dans le CLI dès le MVP ; côté configurateur web, la manière dont l'UI atteint le disque local (serveur local lancé par le CLI ou autre) est tranchée en Phase 8B.
 
 ---
 
@@ -479,7 +479,7 @@ Le menu d'accueil propose trois chemins, au même niveau dans l'UI et dans le CL
 
 - Templates officiels (gratuits).
 - Templates communautaires (gratuits, modération avant publication).
-- **Templates premium (payants, à partir de la V2)** — nouvelle source de revenu alignée avec la décision « gratuit puis payant » (§0).
+- **Templates premium (payants, à partir de la V2)** nouvelle source de revenu alignée avec la décision « gratuit puis payant » (§0).
 - Templates privés pour équipes.
 - Versioning, tags, recherche, notation, changelog et compatibilité, fork/duplicate.
 - Registry d'entreprise (V3).
@@ -492,14 +492,14 @@ Le menu d'accueil propose trois chemins, au même niveau dans l'UI et dans le CL
 
 **V1** : historique des liens partagés par projet, expiration configurable.
 
-**V2** : gestion d'équipe complète — comptes, organisations, permissions d'édition, commentaires sur le Blueprint, journal des changements. Fonctionnalité payante, cohérente avec le passage au modèle freemium.
+**V2** : gestion d'équipe complète comptes, organisations, permissions d'édition, commentaires sur le Blueprint, journal des changements. Fonctionnalité payante, cohérente avec le passage au modèle freemium.
 
 ---
 
 ## 20bis. GitHub : connexion, dépôt, partage et collaborateurs (nouveau)
 
 **Connexion** :
-- CLI : *device flow* OAuth de GitHub (un code à saisir sur github.com) — aucun mot de passe ne transite par BuildIt.
+- CLI : *device flow* OAuth de GitHub (un code à saisir sur github.com) aucun mot de passe ne transite par BuildIt.
 - Jeton stocké dans le **trousseau du système** (Keychain, Credential Manager, libsecret) ; jamais dans un fichier du projet, jamais dans le manifest, jamais dans les logs. Déconnexion = révocation locale du jeton.
 - Permissions demandées **au minimum** et annoncées avant la connexion : lecture des dépôts pour cloner, création de dépôt et gestion des collaborateurs seulement quand l'utilisateur s'en sert.
 - Local-first (§0) : le jeton ne quitte pas la machine ; les appels partent directement vers l'API GitHub.
@@ -510,7 +510,7 @@ Le menu d'accueil propose trois chemins, au même niveau dans l'UI et dans le CL
 
 **Partager un projet et ajouter des collaborateurs** :
 - **Règle** : le partage d'un projet n'est disponible **que si le projet utilise un dépôt GitHub**. Sans dépôt, l'écran propose de le créer d'abord, et seul le lien de configuration en lecture seule (§20) reste possible.
-- Partager = inviter un collaborateur GitHub (nom d'utilisateur) avec un rôle — `read`, `triage`, `write`, `maintain`, `admin` —, lister les collaborateurs et invitations en attente, retirer un accès. Le lien du dépôt est copiable.
+- Partager = inviter un collaborateur GitHub (nom d'utilisateur) avec un rôle `read`, `triage`, `write`, `maintain`, `admin` —, lister les collaborateurs et invitations en attente, retirer un accès. Le lien du dépôt est copiable.
 - Les droits sont ceux de GitHub : l'invitation échoue proprement, avec la raison, si le compte connecté n'est pas administrateur du dépôt.
 - Aucun compte BuildIt n'est créé : la gestion d'équipe du §20 (V2, payante) reste distincte. Celle-ci délègue tout à GitHub et ne coûte donc rien à opérer.
 
@@ -520,10 +520,10 @@ Le menu d'accueil propose trois chemins, au même niveau dans l'UI et dans le CL
 
 ## 21. CLI
 
-Le moteur ne doit pas être prisonnier de l'interface web — le CLI (`pf`, cf. §9) en est la deuxième façade, au même niveau que l'UI, pas un ajout secondaire.
+Le moteur ne doit pas être prisonnier de l'interface web le CLI (`pf`, cf. §9) en est la deuxième façade, au même niveau que l'UI, pas un ajout secondaire.
 
 ```
-pf                 # sans argument : menu d'accueil (créer / cloner / ouvrir) — §18bis
+pf                 # sans argument : menu d'accueil (créer / cloner / ouvrir) §18bis
 pf create
 pf create --web --mobile
 pf add auth
@@ -588,7 +588,7 @@ CLI ─┘
     Deployment
 ```
 
-Les deux autres points d'entrée du §18bis ne traversent pas ce pipeline — ils n'ont pas de manifest :
+Les deux autres points d'entrée du §18bis ne traversent pas ce pipeline ils n'ont pas de manifest :
 
 ```
 Cloner          : Lien/dépôt → Validation du lien → Clone → Détection → [Installation]
@@ -597,14 +597,14 @@ Ouvrir (local)  : Dossier → Détection → [Installation]
 
 Ils partagent avec lui l'exécuteur de commandes (Post Install), la règle du dossier cible vide et le nettoyage en cas d'échec.
 
-En cas d'échec à n'importe quelle étape après le début de l'écriture des fichiers : **rollback automatique** (nouveau) — le système restaure l'état précédent plutôt que de laisser un projet à moitié généré. Une reprise (« retry from last step ») est proposée quand l'échec est lié à une erreur transitoire (réseau, registre npm indisponible...).
+En cas d'échec à n'importe quelle étape après le début de l'écriture des fichiers : **rollback automatique** (nouveau) le système restaure l'état précédent plutôt que de laisser un projet à moitié généré. Une reprise (« retry from last step ») est proposée quand l'échec est lié à une erreur transitoire (réseau, registre npm indisponible...).
 
 ---
 
 ## 23. Roadmap
 
 ### MVP (gratuit)
-- Web uniquement — Next.js / React / Vite, TypeScript, Tailwind.
+- Web uniquement Next.js / React / Vite, TypeScript, Tailwind.
 - Monorepo pnpm + Turborepo.
 - Presets SaaS / Full-stack / Dashboard / API.
 - Registry, Manifest, Template generator, Preview, Docker, Git, README, `.env.example`.
@@ -631,7 +631,7 @@ En cas d'échec à n'importe quelle étape après le début de l'écriture des f
 - Marketplace de templates (gratuits + premium payants).
 - Registry communautaire (avec modération).
 - Cloud generation (payant).
-- Gestion d'équipe complète (comptes, organisations — payant).
+- Gestion d'équipe complète (comptes, organisations payant).
 
 ### V3
 - Génération multi-cloud, Infrastructure as Code.
@@ -651,12 +651,12 @@ En cas d'échec à n'importe quelle étape après le début de l'écriture des f
 - Prévoir un mode dry-run avant toute écriture, et un rollback en cas d'échec en cours d'écriture (§22).
 - Afficher les variables d'environnement nécessaires, sans jamais stocker de valeur sensible par défaut.
 - Gérer les licences des templates/services, avec alerte si incompatible avec un usage commercial (§11).
-- Conserver le moteur de génération indépendant de l'UI — CLI et UI au même niveau (§9, §21).
+- Conserver le moteur de génération indépendant de l'UI CLI et UI au même niveau (§9, §21).
 - **No-lock-in explicite** : le code généré doit rester autonome, à documenter clairement (§1).
 - **Confidentialité par défaut** : local-first pour l'analyse de code et l'IA, cloud en option payante seulement (§0, §17, §18).
 - **Fraîcheur du catalogue** : statut et revue trimestrielle par entrée (§7).
 - **Jeton GitHub** : trousseau système uniquement, permissions minimales, jamais loggé, jamais dans le manifest ni dans un fichier du projet (§20bis).
-- **Clonage** : lien validé avant d'appeler Git — pas d'argument commençant par `-`, protocoles limités à `https` et `ssh`, jamais de shell (arguments passés en tableau), aucun prompt interactif caché (§18bis).
+- **Clonage** : lien validé avant d'appeler Git pas d'argument commençant par `-`, protocoles limités à `https` et `ssh`, jamais de shell (arguments passés en tableau), aucun prompt interactif caché (§18bis).
 - **Code cloné non fiable** : l'installation annonce l'exécution des scripts et propose `--ignore-scripts` ; aucune commande lancée sans confirmation (§18bis).
 - **Dépôt privé par défaut** à la création ; le partage de projet n'existe que via GitHub (§20bis).
 
@@ -664,6 +664,6 @@ En cas d'échec à n'importe quelle étape après le début de l'écriture des f
 
 ## 25. Conclusion
 
-Le produit est pensé comme une plateforme de composition de projets, pas comme un clone de `create-next-app`. La première décision est la cible — Web, Mobile, Desktop ou combinaison — puis le moteur filtre intelligemment les technologies possibles. Le point différenciant majeur reste la combinaison Registry + Compatibility Engine + Project Manifest + Recipes + Generator + AI Stack Advisor + Project Doctor, complétée ici par un cadrage produit explicite : gratuit puis payant, local-first par défaut, partage léger dès le MVP, ouvert à Daniel comme premier utilisateur puis à tout développeur ou équipe voulant industrialiser son démarrage de projet.
+Le produit est pensé comme une plateforme de composition de projets, pas comme un clone de `create-next-app`. La première décision est la cible Web, Mobile, Desktop ou combinaison puis le moteur filtre intelligemment les technologies possibles. Le point différenciant majeur reste la combinaison Registry + Compatibility Engine + Project Manifest + Recipes + Generator + AI Stack Advisor + Project Doctor, complétée ici par un cadrage produit explicite : gratuit puis payant, local-first par défaut, partage léger dès le MVP, ouvert à Daniel comme premier utilisateur puis à tout développeur ou équipe voulant industrialiser son démarrage de projet.
 
 Le résultat attendu est un projet cohérent, reproductible et documenté, avec une architecture visible avant génération, un rapport de santé après génération, et aucune dépendance cachée envers BuildIt une fois le code livré.

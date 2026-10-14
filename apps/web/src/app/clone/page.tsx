@@ -26,9 +26,9 @@ import type { CloneProgress } from './progress';
 import { type CloneRunStatus, type CloneTab, CloneView } from './view';
 
 /**
- * Écran 22 — Clone Project (§6.22) : le branchement des Server Actions.
+ * Écran 22 Clone Project (§6.22) : le branchement des Server Actions.
  *
- * Une Server Action rend son résultat d'un seul coup — un clone de 200 Mo y
+ * Une Server Action rend son résultat d'un seul coup un clone de 200 Mo y
  * passerait des minutes derrière un rotor. Le clone passe donc par
  * `POST /api/clone`, dont on lit le flux d'avancement (`clone/client.ts`), et
  * l'écran montre la phase réelle de git. La vérification, elle, reste une

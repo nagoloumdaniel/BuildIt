@@ -11,7 +11,7 @@ import type { StackOption } from './stack-view';
  *
  * `stack-view.test.ts` prouve la logique du §5 sur des options fabriquées ;
  * ce fichier prouve que les options réelles ont bien la forme que la logique
- * attend — c'est la seule chose que l'écran ne peut pas vérifier lui-même :
+ * attend c'est la seule chose que l'écran ne peut pas vérifier lui-même :
  * chaque catégorie du registry est interrogeable, un blocage porte toujours sa
  * raison, et le verdict de compatibilité a la forme que `lib/flow.ts` exige.
  */
@@ -97,7 +97,7 @@ describe('chargement unique du catalogue', () => {
   /**
    * Le point qui compte : l'état et la raison d'un blocage viennent du moteur.
    *
-   * Le test ne compare pas à une chaîne écrite ici — il compare à ce que
+   * Le test ne compare pas à une chaîne écrite ici il compare à ce que
    * `checkSelectionAction` (donc `resolve()`) répond pour la **même** sélection,
    * et à ce que `optionsFor` rend pour la même catégorie. Un écran qui
    * fabriquerait « compatible » ou « bloqué » de son côté échouerait ici.
@@ -119,7 +119,7 @@ describe('chargement unique du catalogue', () => {
     expect(sentBack?.options).toEqual(frontend);
     expect(blockedHere.length).toBeGreaterThan(0);
 
-    // Le verdict de la sélection est celui du moteur — et, depuis la sonde
+    // Le verdict de la sélection est celui du moteur et, depuis la sonde
     // de `engine.test.ts`, de la complétude vue par l'écran : `next` sans
     // langage choisi est un problème visible, pas un « certifié » en silence
     // qui n'échouerait qu'au Blueprint (bug rapporté, corrigé ici).
@@ -141,7 +141,7 @@ describe('garde-fou du 8B.2', () => {
 
   /**
    * Les deux formes d'import comptent : `import ... from 'x'` **et** l'import
-   * à effet de bord `import 'x'` — c'est cette seconde forme qu'utilise
+   * à effet de bord `import 'x'` c'est cette seconde forme qu'utilise
    * `lib/engine.ts` pour `server-only`, et elle passait sous le premier jet de
    * ce garde-fou (vérifié en l'injectant, puis en le retirant).
    */

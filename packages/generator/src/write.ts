@@ -46,7 +46,7 @@ const messageFor = createMessageFormatter(MESSAGES);
 /**
  * Le système de fichiers est une dépendance injectable.
  *
- * Pas pour simuler l'écriture — les tests écrivent sur un vrai disque — mais
+ * Pas pour simuler l'écriture les tests écrivent sur un vrai disque mais
  * pour pouvoir **provoquer une panne** au milieu d'une génération. Sans ça,
  * l'annulation ne serait vérifiable que par relecture, c'est-à-dire pas
  * vérifiable du tout.
@@ -104,7 +104,7 @@ function reason(error: unknown): string {
 
 /**
  * Les dossiers à créer pour un fichier, du plus proche de la cible au plus
- * profond — c'est l'ordre dans lequel ils doivent être créés, et l'inverse de
+ * profond c'est l'ordre dans lequel ils doivent être créés, et l'inverse de
  * celui dans lequel il faudra les supprimer.
  */
 function ancestorsOf(relativePath: string): string[] {
@@ -142,7 +142,7 @@ export async function generate(
       return;
     }
     // Un dossier peut être un lien symbolique vers n'importe où. La validation
-    // du plan ne peut pas le voir — elle ne travaille que sur des chaînes — donc
+    // du plan ne peut pas le voir elle ne travaille que sur des chaînes donc
     // le contrôle a lieu ici, au dernier moment où il est encore possible.
     if (await fs.isSymlink(absolute)) {
       throw new Error(messageFor('GEN_PATH_TRAVERSAL', { value: relative }));

@@ -62,9 +62,9 @@ La refonte réutilise les primitives et données existantes. Elle n'ajoute pas d
 
 ## Défauts fermés pendant la vérification
 
-1. **Hydratation `#418` sur `create/target`, `create/preview`, `create/generate`** — `useSyncExternalStore` recevait `store.get` comme *snapshot serveur* : un composant hydraté après le branchement de `localStorage` rendait une sélection absente du HTML. `SessionStore.getServer()` porte désormais le brouillon d'avant branchement.
-2. **Logos cassés dans les deux thèmes** — toute requête `/_next/image` répondait 400 (`sharp` absent). Les logos sont servis en WebP, via une variable CSS par thème.
-3. **404 divergente** — le chemin demandé n'existe pas au rendu serveur ; il apparaît après le montage.
-4. **Champs sans anneau de focus** — `.pf-input:focus` supprimait l'`outline` du navigateur ; le liseré chaud s'y ajoute maintenant.
-5. **Clés React dupliquées** dans les listes de refus — regroupement des phrases identiques plutôt qu'une clé d'index.
+1. **Hydratation `#418` sur `create/target`, `create/preview`, `create/generate`** `useSyncExternalStore` recevait `store.get` comme *snapshot serveur* : un composant hydraté après le branchement de `localStorage` rendait une sélection absente du HTML. `SessionStore.getServer()` porte désormais le brouillon d'avant branchement.
+2. **Logos cassés dans les deux thèmes** toute requête `/_next/image` répondait 400 (`sharp` absent). Les logos sont servis en WebP, via une variable CSS par thème.
+3. **404 divergente** le chemin demandé n'existe pas au rendu serveur ; il apparaît après le montage.
+4. **Champs sans anneau de focus** `.pf-input:focus` supprimait l'`outline` du navigateur ; le liseré chaud s'y ajoute maintenant.
+5. **Clés React dupliquées** dans les listes de refus regroupement des phrases identiques plutôt qu'une clé d'index.
 

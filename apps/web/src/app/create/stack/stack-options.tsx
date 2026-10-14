@@ -17,7 +17,7 @@ import { type CategoryBlock, categoryLabel, categoryProgress } from './stack-vie
  *
  * La carte d'une option n'est plus dessinée ici : c'est `OptionCard`
  * (`components/ui/option-card.tsx`), partagée avec les capacités et
- * l'hébergement — une technologie se lit de la même façon partout.
+ * l'hébergement une technologie se lit de la même façon partout.
  */
 
 export interface CategoryNavProps {

@@ -14,7 +14,7 @@ const file = (webkitRelativePath: string, text = '') => ({
   text: async () => text,
 });
 
-describe('readFileList — repli <input webkitdirectory> (Firefox, Safari)', () => {
+describe('readFileList repli <input webkitdirectory> (Firefox, Safari)', () => {
   it('rend le dossier, ses fichiers et dossiers du premier niveau, et tous les chemins', async () => {
     const picked = await readFileList([
       file('mon-app/package.json', '{"name":"mon-app"}'),
@@ -39,7 +39,7 @@ describe('readFileList — repli <input webkitdirectory> (Firefox, Safari)', () 
   });
 });
 
-describe('mobile — archive .zip ou fichiers, à la place d’un dossier', () => {
+describe('mobile archive .zip ou fichiers, à la place d’un dossier', () => {
   it('reconnaît iPhone, iPad (même déguisé en Mac) et Android', () => {
     const iphone = 'Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/605.1.15';
     expect(isMobileWithoutFolder({ userAgent: iphone })).toBe(true);

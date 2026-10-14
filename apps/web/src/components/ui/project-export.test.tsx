@@ -36,7 +36,7 @@ describe('ProjectExport', () => {
   });
 });
 
-describe('OutputProgress — une ligne d’état, une barre', () => {
+describe('OutputProgress une ligne d’état, une barre', () => {
   it('pendant le travail : la ligne dit l’opération, la barre est indéterminée', () => {
     const html = renderToStaticMarkup(
       <OutputProgress status="Installation des dépendances : pnpm install…" tone="running" />,
@@ -99,7 +99,7 @@ describe('toGenerationView', () => {
   });
 });
 
-describe('ProjectFolder — le dossier écrit, ouvert d’un bouton en local', () => {
+describe('ProjectFolder le dossier écrit, ouvert d’un bouton en local', () => {
   it('en local : un bouton « Ouvrir le dossier du projet », le chemin en petit à côté, rien à copier', () => {
     const html = renderToStaticMarkup(
       <ProjectFolder directory={'C:\\Projets\\mon-projet'} openable />,

@@ -1,4 +1,4 @@
-# Démarrage rapide — de zéro à un projet généré
+# Démarrage rapide de zéro à un projet généré
 
 Toutes les sorties de ce guide ont été obtenues en lançant la commande, dans ce
 dépôt, avec **Node v24.10.0** et **pnpm 11.13.1** (Windows 11, PowerShell 5.1).
@@ -35,8 +35,8 @@ installations téléchargent, et c'est le réseau qui décide.
 
 | | |
 |---|---|
-| Node | ≥ 20.11 (`engines` de la racine du dépôt) — `node --version` → `v24.10.0` |
-| pnpm | ≥ 11 (`engines`) — `pnpm --version` → `11.13.1` |
+| Node | ≥ 20.11 (`engines` de la racine du dépôt) `node --version` → `v24.10.0` |
+| pnpm | ≥ 11 (`engines`) `pnpm --version` → `11.13.1` |
 | Docker | optionnel : seulement pour les services locaux du projet généré, et pour `pnpm test:smoke` |
 
 Le CLI **n'est pas encore publié sur npm** (Phase 12 de la [roadmap](../roadmap.md)) :
@@ -65,7 +65,7 @@ Vérifié le 11/10/2026 sur une installation réelle depuis le registre public.
 `pnpm pf` s'exécute **à la racine du dépôt** et y résout ses chemins par défaut :
 un projet créé sans `--dir` s'écrirait **dans le dépôt**. Choisissez donc un
 **dossier de travail hors du dépôt** et passez-le explicitement (`--dir`,
-`--manifest`) — ce guide le note `<dossier>`.
+`--manifest`) ce guide le note `<dossier>`.
 
 ```bash
 mkdir -p /tmp/pf-work                            # bash : <dossier> = /tmp/pf-work
@@ -78,7 +78,7 @@ New-Item -ItemType Directory "$env:TEMP\pf-work" -Force | Out-Null   # PowerShel
 > Sous Windows, `/tmp` n'existe pas : `--dir /tmp/mon-projet` vise
 > `C:\tmp\mon-projet` (vérifié : `--dir /tmp/pf-proof` et `--dir C:\tmp\pf-proof`
 > affichent le même dossier cible). Le CLI affiche en outre ce dossier
-> **relativement au dossier courant** — `..\..\..\tmp\mon-projet/`, et non
+> **relativement au dossier courant** `..\..\..\tmp\mon-projet/`, et non
 > `/tmp/mon-projet/`. Écrivez toujours un chemin absolu explicite.
 
 ## 1. Récupérer le dépôt
@@ -100,7 +100,7 @@ le remote est celui de [PROJECT_CONTEXT.md](../../PROJECT_CONTEXT.md).
 > fusionnera la branche et publiera le paquet ; d'ici là, clonez
 > `feat/phase8-web-socle`.
 
-Rejoué depuis un dossier vide **hors du dépôt** — le clone prend **2 s** (dépôt
+Rejoué depuis un dossier vide **hors du dépôt** le clone prend **2 s** (dépôt
 ~1 Mo), `pnpm install` **29 s** avec un store pnpm déjà chaud. À froid,
 l'installation télécharge : c'est le réseau qui décide.
 
@@ -111,7 +111,7 @@ pnpm pf --help
 ```
 
 ```text
-pf — BuildIt : décrire un projet, obtenir un projet prêt à développer.
+pf BuildIt : décrire un projet, obtenir un projet prêt à développer.
 
 Usage : pf [commande] [options]
 
@@ -160,7 +160,7 @@ pnpm pf template list
 saas       SaaS Web
            Application web avec comptes, paiement Stripe, emails transactionnels, suivi des erreurs et mesure d’audience.
 dashboard  Dashboard
-           Espace d’administration protégé : indicateurs, graphique, tableau des utilisateurs, paramètres — sur des données réelles.
+           Espace d’administration protégé : indicateurs, graphique, tableau des utilisateurs, paramètres sur des données réelles.
 api        API
            API Hono documentée (OpenAPI) et validée (Zod), avec PostgreSQL, Redis et une image Docker.
 fullstack  Full-stack Monorepo
@@ -178,7 +178,7 @@ pnpm pf create mon-projet --preset saas --dir "<dossier>/mon-projet" --dry-run
 ```
 
 ```text
-Aperçu — rien n'est écrit. 34 fichiers dans <dossier>/mon-projet/ :
+Aperçu rien n'est écrit. 34 fichiers dans <dossier>/mon-projet/ :
 
 .dockerignore
 .env.example
@@ -255,7 +255,7 @@ Et maintenant :
 
 `--no-install` et `--no-git` écartent deux effets de bord sur une machine
 partagée. Sans eux, la même commande écrit, **installe les dépendances et crée le
-premier commit** — c'est le comportement par défaut, décrit par
+premier commit** c'est le comportement par défaut, décrit par
 `pf create --help` :
 
 ```text
@@ -330,7 +330,7 @@ pnpm pf graph --preset saas
 ```
 
 ```text
-saas — 17 technologies, stack certifiée
+saas 17 technologies, stack certifiée
 
   ✓ authentication   Better Auth (better-auth)
   ✓ linting          Biome (biome)
@@ -355,7 +355,7 @@ saas — 17 technologies, stack certifiée
 ```
 
 `✓` : la fiche est certifiée (un test de génération la couvre). `·` : elle est
-seulement déclarée au catalogue — la combinaison est alors « déclarée » : planifiée et vérifiée à sec, sans test de compilation.
+seulement déclarée au catalogue la combinaison est alors « déclarée » : planifiée et vérifiée à sec, sans test de compilation.
 Voir [Concepts](concepts.md).
 
 ## 8. Le configurateur web
@@ -364,7 +364,7 @@ Le parcours en écrans (18 écrans du MVP) produit le **même manifest** que le 
 Il sert l'application déjà construite :
 
 ```bash
-pnpm build       # une fois — c'est un « next build »
+pnpm build       # une fois c'est un « next build »
 pnpm pf web      # http://127.0.0.1:4173
 ```
 
@@ -374,7 +374,7 @@ Usage : pf web [--port <n>] [--no-open]
 Sert le configurateur web déjà construit (pnpm build), ouvre le navigateur,
 et reste au premier plan : Ctrl-C arrête le serveur.
 
-Le serveur n'écoute que sur 127.0.0.1 — il reste sur cette machine.
+Le serveur n'écoute que sur 127.0.0.1 il reste sur cette machine.
 
 Options :
   --port <n>   Port d'écoute (défaut 4173)
@@ -385,7 +385,7 @@ Options :
 > en parallèle dans cette session) et `pnpm pf web` démarre un serveur au premier
 > plan. Les deux commandes sont décrites dans la [référence du CLI](../cli.md).
 > Le bloc `Usage` ci-dessus est, lui, la sortie réelle de `pnpm pf web --help`. Le
-> garde-fou a été vérifié sur un dépôt **non construit** — `pf web` refuse et le
+> garde-fou a été vérifié sur un dépôt **non construit** `pf web` refuse et le
 > dit :
 >
 > ```text
@@ -409,7 +409,7 @@ pnpm pf generate "<dossier>/pf.manifest.json" --dir "<dossier>/mon-api" --dry-ru
 > redirection `>` de PowerShell 5.1 réencode en **UTF-16LE**, et `pf add` refuse
 > alors le fichier : `✗ « … » n'est pas du JSON valide : Unexpected token '�'`. Le
 > correctif est de laisser `cmd` rediriger les octets bruts (choisissez un
-> `<dossier>` sans espace — ici `%TEMP%\pf-work`) :
+> `<dossier>` sans espace ici `%TEMP%\pf-work`) :
 >
 > ```powershell
 > cmd /c "pnpm pf template show api --name mon-api > <dossier>\pf.manifest.json"
@@ -419,9 +419,9 @@ pnpm pf generate "<dossier>/pf.manifest.json" --dir "<dossier>/mon-api" --dry-ru
 > BOM (`EF BB BF`), que `pf add` refuse lui aussi. Vérifié : avec `cmd /c`, le
 > fichier commence par `7B` (`{`) et les quatre commandes suivantes passent.
 
-Ces cinq commandes ont été lancées depuis la racine du dépôt — d'où le
+Ces cinq commandes ont été lancées depuis la racine du dépôt d'où le
 `--manifest` et le `--dir` explicites : **`pnpm pf` s'exécute à la racine du
-dépôt**, donc un manifest sans `--manifest` (ou un projet créé sans `--dir` — ici
+dépôt**, donc un manifest sans `--manifest` (ou un projet créé sans `--dir` ici
 `--dir mon-api` écrirait **dans le dépôt**) y serait cherché ou écrit. C'est le
 seul piège de la ligne de commande lancée depuis les sources.
 
@@ -436,7 +436,7 @@ seul piège de la ligne de commande lancée depuis les sources.
 ```
 
 ```text
-mon-api — 12 technologies, stack déclarée
+mon-api 12 technologies, stack déclarée
 
   ✓ linting          Biome (biome)
   ✓ containers       Docker (docker)
@@ -474,7 +474,7 @@ $ pnpm pf add betterauth                                  # faute de frappe
 |---|---|---|
 | `0` | succès | `pnpm pf --version` → `0.0.0` |
 | `1` | le moteur a refusé | manifest invalide : `✗ Le champ « type » n'existe pas dans un manifest. Vérifiez l'orthographe.` puis, ligne suivante, `  (MANIFEST_UNKNOWN_FIELD)` |
-| `2` | usage : argument manquant, drapeau inconnu, commande pas encore livrée | `pnpm pf analyze` → `pf analyze n'est pas encore disponible : V1 — analyse d’un projet existant.` |
+| `2` | usage : argument manquant, drapeau inconnu, commande pas encore livrée | `pnpm pf analyze` → `pf analyze n'est pas encore disponible : V1 analyse d’un projet existant.` |
 
 Hors terminal, aucune question n'est posée : une information manquante est une
 erreur qui nomme le drapeau à fournir. Les conventions complètes (format des

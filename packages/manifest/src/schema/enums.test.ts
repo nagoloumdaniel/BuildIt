@@ -14,7 +14,7 @@ describe('TARGETS', () => {
     expect(targetSchema.safeParse(value).success).toBe(false);
   });
 
-  it('expose les valeurs acceptées dans l’erreur — matière première de l’indice', () => {
+  it('expose les valeurs acceptées dans l’erreur matière première de l’indice', () => {
     const result = targetSchema.safeParse('wbe');
     expect(result.success).toBe(false);
     if (!result.success) {

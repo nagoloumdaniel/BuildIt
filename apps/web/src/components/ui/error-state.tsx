@@ -8,7 +8,7 @@ import { Illustration, type IllustrationName } from './illustration';
  *
  * Une erreur se raconte en trois temps, toujours dans le même ordre : ce qui
  * s'est passé (le titre), ce que ça change (le corps), et quoi faire
- * maintenant (les gestes). Les refus bruts du moteur viennent ensuite — ils ne
+ * maintenant (les gestes). Les refus bruts du moteur viennent ensuite ils ne
  * sont pas traduits, ce sont les mêmes phrases que le CLI affiche.
  *
  * Il n'y a **jamais** de geste destructif ici : réessayer et revenir suffisent.

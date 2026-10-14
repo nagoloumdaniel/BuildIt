@@ -1,4 +1,4 @@
-# Phase 7B — Projets existants & GitHub : design
+# Phase 7B Projets existants & GitHub : design
 
 **Date :** 2026-09-28 · **Phase roadmap :** 7B (Milestone M4) · **Sections :** §0, §18bis, §20bis, §21, §24
 
@@ -29,21 +29,21 @@ Le generator importe désormais son exécuteur de `exec` et le réexporte : son 
 | Installation | Commande exacte affichée **avant**, confirmée (ou `--yes`). Projet cloné : avertissement « code non fiable », choix « sans scripts » (`--ignore-scripts` ; Yarn ≥ 2 : `--mode=skip-build`) | §18bis, gate 7B |
 | Connexion | Device flow OAuth, identifiant d'application dans `PF_GITHUB_CLIENT_ID` tant que l'application OAuth de BuildIt n'est pas enregistrée (action de mainteneur, un identifiant client n'est pas un secret). `pf login --with-token` lit un jeton sur l'entrée standard, jamais en argument | L'application OAuth n'existe pas encore : on le dit plutôt que de le simuler |
 | Permissions | Annoncées avant la connexion. `repo` par défaut (cloner un dépôt privé, créer, inviter : les applications OAuth n'ont pas plus fin) ; `--public-only` ⇒ `public_repo`. Les permissions accordées sont affichées en clair après connexion | §20bis |
-| Jeton | Trousseau du système : `security` (macOS), `secret-tool` (libsecret, Linux), `PasswordVault` (Windows, via PowerShell). Toujours transmis **par l'entrée standard**. Trousseau absent : refus, avec la commande pour l'installer — **aucun repli en clair**. `PF_GITHUB_TOKEN` lu (jamais écrit) pour la CI | §20bis, §24 |
+| Jeton | Trousseau du système : `security` (macOS), `secret-tool` (libsecret, Linux), `PasswordVault` (Windows, via PowerShell). Toujours transmis **par l'entrée standard**. Trousseau absent : refus, avec la commande pour l'installer **aucun repli en clair**. `PF_GITHUB_TOKEN` lu (jamais écrit) pour la CI | §20bis, §24 |
 | Dépôt créé | Privé sauf `--public`. Nom proposé : `name` de `package.json`, sinon le nom du dossier. Nom pris : refus, rien n'est créé. Push échoué après création : on dit que le dépôt existe et la commande à relancer | §20bis |
 | Partage | `pf repo share` / `pf collab` exigent un `origin` sur github.com ; sinon refus avec la marche à suivre (`pf repo create`) et le rappel du lien de configuration en lecture seule (Phase 9) | Règle « partage ⇔ dépôt » |
 | Rôles | `read`, `triage`, `write`, `maintain`, `admin` (→ `pull`, `triage`, `push`, `maintain`, `admin` de l'API). 403 ⇒ « le compte connecté n'est pas administrateur de ce dépôt » | §20bis |
 
 ## Commandes
 
-`pf clone <lien|propriétaire/dépôt> [dossier] [--install] [--ignore-scripts] [--yes]` — sans lien, dans un terminal et connecté : liste des dépôts du compte. · `pf open <dossier>` · `pf install [--ignore-scripts] [--yes]` · `pf login [--with-token] [--public-only]` · `pf logout` · `pf repo create [--public] [--name] [--description]` · `pf repo share` · `pf collab add <utilisateur> [--role]` · `pf collab list` · `pf collab remove <utilisateur>`.
+`pf clone <lien|propriétaire/dépôt> [dossier] [--install] [--ignore-scripts] [--yes]` sans lien, dans un terminal et connecté : liste des dépôts du compte. · `pf open <dossier>` · `pf install [--ignore-scripts] [--yes]` · `pf login [--with-token] [--public-only]` · `pf logout` · `pf repo create [--public] [--name] [--description]` · `pf repo share` · `pf collab add <utilisateur> [--role]` · `pf collab list` · `pf collab remove <utilisateur>`.
 
 Le menu d'accueil active « Cloner » et « Ouvrir un projet local ».
 
 ## Preuves
 
 - Tests négatifs : liens refusés sans qu'aucune commande ne soit lancée ; clone échoué ⇒ aucun dossier ; jeton absent de toute sortie, de tout argument de commande et de tout fichier écrit ; dépôt privé par défaut ; partage refusé sans dépôt ; aucune installation sans confirmation.
-- Réel dans cette session : cloner un dépôt public, ouvrir un projet local, installer. **Pas** vérifiable ici : l'API GitHub est bloquée par le réseau de la session, et aucun compte de test n'est disponible — création de dépôt, clone privé et invitation sont prouvés contre un faux `fetch` qui rejoue les réponses documentées de l'API, et restent à vérifier sur un vrai compte.
+- Réel dans cette session : cloner un dépôt public, ouvrir un projet local, installer. **Pas** vérifiable ici : l'API GitHub est bloquée par le réseau de la session, et aucun compte de test n'est disponible création de dépôt, clone privé et invitation sont prouvés contre un faux `fetch` qui rejoue les réponses documentées de l'API, et restent à vérifier sur un vrai compte.
 
 ## Hors périmètre
 

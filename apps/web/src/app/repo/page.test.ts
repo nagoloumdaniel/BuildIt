@@ -79,7 +79,7 @@ function render(overrides: Partial<RepoViewProps> = {}): string {
   );
 }
 
-describe('shareBlocker — le partage n’existe que via GitHub', () => {
+describe('shareBlocker le partage n’existe que via GitHub', () => {
   it('explique, puis se tait quand le dépôt existe', () => {
     expect(shareBlocker(null, FR)).toContain('Lisez d’abord');
     expect(shareBlocker(NO_REPO, FR)).toContain('créez-le d’abord');
@@ -92,7 +92,7 @@ describe('shareBlocker — le partage n’existe que via GitHub', () => {
   });
 });
 
-describe('createBlocker — la création du dépôt', () => {
+describe('createBlocker la création du dépôt', () => {
   it('dit ce qui manque, et refuse d’en créer un second', () => {
     expect(createBlocker(null, 'mon-app', false, FR)).toContain('Lisez d’abord');
     expect(createBlocker(NO_REPO, '  ', false, FR)).toContain('nom de dépôt');
@@ -102,7 +102,7 @@ describe('createBlocker — la création du dépôt', () => {
   });
 });
 
-describe('inviteBlocker — l’invitation', () => {
+describe('inviteBlocker l’invitation', () => {
   it('hérite du refus de partage et exige un nom', () => {
     expect(inviteBlocker(NO_REPO, 'bob', false, FR)).toContain('créez-le d’abord');
     expect(inviteBlocker(WITH_REPO, '', false, FR)).toContain('nom d’utilisateur');
@@ -110,7 +110,7 @@ describe('inviteBlocker — l’invitation', () => {
   });
 });
 
-describe('RepoView — l’état du dépôt', () => {
+describe('RepoView l’état du dépôt', () => {
   it('affiche le lien et la visibilité d’un dépôt GitHub', () => {
     const html = render({ status: WITH_REPO });
 
@@ -145,7 +145,7 @@ describe('RepoView — l’état du dépôt', () => {
   });
 });
 
-describe('RepoView — le partage', () => {
+describe('RepoView le partage', () => {
   it('liste collaborateurs et invitations, avec les rôles', () => {
     const html = render({ status: WITH_REPO, access: ACCESS, role: 'write' });
 
@@ -175,7 +175,7 @@ describe('RepoView — le partage', () => {
   });
 });
 
-describe('RepoView — le lien de partage en lecture seule (§20)', () => {
+describe('RepoView le lien de partage en lecture seule (§20)', () => {
   function withShare(overrides: Partial<NonNullable<RepoViewProps['share']>> = {}): string {
     return render({
       status: WITH_REPO,

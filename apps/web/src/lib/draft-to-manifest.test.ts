@@ -53,7 +53,7 @@ function saasPresetManifest(
   return preset.manifest(name);
 }
 
-describe('draftToManifest — un brouillon incomplet est refusé, avec des problèmes lisibles', () => {
+describe('draftToManifest un brouillon incomplet est refusé, avec des problèmes lisibles', () => {
   it('un brouillon vide ne produit pas de manifest, mais une liste de problèmes', () => {
     const result = draftToManifest(freshDraft());
     expect(result.ok).toBe(false);
@@ -122,7 +122,7 @@ describe('draftToManifest — un brouillon incomplet est refusé, avec des probl
     expect(result.issues.some((issue) => issue.path.join('.') === 'desktop.framework')).toBe(true);
   });
 
-  it('une cible inconnue — brouillon d’une autre version — est refusée en nommant les valeurs acceptées', () => {
+  it('une cible inconnue brouillon d’une autre version est refusée en nommant les valeurs acceptées', () => {
     const draft = { ...freshDraft(), name: 'mon-projet', targets: ['website'] };
     const result = draftToManifest(draft);
     expect(result.ok).toBe(false);
@@ -167,7 +167,7 @@ describe('draftToManifest — un brouillon incomplet est refusé, avec des probl
   });
 });
 
-describe('draftToManifest — le manifest produit est celui du moteur (§9, §10)', () => {
+describe('draftToManifest le manifest produit est celui du moteur (§9, §10)', () => {
   it('un brouillon complet passe parseManifest ET planProject', () => {
     const draft = {
       ...freshDraft(),
@@ -192,7 +192,7 @@ describe('draftToManifest — le manifest produit est celui du moteur (§9, §10
       return;
     }
 
-    // La forme d’abord — puis l’identité et la combinaison, par le vrai moteur.
+    // La forme d’abord puis l’identité et la combinaison, par le vrai moteur.
     const planned = planProject(result.value, '/pf-apercu');
     expect(planned.ok).toBe(true);
     if (!planned.ok) {
@@ -284,7 +284,7 @@ describe('draftToManifest — le manifest produit est celui du moteur (§9, §10
     expect(result.value.infra).toEqual(['docker', 'github-actions']);
   });
 
-  it('sans Docker, sans CI ni outil de qualité, les champs restent absents — jamais un tableau vide', () => {
+  it('sans Docker, sans CI ni outil de qualité, les champs restent absents jamais un tableau vide', () => {
     const result = draftToManifest({
       ...freshDraft(),
       name: 'mon-projet',
@@ -317,14 +317,14 @@ describe('draftToManifest — le manifest produit est celui du moteur (§9, §10
     }
     // L’écran Capabilities (§6.7) et l’écran Stack Builder désignent les mêmes
     // ids : le placement suit la catégorie du registry, pas l’écran d’où vient
-    // le choix — sinon les deux écrans produiraient deux manifests différents.
+    // le choix sinon les deux écrans produiraient deux manifests différents.
     expect(result.value.services).toEqual(['stripe', 'zod']);
     expect(result.value.quality).toEqual(['vitest']);
     expect(result.value.database).toEqual({ engine: 'postgresql' });
   });
 });
 
-describe('draftToManifest — variables ajoutées à la main', () => {
+describe('draftToManifest variables ajoutées à la main', () => {
   it('passent dans `env`, triées, sans doublon', () => {
     const result = draftToManifest({ ...saasDraft(), customEnv: ['ZETA', 'ALPHA', 'ZETA'] });
     expect(result.ok ? result.value.env : result.issues).toEqual(['ALPHA', 'ZETA']);
@@ -336,7 +336,7 @@ describe('draftToManifest — variables ajoutées à la main', () => {
   });
 });
 
-describe('draftToManifest — garde-fous', () => {
+describe('draftToManifest garde-fous', () => {
   it('aucune variable d’environnement n’entre dans le manifest (§6.8, §24)', () => {
     const draft = { ...saasDraft(), envVarNames: ['DATABASE_URL', 'sk_live_51H8xQ'] };
     const result = draftToManifest(draft);
@@ -393,7 +393,7 @@ describe('draftToManifest — garde-fous', () => {
     if (!result.ok) {
       return;
     }
-    // Le champ à valeur unique garde un id — le premier dans l’ordre canonique —
+    // Le champ à valeur unique garde un id le premier dans l’ordre canonique —
     // et l’autre n’est pas perdu pour autant : il reste dans la sélection, donc
     // le compatibility engine voit les deux et refuse la combinaison (§12).
     expect(result.value.frontend?.framework).toBe('next');

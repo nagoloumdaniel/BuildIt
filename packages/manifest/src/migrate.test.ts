@@ -9,12 +9,12 @@ const MINIMAL_V1 = {
 };
 
 describe('MIGRATIONS', () => {
-  it('est vide aujourd’hui — il n’existe qu’une version de schéma', () => {
+  it('est vide aujourd’hui il n’existe qu’une version de schéma', () => {
     expect(MIGRATIONS).toHaveLength(0);
   });
 });
 
-describe('migrateManifest — sans migration à appliquer', () => {
+describe('migrateManifest sans migration à appliquer', () => {
   it('laisse passer un manifest déjà à la version courante', () => {
     const result = migrateManifest(MINIMAL_V1);
     expect(result.ok).toBe(true);
@@ -48,11 +48,11 @@ describe('migrateManifest — sans migration à appliquer', () => {
 
 /**
  * La machinerie est livrée vide. Ces tests prouvent qu'elle fonctionne, en
- * injectant une migration factice — pour ne pas avoir à inventer le mécanisme
+ * injectant une migration factice pour ne pas avoir à inventer le mécanisme
  * dans l'urgence le jour où la V1 ajoutera mobile et desktop (§23), sur un
  * format déjà diffusé par des liens de partage.
  */
-describe('applyMigrations — machinerie', () => {
+describe('applyMigrations machinerie', () => {
   const v0ToV1: Migration = {
     from: 0,
     to: 1,
@@ -110,7 +110,7 @@ describe('applyMigrations — machinerie', () => {
     }
   });
 
-  it('valide le résultat de la migration — une migration boguée ne passe pas', () => {
+  it('valide le résultat de la migration une migration boguée ne passe pas', () => {
     const broken: Migration = {
       from: 0,
       to: 1,

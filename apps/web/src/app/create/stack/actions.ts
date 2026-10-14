@@ -20,13 +20,13 @@ import type { CategoryBlock } from './stack-view';
  * catégories). Ce qui est supprimé ici, c'est 36 allers-retours, pas du calcul.
  *
  * Rien n'est décidé ici : l'action ne fait que rendre le même travail que la
- * page faisait, et `actions.ts` reste le seul fichier qui parle au moteur — ce
+ * page faisait, et `actions.ts` reste le seul fichier qui parle au moteur ce
  * module-ci est une action, pas un adaptateur. Le catalogue reste hors du bundle
  * client : `actions.ts` importe `lib/engine.ts`, qui porte `server-only`.
  */
 export async function loadStackBlocksAction(selection: unknown): Promise<CategoryBlock[]> {
   // `Promise.all` garde l'ordre de `CATEGORIES` et laisse le moteur travailler
-  // en parallèle — c'était déjà la forme du chargement de la page.
+  // en parallèle c'était déjà la forme du chargement de la page.
   const loaded = await Promise.all(
     CATEGORIES.map(async (category) => ({
       category,

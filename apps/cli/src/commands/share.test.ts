@@ -14,7 +14,7 @@ import { shareBase, shareLink, sharePayload } from './share.js';
  * Contrat de format : la charge est `base64url(serializeManifest(manifest))`,
  * **le même littéral** que celui vérifié par l'UI
  * (`apps/web/src/app/share/codec.test.ts`). Les deux implémentations sont
- * séparées — le CLI n'empaquette pas l'application web — et ce littéral commun
+ * séparées le CLI n'empaquette pas l'application web et ce littéral commun
  * est ce qui les empêche de diverger.
  */
 
@@ -42,7 +42,7 @@ function payloadOf(link: string): string {
   return link.slice(link.indexOf('#') + 1);
 }
 
-describe('sharePayload — le format, tenu des deux côtés', () => {
+describe('sharePayload le format, tenu des deux côtés', () => {
   it('produit le littéral de référence, partagé avec l’UI', () => {
     expect(sharePayload(MANIFEST)).toBe(GOLDEN_PAYLOAD);
   });
@@ -55,7 +55,7 @@ describe('sharePayload — le format, tenu des deux côtés', () => {
   });
 });
 
-describe('shareLink — origine + fragment', () => {
+describe('shareLink origine + fragment', () => {
   it('compose l’URL de la page de partage', () => {
     expect(shareLink(MANIFEST, 'http://127.0.0.1:4173')).toBe(
       `http://127.0.0.1:4173/share#${GOLDEN_PAYLOAD}`,
@@ -66,7 +66,7 @@ describe('shareLink — origine + fragment', () => {
   });
 });
 
-describe('shareBase — l’origine du configurateur', () => {
+describe('shareBase l’origine du configurateur', () => {
   it('vaut le serveur local par défaut', () => {
     expect(shareBase(undefined)).toBe('http://127.0.0.1:4173');
   });

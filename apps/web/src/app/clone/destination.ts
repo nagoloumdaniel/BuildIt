@@ -8,7 +8,7 @@ import type { GitRemote } from '@buildit/git';
  *
  * Le dossier de destination est **relatif à une racine serveur** et rien
  * d'autre : un chemin absolu venu du navigateur serait une écriture de fichier
- * arbitraire. La racine est celle de la génération (`actions.ts`) — même
+ * arbitraire. La racine est celle de la génération (`actions.ts`) même
  * variable, même défaut —, recopiée ici parce que `actions.ts` est réservé au
  * moteur et n'exporte pas la sienne.
  */
@@ -133,7 +133,7 @@ export async function destinationState(directory: string): Promise<DestinationSt
  *
  * C'est la correction d'un vrai défaut d'usage : la destination était
  * « relative à une racine de travail » que l'utilisateur ne voyait pas, ne
- * choisissait pas, et dont il ignorait l'existence — un clone atterrissait
+ * choisissait pas, et dont il ignorait l'existence un clone atterrissait
  * dans `~/buildit/<nom>` sans que rien ne le dise clairement, et un échec
  * ressemblait à « le clonage ne marche pas ».
  *

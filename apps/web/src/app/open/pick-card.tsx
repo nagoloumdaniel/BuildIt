@@ -9,7 +9,7 @@ import { Spinner } from '../../components/ui/loading';
  *
  * Avant, la carte portait un bouton « Choisir un dossier » et un lien « Écran
  * d'ouverture » : deux cibles pour une seule intention, dans un cadre qui en
- * suggérait une troisième. Ici la carte entière est le bouton — la cible fait
+ * suggérait une troisième. Ici la carte entière est le bouton la cible fait
  * toute sa surface, il n'y a rien à viser, et le reste de l'écran ne porte plus
  * de choix à faire avant de choisir.
  *
@@ -24,7 +24,7 @@ export interface PickCardProps {
   readonly icon?: IconName;
   /** L'explorateur est ouvert, ou le dossier est en cours de lecture. */
   readonly busy?: boolean;
-  /** La phrase de l'attente — elle nomme le travail, jamais « Chargement… ». */
+  /** La phrase de l'attente elle nomme le travail, jamais « Chargement… ». */
   readonly busyLabel?: string;
   readonly disabled?: boolean;
   readonly onPick: () => void;

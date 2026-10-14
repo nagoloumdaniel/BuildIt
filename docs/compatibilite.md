@@ -42,7 +42,7 @@ vingt catégories. Elle se trompait dans les deux sens.
 **Correction** : `language`, `styling`, `ui`, `build`, `package-manager`,
 `monorepo`, `linting`, `containers`, `ci-cd`, `hosting`, `email`, `payments`,
 `cms` et `ecommerce` sont cumulatives (`arity.ts`). Restent exclusives :
-`frontend`, `backend`, `database`, `orm`, `authentication`, `formatting` — le
+`frontend`, `backend`, `database`, `orm`, `authentication`, `formatting` le
 manifest n'a qu'un emplacement pour chacune et le générateur n'en câble qu'une.
 
 ### Accepté à tort

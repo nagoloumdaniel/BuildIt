@@ -51,7 +51,7 @@
      garde la largeur du plus long, le champ voisin ne bouge pas quand
      « Lien créé » remplace « Créer un lien de partage ». */
   /* Spécificité relevée : `.pf-btn` (inline-flex) passait sinon devant, et
-     les deux libellés se plaçaient côte à côte — « Lien créé » décentré. */
+     les deux libellés se plaçaient côte à côte « Lien créé » décentré. */
   .pf-share-row > .pf-share-create {
     display: inline-grid;
     justify-items: center;

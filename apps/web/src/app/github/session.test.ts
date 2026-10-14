@@ -17,7 +17,7 @@ import { githubDisconnect, githubStatus, tokenStoreFor } from './session';
  *
  * Ce que ces tests prouvent, en plus du comportement : le jeton traverse le
  * serveur sans jamais ressortir dans ce qui est rendu, et la sonde est le
- * `JSON.stringify` du résultat — ce que la Server Action renvoie au navigateur.
+ * `JSON.stringify` du résultat ce que la Server Action renvoie au navigateur.
  */
 
 const TOKEN = 'ghp_test_0123456789abcdefghij';
@@ -90,7 +90,7 @@ afterEach(() => {
   forgetPendingDevices();
 });
 
-describe('tokenStoreFor — où vit le jeton', () => {
+describe('tokenStoreFor où vit le jeton', () => {
   it('lit PF_GITHUB_TOKEN quand il est défini', () => {
     expect(tokenStoreFor({ PF_GITHUB_TOKEN: TOKEN }, runner, 'linux').location).toBe(
       'variable PF_GITHUB_TOKEN',
@@ -105,7 +105,7 @@ describe('tokenStoreFor — où vit le jeton', () => {
   });
 });
 
-describe('githubStatus — le compte connecté, jamais le jeton', () => {
+describe('githubStatus le compte connecté, jamais le jeton', () => {
   it('rend le compte, les permissions et l’emplacement du jeton', async () => {
     const fake = fakeFetch(() => user('octocat', 'repo, read:user'));
     const status = await githubStatus({
@@ -158,7 +158,7 @@ describe('githubStatus — le compte connecté, jamais le jeton', () => {
   });
 });
 
-describe('githubDisconnect — un jeton d’environnement ne s’efface pas', () => {
+describe('githubDisconnect un jeton d’environnement ne s’efface pas', () => {
   it('affiche le refus du trousseau, sans jamais citer le jeton', async () => {
     const fake = fakeFetch(() => user());
     const status = await githubDisconnect({
@@ -244,7 +244,7 @@ describe('le device flow', () => {
   });
 });
 
-describe('completeDeviceConnection — ranger, puis rendre un état sans jeton', () => {
+describe('completeDeviceConnection ranger, puis rendre un état sans jeton', () => {
   it('range le jeton dans le trousseau et n’en laisse rien paraître', async () => {
     const started = await startFixture();
     if (!started.ok) {

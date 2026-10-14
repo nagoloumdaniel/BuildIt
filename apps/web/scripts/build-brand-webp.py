@@ -1,7 +1,7 @@
 """Prepare les deux logos pour le web : WebP, alpha conserve.
 
 Pourquoi pas `next/image` : le moteur d'images de Next exige `sharp`, qui n'est
-pas installe ici — toute requete `/_next/image` repond 400 (« The requested
+pas installe ici toute requete `/_next/image` repond 400 (« The requested
 resource isn't a valid image ») et le logo s'affichait casse. Les deux fichiers
 sont des assets fixes, deja a leur taille d'affichage : les preparer une fois
 au build est plus sur, plus rapide (18 ko au lieu de 170 ko), et supprime la
@@ -10,7 +10,7 @@ dependance native.
 La source est le PNG de `assets/brand/` (la reference de marque). La sortie est
 doublee : le WebP reste a cote de sa source, et la copie servie est ecrite dans
 `apps/web/public/brand/`. `apps/web/src/app/globals.css` ne reference que le
-WebP — les PNG ne sont donc plus servis du tout.
+WebP les PNG ne sont donc plus servis du tout.
 """
 
 from pathlib import Path

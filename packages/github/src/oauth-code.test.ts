@@ -4,7 +4,7 @@ import { fakeFetch } from './test-fetch.js';
 
 const REDIRECT = 'https://trybuildit.vercel.app/github/callback';
 
-describe('exchangeAuthorizationCode — le flux de redirection (web application flow)', () => {
+describe('exchangeAuthorizationCode le flux de redirection (web application flow)', () => {
   it('échange un code contre un jeton et ses permissions', async () => {
     const fetch = fakeFetch({
       'POST /login/oauth/access_token': {
@@ -24,7 +24,7 @@ describe('exchangeAuthorizationCode — le flux de redirection (web application 
     expect(result).toEqual({ ok: true, value: { token: 'ghu_abcdef', scopes: ['repo'] } });
   });
 
-  it('envoie le client_secret, le code et le redirect_uri exacts — GitHub les exige tous les trois', async () => {
+  it('envoie le client_secret, le code et le redirect_uri exacts GitHub les exige tous les trois', async () => {
     const fetch = fakeFetch({
       'POST /login/oauth/access_token': { status: 200, body: { access_token: 'ghu_x' } },
     });
@@ -52,7 +52,7 @@ describe('exchangeAuthorizationCode — le flux de redirection (web application 
     expect(result.issues[0]?.code).toBe('GITHUB_OAUTH_CODE_INVALID');
   });
 
-  it('un secret incorrect reçoit le même refus nommé — rien ne distingue les deux à l’utilisateur', async () => {
+  it('un secret incorrect reçoit le même refus nommé rien ne distingue les deux à l’utilisateur', async () => {
     const fetch = fakeFetch({
       'POST /login/oauth/access_token': {
         status: 200,

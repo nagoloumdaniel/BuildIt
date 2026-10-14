@@ -17,7 +17,7 @@ import {
  * La validation du lien précède tout appel à Git : `parseRemote` refuse ce que
  * `git clone` interpréterait comme une option, un protocole exotique ou des
  * identifiants dans l'URL. Le dossier de destination est vérifié libre **avant**
- * le clone, et `packages/git` refait la vérification — un clone n'écrase rien.
+ * le clone, et `packages/git` refait la vérification un clone n'écrase rien.
  */
 
 export interface ClonePreviewView {
@@ -32,7 +32,7 @@ export interface ClonePreviewView {
   readonly github: boolean;
   readonly destination: DestinationState | 'unknown';
   /**
-   * Ce qui a arrêté la vérification — `null` quand la destination est prête.
+   * Ce qui a arrêté la vérification `null` quand la destination est prête.
    *
    * L'écran ne devine pas d'après le texte des refus : `parent` lui dit de
    * rouvrir l'explorateur, `folder` de corriger le nom, `occupied` que le
@@ -56,7 +56,7 @@ export type CloneProblem = 'link' | 'parent' | 'folder' | 'occupied';
  */
 export type CloneDestinationMode = 'parent' | 'root';
 
-/** Le lien validé et le dossier résolu — **interne au serveur**. */
+/** Le lien validé et le dossier résolu **interne au serveur**. */
 export interface ClonePlan {
   readonly remote: GitRemote;
   readonly folder: string;
@@ -96,13 +96,13 @@ function viewOf(
 }
 
 /**
- * Le plan du clone : lien validé, dossier résolu, destination libre — sans la
+ * Le plan du clone : lien validé, dossier résolu, destination libre sans la
  * moindre écriture ni le moindre appel à Git.
  */
 /**
  * **Où** le clone atterrit.
  *
- * `root` : le dossier est relatif à une racine serveur — la seule forme
+ * `root` : le dossier est relatif à une racine serveur la seule forme
  * acceptable en hébergé, où un chemin absolu venu du navigateur serait une
  * écriture de fichier arbitraire. `parent` : un dossier absolu que
  * l'utilisateur vient de choisir dans l'explorateur **de sa machine**, ce qui
@@ -167,7 +167,7 @@ export interface CloneRunOptions {
   readonly link: unknown;
   readonly folder: unknown;
   readonly install: boolean;
-  /** Installer sans exécuter les scripts du projet — le défaut sage pour du code cloné. */
+  /** Installer sans exécuter les scripts du projet le défaut sage pour du code cloné. */
   readonly ignoreScripts: boolean;
   /** Où ça atterrit. Une chaîne reste acceptée : c'est la racine de travail. */
   readonly root: string | ClonePlace;
@@ -197,7 +197,7 @@ export interface CloneResultView {
 }
 
 /**
- * Le clone, puis — si on l'a demandé — la détection et l'installation.
+ * Le clone, puis si on l'a demandé la détection et l'installation.
  *
  * Un dépôt cloné n'est pas un projet reconnu : c'est un avertissement, pas un
  * échec (§18bis). Un échec d'installation non plus : le clone, lui, a réussi.

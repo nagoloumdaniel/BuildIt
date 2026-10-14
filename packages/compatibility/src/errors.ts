@@ -63,7 +63,7 @@ export const messageFor: (
  *
  * Ni un jugement de valeur ni un avis juridique : un signalement, pour que
  * l'utilisateur vérifie avant de livrer. C'est la liste fermée de licences du
- * registry qui rend cette alerte fiable — une licence approximée la rendrait
+ * registry qui rend cette alerte fiable une licence approximée la rendrait
  * inutile.
  */
 export const RESTRICTIVE_LICENSES: readonly string[] = [

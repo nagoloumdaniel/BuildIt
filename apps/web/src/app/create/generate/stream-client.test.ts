@@ -51,7 +51,7 @@ function streaming(chunks: readonly string[], keepOpen = false): GenerateFetch {
   };
 }
 
-describe('parseGenerateEvent — rien n’est cru sur parole', () => {
+describe('parseGenerateEvent rien n’est cru sur parole', () => {
   it('lit les passages connus', () => {
     expect(parseGenerateEvent(block({ type: 'phase', phase: 'writing' }))).toEqual({
       type: 'progress',

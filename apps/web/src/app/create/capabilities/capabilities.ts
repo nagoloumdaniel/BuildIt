@@ -4,7 +4,7 @@ import { FR_WIZARD } from '../../../lib/i18n/messages.wizard';
 import { toggleExclusive } from '../../../lib/session';
 
 /**
- * L'écran Capabilities (§6.7) — « ce que le projet sait faire ».
+ * L'écran Capabilities (§6.7) « ce que le projet sait faire ».
  *
  * Ce fichier ne contient **aucune** liste de technologies (§11) : il dit
  * seulement quelles **catégories** du catalogue sont des capacités, et l'écran
@@ -23,7 +23,7 @@ import { toggleExclusive } from '../../../lib/session';
 export type ScreenRole = 'stack' | 'capabilities' | 'infrastructure';
 
 export const SCREEN_ROLE: Readonly<Record<Category, ScreenRole>> = {
-  // Écran 6 — Stack Builder : la pile technique et le socle de qualité.
+  // Écran 6 Stack Builder : la pile technique et le socle de qualité.
   frontend: 'stack',
   language: 'stack',
   styling: 'stack',
@@ -37,7 +37,7 @@ export const SCREEN_ROLE: Readonly<Record<Category, ScreenRole>> = {
   formatting: 'stack',
   'git-hooks': 'stack',
 
-  // Écran 9 — Infrastructure : ce qui fait tourner et livrer le projet.
+  // Écran 9 Infrastructure : ce qui fait tourner et livrer le projet.
   'package-manager': 'infrastructure',
   monorepo: 'infrastructure',
   containers: 'infrastructure',
@@ -45,7 +45,7 @@ export const SCREEN_ROLE: Readonly<Record<Category, ScreenRole>> = {
   'ci-cd': 'infrastructure',
   hosting: 'infrastructure',
 
-  // Écran 7 — Capabilities : le reste, c'est-à-dire les capacités du §6.7.
+  // Écran 7 Capabilities : le reste, c'est-à-dire les capacités du §6.7.
   authorization: 'capabilities',
   state: 'capabilities',
   'data-fetching': 'capabilities',
@@ -98,7 +98,7 @@ export interface EngineSelection {
  * La sélection envoyée au moteur : technologies **et** capacités.
  *
  * Les deux écrans écrivent dans deux listes du brouillon, mais le moteur ne
- * connaît qu'une sélection de technologies — c'est déjà la règle de
+ * connaît qu'une sélection de technologies c'est déjà la règle de
  * `chosenIds` dans `lib/draft-to-manifest.ts`. L'union est triée pour que deux
  * ordres de clics donnent la même vérification.
  */
@@ -118,7 +118,7 @@ export function engineSelection(draft: DraftState): EngineSelection {
  * une sélection que le moteur refusait au Blueprint, pas ici (même bug que
  * `toggleExclusive`, cf. `lib/session.ts`).
  *
- * `categoryOf` vient des options déjà chargées pour la famille affichée — les
+ * `categoryOf` vient des options déjà chargées pour la famille affichée les
  * seules dont le retrait silencieux a un sens : une capacité d'une autre
  * famille, non chargée ici, n'est jamais retirée par erreur.
  */

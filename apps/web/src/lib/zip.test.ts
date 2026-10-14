@@ -3,7 +3,7 @@ import { createZip } from './zip';
 
 /**
  * Archive `.zip` téléchargeable (Phase 12, §3) : la génération hébergée ne
- * doit jamais écrire dans un dossier partagé entre visiteurs — elle rend un
+ * doit jamais écrire dans un dossier partagé entre visiteurs elle rend un
  * fichier. Format minimal (entrées non compressées, `STORED`) : pas de
  * dépendance ajoutée (aucune lib de zip n'existait dans le monorepo), et
  * `node:zlib` expose `crc32` depuis Node 24 (celui de ce dépôt).

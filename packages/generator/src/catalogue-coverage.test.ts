@@ -28,7 +28,7 @@ import { planProject } from './pipeline.js';
  * par écosystème, vérifient que les fiches tiennent ensemble.
  *
  * Ce que ce test prouve, et rien de plus : chaque technologie produit un plan
- * de fichiers **cohérent** — manifest valide, combinaison acceptée par le
+ * de fichiers **cohérent** manifest valide, combinaison acceptée par le
  * moteur, dépendances npm sans conflit de plages, aucun fichier réclamé deux
  * fois, aucun script en double. C'est un dry-run (§22) : rien n'est écrit,
  * rien n'est installé, rien n'est compilé. La compilation réelle reste le
@@ -68,7 +68,7 @@ const WEB_BASE: Readonly<Record<(typeof UI_ECOSYSTEMS)[number], readonly string[
 
 /**
  * Le socle d'une API, par runtime : le backend et son langage. `.NET` n'a
- * aucun backend au catalogue — C# n'a donc aucun socle (voir plus bas).
+ * aucun backend au catalogue C# n'a donc aucun socle (voir plus bas).
  */
 const API_BASE: Readonly<
   Record<(typeof RUNTIME_ECOSYSTEMS)[number], readonly string[] | undefined>
@@ -103,7 +103,7 @@ function runtimeOf(item: RegistryEntry): (typeof RUNTIME_ECOSYSTEMS)[number] | u
   return RUNTIME_ECOSYSTEMS.find((value) => item.ecosystems?.includes(value));
 }
 
-/** Les `requires` d'une fiche, transitivement — ce que le moteur ajoutera. */
+/** Les `requires` d'une fiche, transitivement ce que le moteur ajoutera. */
 function closure(id: string, seen: Set<string> = new Set()): Set<string> {
   if (!seen.has(id)) {
     seen.add(id);
@@ -126,8 +126,8 @@ interface Draft {
  * Une fiche liée à un runtime serveur (Prisma, Django ORM, Gin…) vit dans une
  * API de ce runtime ; une fiche liée à un moteur d'interface (Vuetify, Pinia…)
  * dans une application web de ce moteur ; une fiche agnostique dans une
- * application Next.js. Le socle cède la place quand la fiche — ou ce qu'elle
- * exige — occupe déjà une catégorie exclusive (Django ORM amène Django, qui
+ * application Next.js. Le socle cède la place quand la fiche ou ce qu'elle
+ * exige occupe déjà une catégorie exclusive (Django ORM amène Django, qui
  * remplace FastAPI).
  */
 function minimalDraft(item: RegistryEntry): Draft | undefined {
@@ -195,7 +195,7 @@ type AppValues = Partial<Record<'framework' | 'language' | 'styling' | 'ui', str
  * que le catalogue sait servir (web, api).
  *
  * Recopié ici plutôt qu'importé : le générateur ne dépend pas de l'application
- * web. La règle elle-même — catégorie → emplacement — n'est pas recopiée, elle
+ * web. La règle elle-même catégorie → emplacement n'est pas recopiée, elle
  * vient de `slotFor` dans le registry, comme côté web.
  */
 function toManifest(draft: Draft, ids: readonly string[]): Manifest {
@@ -800,8 +800,8 @@ describe('couverture du catalogue : combinaisons par écosystème', () => {
 });
 
 /**
- * Les fiches qui apportent quelque chose au-delà de leurs paquets — scripts,
- * fichiers, services locaux — sont celles qui peuvent se marcher dessus. Toute
+ * Les fiches qui apportent quelque chose au-delà de leurs paquets scripts,
+ * fichiers, services locaux sont celles qui peuvent se marcher dessus. Toute
  * paire que le moteur de compatibilité accepte doit aussi se planifier : un
  * refus qui n'arrive qu'à la génération, après que l'écran a dit « compatible »,
  * est le pire moment pour l'apprendre.

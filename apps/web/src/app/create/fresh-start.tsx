@@ -7,7 +7,7 @@ import { NEW_PROJECT_PARAM } from '../../lib/new-project';
 
 /**
  * Le départ d'un **nouveau** projet : `/create?new=1` repart d'un brouillon
- * neuf, puis l'adresse redevient `/create` — un rechargement ensuite garde
+ * neuf, puis l'adresse redevient `/create` un rechargement ensuite garde
  * donc ce qui a été saisi depuis. `useLayoutEffect` : la remise à zéro passe
  * avant que l'écran ne se peigne, aucun reste du projet précédent n'apparaît.
  *

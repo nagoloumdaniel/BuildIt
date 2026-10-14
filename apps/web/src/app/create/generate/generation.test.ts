@@ -20,7 +20,7 @@ import { generateProjectAction, previewManifestAction, workspaceRootAction } fro
 const created: string[] = [];
 
 afterEach(async () => {
-  // biome-ignore lint/complexity/useLiteralKeys: `noPropertyAccessFromIndexSignature` interdit l'accès par point sur `process.env` (signature d'index) — les crochets sont obligatoires ici.
+  // biome-ignore lint/complexity/useLiteralKeys: `noPropertyAccessFromIndexSignature` interdit l'accès par point sur `process.env` (signature d'index) les crochets sont obligatoires ici.
   delete process.env['PF_WEB_WORKSPACE'];
   await Promise.all(created.splice(0).map((path) => rm(path, { recursive: true, force: true })));
 });
@@ -28,7 +28,7 @@ afterEach(async () => {
 async function temporaryRoot(prefix: string): Promise<string> {
   const root = await mkdtemp(join(tmpdir(), prefix));
   created.push(root);
-  // biome-ignore lint/complexity/useLiteralKeys: `noPropertyAccessFromIndexSignature` interdit l'accès par point sur `process.env` (signature d'index) — les crochets sont obligatoires ici.
+  // biome-ignore lint/complexity/useLiteralKeys: `noPropertyAccessFromIndexSignature` interdit l'accès par point sur `process.env` (signature d'index) les crochets sont obligatoires ici.
   process.env['PF_WEB_WORKSPACE'] = root;
   return root;
 }

@@ -103,7 +103,7 @@ describe('résolution', () => {
     }
   });
 
-  it('rend les technologies triées — sortie reproductible', () => {
+  it('rend les technologies triées sortie reproductible', () => {
     const a = resolve({ targets: ['web'], technologies: ['next', 'vitest'] }, BASE);
     const b = resolve({ targets: ['web'], technologies: ['vitest', 'next'] }, BASE);
     expect(a.ok && b.ok).toBe(true);
@@ -174,7 +174,7 @@ describe('erreurs de résolution', () => {
 });
 
 describe('statut de la combinaison', () => {
-  it('expérimentale dès qu’une technologie n’est pas certifiée — sans avertissement', () => {
+  it('expérimentale dès qu’une technologie n’est pas certifiée sans avertissement', () => {
     // Le statut reste informatif ; toutes les fiches sont couvertes par un
     // test de génération, il n'y a plus rien à signaler à l'utilisateur.
     const result = resolve({ targets: ['web'], technologies: ['next'] }, BASE);
@@ -198,7 +198,7 @@ describe('statut de la combinaison', () => {
     }
   });
 
-  it('une sélection vide est certifiée — rien de non testé n’y figure', () => {
+  it('une sélection vide est certifiée rien de non testé n’y figure', () => {
     const result = resolve({ targets: ['web'], technologies: [] }, BASE);
     expect(result.ok).toBe(true);
     if (result.ok) {
@@ -221,7 +221,7 @@ describe('statut de la combinaison', () => {
   });
 });
 
-describe('optionsFor — le §5', () => {
+describe('optionsFor le §5', () => {
   it('rend toutes les options de la catégorie, jamais une liste filtrée', () => {
     const options = optionsFor('orm', { targets: ['web'], technologies: [] }, BASE);
     expect(options.map((option) => option.entry.id)).toEqual(['drizzle', 'prisma']);
@@ -239,7 +239,7 @@ describe('optionsFor — le §5', () => {
     expect(drizzle?.state).toBe('blocked');
   });
 
-  it('dit pourquoi une option est bloquée — c’est l’info-bulle du §5', () => {
+  it('dit pourquoi une option est bloquée c’est l’info-bulle du §5', () => {
     const options = optionsFor('orm', { targets: ['web'], technologies: ['prisma'] }, BASE);
     const drizzle = options.find((option) => option.entry.id === 'drizzle');
     expect(drizzle?.reason).toBeDefined();

@@ -82,7 +82,7 @@ export async function checkSelectionAction(selection: unknown): Promise<Resoluti
   return resolveSelection(toSelection(selection));
 }
 
-/** Les noms de variables d'environnement réclamés — jamais une valeur (§6.8). */
+/** Les noms de variables d'environnement réclamés jamais une valeur (§6.8). */
 export async function loadEnvVarsAction(selection: unknown): Promise<EnvVarView[]> {
   return requiredEnvVars(toSelection(selection));
 }
@@ -92,7 +92,7 @@ export async function loadGraphAction(selection: unknown): Promise<GraphView> {
   return dependencyGraph(toSelection(selection));
 }
 
-/** L'aperçu des fichiers — un dry-run : rien n'est écrit (§22). */
+/** L'aperçu des fichiers un dry-run : rien n'est écrit (§22). */
 export async function previewManifestAction(input: unknown): Promise<PlanPreviewView> {
   const manifest = parseManifest(input);
   if (!manifest.ok) {
@@ -103,7 +103,7 @@ export async function previewManifestAction(input: unknown): Promise<PlanPreview
 
 export interface GenerationView {
   readonly ok: boolean;
-  /** Le dossier écrit — toujours sous la racine de travail, jamais un chemin du client. */
+  /** Le dossier écrit toujours sous la racine de travail, jamais un chemin du client. */
   readonly directory: string;
   readonly files: readonly string[];
   readonly bytes: number;
@@ -163,14 +163,14 @@ function refused(issues: readonly string[]): GenerationView {
 }
 
 /**
- * Génère le projet sur la machine qui sert l'UI (décision 8B.6) — en local
+ * Génère le projet sur la machine qui sert l'UI (décision 8B.6) en local
  * seulement. En mode hébergé (`VERCEL=1`/`PF_HOSTED=1`), le projet part en
  * archive (`generateArchive`) : aucune écriture partagée entre visiteurs
  * anonymes (Phase 12, §3).
  *
  * `generateProject` n'installe rien et n'initialise rien par défaut : le
  * moteur ne lance aucune commande qu'on ne lui a pas demandée. Pas de réseau,
- * pas de script exécuté — un projet est écrit, point.
+ * pas de script exécuté un projet est écrit, point.
  */
 export async function generateProjectAction(input: unknown): Promise<GenerationView> {
   const manifest = parseManifest(input);
@@ -302,7 +302,7 @@ const DELETE_REFUSALS: Readonly<Record<DeleteRefusal, string>> = {
  * Supprime du disque un projet généré (§6.14).
  *
  * Le dossier n'est pas celui que le navigateur demande : c'est celui que la
- * règle de `deletionTarget` accepte — un enfant direct du dossier de travail,
+ * règle de `deletionTarget` accepte un enfant direct du dossier de travail,
  * celui-là même où `generateProjectAction` écrit, ou un dossier que la route
  * de génération a inscrit à son registre après l'avoir écrit ailleurs. Tout le
  * reste est refusé **nommément**, parce qu'un refus muet sur une suppression

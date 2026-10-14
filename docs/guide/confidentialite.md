@@ -12,13 +12,13 @@ Cette page dit ce que cela signifie concrètement, et ce qui sort quand même.
 ## Ce qui ne quitte pas la machine
 
 - **Le moteur tourne en local.** Le dépôt contient deux applications —
-  `apps/cli` et `apps/web` — et **aucun serveur BuildIt** : il n'y a rien
+  `apps/cli` et `apps/web` et **aucun serveur BuildIt** : il n'y a rien
   à qui parler, même si on le voulait.
 - **Le catalogue est embarqué.** Les 283 fiches sont dans un index engendré
   (`packages/registry/src/generated/entries.ts`), chargé depuis le disque.
   `pf template list`, `pf graph` et `pf add` fonctionnent sans réseau.
 - **Le configurateur web est local.** `pf web` sert l'application sur
-  `127.0.0.1` — le seul hôte écouté (`HOST = '127.0.0.1'`, forcé aussi pour le
+  `127.0.0.1` le seul hôte écouté (`HOST = '127.0.0.1'`, forcé aussi pour le
   serveur Next par `HOSTNAME`), jamais `0.0.0.0`. Le serveur reste donc sur cette
   machine, non joignable depuis le réseau.
 - **Aucune télémétrie.** Le CLI n'embarque ni analytics, ni suivi d'usage :
@@ -71,7 +71,7 @@ STRIPE_SECRET_KEY=
 
 ## Le lien de partage (§20)
 
-`pf share` encode le manifest dans le **fragment** de l'URL — la partie après
+`pf share` encode le manifest dans le **fragment** de l'URL la partie après
 `#`, que le navigateur ne transmet jamais au serveur : ni journal, ni requête,
 ni cookie.
 
@@ -80,7 +80,7 @@ $ pnpm pf share pf.manifest.json
 http://127.0.0.1:4173/share#ewogICJtYW5pZmVzdFZlcnNpb24iOiAxLAogICJuYW1lIjog…
 ```
 
-Le fragment décodé est **exactement le manifest** — vérifié sur un lien réel :
+Le fragment décodé est **exactement le manifest** vérifié sur un lien réel :
 
 ```json
 {
@@ -102,8 +102,8 @@ porter (voir plus haut). Le lien s'ouvre là où tourne le configurateur
 
 ## Le jeton GitHub (§20bis)
 
-- Il va dans le **trousseau du système** — Keychain, Secret Service, coffre de
-  Windows — passé par l'entrée standard de l'outil, jamais en argument
+- Il va dans le **trousseau du système** Keychain, Secret Service, coffre de
+  Windows passé par l'entrée standard de l'outil, jamais en argument
   (`packages/github/src/token-store.ts`) ;
 - **trousseau indisponible ⇒ refus** : aucun repli en clair dans un fichier ;
 - il n'est **jamais** écrit dans le manifest ni dans un fichier du projet (§24) ;

@@ -247,7 +247,7 @@ describe('dépréciation', () => {
   });
 });
 
-describe('licences — §11', () => {
+describe('licences §11', () => {
   it('ne dit rien d’une licence permissive', () => {
     expect(codes(checkLicenses([entry({ id: 'next', license: 'MIT' })]))).toEqual([]);
   });

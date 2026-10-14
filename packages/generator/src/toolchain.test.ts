@@ -10,7 +10,7 @@ import type { CommandResult, CommandRunner } from './postinstall.js';
 /**
  * Projets hors Node (COBOL, Flutter) et applications natives Node (Expo,
  * Electron, Tauri) : chacun reçoit le socle de **sa** chaîne d'outils, et le
- * pipeline lance **ses** commandes — jamais un `pnpm install` dans un dossier
+ * pipeline lance **ses** commandes jamais un `pnpm install` dans un dossier
  * sans package.json.
  */
 

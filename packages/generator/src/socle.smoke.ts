@@ -14,7 +14,7 @@ import { generateProject, PIPELINE_STEPS } from './pipeline.js';
  * générée lancera. Si ce test passe, le workflow du projet généré est vert au
  * premier push.
  *
- * Lancé par `pnpm test:smoke` — et par le hook pre-push quand le push touche
+ * Lancé par `pnpm test:smoke` et par le hook pre-push quand le push touche
  * generator, registry ou recipes —, jamais par `pnpm test` :
  * il a besoin du réseau. Hors-ligne, il échoue franchement plutôt que de faire
  * semblant.
@@ -221,8 +221,8 @@ function run(
  * Pannes du registre d'images, pas du projet : quota Docker Hub, réseau.
  *
  * Elles sautent l'aller-retour avec un avertissement, comme l'absence de
- * Docker. Toute autre erreur de téléchargement — une image mal nommée dans le
- * docker-compose.yml généré, par exemple — reste un échec : c'est un défaut du
+ * Docker. Toute autre erreur de téléchargement une image mal nommée dans le
+ * docker-compose.yml généré, par exemple reste un échec : c'est un défaut du
  * générateur, il ne doit pas passer pour une panne d'infrastructure.
  */
 const REGISTRY_OUTAGE =
@@ -241,7 +241,7 @@ function requireImage(target: string, service: string): void {
   } catch (error) {
     if (REGISTRY_OUTAGE.test(String(error))) {
       throw new Error(
-        `Registre d’images indisponible (quota ou réseau) pour « ${service} ». Relancez plus tard, ou PF_SMOKE_SKIP_DOCKER=1 pour sauter explicitement les preuves Docker — et dites-le dans la PR.`,
+        `Registre d’images indisponible (quota ou réseau) pour « ${service} ». Relancez plus tard, ou PF_SMOKE_SKIP_DOCKER=1 pour sauter explicitement les preuves Docker et dites-le dans la PR.`,
       );
     }
     throw error;
@@ -292,7 +292,7 @@ async function waitFor(url: string, timeoutMs: number): Promise<void> {
  * `process.kill(-pid, …)` (convention POSIX du PID négatif pour un groupe)
  * n'existe pas sous Windows : Node y lève `ESRCH` même quand le processus est
  * bien vivant, ce qui faisait échapper l'erreur du bloc `finally` avant que le
- * port ne soit libéré — chaque test suivant trouvait alors le port occupé.
+ * port ne soit libéré chaque test suivant trouvait alors le port occupé.
  * `taskkill /t` (arbre de processus) est l'équivalent Windows. Le processus
  * peut aussi être déjà sorti entre la vérification et l'appel : une erreur à
  * ce moment ne dit rien d'un échec, on l'ignore.
@@ -320,8 +320,8 @@ async function withRunningApp(
   port: number = APP_PORT,
 ): Promise<void> {
   const base = `http://localhost:${port}`;
-  // Un port qui répond déjà ferait tester une autre application — celle du
-  // projet précédent, en train de s'arrêter — sans que rien ne le signale.
+  // Un port qui répond déjà ferait tester une autre application celle du
+  // projet précédent, en train de s'arrêter sans que rien ne le signale.
   const occupied = await fetch(base).then(
     () => true,
     () => false,
@@ -377,7 +377,7 @@ async function imageServes(target: string, path: string, dockerfile = 'Dockerfil
     const original = await readFile(join(target, dockerfile), 'utf8');
     await writeFile(
       join(target, 'Dockerfile.smoke'),
-      // Juste après `corepack enable`, avant tout accès au réseau — la ligne
+      // Juste après `corepack enable`, avant tout accès au réseau la ligne
       // existe dans l'image d'une application seule comme de monorepo.
       original.replace(
         'RUN corepack enable',
@@ -397,7 +397,7 @@ async function imageServes(target: string, path: string, dockerfile = 'Dockerfil
   } catch (error) {
     if (REGISTRY_OUTAGE.test(String(error))) {
       throw new Error(
-        'Registre d’images indisponible (quota ou réseau) pour l’image de base du Dockerfile. Relancez plus tard, ou PF_SMOKE_SKIP_DOCKER=1 pour sauter explicitement les preuves Docker — et dites-le dans la PR.',
+        'Registre d’images indisponible (quota ou réseau) pour l’image de base du Dockerfile. Relancez plus tard, ou PF_SMOKE_SKIP_DOCKER=1 pour sauter explicitement les preuves Docker et dites-le dans la PR.',
       );
     }
     throw error;
@@ -420,7 +420,7 @@ async function imageServes(target: string, path: string, dockerfile = 'Dockerfil
   }
 }
 
-/** Le client Redis généré se connecte et obtient PONG — pas seulement il se type. */
+/** Le client Redis généré se connecte et obtient PONG pas seulement il se type. */
 function cacheRoundTrip(root: string, target: string, service: string, url: string): void {
   composed.push(root);
   run('docker', ['compose', 'up', '-d', '--wait', service], root);
@@ -476,7 +476,7 @@ const API_PORT = APP_PORT + 1;
 
 /**
  * Le contrat web ↔ API, en vrai : l'application web construite appelle l'API
- * construite à travers le paquet partagé. Sonde négative d'abord — tant que
+ * construite à travers le paquet partagé. Sonde négative d'abord tant que
  * l'API ne tourne pas, /status doit le dire.
  */
 async function bridgeJourney(webDir: string, apiDir: string): Promise<void> {
@@ -502,7 +502,7 @@ async function bridgeJourney(webDir: string, apiDir: string): Promise<void> {
  *
  * Navigateur : `playwright install chromium` par défaut. Avec
  * `PF_SMOKE_CHROMIUM=<exécutable>`, un Chromium déjà présent est utilisé via
- * une configuration enveloppe — la configuration générée n'est pas modifiée.
+ * une configuration enveloppe la configuration générée n'est pas modifiée.
  */
 async function playwrightPasses(app: string): Promise<void> {
   const chromium = process.env['PF_SMOKE_CHROMIUM'];
@@ -552,7 +552,7 @@ async function expectPaths(target: string, paths: readonly string[]): Promise<vo
 /**
  * Inscription puis connexion, par l'API de Better Auth, sur l'application
  * construite par l'étape de validation. Preuve que l'adaptateur Prisma, les
- * tables et la route Next.js fonctionnent ensemble — pas seulement qu'ils se
+ * tables et la route Next.js fonctionnent ensemble pas seulement qu'ils se
  * typent.
  */
 async function signUpAndSignIn(target: string, databaseUrl: string): Promise<void> {
@@ -604,7 +604,7 @@ afterAll(async () => {
 
 /**
  * Les preuves les plus fortes exigent Docker : base réelle, Redis, image. Sans
- * Docker, le test **échoue** — une réussite qui aurait sauté ses preuves en
+ * Docker, le test **échoue** une réussite qui aurait sauté ses preuves en
  * silence serait un mensonge. `PF_SMOKE_SKIP_DOCKER=1` les saute
  * explicitement, et chacune apparaît alors comme « skipped » dans le compte.
  */
@@ -616,12 +616,12 @@ const SKIP_E2E = process.env['PF_SMOKE_SKIP_E2E'] === '1';
 function requireDocker(): void {
   if (!DOCKER) {
     throw new Error(
-      'Docker est indisponible : les preuves base de données, Redis et image ne peuvent pas tourner. Démarrez Docker, ou relancez avec PF_SMOKE_SKIP_DOCKER=1 pour les sauter explicitement — et dites-le dans la PR.',
+      'Docker est indisponible : les preuves base de données, Redis et image ne peuvent pas tourner. Démarrez Docker, ou relancez avec PF_SMOKE_SKIP_DOCKER=1 pour les sauter explicitement et dites-le dans la PR.',
     );
   }
 }
 
-describe('un projet généré passe sa propre CI — gate M3', () => {
+describe('un projet généré passe sa propre CI gate M3', () => {
   for (const [
     label,
     {

@@ -6,7 +6,7 @@
  *
  * 1. les 12 étapes s'enchaînent jusqu'au rapport, sur le vrai rendu ;
  * 2. une condition bloquante du §6 retient vraiment l'utilisateur ;
- * 3. le parcours est faisable **au clavier seul** (gate M5) — c'est le second
+ * 3. le parcours est faisable **au clavier seul** (gate M5) c'est le second
  *    parcours de ce fichier, `keyboardJourney` ;
  * 4. le brouillon survit à un rechargement de page (§3) ;
  * 5. la génération écrit un projet sur le disque, et le rapport le dit ;
@@ -14,14 +14,14 @@
  *
  * Le navigateur n'est pas téléchargé : on pilote celui de la machine
  * (`PF_E2E_CHROMIUM`, sinon Edge ou Chrome installé). Sans navigateur trouvé,
- * le test **échoue** en disant quoi faire — sauf `PF_E2E_SKIP=1`, qui saute la
+ * le test **échoue** en disant quoi faire sauf `PF_E2E_SKIP=1`, qui saute la
  * preuve explicitement (une preuve sautée doit être demandée).
  *
  * Chaque parcours tourne dans son **propre contexte** de navigateur : le
  * brouillon vit dans `localStorage`, et le second parcours ne doit pas hériter
  * des choix du premier. Le premier (souris) tourne avant le second : il vérifie
  * que l'aperçu n'écrit rien, ce qui suppose un espace de travail encore vide.
- * `PF_E2E_ONLY=clavier` (ou `souris`) ne joue qu'un parcours — pour itérer,
+ * `PF_E2E_ONLY=clavier` (ou `souris`) ne joue qu'un parcours pour itérer,
  * jamais pour la preuve finale.
  */
 import { mkdtemp, readdir, rm } from 'node:fs/promises';
@@ -275,8 +275,8 @@ if (executablePath === undefined) {
   process.exit(0);
 }
 
-console.log(`Parcours E2E — navigateur ${executablePath}`);
-console.log(`Parcours E2E — espace de travail ${workspace}`);
+console.log(`Parcours E2E navigateur ${executablePath}`);
+console.log(`Parcours E2E espace de travail ${workspace}`);
 
 const JOURNEYS = [
   { id: 'souris', label: 'souris (référence §3)', run: mouseJourney },

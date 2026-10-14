@@ -42,7 +42,7 @@ export interface RunOptions {
    */
   readonly input?: string;
   /**
-   * Variables ajoutées à l'environnement **de cette commande seule** — jamais
+   * Variables ajoutées à l'environnement **de cette commande seule** jamais
    * à celui du processus courant.
    */
   readonly env?: Readonly<Record<string, string>>;
@@ -67,7 +67,7 @@ export interface RunOptions {
  * Le problème : `pnpm` s'y installe comme `pnpm.cmd`, et depuis la
  * CVE-2024-27980 Node refuse de lancer un `.cmd` sans shell (`EINVAL`).
  * Activer le shell « juste pour Windows » ferait réinterpréter les arguments
- * par `cmd.exe` — un `$(…)` ou un `;` cesserait d'être du texte. L'invariant
+ * par `cmd.exe` un `$(…)` ou un `;` cesserait d'être du texte. L'invariant
  * « jamais de shell » vaut sur toutes les plateformes ou ne vaut rien.
  *
  * La sortie : on cherche la commande dans le PATH. Un vrai exécutable se lance
@@ -155,7 +155,7 @@ export const nodeCommandRunner: CommandRunner = {
       child.stderr.on('data', collect);
       child.on('error', reject);
       child.on('close', (code) => {
-        // Un code null — tué par un signal — n'arrive que si le parent tue
+        // Un code null tué par un signal n'arrive que si le parent tue
         // l'enfant : la preuve vit au test « tué par un signal », qui tourne
         // là où SIGKILL est natif. Windows ne le produit que pour un kill
         // par le parent, hors d'atteinte sans exposer le processus enfant.

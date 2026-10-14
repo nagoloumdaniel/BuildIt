@@ -13,7 +13,7 @@ import type { DependencySource } from './dependencies.js';
 /**
  * Recipe Resolver (§22).
  *
- * Les recettes sont choisies **explicitement** — jamais déduites de la stack.
+ * Les recettes sont choisies **explicitement** jamais déduites de la stack.
  * Better Auth sait faire email, OAuth et passkeys ; appliquer toutes ses
  * recettes parce qu'il est dans la stack livrerait trois systèmes de connexion
  * à qui en voulait un.

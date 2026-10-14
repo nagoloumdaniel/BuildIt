@@ -33,13 +33,13 @@ import { type FileSystem, type GenerationReport, generate } from './write.js';
  *          → Post Install (install, git) → Validation
  * ```
  *
- * Le rollback couvre l'écriture — la seule étape qui produit le projet. Après
+ * Le rollback couvre l'écriture la seule étape qui produit le projet. Après
  * elle, le projet est complet sur le disque : un échec d'installation, de Git
  * ou de validation le laisse en place et nomme l'étape (`failedStep`), pour
  * qu'on puisse la relancer (`fromStep`) plutôt que tout régénérer.
  *
  * Chaque étage existe déjà et est testé isolément. Ce fichier ne fait que les
- * enchaîner, et s'arrête au premier qui refuse — avec ses mots à lui. Un
+ * enchaîner, et s'arrête au premier qui refuse avec ses mots à lui. Un
  * pipeline qui reformulerait les erreurs de ses étages ferait perdre la
  * précision que chacun a construite.
  */
@@ -100,7 +100,7 @@ export interface GenerationOutcome {
 /** Un échec dit où il s'est produit, et s'il vaut la peine de reprendre là. */
 export interface GenerationFailure extends ParseFailure<string> {
   readonly failedStep: PipelineStep;
-  /** `true` : erreur transitoire (réseau) — relancer avec `fromStep: failedStep`. */
+  /** `true` : erreur transitoire (réseau) relancer avec `fromStep: failedStep`. */
   readonly retryable: boolean;
   readonly completedSteps: readonly PipelineStep[];
 }
@@ -147,7 +147,7 @@ function toIssues(issues: readonly Issue<string>[]): PipelineIssue[] {
  * Templates livrés avec le paquet.
  *
  * Résolu d'abord depuis ce fichier : `src/` en développement, `dist/` une fois
- * publié — le dossier est à côté des deux. Mais un bundler (webpack, dans le
+ * publié le dossier est à côté des deux. Mais un bundler (webpack, dans le
  * configurateur web) fige `import.meta.url` au chemin **de la machine de
  * build** : sur Vercel, `/vercel/path0/packages/generator/templates` n'existe
  * plus dans la fonction déployée, et chaque gabarit était « introuvable ».
@@ -362,7 +362,7 @@ function fromStepFailure(
   return failure([step.issue], failedStep, completedSteps, step.retryable);
 }
 
-/** Scripts du package.json planifié — ceux que la validation lancera. */
+/** Scripts du package.json planifié ceux que la validation lancera. */
 function plannedScripts(plan: FilePlan): Record<string, string> {
   const file = plan.files.find((planned) => planned.path === 'package.json');
   if (file === undefined) {

@@ -4,7 +4,7 @@
  *
  * Les fiches vivent en JSON, un fichier par technologie : c'est ce qui rend une
  * contribution lisible en revue de code (§11). Mais un paquet publié ne peut pas
- * aller lire un dossier sur le disque après installation — les chemins ne sont
+ * aller lire un dossier sur le disque après installation les chemins ne sont
  * pas fiables. L'index engendré résout les deux : source éditable à la main,
  * données embarquées à la construction.
  *
@@ -54,7 +54,7 @@ function render() {
   entryCount = entries.length;
 
   return [
-    '// Fichier engendré par scripts/build-index.mjs — ne pas modifier à la main.',
+    '// Fichier engendré par scripts/build-index.mjs ne pas modifier à la main.',
     '// Source de vérité : le dossier data/. Relancer le script après toute modification.',
     '',
     '/** Fiches brutes, non validées. `loadCatalogue()` les valide. */',

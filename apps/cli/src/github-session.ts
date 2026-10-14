@@ -35,7 +35,7 @@ export async function requireSession(io: Io): Promise<Session | undefined> {
 
 /**
  * Le dépôt GitHub d'un projet, lu dans son `origin`. Règle du §20bis : sans
- * dépôt GitHub, pas de partage du projet — on dit pourquoi et quoi faire.
+ * dépôt GitHub, pas de partage du projet on dit pourquoi et quoi faire.
  */
 export async function requireGitHubProject(io: Io, dir: string): Promise<Repository | undefined> {
   const state = await repositoryState(dir, io.runner);

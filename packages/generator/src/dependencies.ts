@@ -39,7 +39,7 @@ const messageFor = createMessageFormatter(MESSAGES);
 /**
  * Ce qui réclame des paquets : une fiche du registry, ou une recette.
  *
- * Le sous-ensemble utile d'une fiche, et rien de plus — une recette s'y
+ * Le sous-ensemble utile d'une fiche, et rien de plus une recette s'y
  * convertit, et ses plages entrent en conflit avec celles des fiches par le
  * même code, avec les mêmes messages.
  */
@@ -67,7 +67,7 @@ interface Claim {
  * Plage d'un paquet pour une fiche donnée.
  *
  * `packageRanges` prime. À défaut, le paquet qui porte le nom de la fiche
- * hérite de son `versionRange` — c'est le cas courant (`next` installe `next`).
+ * hérite de son `versionRange` c'est le cas courant (`next` installe `next`).
  * Un paquet satellite sans plage propre n'hérite de rien : appliquer la version
  * de Next.js à React serait faux.
  */

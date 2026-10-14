@@ -1,8 +1,8 @@
-# Phase 8A — Direction artistique du configurateur
+# Phase 8A Direction artistique du configurateur
 
 **Date :** 11/10/2026
 **Périmètre :** tokens, règles visuelles et garde-fous des 18 écrans du MVP.
-**Statut :** direction **appliquée et outillée** ; la validation humaine du gate 8A (trois maquettes arbitrées par Daniel) reste due — voir « Ce qui reste à un humain ».
+**Statut :** direction **appliquée et outillée** ; la validation humaine du gate 8A (trois maquettes arbitrées par Daniel) reste due voir « Ce qui reste à un humain ».
 
 ---
 
@@ -33,7 +33,7 @@ Les composants d'interface sont des classes `pf-*` (`pf-card`, `pf-choice`, `pf-
 
 1. **Aucune couleur en dur dans un composant.** Une seule valeur écrite dans un `.tsx` et le thème sombre devient une chasse au trésor.
 2. **Tout élément interactif a un `:focus-visible` visible.** C'est un outil ; on y travaille au clavier. Le gate M5 exige le parcours complet au clavier seul.
-3. **`prefers-reduced-motion` est respecté globalement** (§8E) : les animations tombent à 0,01 ms, et aucune animation ne porte d'information — la progression d'une génération est aussi écrite en texte.
+3. **`prefers-reduced-motion` est respecté globalement** (§8E) : les animations tombent à 0,01 ms, et aucune animation ne porte d'information la progression d'une génération est aussi écrite en texte.
 4. **La couleur ne porte jamais seule une information.** Un choix sélectionné est `aria-pressed="true"` **et** coloré ; une option bloquée est `disabled` **avec sa raison**.
 5. **Aucune dépendance d'interface.** Pas de bibliothèque de composants, pas de CSS-in-JS, pas de police téléchargée. Tailwind 4 et les tokens suffisent : ce dépôt doit rester installable et rapide.
 
@@ -45,4 +45,4 @@ Les composants d'interface sont des classes `pf-*` (`pf-card`, `pf-choice`, `pf-
 
 ## Ce qui reste à un humain
 
-Le gate 8A demande une **validation de direction sur trois maquettes** — Stack Builder, Blueprint, File Preview — avant de figer les 18 écrans. Cette validation n'a pas eu lieu : les écrans ont été construits sur la direction ci-dessus, en tokens provisoires devenus le design system. Si Daniel tranche autrement, la reprise est bornée : `globals.css` et les classes `pf-*`, pas les écrans.
+Le gate 8A demande une **validation de direction sur trois maquettes** Stack Builder, Blueprint, File Preview avant de figer les 18 écrans. Cette validation n'a pas eu lieu : les écrans ont été construits sur la direction ci-dessus, en tokens provisoires devenus le design system. Si Daniel tranche autrement, la reprise est bornée : `globals.css` et les classes `pf-*`, pas les écrans.

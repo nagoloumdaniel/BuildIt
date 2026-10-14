@@ -100,7 +100,7 @@ describe('pf login --with-token', () => {
   });
 });
 
-describe('pf login — connexion par code', () => {
+describe('pf login connexion par code', () => {
   it('sans application OAuth configurée : le dit, et propose --with-token', async () => {
     const io = fakeIo({ runner: fakeWorld() });
     expect(await run(['login'], io)).toBe(1);

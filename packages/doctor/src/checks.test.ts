@@ -85,7 +85,7 @@ describe('Project Doctor', () => {
   it('les constats sans objet sortent de l’équation, pas du score', () => {
     // Un projet web sans base de données et sans conteneur : les deux constats
     // correspondants passent en `n/a`. Deux constats évaluables en moins, donc
-    // 100 — un `n/a` mal compté ferait baisser le score d'un projet sain qui
+    // 100 un `n/a` mal compté ferait baisser le score d'un projet sain qui
     // n'a simplement pas ces briques.
     const result = runDoctor(
       {
@@ -146,7 +146,7 @@ describe('Project Doctor', () => {
 
   it('avertit quand rien n’est déclaré, alors que le projet est installé', () => {
     // Un `package.json` réduit à sa plus simple expression : installé, mais
-    // aucune dépendance — il n'y a rien à comparer, et le dire vaut mieux que
+    // aucune dépendance il n'y a rien à comparer, et le dire vaut mieux que
     // d'afficher « 0 dépendance » comme un satisfecit.
     const result = report({ dependencies: [], expectedPackages: [] });
     const dependances = result.checks.find((entry) => entry.id === 'dependencies');

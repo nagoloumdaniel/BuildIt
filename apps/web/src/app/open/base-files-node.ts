@@ -11,7 +11,7 @@ import {
 } from './base-files';
 
 /**
- * Les fichiers de base d'un projet local, **côté serveur** — seulement en
+ * Les fichiers de base d'un projet local, **côté serveur** seulement en
  * local (`pf web`), où le serveur est sur la machine de l'utilisateur. En
  * hébergé, le même calcul tourne dans le navigateur (`base-files.ts`).
  *

@@ -17,7 +17,7 @@ import {
 /**
  * La connexion par code (OAuth device flow, §20bis).
  *
- * Le `device_code` — ce qui s'échange contre un jeton — ne quitte **jamais** le
+ * Le `device_code` ce qui s'échange contre un jeton ne quitte **jamais** le
  * serveur : le navigateur ne reçoit qu'un identifiant opaque, le code court à
  * saisir sur github.com et l'adresse de vérification. Le jeton obtenu est rangé
  * dans le trousseau avant que quoi que ce soit d'autre ne soit rendu.
@@ -33,7 +33,7 @@ const REASONS: Readonly<Record<string, string>> = {
   public_repo: 'dépôts publics seulement : créer un dépôt public, gérer ses collaborateurs',
 };
 
-/** Les permissions demandées, chacune avec sa raison — affichées avant la connexion. */
+/** Les permissions demandées, chacune avec sa raison affichées avant la connexion. */
 export const PERMISSIONS: readonly PermissionView[] = SCOPES.full.map((scope) => ({
   scope,
   reason: REASONS[scope] ?? scope,
@@ -49,16 +49,16 @@ interface Pending {
 
 /**
  * Où vivent les codes en attente de saisie entre le démarrage de la connexion
- * (`startDevice`) et son attente (`waitDevice`) — deux Server Actions, donc
+ * (`startDevice`) et son attente (`waitDevice`) deux Server Actions, donc
  * deux requêtes séparées.
  *
  * En local (§0), c'est un processus unique : une `Map` en mémoire suffit,
  * `memoryDevicePendingStore` ci-dessous. En hébergé (Phase 12), rien ne
- * garantit que les deux requêtes atteignent la même instance serverless — une
+ * garantit que les deux requêtes atteignent la même instance serverless une
  * `Map` de module y est invisible d'une requête à l'autre, et la connexion
  * échouait en silence (« Aucune connexion en cours ») alors que l'utilisateur
  * venait de saisir le code. Un visiteur hébergé a donc besoin d'un magasin qui
- * ne dépend d'aucune mémoire de processus — un cookie scellé, comme le jeton
+ * ne dépend d'aucune mémoire de processus un cookie scellé, comme le jeton
  * lui-même (`lib/session-cookie.ts`).
  */
 export interface DevicePendingStore {
@@ -70,7 +70,7 @@ export interface DevicePendingStore {
 /**
  * Les codes en attente de saisie, en mémoire : la clé est un identifiant
  * opaque, jamais le `device_code`. Valable tant qu'une seule instance de
- * processus répond aux deux requêtes du flux — vrai en local (§0), faux en
+ * processus répond aux deux requêtes du flux vrai en local (§0), faux en
  * hébergé (voir `DevicePendingStore`).
  */
 const pending = new Map<string, Pending>();
@@ -87,7 +87,7 @@ export const memoryDevicePendingStore: DevicePendingStore = {
   },
 };
 
-/** Oublie les codes en attente — appelé par les tests, et utile après un redémarrage. */
+/** Oublie les codes en attente appelé par les tests, et utile après un redémarrage. */
 export function forgetPendingDevices(): void {
   pending.clear();
 }
@@ -101,7 +101,7 @@ function prune(now: number): void {
 }
 
 export interface DeviceStartView {
-  /** Identifiant opaque de l'attente — le `device_code` reste sur le serveur. */
+  /** Identifiant opaque de l'attente le `device_code` reste sur le serveur. */
   readonly id: string;
   /** Le code court à saisir sur github.com : fait pour être affiché. */
   readonly userCode: string;

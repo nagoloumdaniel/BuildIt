@@ -20,10 +20,10 @@ import {
 } from './env-model';
 
 /**
- * Écran 7 — Environment & Secrets (§6.8, §24).
+ * Écran 7 Environment & Secrets (§6.8, §24).
  *
  * Les noms viennent du moteur (`loadEnvVarsAction`), qui lit le champ `env` des
- * fiches du catalogue et suit la résolution — additions comprises. L'écran
+ * fiches du catalogue et suit la résolution additions comprises. L'écran
  * n'affiche **aucune valeur** et n'offre aucun champ pour en saisir une : la
  * valeur n'a rien à faire dans le brouillon ni dans un lien de partage. Seuls
  * des **noms** peuvent être ajoutés à la main (`draft.customEnv`) : ils

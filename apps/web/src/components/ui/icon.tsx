@@ -4,13 +4,13 @@ import type { ReactElement, SVGProps } from 'react';
  * Le jeu d'icônes de l'interface.
  *
  * Un seul fichier, un seul gabarit : grille 24, trait `currentColor` de 1,75,
- * bouts et jointures arrondis. Pas de dépendance d'icônes — un paquet de 1 500
+ * bouts et jointures arrondis. Pas de dépendance d'icônes un paquet de 1 500
  * glyphes pour les trente qu'on utilise coûterait plus en poids et en montage
  * qu'il ne rapporte, et la cohérence de trait serait à surveiller de toute
  * façon.
  *
  * Règle d'usage : une icône **accompagne** un libellé, elle ne le remplace que
- * lorsque le geste est universel (fermer, copier) — et porte alors un
+ * lorsque le geste est universel (fermer, copier) et porte alors un
  * `aria-label`. Sans libellé ni `aria-label`, elle reste décorative
  * (`aria-hidden`), ce qui est le défaut ici.
  */

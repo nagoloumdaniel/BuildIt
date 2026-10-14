@@ -8,7 +8,7 @@ import {
 } from '@buildit/validation';
 
 /**
- * Rendu de template — substitution, et rien d'autre.
+ * Rendu de template substitution, et rien d'autre.
  *
  * Un moteur de template classique (Handlebars, EJS, Nunjucks) évalue du code
  * contenu dans les données. Comme les templates de BuildIt viendront un
@@ -17,7 +17,7 @@ import {
  *
  * Ici il n'y a pas de moteur : une passe de remplacement sur une **liste
  * fermée** de variables. Pas de condition, pas de boucle, pas d'évaluation. Le
- * contenu conditionnel se fait par sélection de templates — deux variantes d'un
+ * contenu conditionnel se fait par sélection de templates deux variantes d'un
  * fichier sont deux templates, pas un template avec un `if`.
  *
  * Conséquence directe : tout ce qui n'est pas `{{variable}}` traverse
@@ -34,7 +34,7 @@ export const TEMPLATE_VARIABLES = [
   'year',
   'nodeVersion',
   'packageManager',
-  /** Nom en snake_case : paquet Dart, crate Rust — sans « - » ni « . ». */
+  /** Nom en snake_case : paquet Dart, crate Rust sans « - » ni « . ». */
   'identifier',
 ] as const;
 
@@ -60,7 +60,7 @@ const MESSAGES: Readonly<Record<TemplateIssueCode, string>> = {
 const messageFor = createMessageFormatter(MESSAGES);
 
 /**
- * Seuls des noms de variables — pas d'expression, pas de chemin pointé.
+ * Seuls des noms de variables pas d'expression, pas de chemin pointé.
  *
  * `{{1 + 1}}` et `{{user.name}}` ne correspondent pas et seront donc signalés
  * comme accolade non fermée ou variable inconnue, jamais évalués.
@@ -70,8 +70,8 @@ const PLACEHOLDER = /\{\{\s*([A-Za-z_][A-Za-z0-9_]*)\s*\}\}/g;
 /**
  * Attrape **toute** paire d'accolades, quel que soit son contenu.
  *
- * C'est ce qui permet de distinguer `{{1 + 1}}` — fermé, mais dont le contenu
- * n'est pas un nom de variable — d'un `{{` réellement non refermé. Les
+ * C'est ce qui permet de distinguer `{{1 + 1}}` fermé, mais dont le contenu
+ * n'est pas un nom de variable d'un `{{` réellement non refermé. Les
  * confondre produirait un message faux, et un message faux sur une erreur de
  * sécurité est pire que pas de message.
  */

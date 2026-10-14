@@ -2,12 +2,12 @@
 
 > BuildIt (moteur **Forge**, binaire **`pf`**) transforme une description de projet en projet prêt à développer : plateformes et technologies choisies, code généré, cohérent, documenté, diagnostiqué. Le code généré est **autonome** : aucune dépendance runtime à l'outil, et l'analyse tourne **en local**.
 
-Statut : **pré-alpha**, dans le dépôt `github.com/nagoloumdaniel/BuildIt`. Ni le paquet npm ni le site n'existent encore : les deux sont la Phase 12 de la [roadmap](roadmap.md). Ce fichier est versionné mais **pas encore servi** — il n'y a pas d'hébergement — et les liens ci-dessous sont relatifs à ce dossier de documentation.
+Statut : **pré-alpha**, dans le dépôt `github.com/nagoloumdaniel/BuildIt`. Ni le paquet npm ni le site n'existent encore : les deux sont la Phase 12 de la [roadmap](roadmap.md). Ce fichier est versionné mais **pas encore servi** il n'y a pas d'hébergement et les liens ci-dessous sont relatifs à ce dossier de documentation.
 
 Deux points à savoir avant de cloner, tous deux vérifiés :
 
 - les sources utiles sont sur la branche **`feat/phase8-web-socle`** ; la branche par défaut `main` ne contient ni ce dossier `docs/`, ni `apps/web`, ni `pf share` ;
-- `pf` s'exécute **depuis la racine du dépôt**, par `pnpm pf <commande>` (script de la racine, via `jiti apps/cli/src/main.ts`), et il y résout ses chemins : un projet créé sans `--dir` s'écrirait **dans le dépôt**. La forme publiée (`pnpm add -g @buildit/cli`, puis `pf …`) est prévue en Phase 12 — **pas disponible aujourd'hui**.
+- `pf` s'exécute **depuis la racine du dépôt**, par `pnpm pf <commande>` (script de la racine, via `jiti apps/cli/src/main.ts`), et il y résout ses chemins : un projet créé sans `--dir` s'écrirait **dans le dépôt**. La forme publiée (`pnpm add -g @buildit/cli`, puis `pf …`) est prévue en Phase 12 **pas disponible aujourd'hui**.
 
 ## Installation
 
@@ -31,14 +31,14 @@ Le configurateur web, c'est le même moteur servi en local : `pnpm build`, puis 
 
 ## Concepts
 
-- [Concepts](guide/concepts.md) : manifest, registry, compatibility engine, presets, recettes, générateur — et la frontière forme / identité / combinaison
+- [Concepts](guide/concepts.md) : manifest, registry, compatibility engine, presets, recettes, générateur et la frontière forme / identité / combinaison
 - [BuildIt et Forge](guide/produit-et-moteur.md) : le produit, le moteur, le binaire `pf`, et pourquoi l'UI et le CLI sont deux façades du même moteur
 - [Référence du manifest](guide/reference-manifest.md) : les champs du Project Manifest, la forme canonique, les codes de refus
 - [Référence du registry](guide/reference-registry.md) : 283 fiches, 37 catégories, 19 licences reconnues, la forme d'une fiche, ce que le chargement vérifie
 
 ## Garanties
 
-- [No-lock-in](guide/no-lock-in.md) : le code généré est autonome — et le test qui le prouve
+- [No-lock-in](guide/no-lock-in.md) : le code généré est autonome et le test qui le prouve
 - [Confidentialité, local-first](guide/confidentialite.md) : ce qui reste sur la machine, ce qui sort, et quand
 
 ## Cadrage et contribution

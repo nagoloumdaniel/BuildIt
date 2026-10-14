@@ -15,11 +15,11 @@ import type { GithubStatusView } from './session';
 import { GithubView } from './view';
 
 /**
- * Écran 21 — GitHub Connection (§6.21, §20bis) : le branchement des Server
+ * Écran 21 GitHub Connection (§6.21, §20bis) : le branchement des Server
  * Actions. La vue, elle, est dans `view.tsx`.
  *
  * Elle est pure pour une raison technique : un `page.tsx` Next ne peut exporter
- * que `default` — le type engendré par Next le vérifie —, donc tout composant
+ * que `default` le type engendré par Next le vérifie —, donc tout composant
  * testable vit à côté, pas dedans.
  */
 export default function GithubPage(): ReactElement {
@@ -81,7 +81,7 @@ export default function GithubPage(): ReactElement {
   }, [load]);
 
   // Le retour du flux de redirection (`github/callback`) arrive ici par
-  // l'adresse, pas par un état que ce composant aurait gardé — l'écran a été
+  // l'adresse, pas par un état que ce composant aurait gardé l'écran a été
   // rechargé entre-temps. `connected=1` : le statut ci-dessus le confirmera
   // déjà. `error=...` : il faut le traduire, une seule fois.
   useEffect(() => {

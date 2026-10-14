@@ -42,7 +42,7 @@ const CONNECTED: GithubStatusView = {
   issues: [],
 };
 
-describe('GithubView — déconnecté', () => {
+describe('GithubView déconnecté', () => {
   it('propose la connexion et annonce les permissions en clair', () => {
     const html = render({ status: DISCONNECTED });
 
@@ -112,7 +112,7 @@ describe('GithubView — déconnecté', () => {
   });
 });
 
-describe('GithubView — connecté', () => {
+describe('GithubView connecté', () => {
   it('montre le compte, les permissions accordées et l’emplacement du jeton', () => {
     const html = render({ status: CONNECTED });
 
@@ -134,7 +134,7 @@ describe('GithubView — connecté', () => {
   });
 });
 
-describe('GithubView — messages', () => {
+describe('GithubView messages', () => {
   it('rend le message d’état en région d’annonce', () => {
     const html = render({ status: CONNECTED, message: 'Connecté : octocat.' });
 

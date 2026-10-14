@@ -4,7 +4,7 @@ import { cookieTokenStore, sealJson, sealToken, unsealJson, unsealToken } from '
 /**
  * Jeton GitHub par visiteur, en mode hébergé (Phase 12).
  *
- * Décision 8B.6 gardait un seul jeton, dans le trousseau du serveur — valable
+ * Décision 8B.6 gardait un seul jeton, dans le trousseau du serveur valable
  * tant qu'il n'y a qu'un visiteur. En hébergé, deux visiteurs anonymes
  * partageraient sinon le même compte GitHub : un vrai problème de sécurité,
  * pas un détail (cf. le prompt de cette tâche). La correction : le jeton vit
@@ -30,7 +30,7 @@ describe('sealToken / unsealToken', () => {
     expect(sealToken(TOKEN, SECRET)).not.toBe(sealToken(TOKEN, SECRET));
   });
 
-  it('refuse de desceller avec le mauvais secret — c’est la preuve que le jeton d’un visiteur n’est pas lisible par un autre', () => {
+  it('refuse de desceller avec le mauvais secret c’est la preuve que le jeton d’un visiteur n’est pas lisible par un autre', () => {
     const sealed = sealToken(TOKEN, SECRET);
     expect(unsealToken(sealed, 'un-autre-secret-tout-aussi-long-mais-different')).toBeUndefined();
   });
@@ -82,7 +82,7 @@ describe('cookieTokenStore', () => {
     expect(await store.get()).toBe(TOKEN);
   });
 
-  it('un visiteur ne lit jamais le jeton scellé pour un autre — c’est le cœur de la garantie (§2 du prompt)', async () => {
+  it('un visiteur ne lit jamais le jeton scellé pour un autre c’est le cœur de la garantie (§2 du prompt)', async () => {
     const jar = fakeCookieJar();
     const storeA = cookieTokenStore(SECRET, () => jar.forVisitor('visiteur-A'));
     const storeB = cookieTokenStore(SECRET, () => jar.forVisitor('visiteur-B'));
@@ -109,7 +109,7 @@ describe('cookieTokenStore', () => {
     expect(refusal?.code).toBe('GITHUB_TOKEN_INVALID');
   });
 
-  it('sans SESSION_SECRET, refuse d’enregistrer — jamais de repli en clair', async () => {
+  it('sans SESSION_SECRET, refuse d’enregistrer jamais de repli en clair', async () => {
     const jar = fakeCookieJar();
     const store = cookieTokenStore('', () => jar.forVisitor('a'));
     const refusal = await store.set(TOKEN);
@@ -118,7 +118,7 @@ describe('cookieTokenStore', () => {
   });
 });
 
-describe('sealJson / unsealJson — le même coffre, pour un état qui n’est pas un jeton', () => {
+describe('sealJson / unsealJson le même coffre, pour un état qui n’est pas un jeton', () => {
   it('scelle puis descelle la même valeur', () => {
     const value = { deviceCode: 'abc', expiresAt: 1700000000000 };
     const sealed = sealJson(value, SECRET);

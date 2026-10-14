@@ -16,7 +16,7 @@ import { Illustration, type IllustrationName } from './illustration';
  * Le centrage est porté par `.pf-empty-state` (dans `globals.css`) et non par
  * un utilitaire : collé à une interpolation (`text-center${…}`), le nom de
  * classe n'était pas repéré par l'analyseur de Tailwind, la règle n'était
- * jamais engendrée, et le titre restait à gauche d'un bloc centré — un
+ * jamais engendrée, et le titre restait à gauche d'un bloc centré un
  * désalignement visible sur chaque écran vide.
  */
 
@@ -113,7 +113,7 @@ export interface IssueListProps {
  * Les phrases **identiques sont regroupées** : le moteur produit souvent le
  * même refus pour deux champs (un nom vide, deux fois), et répéter la phrase
  * entière noie les autres. Le compte est dit en marge plutôt que la répétition
- * — et la clé de rendu redevient la phrase, donc unique.
+ * et la clé de rendu redevient la phrase, donc unique.
  */
 export function IssueList({ issues, title, className }: IssueListProps): ReactElement | null {
   if (issues.length === 0) {

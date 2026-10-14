@@ -1,5 +1,5 @@
 /**
- * Project Manifest — le contrat d'entrée du moteur (cahier des charges §10).
+ * Project Manifest le contrat d'entrée du moteur (cahier des charges §10).
  *
  * L'UI et le CLI produisent tous deux un manifest, et un seul pipeline le
  * consomme (§9). Ce paquet valide sa **forme** ; savoir ce que désigne le slug

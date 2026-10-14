@@ -26,7 +26,7 @@ export const REGISTRY_ISSUE_CODES = [
   'REGISTRY_DECLARED_WITH_TEMPLATE',
   'REGISTRY_PACKAGE_ROLE_CONFLICT',
   'REGISTRY_ORPHAN_PACKAGE_RANGE',
-  // Codes d'intégrité — voir integrity.ts
+  // Codes d'intégrité voir integrity.ts
   'REGISTRY_DUPLICATE_ID',
   'REGISTRY_UNKNOWN_REFERENCE',
   'REGISTRY_SELF_REFERENCE',

@@ -39,7 +39,7 @@ famille dit déjà « étiquette de donnée ».
 
 ## 3. Les composants réutilisables
 
-Tous sous `src/components/ui/` — sauf `Toaster`, `ThemeToggle` et
+Tous sous `src/components/ui/` sauf `Toaster`, `ThemeToggle` et
 `LocaleToggle`, qui vivent dans `src/app/` parce qu'ils portent l'état du
 document (stockage, `data-theme`, `lang`). **Aucun écran ne redessine ce qui
 existe.**
@@ -91,7 +91,7 @@ est du dessin mort, il part avec le reste. L'audit se fait en comparant les
 `.pf-*` / `--pf-*` déclarés dans `globals.css` à ce que le balisage consomme —
 `pf-sr-only` et `--pf-shadow-lift` sont partis comme ça.
 
-## 4. Les chargements — aucun squelette
+## 4. Les chargements aucun squelette
 
 Un squelette promet une forme avant de la connaître ; il fait sauter la page
 quand la vraie donnée arrive, et il ment quand la requête échoue.
@@ -129,8 +129,8 @@ Le chemin rendu n'est pas pour autant cru : l'action qui suit le revalide
 ## 6. Les deux langues
 
 Français et anglais, via `useMessages()` (`src/lib/i18n/`). Le dictionnaire
-est découpé par zone — `messages.dashboard.ts`, `messages.workspace.ts`,
-`messages.wizard.ts`, `messages.build.ts`, `messages.account.ts` — et
+est découpé par zone `messages.dashboard.ts`, `messages.workspace.ts`,
+`messages.wizard.ts`, `messages.build.ts`, `messages.account.ts` et
 recomposé par `messages.ts`. Le français fait foi : une clé ajoutée d'un côté
 sans l'autre fait échouer `pnpm typecheck`.
 
@@ -174,7 +174,7 @@ Non négociable, sur chaque écran :
 - Pas de dégradé décoratif, pas d'ombre colorée sous chaque carte.
 - Pas de grille de rectangles identiques : une carte délimite une décision,
   pas un paragraphe.
-- Pas de numéros `01 / 02 / 03` hors d'une vraie séquence — le parcours en
+- Pas de numéros `01 / 02 / 03` hors d'une vraie séquence le parcours en
   est une, le reste non.
 - Pas de `→` collé au texte d'un lien : l'icône `arrowRight` existe.
 - Pas de tiret cadratin dans un texte affiché : deux-points quand la suite

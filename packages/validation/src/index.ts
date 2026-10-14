@@ -3,7 +3,7 @@
  *
  * Extrait de `@buildit/manifest` quand le registry a eu besoin des
  * mêmes briques : un code stable, un chemin, un message, un indice. Deux copies
- * auraient fini par diverger — l'une corrigée, l'autre pas.
+ * auraient fini par diverger l'une corrigée, l'autre pas.
  */
 
 export type { Issue, PathSegment, Severity } from './issue.js';

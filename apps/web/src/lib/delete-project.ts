@@ -1,5 +1,5 @@
 /**
- * Supprimer un projet généré — la règle, hors Node et hors React.
+ * Supprimer un projet généré la règle, hors Node et hors React.
  *
  * Une Server Action qui supprime récursivement le dossier que le navigateur
  * lui désigne est une suppression de fichier arbitraire : le JSON vient du
@@ -46,7 +46,7 @@ export interface DeletionRefused {
  * Deux découpages successifs plutôt qu'une classe de caractères : une
  * expression régulière mêlant `\` et `/` se fait « simplifier » par les
  * outils de formatage, et perdre la barre inverse rendait la comparaison
- * aveugle sur Windows — un chemin entier devenait un seul segment.
+ * aveugle sur Windows un chemin entier devenait un seul segment.
  */
 function segments(path: string): readonly string[] {
   return path

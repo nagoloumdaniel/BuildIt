@@ -1,6 +1,6 @@
 # Contribuer à BuildIt
 
-Le projet est en pré-alpha (Phase 1 de la [roadmap](docs/roadmap.md)). Les contributions externes ne sont pas encore ouvertes — ce document fixe les conventions pour qu'elles le soient proprement le jour venu.
+Le projet est en pré-alpha (Phase 1 de la [roadmap](docs/roadmap.md)). Les contributions externes ne sont pas encore ouvertes ce document fixe les conventions pour qu'elles le soient proprement le jour venu.
 
 ## Prérequis
 
@@ -17,7 +17,7 @@ pnpm install
 pnpm ci:local
 ```
 
-C'est le pipeline complet : lint, typecheck, tests, build, scan de secrets. Le hook `pre-push` l'exécute de toute façon — le lancer à la main évite juste d'attendre pour rien.
+C'est le pipeline complet : lint, typecheck, tests, build, scan de secrets. Le hook `pre-push` l'exécute de toute façon le lancer à la main évite juste d'attendre pour rien.
 
 Il n'y a pas de CI GitHub : ce hook **est** la CI. Quand le push touche `packages/generator`, `packages/registry` ou `packages/recipes`, il lance aussi `pnpm test:smoke` (réseau, environ une minute ; Docker recommandé pour la partie base de données). `pnpm ci:full` lance les deux à la main.
 
@@ -42,7 +42,7 @@ docs(readme): explicite le principe de non-dépendance
 
 ### Tests
 
-Les tests s'écrivent **avant** l'implémentation. Un garde-fou n'est considéré comme en place que si on a vu la violation correspondante être rejetée — prouver qu'il passe ne suffit pas, il faut prouver qu'il mord.
+Les tests s'écrivent **avant** l'implémentation. Un garde-fou n'est considéré comme en place que si on a vu la violation correspondante être rejetée prouver qu'il passe ne suffit pas, il faut prouver qu'il mord.
 
 ### Changesets
 
@@ -54,8 +54,8 @@ pnpm exec changeset
 
 ## Secrets
 
-Aucune valeur sensible dans le dépôt, jamais — pas même en exemple, pas même commentée. `secretlint` tourne au `pre-commit` et dans `pnpm ci:local`. Les variables d'environnement se déclarent dans `.env.example`, sans valeur.
+Aucune valeur sensible dans le dépôt, jamais pas même en exemple, pas même commentée. `secretlint` tourne au `pre-commit` et dans `pnpm ci:local`. Les variables d'environnement se déclarent dans `.env.example`, sans valeur.
 
 ## Registry
 
-Ajouter une technologie au catalogue, c'est ajouter un fichier JSON — pas modifier du code. La procédure complète est dans [packages/registry/CONTRIBUTING.md](packages/registry/CONTRIBUTING.md).
+Ajouter une technologie au catalogue, c'est ajouter un fichier JSON pas modifier du code. La procédure complète est dans [packages/registry/CONTRIBUTING.md](packages/registry/CONTRIBUTING.md).

@@ -10,7 +10,7 @@ import { rememberGeneratedProject } from './remember';
  * « Un projet généré n'est plus un brouillon » (§6.14), prouvé sans navigateur.
  *
  * Le stockage est injectable (`ProjectStorage` : un `read` et un `write`) : la
- * règle se teste donc au repos, y compris le point qui compte — **un refus
+ * règle se teste donc au repos, y compris le point qui compte **un refus
  * n'écrit rien**, il ne peut pas faire apparaître un projet qui n'existe pas.
  */
 

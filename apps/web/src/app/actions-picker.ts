@@ -17,7 +17,7 @@ import { type DialogOutcome, openNativeDialog } from './picker/native-dialog';
  * Vrai quand l'explorateur peut s'ouvrir : local seulement.
  *
  * L'écran l'appelle au montage pour décider entre le bouton « Choisir un
- * dossier » et le champ de saisie — plutôt que de proposer un bouton qui
+ * dossier » et le champ de saisie plutôt que de proposer un bouton qui
  * échouera, puis d'expliquer pourquoi.
  */
 export async function canOpenNativePickerAction(): Promise<boolean> {

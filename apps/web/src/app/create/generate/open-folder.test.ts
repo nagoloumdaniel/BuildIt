@@ -41,7 +41,7 @@ function deps(root: string, overrides: Partial<OpenFolderDeps> = {}) {
   return { value, launched };
 }
 
-describe('folderOpener — le gestionnaire de fichiers de chaque système', () => {
+describe('folderOpener le gestionnaire de fichiers de chaque système', () => {
   it('explorer.exe sous Windows, open sous macOS, xdg-open ailleurs', () => {
     expect(folderOpener('win32', 'C:\\p')).toEqual({ command: 'explorer.exe', args: ['C:\\p'] });
     expect(folderOpener('darwin', '/p')).toEqual({ command: 'open', args: ['/p'] });
@@ -49,7 +49,7 @@ describe('folderOpener — le gestionnaire de fichiers de chaque système', () =
   });
 });
 
-describe('openProjectFolder — les refus', () => {
+describe('openProjectFolder les refus', () => {
   it('refuse en hébergé, avant de lire quoi que ce soit', async () => {
     const root = await workspace();
     const { value, launched } = deps(root, { hosted: true });
@@ -100,7 +100,7 @@ describe('openProjectFolder — les refus', () => {
   });
 });
 
-describe('openProjectFolder — l’ouverture', () => {
+describe('openProjectFolder l’ouverture', () => {
   it('lance le gestionnaire du système sur le chemin du registre', async () => {
     const root = await workspace();
     const project = join(root, 'mon projet');
@@ -114,7 +114,7 @@ describe('openProjectFolder — l’ouverture', () => {
   });
 });
 
-describe('openProjectFolderAction — les refus de l’action', () => {
+describe('openProjectFolderAction les refus de l’action', () => {
   it('refuse en mode hébergé', async () => {
     process.env['PF_HOSTED'] = '1';
     const outcome = await openProjectFolderAction('C:\\Projets\\app');

@@ -16,7 +16,7 @@ import {
  * deux mesures sans jamais revenir en arrière.
  */
 
-describe('parseCloneChunk — lire la sortie de git', () => {
+describe('parseCloneChunk lire la sortie de git', () => {
   it('lit la dernière mesure d’un morceau, même réécrite en place', () => {
     const chunk = [
       "Cloning into 'mon-app'...",
@@ -51,7 +51,7 @@ describe('parseCloneChunk — lire la sortie de git', () => {
   });
 });
 
-describe('overallPercent — des parts qui ne se recouvrent pas', () => {
+describe('overallPercent des parts qui ne se recouvrent pas', () => {
   it('borne chaque phase entre son début et sa fin', () => {
     expect(overallPercent('starting', 0)).toBe(0);
     expect(overallPercent('starting', 100)).toBe(2);
@@ -85,7 +85,7 @@ describe('overallPercent — des parts qui ne se recouvrent pas', () => {
   });
 });
 
-describe('createCloneProgressReader — la barre ne redescend jamais', () => {
+describe('createCloneProgressReader la barre ne redescend jamais', () => {
   it('garde la phase la plus avancée quand git réaffiche une phase antérieure', () => {
     const read = createCloneProgressReader();
 

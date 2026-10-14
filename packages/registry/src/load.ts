@@ -43,7 +43,7 @@ export interface Registry {
   get(id: string): RegistryEntry | undefined;
   /** Filtre les fiches. Les critères absents ne filtrent pas. */
   query(criteria: RegistryQuery): RegistryEntry[];
-  /** Problèmes non bloquants relevés au chargement — fraîcheur, notamment. */
+  /** Problèmes non bloquants relevés au chargement fraîcheur, notamment. */
   warnings(): readonly IntegrityIssue[];
 }
 

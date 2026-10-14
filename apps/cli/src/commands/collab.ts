@@ -8,7 +8,7 @@ import { printAccess } from './repo.js';
 
 export const COLLAB_USAGE: string = `Usage : pf collab <add|list|remove> [options]
 
-Gère les accès au dépôt GitHub du projet — seul un projet adossé à un dépôt
+Gère les accès au dépôt GitHub du projet seul un projet adossé à un dépôt
 GitHub se partage. Les droits sont ceux de GitHub : il faut être
 administrateur du dépôt.
 

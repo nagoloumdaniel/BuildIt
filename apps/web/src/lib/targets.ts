@@ -2,11 +2,11 @@ import { TARGETS, type Target } from '@buildit/manifest';
 import { loadCatalogue, type RegistryEntry, targetsWithoutFramework } from '@buildit/registry';
 
 /**
- * Les cibles que l'écran Target propose — et la raison de celles qu'il ne
+ * Les cibles que l'écran Target propose et la raison de celles qu'il ne
  * propose pas (§7.9, §7.10, §23).
  *
  * Le §10 décrit chaque cible par une **application** : `web` par `frontend`,
- * `mobile` par `mobile`, `desktop` par `desktop`, `api` par `backend` — et
+ * `mobile` par `mobile`, `desktop` par `desktop`, `api` par `backend` et
  * chacune exige un `framework`. Un brouillon qui choisit une cible sans
  * framework ne peut donc pas produire de manifest : il échouait trois écrans
  * plus loin, sur un champ manquant, sans que l'utilisateur sache pourquoi.
@@ -75,7 +75,7 @@ export function offeredTargets(): readonly Target[] {
 }
 
 /**
- * Les cibles choisies que l'écran ne propose plus — un brouillon d'une version
+ * Les cibles choisies que l'écran ne propose plus un brouillon d'une version
  * précédente, ou un manifest importé d'un lien de partage (§20). Le refus est
  * nommé ici pour que l'écran dise **pourquoi** avant d'aller plus loin (§12).
  */

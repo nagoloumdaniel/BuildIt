@@ -7,7 +7,7 @@ import { middleware } from './middleware';
  * Le configurateur écrit sur le disque et lit le trousseau : un navigateur qui
  * ouvre une page hostile peut faire résoudre un nom de domaine vers `127.0.0.1`
  * (DNS rebinding) et atteindre ce serveur avec l'origine de l'attaquant. Le
- * `Host` est la seule chose que l'attaquant ne contrôle pas — il doit donc être
+ * `Host` est la seule chose que l'attaquant ne contrôle pas il doit donc être
  * refusé par un **test négatif**, pas par une relecture (trouvé en revue,
  * MAJOR-2 : le garde-fou n'avait aucune sonde).
  *
@@ -22,7 +22,7 @@ function host(value: string | null) {
   return { headers } as unknown as Parameters<typeof middleware>[0];
 }
 
-describe('middleware — un seul hôte : le local', () => {
+describe('middleware un seul hôte : le local', () => {
   it.each(['127.0.0.1', '127.0.0.1:4173', 'localhost', 'LOCALHOST:3000', '[::1]:4173', '[::1]'])(
     'laisse passer %s',
     (value) => {
@@ -44,7 +44,7 @@ describe('middleware — un seul hôte : le local', () => {
     'localhost:abc',
     '',
     // `::1` sans crochets ne se distingue pas d'un nom au port : refusé. Le
-    // navigateur envoie `[::1]`, qui passe — et se tromper dans ce sens-là est
+    // navigateur envoie `[::1]`, qui passe et se tromper dans ce sens-là est
     // sans danger (fail-closed), contrairement à l'inverse.
     '::1',
   ])('refuse %s avec un 403 explicite', (value) => {
@@ -67,7 +67,7 @@ describe('middleware — un seul hôte : le local', () => {
   });
 });
 
-describe('middleware — mode hébergé (Phase 12)', () => {
+describe('middleware mode hébergé (Phase 12)', () => {
   const originalVercel = process.env['VERCEL'];
   const originalSiteUrl = process.env['PF_SITE_URL'];
 

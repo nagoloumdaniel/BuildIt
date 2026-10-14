@@ -27,12 +27,12 @@ const MINIMAL: Manifest = {
   architecture: 'single-app',
 };
 
-describe('serializeManifest — forme', () => {
+describe('serializeManifest forme', () => {
   it('produit du JSON valide', () => {
     expect(() => JSON.parse(serializeManifest(FULL))).not.toThrow();
   });
 
-  it('se termine par un saut de ligne — les fichiers texte se terminent par un saut de ligne', () => {
+  it('se termine par un saut de ligne les fichiers texte se terminent par un saut de ligne', () => {
     expect(serializeManifest(FULL).endsWith('\n')).toBe(true);
   });
 
@@ -47,7 +47,7 @@ describe('serializeManifest — forme', () => {
   });
 });
 
-describe('serializeManifest — ordre canonique des clés', () => {
+describe('serializeManifest ordre canonique des clés', () => {
   it('suit l’ordre déclaré, pas l’ordre d’insertion', () => {
     const shuffled: Manifest = {
       shareLink: { enabled: true, readOnly: true },
@@ -70,7 +70,7 @@ describe('serializeManifest — ordre canonique des clés', () => {
   });
 });
 
-describe('serializeManifest — tableaux triés', () => {
+describe('serializeManifest tableaux triés', () => {
   it('trie les ensembles de slugs', () => {
     const parsed = JSON.parse(serializeManifest(FULL)) as { services: string[] };
     expect(parsed.services).toEqual(['email', 'payments', 'redis', 'storage']);
@@ -83,7 +83,7 @@ describe('serializeManifest — tableaux triés', () => {
   });
 });
 
-describe('serializeManifest — stabilité', () => {
+describe('serializeManifest stabilité', () => {
   it('deux manifests au contenu identique produisent exactement la même chaîne', () => {
     const a: Manifest = {
       manifestVersion: 1,
@@ -102,7 +102,7 @@ describe('serializeManifest — stabilité', () => {
     expect(serializeManifest(a)).toBe(serializeManifest(b));
   });
 
-  it('est idempotente — sérialiser deux fois donne la même chaîne', () => {
+  it('est idempotente sérialiser deux fois donne la même chaîne', () => {
     const once = serializeManifest(FULL);
     const reparsed = parseManifest(JSON.parse(once));
     expect(reparsed.ok).toBe(true);

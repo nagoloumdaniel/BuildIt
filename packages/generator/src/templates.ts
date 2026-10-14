@@ -15,10 +15,10 @@ import { renderTemplate, type TemplateContext, type TemplateIssueCode } from './
  * Template Resolver (§22) : des templates sur le disque aux fichiers du plan.
  *
  * Deux formes de demande :
- * - `directory` — le template d'une fiche certifiée (`frontend/next`). Son
+ * - `directory` le template d'une fiche certifiée (`frontend/next`). Son
  *   arborescence est recopiée telle quelle à la racine du projet : le template
  *   **est** la forme du projet, sans règle de placement cachée.
- * - `file` — un fichier de recette, rendu vers une cible explicite.
+ * - `file` un fichier de recette, rendu vers une cible explicite.
  *
  * Lecture seule : ce module ne touche au disque que pour lire les templates,
  * ce qui garde le dry-run sans écriture.
@@ -203,7 +203,7 @@ function loadFile(
  * Charge et rend les templates demandés.
  *
  * Tous les problèmes sont rapportés d'un coup. Aucune demande : aucun accès au
- * disque — le générateur n'exige pas de dossier de templates tant qu'aucune
+ * disque le générateur n'exige pas de dossier de templates tant qu'aucune
  * fiche certifiée ni recette n'en a besoin.
  */
 export function loadTemplateFiles(

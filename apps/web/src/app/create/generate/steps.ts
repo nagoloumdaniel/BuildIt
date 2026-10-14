@@ -11,7 +11,7 @@ import { formatBytes } from '../../../lib/projects';
 
 /**
  * Le poids écrit, dans la langue courante : « 1,5 ko » en français, « 1.5 kB »
- * en anglais. Ré-exporté de `lib/projects.ts` — une seule table d'unités pour
+ * en anglais. Ré-exporté de `lib/projects.ts` une seule table d'unités pour
  * tout le configurateur, donc deux écrans ne peuvent pas diverger.
  */
 export { formatBytes };

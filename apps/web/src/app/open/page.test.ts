@@ -20,7 +20,7 @@ const SUMMARY: ProjectSummaryView = {
   warnings: [],
   plainCommand: 'pnpm install',
   safeCommand: 'pnpm install --ignore-scripts',
-  description: 'JavaScript / TypeScript — pnpm (d’après pnpm-lock.yaml)',
+  description: 'JavaScript / TypeScript pnpm (d’après pnpm-lock.yaml)',
 };
 
 const PYTHON: ProjectSummaryView = {
@@ -34,7 +34,7 @@ const PYTHON: ProjectSummaryView = {
   manualCommand: 'uv sync',
 };
 
-describe('plannedCommand — la commande affichée est celle qui sera lancée', () => {
+describe('plannedCommand la commande affichée est celle qui sera lancée', () => {
   it('suit le choix « sans scripts »', () => {
     expect(plannedCommand(SUMMARY, false)).toBe('pnpm install');
     expect(plannedCommand(SUMMARY, true)).toBe('pnpm install --ignore-scripts');
@@ -45,7 +45,7 @@ describe('plannedCommand — la commande affichée est celle qui sera lancée', 
   });
 });
 
-describe('installBlocker — rien ne se lance sans accord', () => {
+describe('installBlocker rien ne se lance sans accord', () => {
   it('dit la raison, dans l’ordre de lecture, puis rien quand tout est réuni', () => {
     expect(installBlocker(null, false, false)).toBe('noInspection');
     expect(installBlocker(SUMMARY, false, false)).toBe('unconfirmed');
@@ -67,7 +67,7 @@ describe('installBlocker — rien ne se lance sans accord', () => {
   });
 });
 
-describe('pickOutcomePhase — une annulation n’est pas une panne', () => {
+describe('pickOutcomePhase une annulation n’est pas une panne', () => {
   it('distingue le dossier choisi, l’annulation, l’absence de bureau et l’échec', () => {
     expect(pickOutcomePhase({ ok: true, path: 'C:\\projets\\mon-app' })).toBe('ready');
     expect(pickOutcomePhase({ ok: false, reason: 'cancelled' })).toBe('cancelled');
@@ -76,7 +76,7 @@ describe('pickOutcomePhase — une annulation n’est pas une panne', () => {
   });
 });
 
-describe('OpenPage — le branchement', () => {
+describe('OpenPage le branchement', () => {
   it('monte l’écran d’ouverture avec son titre et son retour', () => {
     const html = renderToStaticMarkup(createElement(OpenPage));
 

@@ -19,7 +19,7 @@ function fakeStorage(values: Record<string, string> = {}) {
   };
 }
 
-describe('saveDraft / loadDraft — aller-retour', () => {
+describe('saveDraft / loadDraft aller-retour', () => {
   it('rend un brouillon identique', () => {
     const storage = fakeStorage() as unknown as Storage;
     const draft = { ...freshDraft(), name: 'mon-projet', targets: ['web'] };
@@ -64,7 +64,7 @@ describe('variables ajoutées à la main (`customEnv`)', () => {
   });
 });
 
-describe('loadDraft — une reprise impossible rend un brouillon frais, jamais un crash', () => {
+describe('loadDraft une reprise impossible rend un brouillon frais, jamais un crash', () => {
   it('sans storage', () => {
     expect(loadDraft(null)).toEqual(freshDraft());
   });
@@ -127,7 +127,7 @@ describe('loadDraft — une reprise impossible rend un brouillon frais, jamais u
   });
 });
 
-describe('§6.8 — aucune valeur sensible dans le brouillon', () => {
+describe('§6.8 aucune valeur sensible dans le brouillon', () => {
   it('les variables d’environnement ne portent que des noms', () => {
     const draft = freshDraft();
     expect(draft.envVarNames).toEqual([]);
@@ -164,7 +164,7 @@ describe('§6.8 — aucune valeur sensible dans le brouillon', () => {
   });
 });
 
-describe('samePersistedDraft — ce qui part dans localStorage, et rien d’autre', () => {
+describe('samePersistedDraft ce qui part dans localStorage, et rien d’autre', () => {
   it('vrai pour deux brouillons frais distincts', () => {
     expect(samePersistedDraft(freshDraft(), freshDraft())).toBe(true);
   });
@@ -201,7 +201,7 @@ describe('samePersistedDraft — ce qui part dans localStorage, et rien d’autr
   });
 });
 
-describe('restorePersistedDraft — le stockage relu, sans défaire la mémoire', () => {
+describe('restorePersistedDraft le stockage relu, sans défaire la mémoire', () => {
   it('ce qui a changé en mémoire depuis la création du store gagne', () => {
     const baseline = freshDraft();
     const current = { ...baseline, step: 'stack' as const };

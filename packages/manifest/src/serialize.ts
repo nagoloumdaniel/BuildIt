@@ -5,7 +5,7 @@ import { MANIFEST_KEY_ORDER, type Manifest } from './schema/manifest.js';
  *
  * Deux manifests exprimant les mêmes choix doivent produire exactement la même
  * chaîne. Ce n'est pas une coquetterie : c'est ce qui rend vérifiable la
- * promesse du §9 — l'UI et le CLI sont deux façades du même moteur, donc les
+ * promesse du §9 l'UI et le CLI sont deux façades du même moteur, donc les
  * mêmes choix doivent donner le même manifest, octet pour octet. Sans forme
  * canonique, cette promesse est invérifiable et donc sans valeur.
  */
@@ -39,7 +39,7 @@ function orderKeys(value: object, order: readonly string[]): Record<string, unkn
  * Met un manifest en forme canonique : ensembles triés, clés dans l'ordre
  * déclaré, champs absents retirés.
  *
- * Idempotente — l'appliquer deux fois donne le même résultat.
+ * Idempotente l'appliquer deux fois donne le même résultat.
  */
 export function canonicalizeManifest(manifest: Manifest): Manifest {
   const source = manifest as unknown as Record<string, unknown>;

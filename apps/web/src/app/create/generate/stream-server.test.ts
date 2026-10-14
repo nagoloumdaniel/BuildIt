@@ -53,7 +53,7 @@ async function run(body: unknown, options: { hosted?: boolean; runner?: CommandR
   return { done, events, registryRoot };
 }
 
-describe('runGenerateStream — les refus, avant toute écriture', () => {
+describe('runGenerateStream les refus, avant toute écriture', () => {
   it('refuse en mode hébergé, sans lire le chemin reçu', async () => {
     const parent = await temporary('pf-gen-heberge-');
     const { done, events } = await run(
@@ -107,7 +107,7 @@ describe('runGenerateStream — les refus, avant toute écriture', () => {
   });
 });
 
-describe('runGenerateStream — l’écriture et l’installation, annoncées dans l’ordre', () => {
+describe('runGenerateStream l’écriture et l’installation, annoncées dans l’ordre', () => {
   it('écrit sans installer : writing → written → done, et inscrit le dossier au registre', async () => {
     const parent = await temporary('pf-gen-ecrit-');
     const calls: Call[] = [];

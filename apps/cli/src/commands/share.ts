@@ -28,7 +28,7 @@ const SHARE_PATH = '/share';
  *
  * C'est **le même calcul** que `encodeSharePayload` de l'UI
  * (`apps/web/src/app/share/codec.ts`). Les deux implémentations sont séparées à
- * dessein — le CLI n'empaquette pas l'application web —, et le format est tenu
+ * dessein le CLI n'empaquette pas l'application web —, et le format est tenu
  * par les deux suites de tests : chacune compare sa charge à un même littéral,
  * calculé indépendamment. Si l'une dérive, son test tombe.
  */

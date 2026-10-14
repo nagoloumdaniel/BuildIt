@@ -1,7 +1,6 @@
 'use client';
 
 import { type ReactElement, useCallback, useEffect, useState } from 'react';
-import { downloadZip } from '../../lib/download-zip';
 import { useMessages } from '../../lib/i18n/provider';
 import {
   browserProjectStorage,
@@ -22,14 +21,14 @@ import { ProjectsView } from './view';
  *
  * La liste vit en `localStorage` : elle n'est donc lue qu'après hydratation,
  * jamais au premier rendu serveur. Tant qu'elle n'est pas lue, la vue dit
- * qu'elle lit — elle n'affiche pas « aucun projet », qui serait faux.
+ * qu'elle lit elle n'affiche pas « aucun projet », qui serait faux.
  *
  * Le re-téléchargement n'est proposé que pour le projet dont l'archive est
  * encore en main : le rapport vit en `sessionStorage` et ne concerne que la
  * génération de l'onglet courant.
  *
  * Deux gestes de retrait, et ils ne se confondent pas : `forget` oublie la
- * ligne (rien ne quitte le disque), `remove` supprime le dossier — par une
+ * ligne (rien ne quitte le disque), `remove` supprime le dossier par une
  * Server Action, parce que le navigateur n'a aucun accès au disque, et avec un
  * retour explicite dans les deux cas. Le projet ne quitte la liste **qu'après**
  * un succès : une carte qui disparaît sur un échec laisserait croire que les

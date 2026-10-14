@@ -12,7 +12,7 @@ import { CATEGORIES, GENERATION_STATUSES, LICENSES, LIFECYCLE_STATUSES } from '.
 
 const DOC = readFileSync(new URL('../CONTRIBUTING.md', import.meta.url), 'utf8');
 
-describe('CONTRIBUTING.md — catégories', () => {
+describe('CONTRIBUTING.md catégories', () => {
   it.each(CATEGORIES)('documente la catégorie %s', (category) => {
     expect(DOC).toContain(category);
   });
@@ -31,13 +31,13 @@ describe('CONTRIBUTING.md — catégories', () => {
   });
 });
 
-describe('CONTRIBUTING.md — licences', () => {
+describe('CONTRIBUTING.md licences', () => {
   it.each(LICENSES)('documente la licence %s', (license) => {
     expect(DOC).toContain(license);
   });
 });
 
-describe('CONTRIBUTING.md — statuts', () => {
+describe('CONTRIBUTING.md statuts', () => {
   it.each(LIFECYCLE_STATUSES)('documente le statut de cycle de vie %s', (status) => {
     expect(DOC).toContain(status);
   });
@@ -47,7 +47,7 @@ describe('CONTRIBUTING.md — statuts', () => {
   });
 });
 
-describe('CONTRIBUTING.md — commandes citées', () => {
+describe('CONTRIBUTING.md commandes citées', () => {
   it('cite la commande de régénération de l’index telle qu’elle existe', () => {
     const packageJson = JSON.parse(
       readFileSync(new URL('../package.json', import.meta.url), 'utf8'),

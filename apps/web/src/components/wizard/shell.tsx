@@ -207,11 +207,11 @@ function GoLocked({ step, memory }: { step: StepId; memory: LockSource }): null 
  * Elle distingue les deux façons d'arriver sur un écran :
  *
  * - **accès direct** à l'adresse (`window.location.href` est inchangée) : le
- *   focus reste où le navigateur l'a mis — le déplacer serait intrusif et
+ *   focus reste où le navigateur l'a mis le déplacer serait intrusif et
  *   ferait sauter le lien d'évitement et la bascule de thème du premier Tab ;
  * - **navigation dans le parcours** (l'adresse a changé) : le routeur de Next
  *   retire l'élément qui portait le focus (« Continuer »), et sans transfert il
- *   retombe sur `<body>` — l'utilisateur au clavier devrait alors retraverser
+ *   retombe sur `<body>` l'utilisateur au clavier devrait alors retraverser
  *   tout l'en-tête à chaque étape, et rien n'annonce l'écran suivant.
  */
 const requestedUrl = typeof window === 'undefined' ? null : window.location.href;
@@ -225,7 +225,7 @@ export interface StepShellProps {
    * Un projet généré avec succès est terminé : rien n'y est plus modifiable
    * (§6.14), donc aucun retour vers les écrans qui l'ont composé. Seul
    * l'écran Report pose ce drapeau, et seulement une fois la génération
-   * réussie — un refus garde la navigation normale, revenir corriger un choix
+   * réussie un refus garde la navigation normale, revenir corriger un choix
    * a un sens tant que rien n'a été écrit.
    */
   readonly hidePrevious?: boolean;
@@ -283,7 +283,7 @@ export function StepShell({
   const panelId = useId();
 
   // Le focus ne se rattrape pas après coup (8F.1) : il est posé ici, à l'entrée
-  // de l'écran. La `ref` garde le premier passage d'un montage unique — le mode
+  // de l'écran. La `ref` garde le premier passage d'un montage unique le mode
   // strict de React rejoue les effets en développement et ne doit pas
   // transformer ce montage en « navigation ».
   useEffect(() => {

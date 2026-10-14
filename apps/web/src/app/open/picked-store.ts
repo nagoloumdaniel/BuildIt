@@ -7,14 +7,14 @@ import type { PickedAccess, PickedFolder } from './browser-picker';
  * d'ouverture.
  *
  * Pourquoi un module et pas l'URL : en local, le dossier est un chemin absolu
- * (`C:\\projets\\mon-app`) qui n'a rien à faire dans une adresse — on ne partage
+ * (`C:\\projets\\mon-app`) qui n'a rien à faire dans une adresse on ne partage
  * pas l'arborescence de sa machine dans un lien, et un chemin dans l'URL
  * invite à le modifier à la main, ce que le produit refuse de toute façon. En
  * hébergé, ce n'est même pas possible : le navigateur rend une poignée, pas un
  * chemin, et les entrées lues ne tiendraient pas dans une adresse.
  *
  * La navigation de Next est côté client : ce module reste vivant entre la carte
- * du menu et l'écran `/open`. C'est le même motif que `lib/toasts.ts` — un état
+ * du menu et l'écran `/open`. C'est le même motif que `lib/toasts.ts` un état
  * minuscule, posé une fois, repris une fois, et **consommé** à la lecture pour
  * qu'un retour en arrière ne rejoue pas une analyse que personne n'a demandée.
  */

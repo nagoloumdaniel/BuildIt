@@ -15,7 +15,7 @@ import { useMessages } from '../lib/i18n/provider';
  *
  * Les deux gestes sont volontairement dans cet ordre : « Réessayer » d'abord
  * (le cas courant est un hoquet réseau ou un rendez-vous raté avec le moteur),
- * « Accueil » ensuite. Le message technique — le `digest` — n'est pas traduit :
+ * « Accueil » ensuite. Le message technique le `digest` n'est pas traduit :
  * c'est une valeur, et c'est la seule chose qui relie l'écran au journal du
  * serveur si l'utilisateur doit le signaler.
  */

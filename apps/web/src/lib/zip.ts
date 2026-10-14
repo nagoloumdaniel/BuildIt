@@ -1,14 +1,14 @@
 import { crc32 } from 'node:zlib';
 
 /**
- * Un lecteur `.zip` minimal — entrées `STORED` (non compressées).
+ * Un lecteur `.zip` minimal entrées `STORED` (non compressées).
  *
  * Phase 12 (§3) : en mode hébergé, la génération écrit dans un répertoire
  * temporaire isolé par requête puis produit une archive téléchargeable au
  * lieu d'écrire dans un dossier partagé entre visiteurs. Aucune dépendance de
  * zip n'existait dans le monorepo (`archiver`, `jszip`, `adm-zip`…) ; le
  * format ZIP est documenté et petit pour des entrées non compressées, et
- * `node:zlib` expose `crc32` nativement depuis Node 24 — en ajouter une
+ * `node:zlib` expose `crc32` nativement depuis Node 24 en ajouter une
  * dépendance pour ça serait disproportionné.
  *
  * Pas de compression : les projets générés sont surtout du texte (code
@@ -17,7 +17,7 @@ import { crc32 } from 'node:zlib';
  */
 
 export interface ZipEntry {
-  /** Chemin dans l'archive, toujours en `/` — jamais un chemin Windows. */
+  /** Chemin dans l'archive, toujours en `/` jamais un chemin Windows. */
   readonly path: string;
   readonly data: Buffer;
 }

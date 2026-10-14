@@ -64,7 +64,7 @@ export async function graph(args: readonly string[], io: Io): Promise<ExitCode> 
   const addedBy = new Map(additions.map((addition) => [addition.id, addition.requiredBy]));
   // « déclarée » et non plus « expérimentale » : chaque fiche du catalogue est
   // planifiée par un test de génération ; ce qui manque à une fiche déclarée,
-  // c'est la compilation du test de fumée — la légende ci-dessous le dit.
+  // c'est la compilation du test de fumée la légende ci-dessous le dit.
   io.out(
     `${manifest.name} : ${technologies.length} technologies, stack ${status === 'certified' ? 'certifiée' : 'déclarée'}`,
   );

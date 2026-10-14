@@ -1,4 +1,4 @@
-# Phase 2 — Project Manifest : design
+# Phase 2 Project Manifest : design
 
 **Date :** 2026-09-23
 **Phase roadmap :** 2 (Milestone M1)
@@ -14,7 +14,7 @@ Le Project Manifest est le contrat entre l'UI et le CLI (§9) : les deux façade
 
 | Sujet | Décision | Raison |
 |---|---|---|
-| Bibliothèque de validation | **Zod** | Meilleure introspection d'erreurs (chemin + code), et les presets générés embarquent déjà Zod (§8) — on mange notre propre cuisine |
+| Bibliothèque de validation | **Zod** | Meilleure introspection d'erreurs (chemin + code), et les presets générés embarquent déjà Zod (§8) on mange notre propre cuisine |
 | Portée du schéma | **§10 complet dès maintenant**, champs optionnels | Le contrat est la chose coûteuse à faire bouger. Typer `mobile` et `backend` aujourd'hui évite une migration garantie dans six semaines, et évite d'invalider les liens de partage (§20) déjà émis |
 | Langue des messages | **Français** | Décision produit assumée |
 | Modèle d'erreur | **code stable + chemin + message + indice** | Le code survit à une reformulation ; le CLI et l'UI rendent le même objet différemment |
@@ -33,18 +33,18 @@ registry        « le slug "next" existe et vaut Next.js »       <- Phase 3
 compatibility   « "next" va avec "drizzle" en version >= 15 »   <- Phase 4
 ```
 
-Le schéma du manifest ne connaît **aucun nom de technologie**. S'il en connaissait, ajouter une entrée au catalogue (§7 en liste ~250) obligerait à modifier le contrat — et à faire migrer tous les manifests existants pour une raison qui n'a rien à voir avec leur structure.
+Le schéma du manifest ne connaît **aucun nom de technologie**. S'il en connaissait, ajouter une entrée au catalogue (§7 en liste ~250) obligerait à modifier le contrat et à faire migrer tous les manifests existants pour une raison qui n'a rien à voir avec leur structure.
 
 Seules les énumérations **fermées par nature** vivent dans le schéma :
 
-- `targets` — web, mobile, desktop, api, library (§4)
-- `architecture` — single-app, monorepo, modular-monolith, microservices, serverless, event-driven (§7.23)
+- `targets` web, mobile, desktop, api, library (§4)
+- `architecture` single-app, monorepo, modular-monolith, microservices, serverless, event-driven (§7.23)
 
 Tout le reste est un slug opaque, validé sur sa forme uniquement.
 
 ## Le manifest ne peut pas porter de secret
 
-Le manifest est sérialisé dans le lien de partage en lecture seule (§20). §24 exige qu'aucune valeur sensible ne soit stockée. Plutôt que d'ajouter un filtre — qu'on oublierait d'appliquer quelque part — la garantie est structurelle :
+Le manifest est sérialisé dans le lien de partage en lecture seule (§20). §24 exige qu'aucune valeur sensible ne soit stockée. Plutôt que d'ajouter un filtre qu'on oublierait d'appliquer quelque part la garantie est structurelle :
 
 **Aucun champ du manifest n'est du texte libre.** Tout est énumération fermée, booléen, ou slug kebab-case. Le seul champ à contenu choisi par l'utilisateur est `name`, contraint par la grammaire des noms de paquets npm.
 
@@ -136,11 +136,11 @@ MANIFEST_DUPLICATE_ENTRY
 
 `serializeManifest` produit toujours la même chaîne pour un même contenu :
 
-1. Les clés d'objet suivent un **ordre canonique déclaré**, pas l'ordre d'insertion ni l'ordre alphabétique — un manifest posé dans un dépôt généré doit rester lisible par un humain.
+1. Les clés d'objet suivent un **ordre canonique déclaré**, pas l'ordre d'insertion ni l'ordre alphabétique un manifest posé dans un dépôt généré doit rester lisible par un humain.
 2. Les tableaux de slugs sont **triés alphabétiquement** : ce sont des ensembles, leur ordre ne porte pas de sens.
 3. Indentation de deux espaces, saut de ligne final.
 
-Cette propriété n'est pas cosmétique : c'est elle qui rend vérifiable la promesse du gate de la Phase 7 — mêmes choix dans l'UI et dans le CLI ⇒ manifest identique **octet pour octet**. Sans ordre stable, cette promesse est invérifiable et donc sans valeur.
+Cette propriété n'est pas cosmétique : c'est elle qui rend vérifiable la promesse du gate de la Phase 7 mêmes choix dans l'UI et dans le CLI ⇒ manifest identique **octet pour octet**. Sans ordre stable, cette promesse est invérifiable et donc sans valeur.
 
 ## Migration
 
@@ -179,7 +179,7 @@ packages/manifest/src/
 - Le manifest exemple du §10 est une fixture et doit valider **sans modification**.
 - Propriété de round-trip : `parse → serialize → parse` donne le même manifest.
 - Propriété de stabilité : deux objets au contenu identique mais aux clés et tableaux dans un ordre différent produisent la **même** chaîne.
-- Les assertions portent sur les **codes**, jamais sur les messages — sinon reformuler une phrase casse la suite de tests.
+- Les assertions portent sur les **codes**, jamais sur les messages sinon reformuler une phrase casse la suite de tests.
 
 ## Gate de sortie (M1, partie manifest)
 

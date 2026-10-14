@@ -150,7 +150,7 @@ describe('intégrité', () => {
   });
 });
 
-describe('registry chargé — interrogation', () => {
+describe('registry chargé interrogation', () => {
   const registry = (() => {
     const result = loadRegistry([TYPESCRIPT, NEXT, VUE]);
     if (!result.ok) {
@@ -197,7 +197,7 @@ describe('registry chargé — interrogation', () => {
     expect(registry.query({})).toHaveLength(3);
   });
 
-  it('rend les fiches triées par identifiant — ordre stable quel que soit l’ordre de chargement', () => {
+  it('rend les fiches triées par identifiant ordre stable quel que soit l’ordre de chargement', () => {
     const shuffled = loadRegistry([VUE, NEXT, TYPESCRIPT]);
     expect(shuffled.ok).toBe(true);
     if (shuffled.ok) {

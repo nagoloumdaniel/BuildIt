@@ -15,7 +15,7 @@ import type { Category } from './schema/entry.js';
 const result = loadCatalogue();
 
 describe('le catalogue officiel charge', () => {
-  it('ne produit aucune erreur — sinon le message dit laquelle', () => {
+  it('ne produit aucune erreur sinon le message dit laquelle', () => {
     const problems = result.ok
       ? []
       : result.issues.map((issue) => `${issue.path.join('.')} → ${issue.code} : ${issue.message}`);
@@ -34,13 +34,13 @@ describe('le catalogue officiel charge', () => {
  * Accès au catalogue chargé, appelé **dans** chaque test.
  *
  * Surtout pas dans le corps d'un `describe` : y lever une exception interrompt
- * la collecte des tests, et le test de diagnostic ci-dessus — celui qui imprime
- * les erreurs réelles — ne s'exécute jamais. On perd alors l'information au
+ * la collecte des tests, et le test de diagnostic ci-dessus celui qui imprime
+ * les erreurs réelles ne s'exécute jamais. On perd alors l'information au
  * moment précis où on en a besoin.
  */
 function requireRegistry(): Registry {
   if (!result.ok) {
-    throw new Error('le catalogue ne charge pas — voir le test de diagnostic ci-dessus');
+    throw new Error('le catalogue ne charge pas voir le test de diagnostic ci-dessus');
   }
   return result.value;
 }
@@ -73,7 +73,7 @@ describe('contenu du catalogue', () => {
     const registry = requireRegistry();
     // Le registry est large par vocation : il déclare ce que le produit connaît.
     // La restriction à 2–4 options recommandées par étape (§5) ne porte pas sur
-    // lui — elle portera sur le sous-ensemble certifié, donc générable, une fois
+    // lui elle portera sur le sous-ensemble certifié, donc générable, une fois
     // les templates écrits en Phase 6. Confondre les deux reviendrait à brider
     // le catalogue pour une raison d'interface.
     const expected: Category[] = [
@@ -140,7 +140,7 @@ describe('contenu du catalogue', () => {
     }
   });
 
-  it('les quatre presets du §8 — SaaS, API, Dashboard, Full-stack — sont certifiés', () => {
+  it('les quatre presets du §8 SaaS, API, Dashboard, Full-stack sont certifiés', () => {
     const registry = requireRegistry();
     const certified = registry.query({ generation: 'certified' }).map((entry) => entry.id);
     expect([...certified].sort()).toEqual([
@@ -217,7 +217,7 @@ describe('contenu du catalogue', () => {
     }
   });
 
-  it('aucune fiche ne porte de valeur dans env — seulement des noms (§24)', () => {
+  it('aucune fiche ne porte de valeur dans env seulement des noms (§24)', () => {
     const registry = requireRegistry();
     for (const entry of registry.entries()) {
       for (const name of entry.env ?? []) {

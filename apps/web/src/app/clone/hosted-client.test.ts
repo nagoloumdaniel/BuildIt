@@ -160,7 +160,7 @@ describe('checkHostedCopy', () => {
   });
 });
 
-describe('copyToFolder — la copie aboutie', () => {
+describe('copyToFolder la copie aboutie', () => {
   it('écrit chaque fichier et compte ce qui est réellement écrit', async () => {
     const parent = memoryDir('Projets');
     const progress: HostedProgress[] = [];
@@ -203,7 +203,7 @@ describe('copyToFolder — la copie aboutie', () => {
   });
 });
 
-describe('copyToFolder — les fins qui ne sont pas un succès', () => {
+describe('copyToFolder les fins qui ne sont pas un succès', () => {
   it('refuse un dossier déjà rempli sans rien télécharger', async () => {
     const parent = memoryDir('Projets');
     const existing = await parent.getDirectoryHandle('hello');

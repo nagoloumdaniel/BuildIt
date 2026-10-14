@@ -3,8 +3,8 @@ import type { Category } from '@buildit/registry';
 /**
  * Arité des catégories : combien de technologies peuvent coexister.
  *
- * L'hypothèse de départ — « une seule technologie par catégorie, donc deux
- * fiches de la même catégorie s'excluent » — est **fausse**. `vitest`,
+ * L'hypothèse de départ « une seule technologie par catégorie, donc deux
+ * fiches de la même catégorie s'excluent » est **fausse**. `vitest`,
  * `playwright` et `testing-library` sont toutes trois dans `testing` et
  * cohabitent parfaitement ; la déduire de la catégorie seule aurait rendu le
  * preset SaaS ingénérable.

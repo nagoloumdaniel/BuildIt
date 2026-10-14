@@ -48,7 +48,7 @@ function codes(requested: string[], stack: RegistryEntry[] = STACK): string[] {
   return result.ok ? [] : result.issues.map((issue) => issue.code);
 }
 
-describe('resolveRecipes — Recipe Resolver (§22)', () => {
+describe('resolveRecipes Recipe Resolver (§22)', () => {
   it('aucune recette demandée : aucune appliquée', () => {
     const result = resolveRecipes([], STACK, CATALOGUE);
     expect(result.ok && result.value).toEqual([]);

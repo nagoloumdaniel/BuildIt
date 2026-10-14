@@ -12,7 +12,7 @@ import { decodeSharePayload, encodeSharePayload } from './share/codec';
 import { SharePreview } from './share/view';
 
 /**
- * Les écrans convertis consomment `@buildit/ui` — et rendent
+ * Les écrans convertis consomment `@buildit/ui` et rendent
  * **exactement** les mêmes classes `pf-*` qu'avant la conversion.
  *
  * C'est la preuve du remplacement : les primitives partagées ne portent aucune
@@ -120,7 +120,7 @@ function repoProps(overrides: Record<string, unknown>): ReactElement {
   });
 }
 
-describe('écran GitHub — Button, Badge, StatusMessage', () => {
+describe('écran GitHub Button, Badge, StatusMessage', () => {
   it('rend les mêmes classes de bouton et de badge qu’avant conversion', () => {
     const html = renderToStaticMarkup(
       createElement(GithubView, {
@@ -159,7 +159,7 @@ describe('écran GitHub — Button, Badge, StatusMessage', () => {
   });
 });
 
-describe('écran Share — pas d’élément changé', () => {
+describe('écran Share pas d’élément changé', () => {
   const ok = renderToStaticMarkup(
     createElement(SharePreview, {
       result: decodeSharePayload(encodeSharePayload(MANIFEST)),
@@ -186,12 +186,12 @@ describe('écran Share — pas d’élément changé', () => {
   });
 });
 
-describe('écran Repository & Sharing — Field, Button, Badge, StatusMessage', () => {
+describe('écran Repository & Sharing Field, Button, Badge, StatusMessage', () => {
   it('Field rend le label et l’aide avec les mêmes classes, sans enveloppe', () => {
     const html = renderToStaticMarkup(repoProps({ status: NO_REPO, name: 'mon-app' }));
 
     // Volontairement changé : le dossier n'est plus un champ de saisie mais un
-    // `PathPicker` (l'explorateur de la machine) — son libellé reste `pf-label`,
+    // `PathPicker` (l'explorateur de la machine) son libellé reste `pf-label`,
     // porté par un `<span>` que le bouton référence par `aria-labelledby`.
     expect(html).toContain('<span class="pf-label" id="pf-repo-directory-label">');
     expect(html).toContain('id="pf-repo-directory"');
@@ -206,7 +206,7 @@ describe('écran Repository & Sharing — Field, Button, Badge, StatusMessage', 
     );
 
     // Volontairement changé : la lecture en échec n'est plus une suite de
-    // `StatusMessage` mais un `ErrorState` — le refus du moteur reste listé
+    // `StatusMessage` mais un `ErrorState` le refus du moteur reste listé
     // (classe portée par l'item de `IssueList`), avec la sortie cette fois.
     expect(html).toContain('class="pf-error"');
     expect(html).toContain('role="alert"');
@@ -231,7 +231,7 @@ describe('écran Repository & Sharing — Field, Button, Badge, StatusMessage', 
   });
 });
 
-describe('écran Graphe — Badge d’état et lien d’action', () => {
+describe('écran Graphe Badge d’état et lien d’action', () => {
   it('l’état d’attente est une région status et le lien garde pf-btn', () => {
     const html = renderToStaticMarkup(createElement(DraftProvider, null, createElement(GraphPage)));
 

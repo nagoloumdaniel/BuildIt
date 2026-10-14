@@ -18,11 +18,11 @@ import { editableBlueprint } from './edit-links';
 import { blueprintView, manifestTechnologyIds } from './summary';
 
 /**
- * Project Blueprint (§6.10) — le résumé du manifest canonique.
+ * Project Blueprint (§6.10) le résumé du manifest canonique.
  *
  * Le manifest vient de `draftToManifest` : c'est **le même** convertisseur que le
  * CLI, donc le résumé décrit le projet qui sera réellement généré. Les noms
- * lisibles viennent du catalogue, par `loadGraphAction` — le navigateur ne
+ * lisibles viennent du catalogue, par `loadGraphAction` le navigateur ne
  * charge jamais le catalogue lui-même. Un identifiant non nommé s'affiche tel
  * quel : l'écran n'invente pas de nom.
  *
@@ -30,7 +30,7 @@ import { blueprintView, manifestTechnologyIds } from './summary';
  * pas une étape de la progression (§6.11).
  *
  * Chaque choix porte un crayon qui ramène à son étape et à sa section
- * (`edit-links.ts`) — sauf une fois le projet généré : le brouillon est alors
+ * (`edit-links.ts`) sauf une fois le projet généré : le brouillon est alors
  * verrouillé, et un crayon promettrait une modification que les écrans
  * refusent.
  */
@@ -86,7 +86,7 @@ export default function BlueprintPage() {
 
   /**
    * Le lien de partage (§20) : la configuration est encodée dans le fragment,
-   * donc rien n'est envoyé au serveur — le serveur ne fournit que l'origine
+   * donc rien n'est envoyé au serveur le serveur ne fournit que l'origine
    * publique (le domaine du site hébergé, jamais une boucle locale), et
    * l'origine du navigateur sert de repli. La copie est un geste à part, sur
    * la même ligne (`ShareLinkRow`).

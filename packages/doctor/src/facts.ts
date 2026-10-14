@@ -8,7 +8,7 @@
  *
  * Les catégories de constats sont celles du §16 : TypeScript, dépendances,
  * variables d'environnement, base de données, Docker, tests, CI, monitoring,
- * rate limiting. Le score est la part des constats satisfaits — un constat
+ * rate limiting. Le score est la part des constats satisfaits un constat
  * partiel compte la moitié —, donc toujours entre 0 et 100.
  */
 
@@ -69,7 +69,7 @@ export interface ProjectFacts {
   readonly gitignore: boolean;
   /** Un `Dockerfile` (ou `compose.yaml` / `docker-compose.yml`) existe. */
   readonly docker: boolean;
-  /** `.dockerignore` présent — seulement évalué si `docker`. */
+  /** `.dockerignore` présent seulement évalué si `docker`. */
   readonly dockerignore: boolean;
   /** Des fichiers de test existent, ou un script de test les lance. */
   readonly tests: boolean;

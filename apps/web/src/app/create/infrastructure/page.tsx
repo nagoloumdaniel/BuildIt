@@ -14,13 +14,13 @@ import { currentDeepLink, revealSection } from '../blueprint/deep-link';
 import { chooseHosting, infrastructureIds, selectedHosting } from './infrastructure';
 
 /**
- * Écran 8 — Infrastructure (§6.9).
+ * Écran 8 Infrastructure (§6.9).
  *
  * Deux cases à cocher (`docker`, CI) et un cloud cible. Le brouillon n'a pas de
  * champ cloud : l'hébergeur est un identifiant de la catégorie `hosting` choisi
  * parmi les options du moteur, et il rejoint `draft.technologies`. Docker et
  * CI/CD restent des booléens, parce que le manifest n'a que deux façons de les
- * exprimer — et c'est `lib/draft-to-manifest.ts` qui les traduit.
+ * exprimer et c'est `lib/draft-to-manifest.ts` qui les traduit.
  *
  * La traduction brouillon → manifest n'est plus détaillée ici : le plan du
  * projet (écran 9) montre ce qui sera réellement généré, et un crayon y ramène

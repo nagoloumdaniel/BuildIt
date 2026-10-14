@@ -9,7 +9,7 @@ import { useMessages } from '../lib/i18n/provider';
  * Ce que Next affiche pendant qu'un écran se prépare.
  *
  * Le chargement d'une route n'est pas un état d'écran : on ne sait encore rien
- * de sa forme. Un squelette mentirait donc deux fois — il dessinerait un
+ * de sa forme. Un squelette mentirait donc deux fois il dessinerait un
  * contenu qui n'a pas été lu, et il ferait sauter la mise en page quand le
  * vrai écran arriverait plus haut ou plus court.
  *

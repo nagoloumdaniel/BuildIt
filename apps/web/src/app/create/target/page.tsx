@@ -7,12 +7,12 @@ import { toggle } from '../../../lib/session';
 import { offeredTargets } from '../../../lib/targets';
 
 /**
- * Écran 2 — Target Selection (§4).
+ * Écran 2 Target Selection (§4).
  *
  * Ce que chaque plateforme veut dire, et ce qu'elle ne veut pas dire, est dit
  * par le dictionnaire : `wizard.targets.labels` est complet (`satisfies
  * Record<Target, …>`), donc ajouter une cible au manifest casse la compilation
- * ici et force à écrire sa phrase — c'est une décision produit, pas un détail.
+ * ici et force à écrire sa phrase c'est une décision produit, pas un détail.
  * Les identifiants, eux, viennent du manifest : ils ne se recopient pas.
  */
 export default function TargetPage() {

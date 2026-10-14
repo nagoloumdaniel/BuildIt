@@ -15,7 +15,7 @@ import { Logo, Wordmark } from './logo';
  *
  * L'en-tête n'est **pas** une barre : c'est une rangée de bulles posées au-dessus
  * de la page. Une barre pleine derrière des bulles faisait deux fonds pour une
- * seule rangée — l'un disait « barre », l'autre « pilule », et le contenu qui
+ * seule rangée l'un disait « barre », l'autre « pilule », et le contenu qui
  * défilait disparaissait sous un bandeau au lieu de passer entre les bulles.
  *
  * Quatre groupes, chacun dans sa bulle, dans l'ordre de lecture :

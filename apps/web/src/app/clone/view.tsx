@@ -18,7 +18,7 @@ import { HostedCloneForm, type HostedCloneProps, HostedCloneRun } from './hosted
 import type { ClonePhase, CloneProgress } from './progress';
 
 /**
- * La vue de l'écran 22 — Clone Project (§6.22, §18bis).
+ * La vue de l'écran 22 Clone Project (§6.22, §18bis).
  *
  * Deux onglets : *Mes dépôts* (le compte connecté) et *Depuis un lien*.
  *
@@ -47,10 +47,10 @@ export type CloneRunStatus =
   | 'done'
   | 'cancelled'
   | 'failed'
-  /** Le serveur n'a pas répondu à la vérification — rien n'a été cloné. */
+  /** Le serveur n'a pas répondu à la vérification rien n'a été cloné. */
   | 'unavailable';
 
-/** Le dictionnaire de la section clone — passé aux fonctions pures, testables. */
+/** Le dictionnaire de la section clone passé aux fonctions pures, testables. */
 export type CloneMessages = Messages['clone'];
 
 export interface CloneViewProps {
@@ -73,7 +73,7 @@ export interface CloneViewProps {
   /** Le nom du sous-dossier (local) ou le dossier relatif (hébergé). */
   readonly folder: string;
   readonly onFolder: (value: string) => void;
-  /** Le dossier parent absolu choisi dans l'explorateur — vide en hébergé. */
+  /** Le dossier parent absolu choisi dans l'explorateur vide en hébergé. */
   readonly parent: string;
   readonly onParent: (value: string) => void;
   readonly install: boolean;
@@ -97,7 +97,7 @@ export interface CloneBlockerState {
   readonly parent: string;
 }
 
-/** Ce qui reste bloquant juste avant de cloner — `undefined` quand on peut y aller. */
+/** Ce qui reste bloquant juste avant de cloner `undefined` quand on peut y aller. */
 export function cloneBlocker(
   preview: ClonePreviewView | null,
   state: CloneBlockerState,
@@ -150,7 +150,7 @@ export function destinationLabel(
   }
 }
 
-/** La phase en clair — celle que l'écran affiche, jamais son identifiant. */
+/** La phase en clair celle que l'écran affiche, jamais son identifiant. */
 export function phaseLabel(phase: ClonePhase, t: CloneMessages): string {
   switch (phase) {
     case 'starting':

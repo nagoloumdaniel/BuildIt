@@ -10,12 +10,12 @@ import { generateProjectAction } from '../../actions';
  * Génération en mode hébergé (Phase 12, §3) : au lieu d'écrire dans le dossier
  * de travail partagé (`PF_WEB_WORKSPACE`), chaque requête écrit dans son
  * propre répertoire temporaire isolé (`fs.mkdtempSync`), produit une archive
- * `.zip`, puis nettoie ce répertoire — jamais d'écriture partagée entre
+ * `.zip`, puis nettoie ce répertoire jamais d'écriture partagée entre
  * visiteurs anonymes.
  */
 
 afterEach(() => {
-  // biome-ignore lint/complexity/useLiteralKeys: `noPropertyAccessFromIndexSignature` interdit l'accès par point sur `process.env` (signature d'index) — les crochets sont obligatoires ici.
+  // biome-ignore lint/complexity/useLiteralKeys: `noPropertyAccessFromIndexSignature` interdit l'accès par point sur `process.env` (signature d'index) les crochets sont obligatoires ici.
   delete process.env['VERCEL'];
 });
 
@@ -48,7 +48,7 @@ function saasDraft(): DraftState {
 
 describe('generateProjectAction en mode hébergé (VERCEL=1)', () => {
   it('rend une archive zip plutôt que d’écrire sur un disque partagé', async () => {
-    // biome-ignore lint/complexity/useLiteralKeys: `noPropertyAccessFromIndexSignature` interdit l'accès par point sur `process.env` (signature d'index) — les crochets sont obligatoires ici.
+    // biome-ignore lint/complexity/useLiteralKeys: `noPropertyAccessFromIndexSignature` interdit l'accès par point sur `process.env` (signature d'index) les crochets sont obligatoires ici.
     process.env['VERCEL'] = '1';
     const manifest = draftToManifest(saasDraft());
     expect(manifest.ok).toBe(true);
@@ -89,7 +89,7 @@ describe('generateProjectAction en mode hébergé (VERCEL=1)', () => {
   });
 
   it('un brouillon invalide est refusé sans toucher au disque', async () => {
-    // biome-ignore lint/complexity/useLiteralKeys: `noPropertyAccessFromIndexSignature` interdit l'accès par point sur `process.env` (signature d'index) — les crochets sont obligatoires ici.
+    // biome-ignore lint/complexity/useLiteralKeys: `noPropertyAccessFromIndexSignature` interdit l'accès par point sur `process.env` (signature d'index) les crochets sont obligatoires ici.
     process.env['VERCEL'] = '1';
     const report = await generateProjectAction({});
     expect(report.ok).toBe(false);

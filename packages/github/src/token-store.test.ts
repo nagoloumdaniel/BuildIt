@@ -44,7 +44,7 @@ function fakeKeychain(
   });
 }
 
-describe.each(['linux', 'darwin', 'win32'] as const)('keychainStore — %s', (platform) => {
+describe.each(['linux', 'darwin', 'win32'] as const)('keychainStore %s', (platform) => {
   it('écrit, relit, efface ; le jeton ne passe jamais en argument', async () => {
     const runner = fakeKeychain();
     const store = keychainStore(runner, platform);
@@ -86,9 +86,9 @@ describe.each(['linux', 'darwin', 'win32'] as const)('keychainStore — %s', (pl
   });
 });
 
-describe('keychainStore — arguments', () => {
+describe('keychainStore arguments', () => {
   it.each(['linux', 'darwin', 'win32'] as const)(
-    '%s : arguments en ASCII — une locale C ne lit pas le reste',
+    '%s : arguments en ASCII une locale C ne lit pas le reste',
     async (platform) => {
       const runner = fakeKeychain();
       const store = keychainStore(runner, platform);
@@ -103,7 +103,7 @@ describe('keychainStore — arguments', () => {
   );
 });
 
-describe('keychainStore — plateforme sans trousseau connu', () => {
+describe('keychainStore plateforme sans trousseau connu', () => {
   it('refuse d’enregistrer et renvoie vers PF_GITHUB_TOKEN', async () => {
     const store = keychainStore(fakeKeychain(), 'aix');
     expect((await store.set(TOKEN))?.hint).toContain('PF_GITHUB_TOKEN');
@@ -112,7 +112,7 @@ describe('keychainStore — plateforme sans trousseau connu', () => {
   });
 });
 
-describe('keychainStore — valeur relue invalide', () => {
+describe('keychainStore valeur relue invalide', () => {
   it('une valeur qui n’a pas la forme d’un jeton est ignorée', async () => {
     const runner: CommandRunner = { run: async () => ({ exitCode: 0, output: 'pas un jeton !' }) };
     expect(await keychainStore(runner, 'linux').get()).toBeUndefined();

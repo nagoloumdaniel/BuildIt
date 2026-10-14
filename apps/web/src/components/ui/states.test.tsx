@@ -9,7 +9,7 @@ import { LoadingLine, ProgressPanel } from './loading';
  *
  * Rendus sans DOM (`renderToStaticMarkup`) : c'est le HTML que le serveur
  * envoie, donc ce qu'un lecteur d'écran annonce avant toute hydratation. Ce
- * qui se vérifie ici est ce qui doit tenir sans JavaScript — le reste est du
+ * qui se vérifie ici est ce qui doit tenir sans JavaScript le reste est du
  * ressort des tests d'écran.
  */
 

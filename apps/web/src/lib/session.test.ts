@@ -27,8 +27,8 @@ describe('createSessionStore', () => {
 
   it('garde le snapshot serveur stable, quoi qu’il arrive à l’état courant', () => {
     // C'est le contrat de l'hydratation : React relit le snapshot serveur pour
-    // comparer le HTML au premier rendu client. S'il changeait — parce qu'un
-    // brouillon a été relu ou modifié entre-temps — le composant qui s'hydrate
+    // comparer le HTML au premier rendu client. S'il changeait parce qu'un
+    // brouillon a été relu ou modifié entre-temps le composant qui s'hydrate
     // rendrait une sélection absente du HTML, et React signalerait une
     // divergence (`#418`), ce qui arrivait sur les écrans du parcours.
     const storage = fakeStorage();
@@ -142,7 +142,7 @@ describe('createSessionStore', () => {
   it('attach à un brouillon identique ne notifie pas : rien n’a changé', () => {
     // Le cas mesuré du §8bis : le premier rendu part sans stockage (donc d'un
     // brouillon frais), le `localStorage` est branché, et le brouillon relu est
-    // le même. Notifier ferait rejouer l'effet qui charge le catalogue — deux
+    // le même. Notifier ferait rejouer l'effet qui charge le catalogue deux
     // chargements identiques par visite.
     const session = createSessionStore(null);
     const avant = session.get();
@@ -157,7 +157,7 @@ describe('createSessionStore', () => {
 
   it('attach annonce un changement réel, même sur un champ qu’un écran ne lit pas', () => {
     // Le garde-fou inverse : ne pas notifier serait un bug si le brouillon relu
-    // différait — la reprise du brouillon repose sur cette notification.
+    // différait la reprise du brouillon repose sur cette notification.
     const storage = fakeStorage();
     storage.setItem('pf-draft', JSON.stringify({ ...freshDraft(), mode: 'expert' }));
     const session = createSessionStore(null);
@@ -237,10 +237,10 @@ describe('toggle', () => {
   });
 });
 
-describe('toggleExclusive — une catégorie exclusive remplace, jamais ne cumule', () => {
+describe('toggleExclusive une catégorie exclusive remplace, jamais ne cumule', () => {
   /**
    * Bug rapporté : choisir TypeScript puis JavaScript (ou l'inverse) pouvait
-   * laisser les deux dans la sélection — le moteur ne refusait la paire qu'au
+   * laisser les deux dans la sélection le moteur ne refusait la paire qu'au
    * Blueprint, écrans plus loin. `toggleExclusive` décide dans `current` seul,
    * sans dépendre d'un aller-retour serveur qui aurait grisé l'un des deux.
    */

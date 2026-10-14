@@ -60,7 +60,7 @@ describe('HostedCloneForm', () => {
   });
 });
 
-describe('HostedCloneRun — avant la copie', () => {
+describe('HostedCloneRun avant la copie', () => {
   it('grise la copie tant que le lien n’est pas vérifié, et dit pourquoi', () => {
     const html = run();
     expect(html).toContain(c.hostedCheck);
@@ -127,7 +127,7 @@ describe('HostedCloneRun — avant la copie', () => {
   });
 });
 
-describe('HostedCloneRun — pendant la copie', () => {
+describe('HostedCloneRun pendant la copie', () => {
   it('montre les octets reçus sans pourcentage inventé', () => {
     const html = run({
       plan: PLAN,
@@ -156,7 +156,7 @@ describe('HostedCloneRun — pendant la copie', () => {
   });
 });
 
-describe('HostedCloneRun — après', () => {
+describe('HostedCloneRun après', () => {
   it('raconte la copie, les fichiers écartés, puis les commandes', () => {
     const html = run({
       plan: PLAN,

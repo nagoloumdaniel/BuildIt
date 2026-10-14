@@ -6,12 +6,12 @@ import { takePending } from './picked-store';
 import { OpenView } from './view';
 
 /**
- * Écran 23 — Open Local Project (§6.23) : le branchement.
+ * Écran 23 Open Local Project (§6.23) : le branchement.
  *
  * Toute la logique vit dans `useLocalProjectOpen` (le fil d'état, testable) et
  * dans `view.tsx` (le rendu, testable sans DOM). Ce fichier ne fait qu'une
  * chose en plus : reprendre le dossier que l'accueil vient de faire choisir,
- * pour que l'analyse soit déjà en route quand l'écran s'affiche — sans
+ * pour que l'analyse soit déjà en route quand l'écran s'affiche sans
  * redemander le dossier qu'on vient de désigner.
  *
  * La reprise est consommée (`takePending`) et gardée par une `ref` : le mode

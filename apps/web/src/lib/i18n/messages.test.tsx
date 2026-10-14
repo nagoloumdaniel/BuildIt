@@ -9,7 +9,7 @@ import { useMessages } from './provider';
  *
  * Le typecheck fait déjà l'essentiel : `EN` est déclaré `Widen<typeof FR>`,
  * donc une clé ajoutée d'un seul côté ne compile pas. Mais un type ne dit rien
- * de ce qui est *dans* la clé — une phrase laissée vide, recopiée du français,
+ * de ce qui est *dans* la clé une phrase laissée vide, recopiée du français,
  * ou un gabarit de fonction dont l'anglais oublie un paramètre passent tous les
  * deux. C'est ce que ce fichier vérifie, en parcourant les deux arbres.
  *
@@ -74,7 +74,7 @@ describe('parité fr / en', () => {
   it('sert le français hors fournisseur de langue', () => {
     // Rendu statique d'un test : aucun `LocaleProvider` monté. Un écran doit
     // rester lisible plutôt que de lever. Un hook ne s'appelle pas hors rendu,
-    // d'où la sonde — c'est le cas réel : un composant rendu seul dans un test.
+    // d'où la sonde c'est le cas réel : un composant rendu seul dans un test.
     function Probe(): string {
       return useMessages() === FR ? 'fr' : 'autre';
     }
@@ -88,7 +88,7 @@ describe('parité fr / en', () => {
 
   it('ne recopie pas le français dans l’anglais pour les phrases', () => {
     // Les **valeurs techniques** sont légitimement identiques : « BuildIt »,
-    // « MIT », « GitHub », une version. Une phrase, elle, ne l'est pas — et
+    // « MIT », « GitHub », une version. Une phrase, elle, ne l'est pas et
     // c'est la seule façon de voir une traduction oubliée.
     //
     // Une exception, nommée : un texte qui n'est qu'une **liste de noms de

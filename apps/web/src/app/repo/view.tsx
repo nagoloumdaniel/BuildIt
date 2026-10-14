@@ -15,7 +15,7 @@ import { ShareLinkRow } from '../share/link-row';
 import type { AccessView, RepositoryStatusView, RoleView } from './sharing';
 
 /**
- * La vue de l'écran 24 — Repository & Sharing (§6.24, §20bis).
+ * La vue de l'écran 24 Repository & Sharing (§6.24, §20bis).
  *
  * Règle structurante : **le partage n'existe que via un dépôt GitHub**. Sans
  * dépôt, le bouton « Partager le projet » est grisé et dit pourquoi ; c'est le
@@ -29,7 +29,7 @@ import type { AccessView, RepositoryStatusView, RoleView } from './sharing';
 
 export interface SharePanelProps {
   readonly link: string | null;
-  /** Pourquoi le lien ne peut pas être créé — `null` quand le brouillon est prêt. */
+  /** Pourquoi le lien ne peut pas être créé `null` quand le brouillon est prêt. */
   readonly blocked: string | null;
   /** Encode le lien ; `false` quand il n'a pas pu l'être. La copie vit dans `ShareLinkRow`. */
   readonly onCreate: () => Promise<boolean> | boolean;
@@ -53,7 +53,7 @@ export interface RepoViewProps {
   readonly onDescription: (value: string) => void;
   readonly busy: boolean;
   readonly message?: string | undefined;
-  /** Ce que fait l'opération en cours — un indicateur nomme toujours son travail. */
+  /** Ce que fait l'opération en cours un indicateur nomme toujours son travail. */
   readonly pendingLabel?: string | null;
   /** Le lien de configuration en lecture seule (§20), quand l'écran le propose. */
   readonly share?: SharePanelProps | undefined;
@@ -83,7 +83,7 @@ function visibilityLabel(visibility: RepositoryStatusView['visibility'], t: Mess
   }
 }
 
-/** Pourquoi « Partager le projet » est grisé — `undefined` quand il est actif. */
+/** Pourquoi « Partager le projet » est grisé `undefined` quand il est actif. */
 export function shareBlocker(status: RepositoryStatusView | null, t: Messages): string | undefined {
   if (status === null || !status.ok) {
     return t.repo.blockers.readFirst;

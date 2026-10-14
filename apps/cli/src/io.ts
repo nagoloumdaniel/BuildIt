@@ -10,7 +10,7 @@ export interface Choice<T extends string> {
   readonly value: T;
   readonly label: string;
   readonly hint?: string;
-  /** Affichée mais non choisissable — avec la raison dans `hint`. */
+  /** Affichée mais non choisissable avec la raison dans `hint`. */
   readonly disabled?: boolean;
 }
 
@@ -32,13 +32,13 @@ export interface Io {
   readonly prompter: Prompter;
   /** Contenu de l'entrée standard, quand elle n'est pas un terminal. */
   readStdin(): Promise<string>;
-  /** Lance git, pnpm, l'outil du trousseau — jamais par un shell. */
+  /** Lance git, pnpm, l'outil du trousseau jamais par un shell. */
   readonly runner: CommandRunner;
   /** Vers l'API GitHub. */
   readonly fetch: Fetch;
   /**
    * Quelqu'un répond-il déjà sur ce port ? Sonde TCP : c'est ce qui permet de
-   * refuser de démarrer un second serveur — un orphelin a déjà fait passer la
+   * refuser de démarrer un second serveur un orphelin a déjà fait passer la
    * mauvaise application pour fautive.
    */
   portProbe(host: string, port: number): Promise<boolean>;

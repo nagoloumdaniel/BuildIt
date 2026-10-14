@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { currentDeepLink, deepLinkParam } from './deep-link';
 
-describe('deepLinkParam — la section visée par un crayon du plan', () => {
+describe('deepLinkParam la section visée par un crayon du plan', () => {
   it('lit le paramètre demandé, débarrassé de ses espaces', () => {
     expect(deepLinkParam('?category=orm', 'category')).toBe('orm');
     expect(deepLinkParam('?family=payments&x=1', 'family')).toBe('payments');

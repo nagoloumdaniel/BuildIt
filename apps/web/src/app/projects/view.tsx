@@ -17,14 +17,14 @@ import type { GenerationView } from '../actions';
  *
  * La **même carte** que l'accueil, pour la même raison : un projet généré se
  * lit partout de la même façon, et une deuxième mise en page aurait divergé au
- * premier ajustement. La seule différence est le geste de plus — « Retirer de
- * la liste » — et l'absence de limite : ici, tous les projets, du plus récent
+ * premier ajustement. La seule différence est le geste de plus « Retirer de
+ * la liste » et l'absence de limite : ici, tous les projets, du plus récent
  * au plus ancien.
  *
  * Le vidage de la liste porte une confirmation **explicite**, et la suppression
  * d'un projet en porte une autre, dans sa carte : la première n'efface aucun
  * fichier, la seconde les efface tous. Aucune des deux ne part d'un seul clic,
- * et leurs libellés disent laquelle est laquelle — « Vider la liste » n'est pas
+ * et leurs libellés disent laquelle est laquelle « Vider la liste » n'est pas
  * « Supprimer du disque ».
  *
  * Next interdit tout export autre que `default` dans un `page.tsx` : la vue
@@ -45,7 +45,7 @@ export interface ProjectsViewProps {
   readonly projects: readonly StoredProject[] | null;
   readonly onForget?: ((id: string) => void) | undefined;
   readonly onForgetAll?: (() => void) | undefined;
-  /** La suppression du dossier sur le disque — un autre geste que l'oubli. */
+  /** La suppression du dossier sur le disque un autre geste que l'oubli. */
   readonly onDelete?: ((project: StoredProject) => void) | undefined;
   /** Le projet dont le dossier est en cours de suppression, s'il y en a un. */
   readonly deletingId?: string | null;

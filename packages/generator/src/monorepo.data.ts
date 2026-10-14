@@ -5,7 +5,7 @@ import type { Category } from '@buildit/registry';
  *
  * - `web`, `api`, `mobile`, `desktop` : l'application de ce nom (un framework
  *   d'interface va à la plateforme qu'il vise, voir `roleOf`) ;
- * - `data` : l'application web si elle existe — Better Auth y vit —, sinon l'API ;
+ * - `data` : l'application web si elle existe Better Auth y vit —, sinon l'API ;
  * - `both` : chaque application (TypeScript, Zod, Vitest) ;
  * - `root` : le dépôt entier (Biome, Turborepo, Docker, CI).
  *
@@ -57,7 +57,7 @@ export const ROLE_BY_CATEGORY: Readonly<Record<Category, Role>> = {
 /**
  * Pont entre deux applications d'un monorepo : quand l'application web porte
  * `web` et l'API porte `api`, le dossier de templates `template` est posé à la
- * racine du dépôt — contrat partagé, client, test de contrat.
+ * racine du dépôt contrat partagé, client, test de contrat.
  */
 export interface Bridge {
   readonly web: string;

@@ -56,7 +56,7 @@ describe('uniqueArray', () => {
     expect(schema.safeParse(['redis', 'storage']).success).toBe(true);
   });
 
-  it('accepte un tableau vide — la contrainte de non-vacuité est portée ailleurs', () => {
+  it('accepte un tableau vide la contrainte de non-vacuité est portée ailleurs', () => {
     expect(schema.safeParse([]).success).toBe(true);
   });
 

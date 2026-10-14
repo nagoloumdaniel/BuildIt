@@ -1,14 +1,14 @@
-import 'server-only';
 import { optionsFor, resolve, type Selection } from '@buildit/compatibility';
 import { planProject } from '@buildit/generator';
 import type { Manifest } from '@buildit/manifest';
 import { PRESETS, type PresetId } from '@buildit/presets';
 import { type Category, loadCatalogue, type Registry } from '@buildit/registry';
+import 'server-only';
 
 /**
  * Le seul endroit où le web parle au moteur (8B.2).
  *
- * Les écrans — et les Server Actions qui les alimentent — ne consomment que ce
+ * Les écrans et les Server Actions qui les alimentent ne consomment que ce
  * fichier. Recopier une règle du moteur ici la ferait diverger du CLI, et
  * « mêmes choix ⇒ même projet » (§9) cesserait d'être vrai au premier
  * ajustement. L'adaptateur traduit donc des **types du moteur** vers des vues
@@ -16,7 +16,7 @@ import { type Category, loadCatalogue, type Registry } from '@buildit/registry';
  *
  * `server-only` est la garde du 8B.2 : l'import lève à la compilation si un
  * composant client tente de charger ce module. Le catalogue et le pipeline
- * lisent des fichiers et pèsent leur poids de code — ils n'ont rien à faire
+ * lisent des fichiers et pèsent leur poids de code ils n'ont rien à faire
  * dans un bundle navigateur.
  *
  * Trois écarts assumés au plan, dictés par les sources :
@@ -58,7 +58,7 @@ export interface OptionView {
 
 export interface ResolutionView {
   status: 'certified' | 'experimental';
-  /** Messages destinés à l'écran — jamais des codes : §12 exige une raison lisible. */
+  /** Messages destinés à l'écran jamais des codes : §12 exige une raison lisible. */
   issues: readonly string[];
 }
 
@@ -71,7 +71,7 @@ export interface PresetView {
 export interface PlanPreviewView {
   files: readonly string[];
   /**
-   * Avertissements du plan, **et** problèmes qui l'ont empêché — le contrat du
+   * Avertissements du plan, **et** problèmes qui l'ont empêché le contrat du
    * plan ne prévoit qu'un canal, et un aperçu muet devant un refus serait pire
    * que bavard. `files` reste vide quand le plan est refusé.
    */
@@ -79,7 +79,7 @@ export interface PlanPreviewView {
 }
 
 export interface PreviewOptions {
-  /** Dossier affiché — il nomme le plan, il n'est jamais écrit (§22). */
+  /** Dossier affiché il nomme le plan, il n'est jamais écrit (§22). */
   readonly targetDir?: string;
 }
 
@@ -99,7 +99,7 @@ let catalogue: Registry | undefined;
  *
  * Un catalogue illisible n'est pas une saisie utilisateur à corriger : c'est
  * une installation cassée. Rendre une liste d'options vide, ou une résolution
- * « expérimentale », ferait croire à un choix légitime — la panne doit se voir.
+ * « expérimentale », ferait croire à un choix légitime la panne doit se voir.
  */
 function getRegistry(): Registry {
   if (catalogue === undefined) {
@@ -114,7 +114,7 @@ function getRegistry(): Registry {
   return catalogue;
 }
 
-/** Les options d'une catégorie, chacune avec son état — l'écran Stack Builder (§5). */
+/** Les options d'une catégorie, chacune avec son état l'écran Stack Builder (§5). */
 export async function stackOptions(
   category: Category,
   selection: Selection,
@@ -151,7 +151,7 @@ export async function stackOptions(
  * optionnels ; `ManifestBackend.language` et `ManifestDesktop`, si).
  *
  * Dupliqué à dessein : ce n'est pas une liste de technologies (qui vivrait au
- * registry), c'est la forme du schéma lui-même — une frontière que
+ * registry), c'est la forme du schéma lui-même une frontière que
  * `draft-to-manifest.ts` documente déjà (§10, trois frontières). La recopier
  * ici évite de faire dépendre le moteur de compatibilité, générique par
  * nature, d'une règle de forme qui n'est pas la sienne.
@@ -163,18 +163,18 @@ const TARGETS_REQUIRING_LANGUAGE: ReadonlySet<Selection['targets'][number]> = ne
 
 /**
  * Le moteur de compatibilité certifie une **combinaison** ; il ne sait rien
- * du **schéma** du manifest (§10, trois frontières — voir `draft-to-manifest.ts`).
+ * du **schéma** du manifest (§10, trois frontières voir `draft-to-manifest.ts`).
  * Un framework frontend choisi seul, sans langage, ne crée donc aucun conflit
  * à ses yeux : `resolve()` rend `certified`, `issues: []`.
  *
- * Le manifest, lui, refuse `frontend` sans `language` — un refus qui n'arrive
+ * Le manifest, lui, refuse `frontend` sans `language` un refus qui n'arrive
  * qu'au Blueprint, plusieurs écrans après le Stack Builder où le choix a été
  * fait. Un visiteur qui choisit un framework web voit « Combinaison certifiée »
  * puis, sans lien apparent, « le champ frontend.language est obligatoire » :
  * bug rapporté, reproduit par `engine.test.ts`.
  *
- * Le correctif ne touche ni le moteur ni le manifest — chacun reste juste sur
- * son terrain — il complète la **vue** que l'écran lit : un framework présent
+ * Le correctif ne touche ni le moteur ni le manifest chacun reste juste sur
+ * son terrain il complète la **vue** que l'écran lit : un framework présent
  * sans langage pour la même cible devient un problème visible ici, avant que
  * l'utilisateur n'avance.
  */
@@ -190,7 +190,7 @@ function missingLanguageIssues(selection: Selection, registry: Registry): string
       const entry = registry.get(id);
       // `mobile` n'est pas une catégorie du registry (§11) : un framework
       // mobile, le jour où le catalogue en certifie un, reste catégorie
-      // `frontend` — seule sa cible change. C'est `entry.targets`, pas
+      // `frontend` seule sa cible change. C'est `entry.targets`, pas
       // `entry.category`, qui distingue web et mobile ici.
       return entry !== undefined && entry.category === 'frontend' && entry.targets.includes(target);
     });
@@ -210,7 +210,7 @@ function missingLanguageIssues(selection: Selection, registry: Registry): string
   return issues;
 }
 
-/** La résolution d'une sélection — le verdict du §12, avec ses raisons. */
+/** La résolution d'une sélection le verdict du §12, avec ses raisons. */
 export async function resolveSelection(selection: Selection): Promise<ResolutionView> {
   const registry = getRegistry();
   const result = resolve(selection, registry);
@@ -228,7 +228,7 @@ export async function resolveSelection(selection: Selection): Promise<Resolution
   return { status: result.value.status, issues: [] };
 }
 
-/** Les presets certifiés du §8 — la même liste qu'au CLI, lue au même endroit. */
+/** Les presets certifiés du §8 la même liste qu'au CLI, lue au même endroit. */
 export function listPresets(): PresetView[] {
   return PRESETS.map((preset) => ({
     id: preset.id,
@@ -240,7 +240,7 @@ export function listPresets(): PresetView[] {
 /**
  * L'aperçu du projet : le plan complet, **sans une seule écriture**.
  *
- * `planProject` est le dry-run du §22 — c'est la même fonction qui précède
+ * `planProject` est le dry-run du §22 c'est la même fonction qui précède
  * l'écriture réelle, donc l'aperçu ne peut pas diverger du résultat.
  */
 export async function previewPlan(
@@ -258,7 +258,7 @@ export async function previewPlan(
 }
 
 export interface EnvVarView {
-  /** Un **nom** seulement — le §6.8 interdit d'afficher ou de stocker une valeur. */
+  /** Un **nom** seulement le §6.8 interdit d'afficher ou de stocker une valeur. */
   readonly name: string;
   /** Les technologies qui la réclament, pour que l'écran dise d'où elle vient. */
   readonly technologies: readonly string[];
@@ -268,7 +268,7 @@ export interface EnvVarView {
  * Les variables d'environnement que la sélection réclame (§6.8).
  *
  * Elles ne sont pas inventées ici : chaque fiche du catalogue déclare les
- * siennes (`env`), et le schéma du registry n'accepte que des noms — la valeur
+ * siennes (`env`), et le schéma du registry n'accepte que des noms la valeur
  * ne peut pas s'y trouver. La résolution est celle du moteur, additions
  * comprises : ce que le projet exigera vraiment, pas ce que l'utilisateur a
  * coché.

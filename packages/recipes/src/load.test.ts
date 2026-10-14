@@ -5,7 +5,7 @@ import { loadRecipeCatalogue, loadRecipes } from './load.js';
 /** Une recette valide, que chaque test abîme d'une seule façon. */
 const VALID = {
   id: 'better-auth-email-password',
-  name: 'Better Auth — email et mot de passe',
+  name: 'Better Auth email et mot de passe',
   description: 'Connexion par email et mot de passe.',
   for: ['better-auth'],
   packages: { 'better-auth': '>=1.0.0 <2.0.0' },
@@ -28,7 +28,7 @@ describe('schéma d’une recette', () => {
     expect(codes([{ id: 'x', name: 'X', description: 'x', for: ['a'] }])).toEqual([]);
   });
 
-  it('refuse un champ inconnu — une faute de frappe ne passe pas en silence', () => {
+  it('refuse un champ inconnu une faute de frappe ne passe pas en silence', () => {
     expect(codes([{ ...VALID, pakages: {} }])).toEqual(['RECIPE_UNKNOWN_FIELD']);
   });
 

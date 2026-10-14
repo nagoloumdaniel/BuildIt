@@ -6,7 +6,7 @@ import type { Registry } from '@buildit/registry';
 
 /**
  * Le CLI est le seul endroit qui lit le disque ; le paquet `doctor` ne juge que
- * des faits. Ce module assemble donc les faits — et rien de plus : aucune
+ * des faits. Ce module assemble donc les faits et rien de plus : aucune
  * décision, aucun score, aucune règle.
  *
  * Une lecture qui échoue est une absence, jamais une exception : un projet sans
@@ -59,7 +59,7 @@ export function envNamesIn(text: string): string[] {
 /**
  * Ce que le fichier doit déclarer.
  *
- * Sont écartés, avec leur raison — pas par confort :
+ * Sont écartés, avec leur raison pas par confort :
  *
  * - `NODE_ENV`, `CI`, `PATH` et consorts : des variables d'**environnement**, pas
  *   de configuration du projet ; `.env.example` n'est pas leur place ;
@@ -333,7 +333,7 @@ export async function findManifestFile(source: FileSource): Promise<string | und
 /**
  * Applique un plan de correction. `create` n'écrase **jamais** : un fichier
  * apparu entre l'affichage et l'application est laissé intact. `merge-json`
- * n'ajoute que des clés absentes, à la racine — un `scripts.test` déjà écrit
+ * n'ajoute que des clés absentes, à la racine un `scripts.test` déjà écrit
  * reste celui de l'auteur.
  *
  * Rend les chemins effectivement écrits : un plan qui n'écrit rien est un plan

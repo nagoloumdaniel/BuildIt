@@ -7,7 +7,7 @@ import { publicShareBase, type RequestOrigin } from './share/origin';
  * Ce que le serveur apporte au partage (§20, décision 9.1).
  *
  * **Pas l'encodage** : le manifest voyage dans le fragment de l'URL, donc
- * l'envoyer au serveur pour qu'il rende un lien contredirait la décision — le
+ * l'envoyer au serveur pour qu'il rende un lien contredirait la décision le
  * manifest doit ne jamais quitter le navigateur. Le seul élément que le
  * serveur peut apporter, c'est l'origine **publique** sous laquelle l'UI est
  * atteinte : la décision vit dans `share/origin.ts` (pure, testée), cette

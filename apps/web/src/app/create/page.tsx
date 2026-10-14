@@ -7,7 +7,7 @@ import { useMessages } from '../../lib/i18n/provider';
 import { FreshStart } from './fresh-start';
 
 /**
- * Écran 1 — Create Project (§6.2).
+ * Écran 1 Create Project (§6.2).
  *
  * Le nom et le mode de configuration sont les deux seules décisions de cet
  * écran. Les deux modes du §5 sont décrits ici, en clair : « Guidé » n'est pas

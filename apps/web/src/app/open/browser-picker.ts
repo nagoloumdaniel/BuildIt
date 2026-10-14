@@ -12,7 +12,7 @@ import { listZipEntries, readZipEntry, ZipReadError } from '../../lib/zip-read-b
  *
  * Deux voies de lecture, toutes deux dans le navigateur :
  * - Chrome, Edge : `showDirectoryPicker` (File System Access API), qui rend
- *   aussi une poignée — de quoi **écrire** les fichiers de base manquants ;
+ *   aussi une poignée de quoi **écrire** les fichiers de base manquants ;
  * - Firefox, Safari, Brave… : `<input type="file" webkitdirectory>`, lecture
  *   seule ; les fichiers manquants partent alors en archive `.zip`.
  *
@@ -20,7 +20,7 @@ import { listZipEntries, readZipEntry, ZipReadError } from '../../lib/zip-read-b
  * l'ouverture d'un projet local impossible depuis le site hébergé.
  *
  * Ce qui part vers le serveur : les **noms** du premier niveau et le texte de
- * `package.json` / `pf.manifest.json` — rien d'autre.
+ * `package.json` / `pf.manifest.json` rien d'autre.
  */
 
 export interface PickedFolder {

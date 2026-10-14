@@ -44,7 +44,7 @@ export interface ProjectCardProps {
   readonly project: StoredProject;
   /**
    * Une sortie réussie depuis la carte (archive ou dossier). Absent : la carte
-   * ne propose pas l'export — c'est le cas de l'accueil, qui montre les deux
+   * ne propose pas l'export c'est le cas de l'accueil, qui montre les deux
    * derniers projets sans multiplier les gestes.
    */
   readonly onExported?: ((result: GenerationView) => void) | undefined;
@@ -93,7 +93,7 @@ export function ProjectCard({
       />
 
       {/* Les mesures : une rangée de badges qui passe à la ligne plutôt qu'un
-          tableau — à 360 px, trois colonnes de valeurs ne tiennent pas. */}
+          tableau à 360 px, trois colonnes de valeurs ne tiennent pas. */}
       <div className="mt-2.5 flex flex-wrap items-center gap-1.5">
         <span
           className="pf-badge"
@@ -113,7 +113,7 @@ export function ProjectCard({
       </div>
 
       {/* Le dossier est une donnée technique : il n'est ni traduit ni mis en
-          prose, et il se coupe sur n'importe quel caractère — un chemin
+          prose, et il se coupe sur n'importe quel caractère un chemin
           Windows n'a pas d'espace où revenir à la ligne. */}
       {project.directory === '' ? null : (
         <div className="mt-2.5 flex items-start gap-1">

@@ -5,7 +5,7 @@ export interface ActiveToast {
 }
 
 /**
- * Le store des toasts — pur, sans dépendance. Un `setTimeout` par toast suffit :
+ * Le store des toasts pur, sans dépendance. Un `setTimeout` par toast suffit :
  * la durée est portée par le toast, pas par une boucle de rendu, et le minuteur
  * est le seul propriétaire de l'expiration.
  */

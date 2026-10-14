@@ -8,7 +8,7 @@ import { DashboardView } from './dashboard-view';
 /**
  * L'écran 1 rend le brouillon du parcours, donc il vit sous `DraftProvider`.
  * Le provider est ici remplacé par un brouillon pilotable : c'est le seul moyen
- * de rendre les deux états — vierge et en cours — sans DOM ni `localStorage`.
+ * de rendre les deux états vierge et en cours sans DOM ni `localStorage`.
  */
 
 const state = vi.hoisted<{ draft: DraftState }>(() => ({
@@ -35,7 +35,7 @@ beforeEach(() => {
   state.draft = freshDraft();
 });
 
-describe('Dashboard — le menu d’accueil (§18bis)', () => {
+describe('Dashboard le menu d’accueil (§18bis)', () => {
   it('ouvre sur les trois chemins, sans répéter le nom du produit', () => {
     const html = render();
 
@@ -61,7 +61,7 @@ describe('Dashboard — le menu d’accueil (§18bis)', () => {
     const field = html.match(/<input[^>]*id="pf-shared-link"[^>]*>/)?.[0] ?? '';
 
     expect(html).toContain('Lien partagé reçu');
-    // Le champ est saisissable — la Phase 9 est livrée, il n'est plus désactivé.
+    // Le champ est saisissable la Phase 9 est livrée, il n'est plus désactivé.
     expect(field).not.toBe('');
     expect(field).not.toContain('disabled');
     // Et il dit où vit la donnée : après le `#`, donc hors du serveur.
@@ -76,7 +76,7 @@ describe('Dashboard — le menu d’accueil (§18bis)', () => {
   });
 });
 
-describe('Dashboard — le brouillon en cours', () => {
+describe('Dashboard le brouillon en cours', () => {
   it('propose de reprendre à l’étape quittée', () => {
     state.draft = { ...freshDraft(), name: 'mon-app', step: 'stack' };
     const html = render();
@@ -104,7 +104,7 @@ describe('Dashboard — le brouillon en cours', () => {
   });
 });
 
-describe('Dashboard — projets créés (§6.14)', () => {
+describe('Dashboard projets créés (§6.14)', () => {
   const SUCCESS: GenerationReport = {
     ok: true,
     directory: '/tmp/pf/mon-projet',

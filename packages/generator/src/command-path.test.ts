@@ -11,7 +11,7 @@ import { resolveCommand } from './command-path.js';
  * La première version de `socle.smoke.ts` lançait `pnpm` par `spawn` et
  * `execFileSync` directs. Sous Windows, `pnpm` est un `pnpm.cmd` : Node refuse
  * de l'exécuter sans shell, l'appel échoue en `ENOENT`, et 14 des 19 cas du
- * test de fumée tombaient — non pas à cause du code généré, mais du harnais.
+ * test de fumée tombaient non pas à cause du code généré, mais du harnais.
  * Le gate M3 n'était donc plus vérifiable sur cette plateforme, et rien ne le
  * disait.
  *
@@ -38,7 +38,7 @@ describe('la commande d’un projet généré est lançable (prérequis du gate 
   it('résout une commande sans lanceur npm par un chemin, sans exception', () => {
     // `docker` n'a pas de lanceur npm : la résolution doit rendre soit un chemin
     // exécutable, soit la commande telle quelle. Dans les deux cas, elle ne
-    // lève pas — c'est ce que le harnais appelle avant chaque commande.
+    // lève pas c'est ce que le harnais appelle avant chaque commande.
     const resolved = resolveCommand('docker');
     expect(typeof resolved.file).toBe('string');
     expect(Array.isArray(resolved.prefix)).toBe(true);
@@ -93,7 +93,7 @@ describe('la commande d’un projet généré est lançable (prérequis du gate 
 
   it('remplace un lanceur `.cmd` par son script Node quand il en cache un', () => {
     // Le cas réel de pnpm : `pnpm.cmd` voisine `node_modules/pnpm/bin/pnpm.cjs`.
-    // La résolution doit rendre Node + le script — jamais le `.cmd`, que Node
+    // La résolution doit rendre Node + le script jamais le `.cmd`, que Node
     // refuserait de lancer.
     const directory = mkdtempSync(join(tmpdir(), 'pf-path-'));
     try {

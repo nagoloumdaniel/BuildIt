@@ -1,10 +1,10 @@
-# Phase 8bis — Cibles mobile et desktop : le catalogue ne peut pas les honorer
+# Phase 8bis Cibles mobile et desktop : le catalogue ne peut pas les honorer
 
 **Date :** 11/10/2026
 **Périmètre :** les cibles du §10 dans le parcours web (`apps/web/src/app/create/target/`,
 `apps/web/src/lib/flow.ts`), le catalogue (`packages/registry/`), et ce qui les décrit
 (`docs/roadmap.md`, ligne du constat).
-**Statut :** **arbitré et corrigé** — aucune fiche technologique n'est inventée ; les cibles que le
+**Statut :** **arbitré et corrigé** aucune fiche technologique n'est inventée ; les cibles que le
 catalogue ne peut pas honorer ne sont **plus proposées**, et un brouillon qui les porte encore est
 refusé **avec sa raison**, à l'endroit du choix.
 **Décision structurante :** le manifest (§10) **conserve** `mobile` et `desktop`. Ce qui est retiré,
@@ -31,8 +31,8 @@ library  fiches citant la cible:  46 | dont capables d un framework: 0
 [exit 0]
 ```
 
-Le chiffre qui décide est **0**, pas 46. Les 46 fiches qui citent `mobile` — et les mêmes 46 qui
-citent `desktop` — sont des linters, des CI, des gestionnaires de paquets, des langages, des outils
+Le chiffre qui décide est **0**, pas 46. Les 46 fiches qui citent `mobile` et les mêmes 46 qui
+citent `desktop` sont des linters, des CI, des gestionnaires de paquets, des langages, des outils
 de test : leurs catégories (`linting`, `ci-cd`, `language`, `testing`…) remplissent `quality`,
 `services` ou `infra`, jamais le champ `framework` d'une application (la table est
 `packages/registry/src/slots.ts` : seules `frontend` et `backend` occupent `framework`).
@@ -47,7 +47,7 @@ fiches citant expo/react-native/tauri/electron : 0
 
 Vérification du cas `library`, qui montre pourquoi « 0 framework » ne suffit pas à décider seul : le
 §10 ne décrit `library` par **aucune** application, donc aucun framework ne lui est demandé. Une
-cible sans framework n'est pas forcément inutilisable — c'est l'intersection des deux informations
+cible sans framework n'est pas forcément inutilisable c'est l'intersection des deux informations
 (catalogue × forme du §10) qui tranche.
 
 ## 2. Le cul-de-sac, reproduit par une commande
@@ -72,22 +72,22 @@ Le mécanisme, lu dans le code : `draftToManifest` crée un objet d'application 
 (`apps/web/src/lib/draft-to-manifest.ts`, `toManifest`), et `place()` ne remplit une application
 qu'avec une fiche dont `targets` contient la cible de cette application. Le §10 exige un `framework`
 dans chacun de ces objets (`packages/manifest/src/schema/manifest.ts`). Sans fiche, l'objet reste
-vide et le schéma refuse — **trois écrans après le choix**, sous la forme d'un chemin de champ.
+vide et le schéma refuse **trois écrans après le choix**, sous la forme d'un chemin de champ.
 L'écran Target, lui, proposait les cinq cibles.
 
 ## 3. L'arbitrage
 
-### Option A — ajouter les fiches manquantes : rejetée
+### Option A ajouter les fiches manquantes : rejetée
 
 | Raison | Source |
 |---|---|
 | Le MVP est **« Web uniquement »** ; mobile et desktop sont explicitement **V1** (« Mobile avec Expo, Desktop avec Tauri ») | `docs/cahier-des-charges.md` §23 |
 | Une fiche `declared` ferait **passer** le brouillon (le slug existerait, la cible correspondrait) sans que rien ne génère de code mobile : l'utilisateur croirait avoir un projet mobile. C'est exactement le mensonge que le produit interdit | §24, `packages/registry/CONTRIBUTING.md` |
-| Devenir `certified` demande un template **et** un test de génération (test de fumée) — du travail de pipeline, pas une entrée de catalogue | `CONTRIBUTING.md`, « `declared` ou `certified` » |
+| Devenir `certified` demande un template **et** un test de génération (test de fumée) du travail de pipeline, pas une entrée de catalogue | `CONTRIBUTING.md`, « `declared` ou `certified` » |
 | Le catalogue interdit déjà les fiches qui visent **exclusivement** mobile ou desktop, au nom du périmètre MVP | `packages/registry/src/catalogue.test.ts:216` |
 | Tauri ne vise pas le web : lui inventer une cible `web` pour satisfaire ce test serait une donnée fausse dans un champ qui pilote l'offre | même règle |
 
-### Option B — retirer les cibles sans contenu de ce qui est **proposé** : retenue
+### Option B retirer les cibles sans contenu de ce qui est **proposé** : retenue
 
 Le retrait porte sur l'**offre**, et le contrat du §10 est conservé. Ce n'est pas un compromis
 d'esthétique : c'est ce que la spécification impose.
@@ -99,17 +99,17 @@ d'esthétique : c'est ce que la spécification impose.
   de `TARGETS` contredirait la spécification, casserait les liens de partage (Phase 9) et devrait
   être défait en V1. **Le schéma n'est donc pas modifié.**
 - **L'offre, elle, ne propose que ce que le catalogue peut honorer.** L'écran Target affiche
-  `offeredTargets()` — `web`, `api`, `library` aujourd'hui — et un texte qui dit, pour les autres,
+  `offeredTargets()` `web`, `api`, `library` aujourd'hui et un texte qui dit, pour les autres,
   **pourquoi** : aucun framework au catalogue, V1 (§23).
 - **Le calcul n'est pas une liste d'interdits écrite dans l'écran.** Il se lit dans le catalogue
   (`packages/registry/src/targets.ts`) croisé avec la table des applications du §10. Le jour où une
-  fiche `expo` vise `mobile`, l'écran la propose sans qu'on touche à l'écran — et le test du registry
+  fiche `expo` vise `mobile`, l'écran la propose sans qu'on touche à l'écran et le test du registry
   échoue en nommant la décision à rouvrir.
 - **Un brouillon hérité ou un lien de partage (§20) qui porte encore `mobile` est refusé avec sa
   raison**, dans `blockedReason` : le message nomme la cible, dit qu'aucun framework n'existe au
   catalogue, cite le §10 et liste les plateformes proposées. `canAdvance` devient faux : le parcours
   ne va pas plus loin, il ne découvre pas le trou trois écrans plus tard.
-- **Presets :** les quatre sont `web`, `web`, `api` et `web + api` — mesuré ci-dessous. Rien à en
+- **Presets :** les quatre sont `web`, `web`, `api` et `web + api` mesuré ci-dessous. Rien à en
   retirer.
 - **`pf` :** `pf create` n'a aucun drapeau de cible (`--web`/`--mobile` n'existent pas ; les exemples
   du §21 qui les emploient sont documentés comme tels dans le guide). Rien à y changer.
@@ -174,7 +174,7 @@ $ pnpm exec biome check <les 9 fichiers de ce lot>
 
 $ pnpm lint
  Found 5 errors.
-[exit 1]   # erreurs toutes situées dans `.measure-stack/*` — scripts de mesure d'un autre lot,
+[exit 1]   # erreurs toutes situées dans `.measure-stack/*` scripts de mesure d'un autre lot,
            # non versionnés et en cours au moment de la mesure. Vérifié par
            # `biome check --diagnostic-level=error` : `.measure-stack/measure.mjs`,
            # `measure2.mjs`, `measure-warm.mjs`, `measure-requests.mjs`. Aucun fichier de ce lot

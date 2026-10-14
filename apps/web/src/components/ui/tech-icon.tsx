@@ -16,7 +16,7 @@ import { TECH_BRAND_IDS, TECH_BRAND_TITLES } from './tech-icons.generated';
  * cases est une lettre.
  *
  * La couleur suit `currentColor` : aucune marque ne sort son orange ou son
- * bleu au milieu d'une grille — la page garde ses deux couleurs, et le logo
+ * bleu au milieu d'une grille la page garde ses deux couleurs, et le logo
  * reste lisible dans les deux thèmes. C'est un choix, pas un oubli.
  */
 

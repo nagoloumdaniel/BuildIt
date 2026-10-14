@@ -66,7 +66,7 @@ const BACKENDS: Partial<Record<NodeJS.Platform, Backend>> = {
     get: ['secret-tool', ['lookup', 'service', SERVICE, 'account', ACCOUNT], undefined],
     set: (token) => [
       'secret-tool',
-      // ASCII seulement : sous une locale non UTF-8 (C, POSIX — serveurs, CI),
+      // ASCII seulement : sous une locale non UTF-8 (C, POSIX serveurs, CI),
       // secret-tool refuse un tiret cadratin dans l'étiquette.
       ['store', '--label=BuildIt - GitHub', 'service', SERVICE, 'account', ACCOUNT],
       token,

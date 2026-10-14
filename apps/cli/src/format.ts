@@ -3,7 +3,7 @@ import type { Io } from './io.js';
 
 /**
  * Un problème du moteur, tel que l'utilisateur le lit : le message d'abord,
- * la piste de correction ensuite, le code en dernier — utile pour chercher,
+ * la piste de correction ensuite, le code en dernier utile pour chercher,
  * inutile pour comprendre.
  */
 export function printIssues(io: Io, issues: readonly Issue<string>[]): void {

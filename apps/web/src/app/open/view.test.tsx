@@ -5,7 +5,7 @@ import type { LocalOpenController } from './local-open';
 import type { InstallResultView, ProjectSummaryView } from './project';
 import { OpenView } from './view';
 
-/** L'écran 23, rendu sans DOM — le fil d'état est fourni à la main. */
+/** L'écran 23, rendu sans DOM le fil d'état est fourni à la main. */
 
 const SUMMARY: ProjectSummaryView = {
   directory: 'C:\\projets\\mon-app',
@@ -18,7 +18,7 @@ const SUMMARY: ProjectSummaryView = {
   warnings: [],
   plainCommand: 'pnpm install',
   safeCommand: 'pnpm install --ignore-scripts',
-  description: 'JavaScript / TypeScript — pnpm (d’après pnpm-lock.yaml)',
+  description: 'JavaScript / TypeScript pnpm (d’après pnpm-lock.yaml)',
 };
 
 const PYTHON: ProjectSummaryView = {
@@ -74,7 +74,7 @@ function render(overrides: Partial<LocalOpenController> = {}): string {
   return renderToStaticMarkup(createElement(OpenView, { controller: controller(overrides) }));
 }
 
-describe('OpenView — le dossier se choisit, il ne se tape pas (local)', () => {
+describe('OpenView le dossier se choisit, il ne se tape pas (local)', () => {
   it('n’offre aucun champ de chemin et propose l’explorateur', () => {
     const html = render();
 
@@ -91,7 +91,7 @@ describe('OpenView — le dossier se choisit, il ne se tape pas (local)', () => 
     expect(html).toContain('l’analyse démarre aussitôt');
   });
 
-  it('en hébergé, l’explorateur est celui du navigateur — et le dit', () => {
+  it('en hébergé, l’explorateur est celui du navigateur et le dit', () => {
     const html = render({ mode: 'browser', runnable: false });
 
     expect(html).toContain('lu dans votre navigateur');
@@ -121,7 +121,7 @@ describe('OpenView — le dossier se choisit, il ne se tape pas (local)', () => 
   });
 });
 
-describe('OpenView — l’analyse', () => {
+describe('OpenView l’analyse', () => {
   it('affiche une barre d’avancement pendant la lecture du disque', () => {
     const html = render({ phase: 'inspecting', directory: 'C:\\projets\\mon-app' });
 
@@ -139,7 +139,7 @@ describe('OpenView — l’analyse', () => {
   });
 });
 
-describe('OpenView — le projet reconnu', () => {
+describe('OpenView le projet reconnu', () => {
   it('montre l’écosystème, le gestionnaire et la commande exacte', () => {
     const html = render({
       phase: 'ready',
@@ -191,7 +191,7 @@ describe('OpenView — le projet reconnu', () => {
   });
 });
 
-describe('OpenView — le résultat de l’installation', () => {
+describe('OpenView le résultat de l’installation', () => {
   it('annonce la commande réellement lancée', () => {
     const html = render({
       phase: 'ready',
@@ -225,7 +225,7 @@ describe('OpenView — le résultat de l’installation', () => {
   });
 });
 
-describe('OpenView — le dossier non reconnu', () => {
+describe('OpenView le dossier non reconnu', () => {
   it('rend les refus du moteur et deux sorties : réessayer, revenir', () => {
     const html = render({
       phase: 'ready',
@@ -243,7 +243,7 @@ describe('OpenView — le dossier non reconnu', () => {
   });
 });
 
-describe('OpenView — tout navigateur, et les fichiers de base', () => {
+describe('OpenView tout navigateur, et les fichiers de base', () => {
   it('Firefox / Safari : la carte reste active, lecture par le sélecteur du navigateur', () => {
     const html = render({ mode: 'input', runnable: false });
     expect(html).toContain('lecture seule');
@@ -272,7 +272,7 @@ describe('OpenView — tout navigateur, et les fichiers de base', () => {
   });
 });
 
-describe('OpenView — mobile : archive .zip ou fichiers', () => {
+describe('OpenView mobile : archive .zip ou fichiers', () => {
   it('propose le .zip et les fichiers, explique pourquoi, sans carte dossier', () => {
     const html = render({ mode: 'mobile', runnable: false });
     expect(html).toContain('data-pick-mobile');

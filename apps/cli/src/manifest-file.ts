@@ -11,7 +11,7 @@ export const DEFAULT_MANIFEST_FILE = 'pf.manifest.json';
  *
  * `JSON.parse` refuse un `\uFEFF` en tête, et la façon la plus naturelle
  * d'écrire un fichier sous PowerShell en produit un (`Set-Content -Encoding
- * utf8`, `>` en UTF-16LE). Un manifest écrit par `pf` n'en a jamais — mais un
+ * utf8`, `>` en UTF-16LE). Un manifest écrit par `pf` n'en a jamais mais un
  * manifest écrit à la main, si, et « votre JSON est invalide » serait un
  * mensonge. Le BOM est une marque d'encodage, pas du contenu.
  */

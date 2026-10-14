@@ -13,7 +13,7 @@ import { tokenStoreFor } from './session';
  * parlent au même trousseau, pas à deux copies de la même règle.
  *
  * Phase 12 : en mode hébergé (`VERCEL=1` ou `PF_HOSTED=1`), le jeton ne va
- * jamais au trousseau du système ni à `PF_GITHUB_TOKEN` — ce serait un jeton
+ * jamais au trousseau du système ni à `PF_GITHUB_TOKEN` ce serait un jeton
  * partagé entre tous les visiteurs du déploiement. Il vit dans un cookie
  * scellé, unique par visiteur (`lib/session-cookie.ts`). En local, rien ne
  * change : `tokenStoreFor` garde le comportement de `pf web` tel qu'avant
@@ -30,7 +30,7 @@ export function sessionDeps(): SessionDeps {
   };
 }
 
-/** Le Client Secret de l'application OAuth — exigé seulement par le flux de redirection. */
+/** Le Client Secret de l'application OAuth exigé seulement par le flux de redirection. */
 export function clientSecret(): string {
   return process.env['PF_GITHUB_CLIENT_SECRET'] ?? '';
 }

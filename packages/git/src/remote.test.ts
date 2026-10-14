@@ -6,7 +6,7 @@ function code(input: string): string | undefined {
   return result.ok ? undefined : result.issues[0]?.code;
 }
 
-describe('parseRemote — acceptés', () => {
+describe('parseRemote acceptés', () => {
   it('le raccourci propriétaire/dépôt pointe vers github.com en HTTPS', () => {
     expect(parseRemote('octocat/Hello-World')).toEqual({
       ok: true,
@@ -53,7 +53,7 @@ describe('parseRemote — acceptés', () => {
 });
 
 // Gate 7B : ces liens sont rejetés **avant** tout appel à Git.
-describe('parseRemote — refusés', () => {
+describe('parseRemote refusés', () => {
   it.each([
     ['--upload-pack=touch /tmp/pwned', 'GIT_REMOTE_OPTION'],
     ['-u', 'GIT_REMOTE_OPTION'],

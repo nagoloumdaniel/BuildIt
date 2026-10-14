@@ -54,7 +54,7 @@ import type { InstallResultView, ProjectInspectionView } from './project';
  * s'ouvre côté serveur et rend un chemin absolu : le moteur peut tout faire,
  * installation comprise. En hébergé, le serveur n'est pas sur la machine du
  * visiteur : c'est **son navigateur** qui ouvre l'explorateur (File System
- * Access API) et ne laisse lire que les noms des fichiers — assez pour
+ * Access API) et ne laisse lire que les noms des fichiers assez pour
  * reconnaître le projet, pas pour l'installer. L'écran le dit à ce
  * moment-là ; il ne propose plus de « saisir un chemin », qui était un
  * cul-de-sac sur une machine qu'on ne voit pas.
@@ -91,7 +91,7 @@ export type MobileSource = 'zip' | 'files';
 
 /**
  * Qui ouvre l'explorateur, dans l'ordre : la boîte native (local), la File
- * System Access API (Chromium), puis `<input webkitdirectory>` — que Firefox
+ * System Access API (Chromium), puis `<input webkitdirectory>` que Firefox
  * et Safari comprennent. `none` ne reste que pour un navigateur sans aucun
  * moyen de choisir un dossier (mobile, surtout).
  */
@@ -143,7 +143,7 @@ export type PickResult =
  *
  * C'est la seule fonction qui connaît les deux chemins : la carte du menu et
  * l'écran `/open` l'appellent tous les deux, et aucun des deux ne décide à sa
- * place. `startAt` ne vaut que pour la boîte native — le navigateur choisit
+ * place. `startAt` ne vaut que pour la boîte native le navigateur choisit
  * lui-même où s'ouvrir.
  */
 export async function pickProjectFolder(
@@ -201,7 +201,7 @@ export interface LocalOpenController {
   readonly pickZip: () => void;
   /** Mobile : choisir quelques fichiers de la racine. */
   readonly pickFiles: () => void;
-  /** Analyse une cible déjà choisie — celle que la carte du menu a passée. */
+  /** Analyse une cible déjà choisie celle que la carte du menu a passée. */
   readonly analyse: (target: PickedTarget) => void;
   readonly reanalyse: () => void;
   readonly clear: () => void;
@@ -344,7 +344,7 @@ export function useLocalProjectOpen(): LocalOpenController {
       setBase(null);
       setBaseResult(null);
       setPhase('inspecting');
-      // Seuls les noms et deux petits textes partent au serveur — jamais la
+      // Seuls les noms et deux petits textes partent au serveur jamais la
       // poignée du dossier, qui ne se sérialise pas.
       const picked =
         next.kind === 'path'

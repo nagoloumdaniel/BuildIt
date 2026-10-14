@@ -16,7 +16,7 @@ import {
 
 /**
  * Le clone, contre un **faux runner** : aucune commande Git réelle n'est lancée.
- * Le disque, lui, est réel — un dossier temporaire — parce que c'est justement
+ * Le disque, lui, est réel un dossier temporaire parce que c'est justement
  * ce que `packages/git` doit laisser propre.
  */
 
@@ -61,7 +61,7 @@ afterEach(async () => {
   await Promise.all(created.splice(0).map((path) => rm(path, { recursive: true, force: true })));
 });
 
-describe('resolveDestination — le repli relatif, seul admis en hébergé', () => {
+describe('resolveDestination le repli relatif, seul admis en hébergé', () => {
   it('accepte un dossier simple ou imbriqué, sous la racine', async () => {
     const root = await tempRoot();
     expect(resolveDestination('mon-projet', root)).toEqual({
@@ -125,7 +125,7 @@ describe('resolveDestination — le repli relatif, seul admis en hébergé', () 
   );
 });
 
-describe('resolveAbsoluteDestination — le parent choisi dans l’explorateur', () => {
+describe('resolveAbsoluteDestination le parent choisi dans l’explorateur', () => {
   it('accepte un dossier parent absolu existant et pose le nom dedans', async () => {
     const parent = await tempRoot();
 
@@ -169,7 +169,7 @@ describe('resolveAbsoluteDestination — le parent choisi dans l’explorateur',
   });
 });
 
-describe('destinationState — sans rien écrire', () => {
+describe('destinationState sans rien écrire', () => {
   it('distingue absent, vide et occupé', async () => {
     const root = await tempRoot();
     const libre = join(root, 'libre');
@@ -186,7 +186,7 @@ describe('destinationState — sans rien écrire', () => {
   });
 
   it.skipIf(process.platform !== 'win32')(
-    'suit un lien posé dans la racine — constat M2 du rapport, non corrigé',
+    'suit un lien posé dans la racine constat M2 du rapport, non corrigé',
     async () => {
       // `stat` suit les liens : une jonction vers un dossier vide **hors** de la
       // racine de travail passe pour une destination libre. Ce test fige le
@@ -212,7 +212,7 @@ describe('defaultFolder', () => {
   });
 });
 
-describe('planClone — valider avant Git', () => {
+describe('planClone valider avant Git', () => {
   it('refuse un lien que Git lirait comme une option', async () => {
     const root = await tempRoot();
     const planned = await planClone('--upload-pack=evil', 'x', root);
@@ -246,7 +246,7 @@ describe('planClone — valider avant Git', () => {
   });
 });
 
-describe('planClone — la destination en local, choisie dans l’explorateur', () => {
+describe('planClone la destination en local, choisie dans l’explorateur', () => {
   it('accepte un parent absolu existant et pose le sous-dossier dedans', async () => {
     const parent = await tempRoot();
 
@@ -295,7 +295,7 @@ describe('planClone — la destination en local, choisie dans l’explorateur', 
   });
 });
 
-describe('cloneProject — le clone, puis l’installation', () => {
+describe('cloneProject le clone, puis l’installation', () => {
   it('ne lance aucune commande quand le lien est refusé', async () => {
     const root = await tempRoot();
     const fake = fakeRunner();
@@ -429,7 +429,7 @@ describe('cloneProject — le clone, puis l’installation', () => {
   });
 });
 
-describe('les Server Actions du clone — validation avant tout accès', () => {
+describe('les Server Actions du clone validation avant tout accès', () => {
   it('refuse un lien invalide sans rien préparer', async () => {
     const preview = await clonePreviewAction('--upload-pack=evil', 'x');
     expect(preview.ok).toBe(false);

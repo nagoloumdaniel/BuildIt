@@ -37,14 +37,14 @@ import {
  *
  * Deux effets, deux responsabilités :
  *
- * - recharger les options dès que `targets`/`technologies` changent — un choix
+ * - recharger les options dès que `targets`/`technologies` changent un choix
  *   dans une catégorie change l'état des options **partout ailleurs** ;
  * - écrire `resolution` dans le brouillon, parce que la condition bloquante de
  *   l'étape est `resolution.issues.length === 0` (`lib/flow.ts`).
  *
  * Toute la logique de §5 est dans `stack-view.ts` : ce fichier ne fait que
  * câbler le store, appeler les Server Actions et rendre. Les libellés viennent
- * tous du dictionnaire (`useMessages`) — y compris les 37 catégories.
+ * tous du dictionnaire (`useMessages`) y compris les 37 catégories.
  */
 export default function StackPage() {
   const t = useMessages();
@@ -90,7 +90,7 @@ export default function StackPage() {
     setLoading(true);
     // Un seul aller-retour pour tout le catalogue. Le chargement par catégorie
     // (37 Server Actions) exécutait les mêmes appels côté serveur, mais en
-    // payant 36 allers-retours de plus — mesuré à ~325 ms sur le build de
+    // payant 36 allers-retours de plus mesuré à ~325 ms sur le build de
     // production (rapport 8bis).
     void loadStackBlocksAction(selection).then((loaded) => {
       if (!alive) {
@@ -120,7 +120,7 @@ export default function StackPage() {
     };
   }, [selection, session, attempt]);
 
-  // Qui appartient à quelle catégorie, pour `toggleExclusive` (§12) — reconstruit
+  // Qui appartient à quelle catégorie, pour `toggleExclusive` (§12) reconstruit
   // à chaque rendu depuis les blocs déjà chargés, jamais depuis un second
   // aller-retour.
   const categoryOf = useMemo(() => {

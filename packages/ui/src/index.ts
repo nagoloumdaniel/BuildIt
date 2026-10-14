@@ -1,5 +1,5 @@
 /**
- * `@buildit/ui` — les primitives d'interface partagées (Phase 8).
+ * `@buildit/ui` les primitives d'interface partagées (Phase 8).
  *
  * Elles ne portent que des classes `pf-*` et un rôle ARIA : ni style propre, ni
  * données, ni logique métier, ni dépendance à Next. Les tokens des deux thèmes

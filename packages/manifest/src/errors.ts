@@ -5,7 +5,7 @@ import { createMessageFormatter, type Issue, type PathSegment } from '@buildit/v
  *
  * Le modèle d'erreur lui-même (code stable, chemin, indice) vit dans
  * `@buildit/validation` : il est partagé avec le registry. Ce fichier
- * ne porte plus que ce qui est propre au manifest — sa liste de codes et son
+ * ne porte plus que ce qui est propre au manifest sa liste de codes et son
  * catalogue de phrases.
  */
 

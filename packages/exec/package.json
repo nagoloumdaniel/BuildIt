@@ -4,7 +4,7 @@
   "private": true,
   "type": "module",
   "license": "MIT",
-  "description": "Exécution de commandes sans shell (§22, §24) — partagée par le generator, workspace, git et github.",
+  "description": "Exécution de commandes sans shell (§22, §24) partagée par le generator, workspace, git et github.",
   "exports": {
     ".": {
       "types": "./src/index.ts",

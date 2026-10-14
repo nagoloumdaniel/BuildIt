@@ -4,7 +4,7 @@ import type { EnvVarView } from '../../../lib/engine';
 import { infrastructureIds } from '../infrastructure/infrastructure';
 
 /**
- * L'écran 8 — Environment & Secrets (§6.8, §24).
+ * L'écran 8 Environment & Secrets (§6.8, §24).
  *
  * Rien ici ne connaît de **valeur** : le type du brouillon n'a pas de champ pour
  * elle (`envVarNames`), la vue du moteur n'en porte pas (`EnvVarView`), et la
@@ -23,7 +23,7 @@ export interface EnvSelection {
  *
  * `requiredEnvVars` part de la résolution du moteur : une technologie ajoutée
  * pour tenir une exigence apporte ses variables, et les booléens de l'écran 9
- * appartiennent à la même sélection (`docker`, `github-actions` — la règle de
+ * appartiennent à la même sélection (`docker`, `github-actions` la règle de
  * `chosenIds` dans `lib/draft-to-manifest.ts`).
  */
 export function envSelection(draft: DraftState): EnvSelection {
@@ -35,7 +35,7 @@ export function envSelection(draft: DraftState): EnvSelection {
   };
 }
 
-/** Les noms seuls — c'est tout ce que le brouillon a le droit de retenir. */
+/** Les noms seuls c'est tout ce que le brouillon a le droit de retenir. */
 export function namesOf(variables: readonly EnvVarView[]): string[] {
   return variables.map((variable) => variable.name);
 }
@@ -70,12 +70,12 @@ export function isEngineAdded(variable: EnvVarView, chosenIds: ReadonlySet<strin
   return variable.technologies.every((id) => !chosenIds.has(id));
 }
 
-/** Pourquoi un nom saisi à la main est refusé — ou `undefined` s'il passe. */
+/** Pourquoi un nom saisi à la main est refusé ou `undefined` s'il passe. */
 export type CustomEnvError = 'invalid' | 'duplicate';
 
 /**
  * Vérifie un nom de variable ajouté à la main : la grammaire du manifest
- * (`ENV_NAME_PATTERN`), et pas de doublon avec ce qui est déjà listé — par la
+ * (`ENV_NAME_PATTERN`), et pas de doublon avec ce qui est déjà listé par la
  * stack ou par une saisie précédente.
  */
 export function customEnvError(
@@ -88,7 +88,7 @@ export function customEnvError(
   return listed.includes(name) ? 'duplicate' : undefined;
 }
 
-/** Ajoute une variable au brouillon — la liste reste triée. */
+/** Ajoute une variable au brouillon la liste reste triée. */
 export function withCustomEnv(draft: DraftState, name: string): DraftState {
   const current = draft.customEnv ?? [];
   if (current.includes(name)) {

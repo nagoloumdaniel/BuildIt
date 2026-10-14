@@ -35,7 +35,7 @@ import { APP_TARGET, type AppKey } from './targets';
 
 type AppField = 'framework' | 'language' | 'styling' | 'ui';
 
-/** Les champs que chaque application accepte — le schéma du §10, ni plus ni moins. */
+/** Les champs que chaque application accepte le schéma du §10, ni plus ni moins. */
 const APP_FIELDS: Readonly<Record<AppKey, readonly AppField[]>> = {
   frontend: ['framework', 'language', 'styling', 'ui'],
   mobile: ['framework', 'language', 'styling'],
@@ -50,7 +50,7 @@ const APP_KEYS: readonly AppKey[] = ['frontend', 'mobile', 'desktop', 'backend']
  * Où va chaque catégorie : la table vit désormais dans le registry
  * (`@buildit/registry`, module `slots.ts`), avec celle que `pf add`
  * lisait de son côté. Deux copies tenues ensemble par un test finissent par
- * diverger — la règle n'existe plus qu'une fois.
+ * diverger la règle n'existe plus qu'une fois.
  *
  * Ce qui reste ici, et qui n'appartient qu'au brouillon : la **politique** de
  * placement. Le brouillon assemble un manifest neuf : le premier framework
@@ -92,7 +92,7 @@ interface Assembly {
 /**
  * Le manifest en cours d'assemblage : les clés du §10, et rien d'autre.
  *
- * Nommer ces clés n'est pas une garantie — le manifest peut sortir incomplet,
+ * Nommer ces clés n'est pas une garantie le manifest peut sortir incomplet,
  * c'est voulu. La garantie qu'aucun champ inventé ne passe vient du schéma
  * strict de `parseManifest`, pas d'ici : ce type sert à écrire l'assemblage
  * sans cast, et sans accès par crochets qu'interdit
@@ -140,7 +140,7 @@ function catalogue(): Registry {
 /**
  * Les ids choisis : un ensemble, dans un ordre stable.
  *
- * Les deux listes du brouillon — Stack Builder et Capabilities (§6.7) — sont
+ * Les deux listes du brouillon Stack Builder et Capabilities (§6.7) sont
  * deux vues de la même sélection : le même id choisi aux deux écrans reste un
  * choix. L'ordre est trié pour que deux saisies du même ensemble donnent la
  * même chaîne, quel que soit l'ordre des clics.
@@ -159,8 +159,8 @@ function chosenIds(draft: DraftState): string[] {
 /**
  * Place une fiche au rôle que sa catégorie désigne.
  *
- * Un choix qui ne trouve pas d'emplacement libre — second framework, seconde
- * base, fiche qui ne sert pas l'application visée — rejoint `services` plutôt
+ * Un choix qui ne trouve pas d'emplacement libre second framework, seconde
+ * base, fiche qui ne sert pas l'application visée rejoint `services` plutôt
  * que d'être écarté : le moteur verra la sélection entière et nommera le
  * conflit, au lieu de générer un projet amputé d'un choix.
  */
@@ -205,7 +205,7 @@ function place(assembly: Assembly, entry: RegistryEntry, targets: ReadonlySet<st
 }
 
 /**
- * Rend l'objet manifest — encore incomplet, c'est voulu : c'est `parseManifest`
+ * Rend l'objet manifest encore incomplet, c'est voulu : c'est `parseManifest`
  * qui juge. Le passer au schéma plutôt que de le typer en `Manifest` est ce qui
  * rend impossible un champ inventé : une clé qui n'existe pas au §10 est
  * refusée, elle n'est pas ignorée.

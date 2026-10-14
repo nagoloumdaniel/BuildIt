@@ -23,7 +23,7 @@ async function detect(files: Record<string, string>): Promise<Detection> {
 
 const PKG = JSON.stringify({ name: 'demo' });
 
-describe('detectProject — JavaScript', () => {
+describe('detectProject JavaScript', () => {
   it.each([
     ['pnpm-lock.yaml', 'pnpm'],
     ['yarn.lock', 'yarn'],
@@ -111,7 +111,7 @@ describe('detectProject — JavaScript', () => {
   });
 });
 
-describe('detectProject — autres écosystèmes', () => {
+describe('detectProject autres écosystèmes', () => {
   it.each([
     [{ 'pyproject.toml': '', 'uv.lock': '' }, 'python', 'uv sync'],
     [{ 'pyproject.toml': '', 'poetry.lock': '' }, 'python', 'poetry install'],
@@ -129,7 +129,7 @@ describe('detectProject — autres écosystèmes', () => {
   });
 });
 
-describe('detectProject — refus', () => {
+describe('detectProject refus', () => {
   it('dossier absent', async () => {
     const result = await detectProject('/pf/absent/nulle-part');
     expect(!result.ok && result.issues[0]?.code).toBe('WORKSPACE_NOT_FOUND');

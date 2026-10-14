@@ -4,7 +4,7 @@
   "private": true,
   "type": "module",
   "license": "MIT",
-  "description": "Pipeline de generation — plan de fichiers, dry-run, ecriture et rollback (§22).",
+  "description": "Pipeline de generation plan de fichiers, dry-run, ecriture et rollback (§22).",
   "exports": {
     ".": {
       "types": "./src/index.ts",

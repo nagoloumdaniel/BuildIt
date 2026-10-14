@@ -1,5 +1,5 @@
 /**
- * Pipeline de génération — plan de fichiers, dry-run, écriture, annulation (§22).
+ * Pipeline de génération plan de fichiers, dry-run, écriture, annulation (§22).
  *
  * Rien n'est écrit avant que tout soit décidé : le pipeline produit d'abord un
  * plan complet et inspectable, puis le déroule en journalisant ce qu'il crée.

@@ -14,7 +14,7 @@ import {
 /**
  * L'écran 7 (§6.7) ne recopie aucune liste de technologies : il demande au
  * moteur les options d'une **catégorie** du catalogue. Ce qui se décide ici,
- * c'est quelles catégories sont des capacités — et cette décision doit porter
+ * c'est quelles catégories sont des capacités et cette décision doit porter
  * sur le catalogue entier, sinon une catégorie ajoutée disparaîtrait de tous
  * les écrans en silence.
  */
@@ -22,7 +22,7 @@ describe('rôle des catégories sur les écrans du parcours', () => {
   it('range chaque catégorie du catalogue sur exactement un écran', () => {
     // Une catégorie absente de la table est un trou : elle n'apparaîtrait nulle
     // part. `Object.keys` est comparé au catalogue réel, pas à une liste écrite
-    // ici — un test qui recopie sa source ne prouve rien.
+    // ici un test qui recopie sa source ne prouve rien.
     expect(Object.keys(SCREEN_ROLE).sort()).toEqual([...CATEGORIES].sort());
   });
 

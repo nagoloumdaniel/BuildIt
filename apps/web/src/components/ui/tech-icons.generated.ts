@@ -1,4 +1,4 @@
-// Fichier engendré par scripts/build-tech-icons.mjs — ne pas modifier à la main.
+// Fichier engendré par scripts/build-tech-icons.mjs ne pas modifier à la main.
 // Les tracés vivent dans `public/tech-sprite.svg` (marques `simple-icons`, CC0-1.0).
 // Ici ne restent que les identifiants disponibles : quelques kilooctets, pas 300.
 // Relancer le script après tout ajout au catalogue des technologies.

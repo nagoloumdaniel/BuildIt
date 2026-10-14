@@ -108,7 +108,7 @@ afterEach(async () => {
   await Promise.all(created.splice(0).map((path) => rm(path, { recursive: true, force: true })));
 });
 
-describe('repositoryStatus — l’état du dépôt, sans rien modifier', () => {
+describe('repositoryStatus l’état du dépôt, sans rien modifier', () => {
   it('refuse un dossier qui n’existe pas', async () => {
     const dir = await tempDir();
     const status = await repositoryStatus(join(dir, 'absent'), fakeGit(() => FAIL).runner);
@@ -200,7 +200,7 @@ describe('un origin qui porte des identifiants n’est jamais renvoyé tel quel 
   });
 });
 
-describe('requireGitHubRepository — la règle du §20bis', () => {
+describe('requireGitHubRepository la règle du §20bis', () => {
   it('refuse de partager un projet sans dépôt GitHub, et dit comment en obtenir un', async () => {
     const dir = await tempDir();
     const result = await requireGitHubRepository(dir, repoRunner(dir).runner);
@@ -239,7 +239,7 @@ describe('requireGitHubRepository — la règle du §20bis', () => {
   });
 });
 
-describe('createRepository — le premier commit d’abord, GitHub ensuite', () => {
+describe('createRepository le premier commit d’abord, GitHub ensuite', () => {
   it('refuse un nom invalide sans rien créer', async () => {
     const dir = await tempDir();
     const fake = fakeGit(() => OK);
@@ -429,7 +429,7 @@ describe('createRepository — le premier commit d’abord, GitHub ensuite', () 
   });
 });
 
-describe('les accès — collaborateurs et invitations', () => {
+describe('les accès collaborateurs et invitations', () => {
   function accessApi(): ReturnType<typeof ghFetch> {
     return ghFetch((url, init) => {
       if (url.includes('/invitations') && init?.method === 'DELETE') {
@@ -568,7 +568,7 @@ describe('les rôles du §20bis', () => {
   });
 });
 
-describe('les Server Actions de l’écran 24 — validation avant tout accès', () => {
+describe('les Server Actions de l’écran 24 validation avant tout accès', () => {
   it('refuse un chemin relatif', async () => {
     const status = await repositoryStatusAction('mon-projet');
     expect(status.ok).toBe(false);

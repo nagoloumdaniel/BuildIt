@@ -117,7 +117,7 @@ describe('cohérence de cible', () => {
     ).toEqual([]);
   });
 
-  it('ne contraint pas compatibleWith — deux technos de plateformes différentes peuvent coexister', () => {
+  it('ne contraint pas compatibleWith deux technos de plateformes différentes peuvent coexister', () => {
     expect(
       codesOf([
         entry({ id: 'expo', targets: ['mobile'] }),
@@ -127,7 +127,7 @@ describe('cohérence de cible', () => {
   });
 });
 
-describe('fraîcheur — §7', () => {
+describe('fraîcheur §7', () => {
   it('avertit sans bloquer sur une fiche non revue depuis plus d’un an', () => {
     const issues = checkIntegrity([entry({ id: 'next', lastReviewedAt: '2020-01-01' })]);
     expect(issues.map((issue) => issue.code)).toContain('REGISTRY_STALE_ENTRY');

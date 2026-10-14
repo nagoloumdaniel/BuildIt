@@ -36,7 +36,7 @@ function codesOf(input: unknown): ManifestIssueCode[] {
   return result.ok ? [] : result.issues.map((issue) => issue.code);
 }
 
-describe('parseManifest — acceptation', () => {
+describe('parseManifest acceptation', () => {
   it('valide le manifest d’exemple du §10 sans modification', () => {
     const result = parseManifest(SPEC_EXAMPLE);
     expect(result.ok ? null : result.issues).toBeNull();
@@ -55,7 +55,7 @@ describe('parseManifest — acceptation', () => {
     }
   });
 
-  it('rend un manifest en forme canonique — les ensembles sont triés', () => {
+  it('rend un manifest en forme canonique les ensembles sont triés', () => {
     const result = parseManifest(SPEC_EXAMPLE);
     expect(result.ok).toBe(true);
     if (result.ok) {
@@ -74,7 +74,7 @@ describe('parseManifest — acceptation', () => {
   });
 });
 
-describe('parseManifest — ne lève jamais', () => {
+describe('parseManifest ne lève jamais', () => {
   it.each([
     ['null', null],
     ['undefined', undefined],
@@ -91,13 +91,13 @@ describe('parseManifest — ne lève jamais', () => {
   });
 });
 
-describe('parseManifest — entrée non-objet', () => {
+describe('parseManifest entrée non-objet', () => {
   it.each([null, 42, 'texte', true, []])('signale MANIFEST_NOT_AN_OBJECT pour %s', (input) => {
     expect(codesOf(input)).toContain('MANIFEST_NOT_AN_OBJECT');
   });
 });
 
-describe('parseManifest — version', () => {
+describe('parseManifest version', () => {
   it('signale une version absente', () => {
     expect(codesOf({ name: 'x', targets: ['web'], architecture: 'single-app' })).toContain(
       'MANIFEST_VERSION_MISSING',
@@ -112,13 +112,13 @@ describe('parseManifest — version', () => {
     expect(codesOf({ ...MINIMAL, manifestVersion: '1' })).toContain('MANIFEST_VERSION_UNSUPPORTED');
   });
 
-  it('ne rapporte que le problème de version — inutile de noyer l’utilisateur', () => {
+  it('ne rapporte que le problème de version inutile de noyer l’utilisateur', () => {
     const codes = codesOf({ manifestVersion: 99, name: 'PAS BON', targets: [] });
     expect(codes).toEqual(['MANIFEST_VERSION_UNSUPPORTED']);
   });
 });
 
-describe('parseManifest — champs requis', () => {
+describe('parseManifest champs requis', () => {
   it.each(['name', 'targets', 'architecture'])('signale l’absence de %s', (field) => {
     const input: Record<string, unknown> = { ...MINIMAL };
     delete input[field];
@@ -130,7 +130,7 @@ describe('parseManifest — champs requis', () => {
   });
 });
 
-describe('parseManifest — valeurs invalides', () => {
+describe('parseManifest valeurs invalides', () => {
   it('signale un nom de projet invalide', () => {
     expect(codesOf({ ...MINIMAL, name: 'Mon Projet' })).toContain('MANIFEST_NAME_INVALID');
   });
@@ -193,7 +193,7 @@ describe('parseManifest — valeurs invalides', () => {
   });
 });
 
-describe('parseManifest — indices', () => {
+describe('parseManifest indices', () => {
   it('propose la cible la plus proche sur une faute de frappe', () => {
     const result = parseManifest({ ...MINIMAL, targets: ['wbe'] });
     expect(result.ok).toBe(false);
@@ -211,7 +211,7 @@ describe('parseManifest — indices', () => {
   });
 });
 
-describe('parseManifest — chemins', () => {
+describe('parseManifest chemins', () => {
   it('pointe le champ fautif, index de tableau compris', () => {
     const result = parseManifest({ ...MINIMAL, targets: ['web', 'wbe'] });
     expect(result.ok).toBe(false);
@@ -232,7 +232,7 @@ describe('parseManifest — chemins', () => {
   });
 });
 
-describe('parseManifest — aucun message vide', () => {
+describe('parseManifest aucun message vide', () => {
   it('chaque problème porte un message non vide', () => {
     const result = parseManifest({ ...MINIMAL, name: 'BAD', targets: ['wbe'] });
     expect(result.ok).toBe(false);

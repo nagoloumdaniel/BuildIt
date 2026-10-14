@@ -34,7 +34,7 @@ function render(overrides: Partial<ProjectsViewProps> = {}): string {
   return renderToStaticMarkup(createElement(ProjectsView, { projects: [], ...overrides }));
 }
 
-describe('newestFirst — du plus récent au plus ancien', () => {
+describe('newestFirst du plus récent au plus ancien', () => {
   it('trie par date décroissante sans muter l’entrée', () => {
     const input = [OLD, RECENT];
     const ordered = newestFirst(input);
@@ -51,7 +51,7 @@ describe('newestFirst — du plus récent au plus ancien', () => {
   });
 });
 
-describe('ProjectsView — la liste', () => {
+describe('ProjectsView la liste', () => {
   it('montre tous les projets, du plus récent au plus ancien', () => {
     const html = render({ projects: [OLD, RECENT] });
 
@@ -109,7 +109,7 @@ describe('ProjectsView — la liste', () => {
   });
 });
 
-describe('ProjectsView — vider la liste demande une confirmation', () => {
+describe('ProjectsView vider la liste demande une confirmation', () => {
   it('propose de vider, sans rien effacer au premier clic', () => {
     const html = render({ projects: [RECENT], onForgetAll: () => undefined });
 
@@ -133,7 +133,7 @@ describe('ProjectsView — vider la liste demande une confirmation', () => {
   });
 });
 
-describe('ProjectsView — les états sans projet', () => {
+describe('ProjectsView les états sans projet', () => {
   it('dit qu’il lit la liste plutôt que d’annoncer qu’elle est vide', () => {
     const html = render({ projects: null });
 

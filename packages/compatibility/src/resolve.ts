@@ -15,7 +15,7 @@ import {
 /**
  * Résolution d'une sélection de technologies.
  *
- * Le moteur **complète** la sélection — il ajoute les dépendances obligatoires —
+ * Le moteur **complète** la sélection il ajoute les dépendances obligatoires —
  * et dit ce qu'il a ajouté, avec la raison. Compléter en silence ferait
  * découvrir à l'utilisateur, au moment du rapport de génération, des paquets
  * qu'il n'a jamais choisis.
@@ -34,7 +34,7 @@ export interface Addition {
 }
 
 export interface Resolution {
-  /** Choisies et ajoutées, triées — la sortie ne dépend pas de l'ordre de saisie. */
+  /** Choisies et ajoutées, triées la sortie ne dépend pas de l'ordre de saisie. */
   readonly technologies: readonly string[];
   readonly additions: readonly Addition[];
   /**
@@ -155,7 +155,7 @@ export function resolve(
     return fail(errors);
   }
 
-  // Le statut reste déduit des fiches — il dit si le test de fumée a compilé
+  // Le statut reste déduit des fiches il dit si le test de fumée a compilé
   // chacune d'elles —, mais il ne produit plus d'avertissement : toutes les
   // fiches du catalogue sont planifiées par un test de génération
   // (`catalogue-coverage.test.ts` du générateur). Le lecteur qui affiche le
@@ -187,7 +187,7 @@ export interface Option {
 }
 
 /**
- * Les options d'une catégorie, chacune avec son état — la fonction qui alimente
+ * Les options d'une catégorie, chacune avec son état la fonction qui alimente
  * l'écran Stack Builder (§5).
  *
  * Elle ne renvoie **jamais** une liste filtrée. Masquer une option laisse

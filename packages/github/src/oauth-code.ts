@@ -6,7 +6,7 @@ import { githubIssue } from './errors.js';
 /**
  * Connexion par redirection (OAuth « web application flow ») : l'utilisateur
  * clique, choisit son compte sur github.com, accepte les permissions, puis
- * revient sur le site — jamais de code à recopier à la main.
+ * revient sur le site jamais de code à recopier à la main.
  *
  * Contrairement au device flow (`device-flow.ts`), cet échange exige le
  * **Client Secret** de l'application OAuth : GitHub ne permet pas d'échanger

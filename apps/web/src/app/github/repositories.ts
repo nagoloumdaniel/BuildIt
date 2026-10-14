@@ -72,7 +72,7 @@ export type Visibility = 'private' | 'public' | 'unknown';
  * `packages/github` n'expose pas de lecture d'un dépôt par son nom : on passe
  * par la liste des dépôts accessibles au compte (les 100 plus récemment
  * modifiés, comme le fait `listRepositories`). Un dépôt absent de cette liste
- * rend `unknown` — on ne devine pas une visibilité.
+ * rend `unknown` on ne devine pas une visibilité.
  */
 export async function repositoryVisibility(
   fetcher: Fetch,

@@ -20,7 +20,7 @@ function option(patch: Partial<OptionCardData> & { id: string }): OptionCardData
 const render = (props: Parameters<typeof OptionCard>[0]): string =>
   renderToStaticMarkup(<OptionCard {...props} />);
 
-describe('OptionCard — sélection', () => {
+describe('OptionCard sélection', () => {
   it('une option choisie est appuyée, sans badge « Choisi »', () => {
     const html = render({ option: option({ id: 'react', state: 'selected' }), onToggle: () => {} });
 
@@ -65,7 +65,7 @@ describe('OptionCard — sélection', () => {
   });
 });
 
-describe('OptionCard — incompatibilité', () => {
+describe('OptionCard incompatibilité', () => {
   const blocked = option({
     id: 'vuetify',
     label: 'Vuetify',
@@ -136,7 +136,7 @@ describe('refusalAdvice', () => {
   });
 });
 
-describe('OptionCard — contenu de la carte', () => {
+describe('OptionCard contenu de la carte', () => {
   it('ne répète pas le nom sous la carte : seul le libellé est écrit', () => {
     const html = render({
       option: option({ id: 'prisma-orm-x', label: 'Prisma' }),

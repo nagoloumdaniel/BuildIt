@@ -6,13 +6,13 @@ import { type ReactElement, useEffect, useState } from 'react';
  * Le dernier filet : l'erreur du **layout racine**.
  *
  * Quand le layout lui-même n'a pas pu être rendu, il n'y a plus de
- * fournisseur de langue, plus de thème, plus de polices — Next demande donc à
+ * fournisseur de langue, plus de thème, plus de polices Next demande donc à
  * ce fichier de rendre `<html>` et `<body>` lui-même. Il ne peut rien
  * emprunter à l'application : pas de composant partagé, pas de dictionnaire,
  * pas de classe `pf-*` (la feuille de style a pu ne pas être servie).
  *
  * D'où les deux règles tenues ici, et nulle part ailleurs :
- * 1. le style est **inline** et minimal — il doit tenir sans `globals.css` ;
+ * 1. le style est **inline** et minimal il doit tenir sans `globals.css` ;
  * 2. le texte est **court et bilingue**, choisi d'après la langue réellement
  *    posée par le script du layout (`pf-locale`), avec le français par défaut.
  *

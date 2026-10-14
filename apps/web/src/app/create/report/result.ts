@@ -6,7 +6,7 @@ import type { GenerationView } from '../../actions';
  *
  * Le rapport vit dans `sessionStorage` : il est donc **non fiable** à la
  * relecture, exactement comme le brouillon. `loadReport` revalide champ par
- * champ et rend `null` plutôt qu'une forme à moitié remplie — l'écran dit
+ * champ et rend `null` plutôt qu'une forme à moitié remplie l'écran dit
  * alors « aucun rapport », ce qui est vrai.
  *
  * `GenerationView` est un type importé de `actions.ts` : contrat unique, aucune
@@ -18,7 +18,7 @@ export const REPORT_STORAGE_KEY = 'pf-generation-report';
 
 export type GenerationReport = GenerationView;
 
-/** Les seules chaînes d'un tableau relu — le reste est écarté, sans lever. */
+/** Les seules chaînes d'un tableau relu le reste est écarté, sans lever. */
 function strings(value: unknown): string[] {
   return Array.isArray(value)
     ? value.filter((item): item is string => typeof item === 'string')

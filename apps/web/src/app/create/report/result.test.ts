@@ -10,7 +10,7 @@ import {
 /**
  * Le rapport vit dans `sessionStorage`, donc **derrière une frontière non
  * fiable** : n'importe quel JSON peut s'y trouver. `loadReport` ne fait jamais
- * confiance à la forme relue — un rapport corrompu rend `null`, pas un écran
+ * confiance à la forme relue un rapport corrompu rend `null`, pas un écran
  * cassé (§3 : une reprise impossible rend un état frais).
  */
 
@@ -33,7 +33,7 @@ const REPORT: GenerationReport = {
   issues: [],
 };
 
-describe('saveReport / loadReport — aller-retour', () => {
+describe('saveReport / loadReport aller-retour', () => {
   it('rend le rapport tel qu’écrit', () => {
     const storage = fakeStorage() as unknown as Storage;
     saveReport(storage, REPORT);
@@ -46,7 +46,7 @@ describe('saveReport / loadReport — aller-retour', () => {
     expect(map.getItem(REPORT_STORAGE_KEY)).not.toBeNull();
   });
 
-  it('conserve un rapport d’échec — le rapport doit pouvoir dire le refus', () => {
+  it('conserve un rapport d’échec le rapport doit pouvoir dire le refus', () => {
     const storage = fakeStorage() as unknown as Storage;
     const refused: GenerationReport = {
       ok: false,
@@ -62,7 +62,7 @@ describe('saveReport / loadReport — aller-retour', () => {
   });
 });
 
-describe('loadReport — la relecture ne croit rien sur parole', () => {
+describe('loadReport la relecture ne croit rien sur parole', () => {
   it('rend null sans stockage et sans valeur', () => {
     expect(loadReport(null)).toBeNull();
     expect(loadReport(fakeStorage() as unknown as Storage)).toBeNull();
@@ -123,7 +123,7 @@ describe('loadReport — la relecture ne croit rien sur parole', () => {
   });
 });
 
-describe('loadReport — l’installation des dépendances', () => {
+describe('loadReport l’installation des dépendances', () => {
   it('relit une installation faite ou ratée, et ignore une valeur qui n’est pas un booléen', () => {
     const storage = fakeStorage() as unknown as Storage;
     saveReport(storage, { ...REPORT, installed: true });
@@ -139,7 +139,7 @@ describe('loadReport — l’installation des dépendances', () => {
   });
 });
 
-describe('clearReport — « Terminer » range le rapport', () => {
+describe('clearReport « Terminer » range le rapport', () => {
   it('oublie le rapport enregistré', () => {
     const storage = fakeStorage();
     saveReport(storage as unknown as Storage, REPORT);

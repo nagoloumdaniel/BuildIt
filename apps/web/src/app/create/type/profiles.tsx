@@ -5,7 +5,7 @@ import type { DraftState } from '../../../lib/draft';
 import { useMessages } from '../../../lib/i18n/provider';
 
 /**
- * Écran 3 — **Project Type** (§6.4) : le profil du produit.
+ * Écran 3 **Project Type** (§6.4) : le profil du produit.
  *
  * Le contenu vit ici, pas dans `page.tsx`, pour une raison de build : Next
  * engendre un fichier de types par écran, qui refuse tout export autre que
@@ -42,7 +42,7 @@ export function isProjectType(value: string | undefined): value is ProjectType {
   return value !== undefined && (PROJECT_TYPES as readonly string[]).includes(value);
 }
 
-/** Le changement de brouillon d'une sélection — testable hors React. */
+/** Le changement de brouillon d'une sélection testable hors React. */
 export function withType(draft: DraftState, type: ProjectType): DraftState {
   return { ...draft, type };
 }
@@ -52,7 +52,7 @@ export interface ProjectTypeChoicesProps {
   readonly onSelect: (type: ProjectType) => void;
 }
 
-/** Le contenu de l'écran, hors contexte React — donc testable au rendu serveur. */
+/** Le contenu de l'écran, hors contexte React donc testable au rendu serveur. */
 export function ProjectTypeChoices({ selected, onSelect }: ProjectTypeChoicesProps): ReactElement {
   const t = useMessages();
   const chosen = isProjectType(selected) ? selected : undefined;

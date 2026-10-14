@@ -4,7 +4,7 @@
   "private": true,
   "type": "module",
   "license": "MIT",
-  "description": "Presets certifiés (§8) : manifest, recettes et description — partagés par le CLI et l'UI.",
+  "description": "Presets certifiés (§8) : manifest, recettes et description partagés par le CLI et l'UI.",
   "exports": {
     ".": {
       "types": "./src/index.ts",

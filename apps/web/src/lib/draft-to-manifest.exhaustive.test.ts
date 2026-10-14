@@ -5,14 +5,14 @@ import { draftToManifest } from './draft-to-manifest';
 
 /**
  * Chaque technologie frontend/backend du catalogue, choisie seule, doit
- * atterrir dans le bon champ du manifest (§10) — jamais perdue dans
+ * atterrir dans le bon champ du manifest (§10) jamais perdue dans
  * `services`, jamais absente sans que le schéma le dise.
  *
  * Portée : « toutes les combinaisons possibles » au sens strict est
- * 2^283 — intraitable. Ce test couvre la forme réaliste du bug rapporté
+ * 2^283 intraitable. Ce test couvre la forme réaliste du bug rapporté
  * (« j'ai choisi une techno frontend, le manifest dit qu'aucune ne l'est ») :
  * chaque fiche `frontend`/`backend`, seule, sur chacune de ses cibles
- * déclarées — c'est `place()` dans `draft-to-manifest.ts` qui est en cause
+ * déclarées c'est `place()` dans `draft-to-manifest.ts` qui est en cause
  * si une seule de ces fiches échoue. Des combinaisons à deux cibles
  * (web + api) s'y ajoutent pour couvrir le placement croisé entre
  * applications.
@@ -35,7 +35,7 @@ const frontends = entries.filter(
 );
 const backends = entries.filter((entry) => entry.category === 'backend');
 
-describe('draftToManifest — chaque fiche frontend, seule, atterrit dans frontend.framework', () => {
+describe('draftToManifest chaque fiche frontend, seule, atterrit dans frontend.framework', () => {
   it.each(frontends.map((entry) => [entry.id, entry] as const))('%s', (_id, entry) => {
     expect(entry.targets).toContain('web');
     const result = draftToManifest({
@@ -54,12 +54,12 @@ describe('draftToManifest — chaque fiche frontend, seule, atterrit dans fronte
     }
     expect(result.value.frontend?.framework).toBe(entry.id);
     // La sonde négative : une fiche perdue dans `services` est le bug
-    // exact rapporté — elle ne doit jamais s'y trouver.
+    // exact rapporté elle ne doit jamais s'y trouver.
     expect(result.value.services ?? []).not.toContain(entry.id);
   });
 });
 
-describe('draftToManifest — chaque fiche backend, seule, atterrit dans backend.framework', () => {
+describe('draftToManifest chaque fiche backend, seule, atterrit dans backend.framework', () => {
   it.each(backends.map((entry) => [entry.id, entry] as const))('%s', (_id, entry) => {
     expect(entry.targets).toContain('api');
     const result = draftToManifest({
@@ -78,7 +78,7 @@ describe('draftToManifest — chaque fiche backend, seule, atterrit dans backend
   });
 });
 
-describe('draftToManifest — web + api ensemble : chaque paire place les deux frameworks', () => {
+describe('draftToManifest web + api ensemble : chaque paire place les deux frameworks', () => {
   // Échantillon raisonnable plutôt que le produit cartésien complet (13 × 16
   // = 208 paires, déjà loin d'être « rien ») : un frontend et un backend au
   // hasard de chaque bout du catalogue suffisent à prouver que la présence
@@ -109,7 +109,7 @@ describe('draftToManifest — web + api ensemble : chaque paire place les deux f
   });
 });
 
-describe('draftToManifest — front + back sans monorepo ne bloque plus la génération', () => {
+describe('draftToManifest front + back sans monorepo ne bloque plus la génération', () => {
   // L'architecture se choisit (écran 4) **avant** la stack (écran 5) : un
   // brouillon « single-app » qui reçoit ensuite next + hono était refusé au
   // moment de générer (MANIFEST_APPS_NEED_MONOREPO). Deux applications
