@@ -255,4 +255,31 @@ describe('satisfaire les minimums suffit à produire un manifest', () => {
     const result = draftToManifest(state);
     expect(result.ok, JSON.stringify(!result.ok ? result.issues : [])).toBe(true);
   });
+
+  /**
+   * Le cas signalé : plateformes web, mobile, API **et** bibliothèque. Chaque
+   * application a son framework — Next.js pour le web, Expo pour le mobile, un
+   * backend pour l'API — et le manifest les range chacune dans son emplacement.
+   */
+  it('web + mobile + API + bibliothèque : trois applications, trois frameworks', () => {
+    const state: DraftState = {
+      ...freshDraft(),
+      name: 'multi-plateformes',
+      targets: ['web', 'mobile', 'api', 'library'],
+      architecture: 'monorepo',
+      technologies: ['next', 'expo', 'hono', 'typescript', 'postgresql', 'prisma'],
+      capabilities: [],
+      infra: { docker: true, ci: true },
+    };
+
+    expect(missingRequirements(state)).toEqual([]);
+    const result = draftToManifest(state);
+    expect(result.ok, JSON.stringify(!result.ok ? result.issues : [])).toBe(true);
+    if (!result.ok) {
+      return;
+    }
+    expect(result.value.frontend?.framework).toBe('next');
+    expect(result.value.mobile?.framework).toBe('expo');
+    expect(result.value.backend?.framework).toBe('hono');
+  });
 });

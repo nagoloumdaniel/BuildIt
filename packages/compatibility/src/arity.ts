@@ -89,3 +89,25 @@ const EXCLUSIVE = new Set<string>(EXCLUSIVE_CATEGORIES);
 export function isExclusive(category: Category): boolean {
   return EXCLUSIVE.has(category);
 }
+
+/**
+ * Deux fiches d'une catégorie **exclusive** peuvent-elles cohabiter ?
+ *
+ * Oui quand elles ne visent **aucune plateforme commune** : Next.js (web) et
+ * Expo (mobile) sont deux applications d'un même projet, chacune son framework ;
+ * React et Vue se disputent le web et restent en concurrence. Même règle pour
+ * deux backends, deux bases ou deux ORM : ils visent la même plateforme, donc
+ * le second remplace le premier.
+ *
+ * La règle est **ici**, dans le moteur, et l'écran l'applique à la bascule
+ * (`apps/web/src/lib/session.ts`) : deux copies auraient fini par diverger, et
+ * l'écran retirerait un choix que le moteur accepte.
+ */
+export function canCoexist(first: readonly string[], second: readonly string[]): boolean {
+  // Une fiche sans plateforme connue ne cohabite avec rien : sans savoir ce
+  // qu'elle sert, la laisser à côté d'une autre ferait passer une concurrence
+  // pour un complément.
+  return first.length > 0 && second.length > 0
+    ? !first.some((target) => second.includes(target))
+    : false;
+}

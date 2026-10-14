@@ -4,12 +4,25 @@ import type { OptionView } from '../../../lib/engine';
 import { CapabilityOptions } from './option-list';
 
 const OPTIONS: readonly OptionView[] = [
-  { id: 'stripe', label: 'Stripe', category: 'payments', state: 'selected' },
-  { id: 'paypal', label: 'PayPal', category: 'payments', state: 'available' },
+  {
+    id: 'stripe',
+    label: 'Stripe',
+    category: 'payments',
+    targets: ['web', 'api'],
+    state: 'selected',
+  },
+  {
+    id: 'paypal',
+    label: 'PayPal',
+    category: 'payments',
+    targets: ['web', 'api'],
+    state: 'available',
+  },
   {
     id: 'adyen',
     label: 'Adyen',
     category: 'payments',
+    targets: ['web', 'api'],
     state: 'blocked',
     reason: 'Adyen est exclusif avec Stripe.',
   },

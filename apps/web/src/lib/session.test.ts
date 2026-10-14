@@ -293,4 +293,65 @@ describe('toggleExclusive une catégorie exclusive remplace, jamais ne cumule', 
   it('première sélection d’une catégorie exclusive : rien à remplacer', () => {
     expect(toggleExclusive([], 'typescript', 'language', categoryOf)).toEqual(['typescript']);
   });
+
+  /**
+   * Le cas rapporté : projet visant web, mobile, API et bibliothèque — il était
+   * impossible de garder Next.js **et** Expo. Les plateformes des fiches
+   * tranchent, exactement comme dans le moteur (`canCoexist`).
+   */
+  describe('avec les plateformes des fiches', () => {
+    const targetsOf = new Map<string, readonly string[]>([
+      ['next', ['web']],
+      ['expo', ['mobile']],
+      ['react', ['web']],
+      ['electron', ['desktop']],
+      ['universal', ['web', 'mobile']],
+      ['hono', ['api']],
+      ['express', ['api']],
+    ]);
+    // `toggleExclusive` lit la catégorie des fiches **déjà choisies** : les
+    // nouvelles venues doivent donc y figurer aussi.
+    const richer = new Map<string, Category>([
+      ...categoryOf,
+      ['expo', 'frontend'],
+      ['electron', 'frontend'],
+      ['universal', 'frontend'],
+      ['hono', 'backend'],
+      ['express', 'backend'],
+    ]);
+
+    it('deux frameworks de plateformes différentes cohabitent', () => {
+      expect(toggleExclusive(['next'], 'expo', 'frontend', richer, targetsOf)).toEqual([
+        'next',
+        'expo',
+      ]);
+
+      // Et dans l'autre sens, puis sur trois plateformes.
+      expect(toggleExclusive(['next', 'expo'], 'electron', 'frontend', richer, targetsOf)).toEqual([
+        'next',
+        'expo',
+        'electron',
+      ]);
+    });
+
+    it('deux frameworks de la même plateforme se remplacent toujours', () => {
+      expect(toggleExclusive(['next'], 'react', 'frontend', richer, targetsOf)).toEqual(['react']);
+      // Un framework qui couvre web + mobile reste en concurrence avec Next.
+      expect(toggleExclusive(['next'], 'universal', 'frontend', richer, targetsOf)).toEqual([
+        'universal',
+      ]);
+    });
+
+    it('deux backends se remplacent : ils visent la même plateforme', () => {
+      expect(toggleExclusive(['hono'], 'express', 'backend', richer, targetsOf)).toEqual([
+        'express',
+      ]);
+    });
+
+    it('sans plateformes connues, on retombe sur le remplacement', () => {
+      expect(toggleExclusive(['postgresql'], 'mysql', 'database', categoryOf, new Map())).toEqual([
+        'mysql',
+      ]);
+    });
+  });
 });

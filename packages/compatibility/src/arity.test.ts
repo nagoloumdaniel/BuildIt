@@ -1,6 +1,6 @@
 import { CATEGORIES } from '@buildit/registry';
 import { describe, expect, it } from 'vitest';
-import { CUMULATIVE_CATEGORIES, EXCLUSIVE_CATEGORIES, isExclusive } from './arity.js';
+import { CUMULATIVE_CATEGORIES, canCoexist, EXCLUSIVE_CATEGORIES, isExclusive } from './arity.js';
 
 describe('couverture', () => {
   it('chaque catégorie du registry a une arité aucune n’est oubliée', () => {
@@ -58,5 +58,29 @@ describe('isExclusive', () => {
     // cohabitent parfaitement. Déduire un conflit de la catégorie seule, comme
     // prévu au départ, aurait rendu le preset SaaS ingénérable.
     expect(isExclusive('testing')).toBe(false);
+  });
+});
+
+describe('canCoexist la plateforme décide, pas la catégorie seule', () => {
+  it('deux plateformes disjointes cohabitent : Next.js (web) et Expo (mobile)', () => {
+    // C'est le cas rapporté : un projet web + mobile doit pouvoir choisir les
+    // deux frameworks, une application chacun.
+    expect(canCoexist(['web'], ['mobile'])).toBe(true);
+  });
+
+  it('la même plateforme reste une concurrence : React et Vue sur le web', () => {
+    expect(canCoexist(['web'], ['web'])).toBe(false);
+    // Un recoupement partiel suffit : les deux visent le web.
+    expect(canCoexist(['web'], ['mobile', 'web'])).toBe(false);
+  });
+
+  it('des plateformes multiples se recoupent dès qu’un point commun existe', () => {
+    // Deux backends visent `api` tous les deux, deux bases le web et l'API.
+    expect(canCoexist(['api'], ['api'])).toBe(false);
+    expect(canCoexist(['web', 'api'], ['api', 'library'])).toBe(false);
+  });
+
+  it('une fiche sans plateforme ne cohabite avec rien', () => {
+    expect(canCoexist([], ['web'])).toBe(false);
   });
 });

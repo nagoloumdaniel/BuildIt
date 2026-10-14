@@ -138,10 +138,22 @@ export default function StackPage() {
     return map;
   }, [blocks]);
 
+  // Les plateformes de chaque fiche, pour la **même** règle d'exclusivité que le
+  // moteur : Next.js (web) et Expo (mobile) cohabitent, Vue et Next non.
+  const targetsOf = useMemo(() => {
+    const map = new Map<string, readonly string[]>();
+    for (const block of blocks) {
+      for (const option of block.options) {
+        map.set(option.id, option.targets ?? []);
+      }
+    }
+    return map;
+  }, [blocks]);
+
   function toggleTechnology(id: string, category: Category): void {
     session.update((currentDraft) => ({
       ...currentDraft,
-      technologies: toggleExclusive(currentDraft.technologies, id, category, categoryOf),
+      technologies: toggleExclusive(currentDraft.technologies, id, category, categoryOf, targetsOf),
     }));
   }
 

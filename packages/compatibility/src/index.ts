@@ -8,7 +8,7 @@
  * masquée.
  */
 
-export { CUMULATIVE_CATEGORIES, EXCLUSIVE_CATEGORIES, isExclusive } from './arity.js';
+export { CUMULATIVE_CATEGORIES, canCoexist, EXCLUSIVE_CATEGORIES, isExclusive } from './arity.js';
 export type {
   CompatibilityCode,
   CompatibilityErrorCode,

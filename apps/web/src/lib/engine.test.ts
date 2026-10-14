@@ -197,4 +197,44 @@ describe('catalogue indisponible', () => {
       vi.resetModules();
     }
   });
+
+  /**
+   * Le cas rapporté : plateformes web **et** mobile. Il était impossible de
+   * garder Next.js et Expo ensemble — la bascule cliente retirait l'un pour
+   * l'autre. Le moteur, lui, distingue les plateformes ; ce test fige la règle
+   * côté moteur pour que l'écran s'y aligne.
+   */
+  describe('plusieurs plateformes élargissent le choix', () => {
+    it('un framework web et un framework mobile cohabitent', async () => {
+      const options = await stackOptions('frontend', {
+        targets: ['web', 'mobile'],
+        technologies: ['next'],
+      });
+      const byId = new Map(options.map((option) => [option.id, option.state]));
+
+      expect(byId.get('expo')).toBe('available');
+      // Deux frameworks sur la **même** plateforme restent en concurrence.
+      expect(byId.get('react')).toBe('blocked');
+      expect(byId.get('vue')).toBe('blocked');
+    });
+
+    it('sans la plateforme mobile, Expo n’est plus proposé', async () => {
+      const options = await stackOptions('frontend', {
+        targets: ['web'],
+        technologies: ['next'],
+      });
+      const expo = options.find((option) => option.id === 'expo');
+
+      // La fiche existe au catalogue mais ne sert aucune cible choisie : le
+      // moteur la refuse pour cause de plateforme, pas d'exclusivité.
+      expect(expo?.state).toBe('blocked');
+    });
+
+    it('le framework retenu porte ses plateformes, pour la bascule de l’écran', async () => {
+      const options = await stackOptions('frontend', { targets: ['web'], technologies: [] });
+      const next = options.find((option) => option.id === 'next');
+
+      expect(next?.targets).toEqual(['web']);
+    });
+  });
 });

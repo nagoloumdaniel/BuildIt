@@ -32,6 +32,12 @@ export interface StackOption {
   readonly id: string;
   readonly label: string;
   readonly category: string;
+  /**
+   * Les plateformes servies par cette fiche. L'écran en a besoin pour la
+   * bascule : deux frameworks d'une catégorie exclusive cohabitent s'ils visent
+   * des plateformes différentes (`canCoexist`, la règle du moteur).
+   */
+  readonly targets?: readonly string[] | undefined;
   readonly state: OptionState;
   /** La raison d'un blocage toujours présente côté moteur pour un `blocked`. */
   readonly reason?: string;

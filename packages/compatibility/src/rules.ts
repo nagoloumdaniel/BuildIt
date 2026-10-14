@@ -6,7 +6,7 @@ import {
   UI_ECOSYSTEMS,
 } from '@buildit/registry';
 import semver from 'semver';
-import { isExclusive } from './arity.js';
+import { canCoexist, isExclusive } from './arity.js';
 import { type CompatibilityIssue, messageFor, RESTRICTIVE_LICENSES } from './errors.js';
 
 /**
@@ -63,14 +63,12 @@ export function checkExclusiveCategories(entries: readonly RegistryEntry[]): Com
         if (first === undefined || second === undefined) {
           continue;
         }
-        // Un framework d'interface par **plateforme** : Next.js (web), Expo
-        // (mobile) et Electron (bureau) vivent ensemble dans un monorepo, une
-        // application chacun. Deux frameworks qui visent la même plateforme
-        // restent en concurrence.
-        if (
-          category === 'frontend' &&
-          !first.targets.some((target) => second.targets.includes(target))
-        ) {
+        // Deux fiches d'une catégorie exclusive cohabitent quand elles ne
+        // visent aucune plateforme commune : Next.js (web), Expo (mobile) et
+        // Electron (bureau) vivent ensemble, une application chacun. Deux
+        // frameworks de la **même** plateforme restent en concurrence, et il en
+        // va de même pour deux backends ou deux bases.
+        if (canCoexist(first.targets, second.targets)) {
           continue;
         }
         issues.push(

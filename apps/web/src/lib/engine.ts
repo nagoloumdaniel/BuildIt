@@ -43,6 +43,15 @@ export interface OptionView {
   id: string;
   label: string;
   category: string;
+  /**
+   * Les plateformes que cette fiche sert (`entry.targets`).
+   *
+   * L'écran en a besoin pour appliquer la **même** règle d'exclusivité que le
+   * moteur : deux frameworks d'une catégorie exclusive cohabitent s'ils visent
+   * des plateformes différentes (Next.js web + Expo mobile), et se remplacent
+   * sinon.
+   */
+  targets: readonly string[];
   state: 'selected' | 'available' | 'blocked';
   reason?: string;
   /** La documentation officielle (`docs` de la fiche, vérifiée par le registry). */
@@ -134,6 +143,7 @@ export async function stackOptions(
       id: option.entry.id,
       label: option.entry.name,
       category: option.entry.category,
+      targets: [...option.entry.targets],
       state: option.state,
       // `exactOptionalPropertyTypes` interdit d'écrire `reason: undefined` : la
       // clé est absente quand il n'y a rien à dire, sinon elle porte la raison.

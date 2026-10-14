@@ -1,4 +1,4 @@
-import { isExclusive } from '@buildit/compatibility';
+import { canCoexist, isExclusive } from '@buildit/compatibility';
 import type { Category } from '@buildit/registry';
 import {
   clearDraft,
@@ -134,24 +134,28 @@ export function toggle(list: readonly string[], value: string): string[] {
  * cocher une option en attendant le prochain aller-retour serveur pour la
  * voir grisée si elle devient incompatible. Une catégorie **exclusive**
  * (`isExclusive`, §12 un seul ORM, un seul moyen de paiement…) n'admet
- * qu'un choix ; en ajouter un second sans retirer le premier produit une
- * sélection que le moteur refuse, mais seulement au Blueprint, des écrans
- * plus loin, sans lien visible avec le clic qui l'a causée (bug rapporté :
- * JavaScript et TypeScript choisis tous les deux).
+ * qu'un choix **par plateforme visée** ; en ajouter un second sans retirer le
+ * premier produit une sélection que le moteur refuse, mais seulement au
+ * Blueprint, des écrans plus loin, sans lien visible avec le clic qui l'a
+ * causée (bug rapporté : JavaScript et TypeScript choisis tous les deux).
  *
- * Le remplacement se décide ici, dans `current` et `category` seuls : aucun
- * aller-retour serveur, donc aucune fenêtre où un second clic rapproché
- * passerait avant que l'option visée n'ait eu le temps d'être grisée.
+ * Le remplacement se décide ici, dans `current`, `category` et les plateformes
+ * des fiches : aucun aller-retour serveur, donc aucune fenêtre où un second
+ * clic rapproché passerait avant que l'option visée n'ait eu le temps d'être
+ * grisée.
  *
  * `categoryOf` vient des options déjà chargées par l'écran cette fonction
  * ne requiert pas le catalogue, seulement de savoir qui d'autre appartient à
- * la même catégorie que l'identifiant choisi.
+ * la même catégorie que l'identifiant choisi. `targetsOf` fait de même pour les
+ * plateformes : c'est ce qui autorise Next.js (web) **et** Expo (mobile) quand
+ * le projet vise les deux, tout en refusant Vue à côté de Next.
  */
 export function toggleExclusive(
   current: readonly string[],
   id: string,
   category: Category,
   categoryOf: ReadonlyMap<string, Category>,
+  targetsOf?: ReadonlyMap<string, readonly string[]>,
 ): string[] {
   if (current.includes(id)) {
     return current.filter((existing) => existing !== id);
@@ -159,6 +163,23 @@ export function toggleExclusive(
   if (!isExclusive(category)) {
     return [...current, id];
   }
-  const withoutSiblings = current.filter((existing) => categoryOf.get(existing) !== category);
-  return [...withoutSiblings, id];
+  const mine = targetsOf?.get(id);
+  // Sans les plateformes de la fiche, on ne peut pas savoir si elle cohabite :
+  // on remplace, comme avant (choisir un second ORM retire le premier).
+  if (mine === undefined || mine.length === 0) {
+    const withoutSiblings = current.filter((existing) => categoryOf.get(existing) !== category);
+    return [...withoutSiblings, id];
+  }
+  // Sinon, la règle du moteur s'applique : deux fiches d'une catégorie
+  // exclusive cohabitent si elles ne visent aucune plateforme commune. C'est ce
+  // qui permet de choisir Next.js (web) **et** Expo (mobile) sur un projet
+  // multi-plateformes, sans garder Vue à côté de Next.
+  const kept = current.filter((existing) => {
+    if (categoryOf.get(existing) !== category) {
+      return true;
+    }
+    const theirs = targetsOf?.get(existing) ?? [];
+    return theirs.length > 0 && canCoexist(mine, theirs);
+  });
+  return [...kept, id];
 }
