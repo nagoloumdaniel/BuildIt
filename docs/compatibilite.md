@@ -95,7 +95,7 @@ backend : Prisma derrière une API Django ne démarrerait pas.
 
 Chaque carte de technologie porte une pastille `!`. Elle ouvre, au clic, au
 survol ou au clavier, la fiche de la technologie et sa documentation officielle
-(champ `docs` du registry, présent sur les 283 fiches). Pour une option
+(champ `docs` du registry, présent sur les 299 fiches). Pour une option
 incompatible, la carte est grisée, son nom passe au rouge, la pastille aussi,
 et la bulle donne : la raison du moteur, les technologies en cause avec leur
 documentation, la conséquence, la solution et jusqu'à trois alternatives

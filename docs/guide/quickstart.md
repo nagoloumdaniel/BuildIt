@@ -21,7 +21,7 @@ Chronométré sur cette machine en repartant d'un dossier vide **hors du dépôt
 
 | Segment | Durée |
 |---|---|
-| `git clone --branch feat/phase8-web-socle …` | 2 s |
+| `git clone …` | 2 s |
 | `pnpm install` du dépôt (**store pnpm déjà chaud**) | 29 s |
 | `pnpm pf --help`, `template list`, `create --dry-run` | 14 s |
 | `pnpm pf create … --no-install --no-git` (écriture seule) | 4 s |
@@ -84,7 +84,7 @@ New-Item -ItemType Directory "$env:TEMP\pf-work" -Force | Out-Null   # PowerShel
 ## 1. Récupérer le dépôt
 
 ```bash
-git clone --branch feat/phase8-web-socle https://github.com/nagoloumdaniel/BuildIt.git
+git clone https://github.com/nagoloumdaniel/BuildIt.git
 cd BuildIt
 pnpm install
 ```
@@ -92,13 +92,7 @@ pnpm install
 `pnpm install` est la commande d'installation de la [racine](../../README.md), et
 le remote est celui de [PROJECT_CONTEXT.md](../../PROJECT_CONTEXT.md).
 
-> **La branche est obligatoire.** `git clone` seul donne la branche par défaut
-> `main`, qui **ne contient pas ce guide** : `docs/` y est absent, comme
-> `apps/web` et `pf share`. Vérifiable sur le dépôt lui-même :
-> `git cat-file -e origin/main:docs/guide/quickstart.md` échoue, et
-> `git rev-list --count origin/main..feat/phase8-web-socle` → `17`. Phase 12
-> fusionnera la branche et publiera le paquet ; d'ici là, clonez
-> `feat/phase8-web-socle`.
+> Le guide est sur la branche par défaut `main` : aucun `--branch` n'est nécessaire.
 
 Rejoué depuis un dossier vide **hors du dépôt** le clone prend **2 s** (dépôt
 ~1 Mo), `pnpm install` **29 s** avec un store pnpm déjà chaud. À froid,

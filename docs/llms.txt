@@ -2,17 +2,16 @@
 
 > BuildIt (moteur **Forge**, binaire **`pf`**) transforme une description de projet en projet prêt à développer : plateformes et technologies choisies, code généré, cohérent, documenté, diagnostiqué. Le code généré est **autonome** : aucune dépendance runtime à l'outil, et l'analyse tourne **en local**.
 
-Statut : **pré-alpha**, dans le dépôt `github.com/nagoloumdaniel/BuildIt`. Ni le paquet npm ni le site n'existent encore : les deux sont la Phase 12 de la [roadmap](roadmap.md). Ce fichier est versionné mais **pas encore servi** il n'y a pas d'hébergement et les liens ci-dessous sont relatifs à ce dossier de documentation.
+Statut : **pré-alpha**, dans le dépôt `github.com/nagoloumdaniel/BuildIt` (branche par défaut `main`). Le CLI du dépôt est en version 0.5.0 (`@nagoloum/cli`) ; sa publication sur npm n'est pas vérifiée et n'est pas annoncée ici. Un déploiement du configurateur peut exister (`trybuildit.vercel.app`), mais son état n'est pas garanti par cette documentation. Les liens ci-dessous sont relatifs à ce dossier.
 
-Deux points à savoir avant de cloner, tous deux vérifiés :
+Point à savoir avant de cloner :
 
-- les sources utiles sont sur la branche **`feat/phase8-web-socle`** ; la branche par défaut `main` ne contient ni ce dossier `docs/`, ni `apps/web`, ni `pf share` ;
-- `pf` s'exécute **depuis la racine du dépôt**, par `pnpm pf <commande>` (script de la racine, via `jiti apps/cli/src/main.ts`), et il y résout ses chemins : un projet créé sans `--dir` s'écrirait **dans le dépôt**. La forme publiée (`pnpm add -g @buildit/cli`, puis `pf …`) est prévue en Phase 12 **pas disponible aujourd'hui**.
+- `pf` s'exécute **depuis la racine du dépôt**, par `pnpm pf <commande>` (script de la racine, via `jiti apps/cli/src/main.ts`), et il y résout ses chemins : un projet créé sans `--dir` s'écrirait **dans le dépôt**. La forme publiée (`pnpm add -g @buildit/cli`, puis `pf …`) est prévue en Phase 12 et **n'est pas disponible aujourd'hui**.
 
 ## Installation
 
 ```bash
-git clone --branch feat/phase8-web-socle https://github.com/nagoloumdaniel/BuildIt.git
+git clone https://github.com/nagoloumdaniel/BuildIt.git
 cd BuildIt
 pnpm install
 pnpm pf --help                                              # les commandes
@@ -34,7 +33,7 @@ Le configurateur web, c'est le même moteur servi en local : `pnpm build`, puis 
 - [Concepts](guide/concepts.md) : manifest, registry, compatibility engine, presets, recettes, générateur et la frontière forme / identité / combinaison
 - [BuildIt et Forge](guide/produit-et-moteur.md) : le produit, le moteur, le binaire `pf`, et pourquoi l'UI et le CLI sont deux façades du même moteur
 - [Référence du manifest](guide/reference-manifest.md) : les champs du Project Manifest, la forme canonique, les codes de refus
-- [Référence du registry](guide/reference-registry.md) : 283 fiches, 37 catégories, 19 licences reconnues, la forme d'une fiche, ce que le chargement vérifie
+- [Référence du registry](guide/reference-registry.md) : 299 fiches, 37 catégories, 19 licences reconnues, la forme d'une fiche, ce que le chargement vérifie
 
 ## Garanties
 

@@ -14,7 +14,7 @@ Cette page dit ce que cela signifie concrètement, et ce qui sort quand même.
 - **Le moteur tourne en local.** Le dépôt contient deux applications —
   `apps/cli` et `apps/web` et **aucun serveur BuildIt** : il n'y a rien
   à qui parler, même si on le voulait.
-- **Le catalogue est embarqué.** Les 283 fiches sont dans un index engendré
+- **Le catalogue est embarqué.** Les 299 fiches sont dans un index engendré
   (`packages/registry/src/generated/entries.ts`), chargé depuis le disque.
   `pf template list`, `pf graph` et `pf add` fonctionnent sans réseau.
 - **Le configurateur web est local.** `pf web` sert l'application sur
