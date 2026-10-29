@@ -57,7 +57,7 @@ Le pipeline est défini à un seul endroit : les scripts `ci:local` et `test:smo
 tooling/typescript-config/   tsconfig de base partagé
 packages/validation/         modèle d'erreur partagé livré
 packages/manifest/           Project Manifest (§10) livré
-packages/registry/           catalogue (§7, §11) livré, 283 fiches
+packages/registry/           catalogue (§7, §11) livré, 299 fiches
   data/<catégorie>/<id>.entry.json   source de vérité, éditable à la main
   src/generated/entries.ts           index engendré, versionné, vérifié
 packages/compatibility/      règles du §12 livré
@@ -161,5 +161,5 @@ Les packages naissent dans leur phase. Ne pas créer de répertoire vide « pour
 - `.next/standalone` n'est **pas nettoyé** entre deux builds : les liens symboliques pnpm d'un build précédent y survivent, morts, et le serveur autonome échoue alors sur un `EPERM` de `realpathSync` sous Windows, Node n'arrive de toute façon pas toujours à résoudre ces liens. C'est pourquoi `pf web` sert par **`next start`** quand `node_modules/next` est là, et ne retombe sur le standalone que pour une application distribuée.
 - Biome n'analyse pas les directives Tailwind 4 (`@theme`, `@layer`) sans `css.parser.tailwindDirectives` : sans cette option, `pnpm lint` échoue sur un fichier CSS par ailleurs correct. Les `!important` du bloc `prefers-reduced-motion` restent des avertissements assumés ils sont nécessaires pour écraser n'importe quel style.
 - Next **interdit tout export autre que `default`** dans un `page.tsx` (`.next/types/app/**/page.ts`, TS2344) : les données et composants d'un écran vivent dans un module frère (`profiles.tsx`, `stack-view.ts`, `summary.ts`…), jamais dans le fichier de route.
-- Importer `@buildit/registry` depuis un composant client fait entrer les 283 fiches engendrées dans le bundle (~13 ko sur 5 routes). C'est assumé : les paquets du monorepo publient leur source, le moteur (`server-only`) n'y est pas, et le catalogue ne contient aucun secret.
+- Importer `@buildit/registry` depuis un composant client fait entrer les 299 fiches engendrées dans le bundle (~13 ko sur 5 routes). C'est assumé : les paquets du monorepo publient leur source, le moteur (`server-only`) n'y est pas, et le catalogue ne contient aucun secret.
 - `pnpm test:e2e` pilote le navigateur **déjà installé** (`PF_E2E_CHROMIUM`, sinon Edge ou Chrome) : sans navigateur, il échoue en disant quoi faire `PF_E2E_SKIP=1` saute la preuve explicitement.

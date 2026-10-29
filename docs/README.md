@@ -9,7 +9,7 @@
 | [No-lock-in](guide/no-lock-in.md) | Le code généré est autonome et le test qui le prouve |
 | [Confidentialité, local-first](guide/confidentialite.md) | Ce qui reste sur la machine, ce qui sort, et quand |
 | [Référence du manifest](guide/reference-manifest.md) | Les champs du Project Manifest, la forme canonique, les codes de refus |
-| [Référence du registry](guide/reference-registry.md) | Les 283 fiches, les 37 catégories, ce que le chargement vérifie |
+| [Référence du registry](guide/reference-registry.md) | Les 299 fiches, les 37 catégories, ce que le chargement vérifie |
 | [Commandes](guide/commandes.md) | Chaque commande du §21 : livrée, en attente, ou exemple caduc |
 | [`llms.txt`](llms.txt) | Index court et factuel pour les moteurs versionné, **pas encore servi** (Phase 12) |
 | [CLI `pf`](cli.md) | Référence détaillée des commandes **la référence qui fait foi** |

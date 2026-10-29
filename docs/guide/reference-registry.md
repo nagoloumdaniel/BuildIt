@@ -17,14 +17,14 @@ Sources qui font foi :
 
 | | |
 |---|---|
-| Fiches | **283** (`data/**/*.entry.json`) |
+| Fiches | **299** (`data/**/*.entry.json`) |
 | Catégories | **37** (liste fermée) |
 | Licences | **19** (liste fermée) |
 | Index engendré | [`src/generated/entries.ts`](../../packages/registry/src/generated/entries.ts), versionné, vérifié par un test |
 
 ```text
 $ (Get-ChildItem packages/registry/data -Recurse -Filter *.entry.json -File).Count
-283
+299
 $ node packages/registry/scripts/build-index.mjs --check     # aucun écart avec data/
 ```
 
@@ -33,7 +33,7 @@ L'index doit correspondre à `data/` : le test
 `--check`, donc un JSON modifié sans régénérer l'index fait échouer la CI.
 
 > Note de maintenance : [PROJECT_CONTEXT.md](../../PROJECT_CONTEXT.md) porte
-> encore « 282 fiches » à deux endroits. Le compte vérifié ci-dessus est **283**
+> encore « 282 fiches » à deux endroits. Le compte vérifié ci-dessus est **299**
 > (fichiers `data/` et entrées de l'index engendré).
 
 ## Les catégories

@@ -109,7 +109,7 @@ son statut de cycle de vie, sa **capacité de génération** (`certified` ou
 `declared`), sa licence, ses relations (`requires`, `compatibleWith`,
 `conflictsWith`), ses paquets, ses variables d'environnement, son template.
 
-Le catalogue officiel compte **283 fiches** et **37 catégories** ; il vit dans
+Le catalogue officiel compte **299 fiches** et **37 catégories** ; il vit dans
 `packages/registry/data/` et l'index consommé par le code est **engendré**
 (`packages/registry/src/generated/entries.ts`), puis **revalidé au chargement** :
 l'index est du code engendré, et du code engendré peut être modifié à la main.

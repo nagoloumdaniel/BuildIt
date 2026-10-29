@@ -1,4 +1,5 @@
 import type { MetadataRoute } from 'next';
+import { siteOrigin } from '../lib/site-origin';
 
 /**
  * `/sitemap.xml`, engendré à la construction de l'application.
@@ -14,7 +15,7 @@ import type { MetadataRoute } from 'next';
  *
  * Même origine que `robots.ts` : `PF_SITE_URL`, repli sur ce que sert `pf web`.
  */
-const ORIGIN: string = (process.env['PF_SITE_URL'] ?? 'http://127.0.0.1:4173').replace(/\/+$/, '');
+const ORIGIN: string = siteOrigin();
 
 export default function sitemap(): MetadataRoute.Sitemap {
   return [

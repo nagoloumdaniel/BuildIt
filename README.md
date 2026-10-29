@@ -1,33 +1,87 @@
+<div align="center">
+
 # BuildIt
 
-> **Development Environment Factory** décrire un projet, choisir ses plateformes et ses technologies, obtenir un projet prêt à développer : cohérent, documenté et diagnostiqué.
+**Development Environment Factory** : décrire un projet, choisir ses technologies, obtenir un projet prêt à développer, cohérent, documenté et diagnostiqué.
 
-**Statut : pré-alpha.** Le moteur (manifest, registry, compatibility, generator) existe et est testé ; quatre presets (SaaS, API, Dashboard, Full-stack en monorepo) sont certifiés : générés, installés, construits et démarrés par le test de fumée. Le CLI `pf` existe ([référence](docs/cli.md)) mais n'est pas encore publié sur npm : rien n'est utilisable par un tiers sans cloner le dépôt. Il sait aussi cloner un dépôt, ouvrir un projet local et gérer le dépôt GitHub d'un projet (Phase 7B). Le **configurateur web** (`pnpm pf web`) porte les 18 écrans du MVP : parcours guidé ou expert, Stack Builder avec progressive disclosure, Blueprint, Dependency Graph, aperçu des fichiers, génération réelle et le même manifest que le CLI pour les mêmes choix. Voir la [roadmap](docs/roadmap.md).
+![Statut : pré-alpha](https://img.shields.io/badge/statut-pr%C3%A9--alpha-orange)
+![Licence MIT](https://img.shields.io/badge/licence-MIT-blue)
+![Node >=20.11](https://img.shields.io/badge/node-%E2%89%A520.11-339933)
+![TypeScript](https://img.shields.io/badge/TypeScript-strict-3178c6)
 
----
+</div>
 
-## Le code généré ne dépend pas de BuildIt
+> **Pré-alpha, projet en cours.** Le moteur et le configurateur fonctionnent dans ce dépôt, mais rien n'est stabilisé : les interfaces et les formats peuvent changer. Le CLI `pf` n'est pas présenté ici comme publié sur npm ; pour l'utiliser, il faut cloner le dépôt.
 
-C'est le principe fondateur du produit, et il est vérifié par un test automatisé, pas seulement affirmé ici.
+![Le configurateur web BuildIt, écran d'accueil en thème sombre](docs/assets/configurateur-accueil.png)
 
-Le projet que vous générez est autonome : aucune dépendance runtime, aucun paquet propriétaire, aucun appel réseau vers nous. Vous pouvez supprimer BuildIt de votre machine juste après la génération rien ne casse. Ce que vous obtenez est le code que vous auriez écrit vous-même si vous aviez pris le temps de câbler correctement Docker, la CI, le lint, les tests et les variables d'environnement.
+## Ce que BuildIt fait
 
-## Confidentialité : local-first par défaut
+- **Génère un projet** à partir d'un *Project Manifest* (plateformes, architecture, stack, qualité) : code, Docker, configuration d'outils, variables d'environnement, documentation.
+- **Vérifie la cohérence** des choix : un moteur de compatibilité refuse ou explique les combinaisons impossibles, avant toute écriture.
+- **Offre deux façades au même moteur** : le CLI `pf` et un configurateur web (Next.js, 18 écrans, parcours guidé en 12 étapes). Mêmes choix, même manifest, même projet.
+- **Diagnostique** un projet avec `pf doctor` (score de santé sur 100). Sur ce dépôt : 89/100.
+- **Gère aussi l'existant** : cloner un dépôt, ouvrir un projet local, créer le dépôt GitHub d'un projet, inviter des collaborateurs, partager un manifest en lecture seule.
 
-L'analyse de projet et l'assistant d'architecture tournent **en local**, avec votre propre clé API. Aucun code, aucun prompt ne transite par un serveur BuildIt. L'exécution hébergée existera un jour comme option payante, jamais comme obligation.
+## Ce que BuildIt ne fait pas
 
----
+- Il n'est **pas publié** : ni paquet npm annoncé comme disponible, ni service hébergé garanti. L'installation passe par un clone du dépôt.
+- Il **ne couvre pas tout le catalogue** : seules 32 technologies sur 299 sont certifiées (voir [État du projet](#état-du-projet)).
+- Le code généré **ne dépend pas de BuildIt** (aucune dépendance runtime, aucun appel réseau vers l'outil), mais il n'est pas une application métier : c'est un socle prêt à développer.
+- Il n'envoie aucun code ni prompt à un serveur BuildIt : l'analyse tourne en local, avec votre propre clé API.
 
-## BuildIt et Forge
+## Trois couches
 
-Deux noms, une seule chose :
+```mermaid
+flowchart LR
+  A["Project Manifest<br/>ce que vous voulez"] --> C["Compatibilité<br/>ce qui tient ensemble"]
+  B["Registry<br/>299 fiches, 37 catégories"] --> C
+  C --> G["Générateur + recettes<br/>projet prêt à développer"]
+  CLI["CLI pf"] --> A
+  WEB["Configurateur web"] --> A
+```
 
-- **BuildIt** est le produit.
-- **Forge** est le moteur qui l'alimente.
-- **`pf`** est le nom de la commande du CLI.
-- L'interface web et le CLI `pf` sont deux façades du même moteur, au même niveau. Tout ce qui est faisable dans l'une l'est dans l'autre, parce que les deux produisent le même *Project Manifest* et le passent au même pipeline.
+1. **Manifeste** : le *Project Manifest* décrit le projet. Le CLI et le web produisent le même, pour les mêmes choix ([référence](docs/guide/reference-manifest.md)).
+2. **Registre** : le catalogue des technologies, une fiche JSON chacune ([référence](docs/guide/reference-registry.md)).
+3. **Compatibilité** : le moteur confronte le manifeste au registre et explique chaque refus ([compatibilité](docs/compatibilite.md)).
 
----
+BuildIt est le produit, **Forge** le moteur, `pf` la commande. Voir [BuildIt et Forge](docs/guide/produit-et-moteur.md).
+
+## Démarrage
+
+Prérequis : **Node ≥ 20.11**, **pnpm ≥ 11**.
+
+```bash
+git clone https://github.com/nagoloumdaniel/BuildIt.git
+cd BuildIt
+pnpm install
+pnpm pf --help                                               # les commandes
+pnpm pf create mon-projet --preset saas --dir ../mon-projet  # génère, installe, premier commit
+pnpm build && pnpm pf web                                    # configurateur sur http://127.0.0.1:4173
+```
+
+`pf` s'exécute depuis la racine du dépôt (`pnpm pf <commande>`). Préréglages certifiés : `saas`, `dashboard`, `api`, `fullstack`. Guide détaillé : [démarrage rapide](docs/guide/quickstart.md).
+
+## Stack
+
+TypeScript (strict), Node ≥ 20.11, pnpm + Turborepo, tsdown, Vitest, Biome, zod 4, Next.js 15, React 19, Tailwind CSS 4, lefthook, commitlint, secretlint, changesets. Design « Forge » (orange et cyan acier, Inter et JetBrains Mono), interface FR/EN.
+
+## État du projet
+
+Chiffres comptés dans le dépôt au 2026-10-29 :
+
+| | |
+|---|---|
+| Registre | **299** fiches, **37** catégories |
+| Certifiées / déclarées | **32** / **267** |
+| Préréglages certifiés | 4 (SaaS, Dashboard, API, Full-stack) |
+| Workspaces | 13 paquets + 2 applications (CLI, web) |
+| Fichiers de test | 182 |
+| Historique | 118 commits, du 2026-09-23 au 2026-10-14 |
+
+**Certifiée** : la technologie peut être générée et le résultat est éprouvé par le test de fumée (installation, build, démarrage). **Déclarée** : la fiche existe et décrit la technologie (compatibilités, licence, documentation), mais BuildIt ne la génère pas encore de bout en bout. Ne pas lire « déclarée » comme « supportée ».
+
+Le CLI du dépôt est en version 0.5.0 (`@nagoloum/cli`) ; sa publication sur npm n'est pas vérifiée à ce jour. Un déploiement de démonstration du configurateur existe peut-être, mais son état n'est pas garanti.
 
 ## Développement
 
@@ -89,4 +143,13 @@ docs/       cahier des charges, roadmap, specs, plans
 
 ## Licence
 
-[MIT](LICENSE)
+[MIT](LICENSE) © 2026 Daniel Nagoloum Talla.
+
+## Contribuer
+
+Les contributions externes ne sont pas encore ouvertes, mais les conventions sont posées : [CONTRIBUTING.md](CONTRIBUTING.md), [code de conduite](CODE_OF_CONDUCT.md), [politique de sécurité](SECURITY.md). Les issues et pull requests disposent de modèles.
+
+## Transparence sur l'IA
+
+Ce projet a été développé avec l'assistance d'outils d'IA (Claude). Sur 118 commits : 92 sont d'auteurs humains, 26 ont l'auteur « Claude », et 82 portent une mention `Co-Authored-By`. Le code est relu, testé et soumis aux mêmes garde-fous locaux que tout le reste (lint, typecheck, tests, scan de secrets).
+

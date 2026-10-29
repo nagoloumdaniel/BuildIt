@@ -4,6 +4,7 @@ import type { ReactNode } from 'react';
 import { AppShell } from '../components/ui/app-shell';
 import { DraftProvider } from '../components/wizard/draft-provider';
 import { LocaleProvider } from '../lib/i18n/provider';
+import { siteOrigin } from '../lib/site-origin';
 import './globals.css';
 import { Toaster } from './toaster';
 
@@ -37,20 +38,22 @@ const mono = JetBrains_Mono({
  * Métadonnées de tout le site.
  *
  * `metadataBase` donne une origine absolue aux URL relatives (canonique, Open
- * Graph) : elle vient de `PF_SITE_URL`, avec le repli sur ce que `pf web` sert
+ * Graph) : elle vient de `PF_SITE_URL` ou du domaine de production Vercel (`lib/site-origin.ts`), avec le repli sur ce que `pf web` sert
  * (`http://127.0.0.1:4173`). Aucun domaine n'est écrit en dur.
  *
  * Le titre passe par un gabarit : un écran qui déclare son propre titre n'a
  * plus à répéter « BuildIt ».
  */
 export const metadata: Metadata = {
-  metadataBase: new URL(process.env['PF_SITE_URL'] ?? 'http://127.0.0.1:4173'),
+  metadataBase: new URL(siteOrigin()),
   title: {
     default: 'BuildIt',
     template: '%s · BuildIt',
   },
   description: 'Décrire un projet, obtenir un projet prêt à développer.',
   applicationName: 'BuildIt',
+  // `./` : le canonique suit la route courante (Next le résout avec metadataBase).
+  alternates: { canonical: './' },
   openGraph: {
     type: 'website',
     siteName: 'BuildIt',
@@ -58,7 +61,12 @@ export const metadata: Metadata = {
     url: '/',
     images: [{ url: '/og-image.png', width: 1200, height: 630, alt: 'BuildIt' }],
   },
-  twitter: { card: 'summary_large_image', images: ['/og-image.png'] },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'BuildIt',
+    description: 'Décrire un projet, obtenir un projet prêt à développer.',
+    images: ['/og-image.png'],
+  },
 };
 
 /**
